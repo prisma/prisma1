@@ -6,7 +6,7 @@ use test_harness::*;
 
 #[test]
 fn single_watch_migrations_must_work() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let migration_persistence = engine.connector().migration_persistence();
 
         let steps = vec![
@@ -27,14 +27,14 @@ fn single_watch_migrations_must_work() {
         assert_eq!(migrations.len(), 2);
         assert_eq!(migrations[0].name, "watch-0001");
         assert_eq!(migrations[1].name, custom_migration_id);
-        assert_eq!(migrations[1].status, MigrationStatus::Success);
+        assert_eq!(migrations[1].status, MigrationStatus::MigrationSuccess);
         assert!(migrations[1].finished_at.is_some());
     });
 }
 
 #[test]
 fn multiple_watch_migrations_must_work() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let migration_persistence = engine.connector().migration_persistence();
 
         let steps1 = vec![
@@ -66,14 +66,14 @@ fn multiple_watch_migrations_must_work() {
         assert_eq!(migrations[0].name, "watch-0001");
         assert_eq!(migrations[1].name, "watch-0002");
         assert_eq!(migrations[2].name, custom_migration_id);
-        assert_eq!(migrations[2].status, MigrationStatus::Success);
+        assert_eq!(migrations[2].status, MigrationStatus::MigrationSuccess);
         assert!(migrations[2].finished_at.is_some());
     });
 }
 
 #[test]
 fn steps_equivalence_criteria_is_satisfied_when_leaving_watch_mode() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let migration_persistence = engine.connector().migration_persistence();
 
         let steps1 = vec![
@@ -105,7 +105,7 @@ fn steps_equivalence_criteria_is_satisfied_when_leaving_watch_mode() {
 
 #[test]
 fn must_handle_additional_steps_when_transitioning_out_of_watch_mode() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let migration_persistence = engine.connector().migration_persistence();
 
         let steps1 = vec![

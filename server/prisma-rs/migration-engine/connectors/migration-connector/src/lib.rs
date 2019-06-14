@@ -21,9 +21,9 @@ extern crate serde_derive;
 pub trait MigrationConnector {
     type DatabaseMigration: DatabaseMigrationMarker + 'static;
 
-    fn initialize(&self);
+    fn initialize(&self) -> ConnectorResult<()>;
 
-    fn reset(&self);
+    fn reset(&self) -> ConnectorResult<()>;
 
     fn migration_persistence(&self) -> Arc<MigrationPersistence>;
 
@@ -51,4 +51,11 @@ pub trait MigrationConnector {
 
 pub trait DatabaseMigrationMarker: Debug {
     fn serialize(&self) -> serde_json::Value;
+}
+
+pub type ConnectorResult<T> = Result<T, ConnectorError>;
+
+#[derive(Debug)]
+pub enum ConnectorError {
+    Generic(String)
 }

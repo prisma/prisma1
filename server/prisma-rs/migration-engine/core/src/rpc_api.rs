@@ -4,6 +4,7 @@ use jsonrpc_core;
 use jsonrpc_core::IoHandler;
 use jsonrpc_core::*;
 use std::io;
+use jsonrpc_core::types::error::Error as JsonRpcError;
 
 pub struct RpcApi {
     io_handler: jsonrpc_core::IoHandler<()>,
@@ -33,7 +34,7 @@ impl RpcApi {
             let engine = if T::has_source_config() {
                 let source_config: SourceConfigInput = params.parse()?;
                 let engine = MigrationEngine::new(&source_config.source_config, T::underlying_database_must_exist());
-                engine.init();
+                engine.init().map_err(convert_error)?;
                 engine
             } else {
                 // FIXME: this is ugly
@@ -63,9 +64,9 @@ impl RpcApi {
     }
 }
 
-fn convert_error(command_error: CommandError) -> jsonrpc_core::types::error::Error {
+fn convert_error(command_error: CommandError) -> JsonRpcError {
     let json = serde_json::to_value(command_error).expect("rendering the errors as json failed.");
-    jsonrpc_core::types::error::Error {
+    JsonRpcError {
         code: jsonrpc_core::types::error::ErrorCode::ServerError(4466),
         message: "An error happened. Check the data field for details.".to_string(),
         data: Some(json),

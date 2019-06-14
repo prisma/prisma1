@@ -14,9 +14,9 @@ pub struct SqlDatabaseMigrationInferrer {
 }
 
 impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
-    fn infer(&self, _previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> SqlMigration {
+    fn infer(&self, _previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> ConnectorResult<SqlMigration> {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
-        let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
+        let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
         infer(&current_database_schema, &expected_database_schema, &self.schema_name, self.sql_family)
     }
 }
@@ -26,20 +26,20 @@ pub struct VirtualSqlDatabaseMigrationInferrer {
     pub schema_name: String,
 }
 impl DatabaseMigrationInferrer<SqlMigration> for VirtualSqlDatabaseMigrationInferrer {
-    fn infer(&self, previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> SqlMigration {
-        let current_database_schema = DatabaseSchemaCalculator::calculate(previous);
-        let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
+    fn infer(&self, previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> ConnectorResult<SqlMigration> {
+        let current_database_schema = DatabaseSchemaCalculator::calculate(previous)?;
+        let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
         infer(&current_database_schema, &expected_database_schema, &self.schema_name, self.sql_family)
     }
 }
 
-fn infer(current: &DatabaseSchema, next: &DatabaseSchema, schema_name: &str, sql_family: SqlFamily) -> SqlMigration {
-    let steps = infer_database_migration_steps_and_fix(&current, &next, &schema_name, sql_family);
-    let rollback = infer_database_migration_steps_and_fix(&next, &current, &schema_name, sql_family);
-    SqlMigration {
+fn infer(current: &DatabaseSchema, next: &DatabaseSchema, schema_name: &str, sql_family: SqlFamily) -> ConnectorResult<SqlMigration> {
+    let steps = infer_database_migration_steps_and_fix(&current, &next, &schema_name, sql_family)?;
+    let rollback = infer_database_migration_steps_and_fix(&next, &current, &schema_name, sql_family)?;
+    Ok(SqlMigration {
         steps: steps,
         rollback: rollback,
-    }
+    })
 }
 
 fn infer_database_migration_steps_and_fix(
@@ -47,7 +47,7 @@ fn infer_database_migration_steps_and_fix(
     to: &DatabaseSchema,
     schema_name: &str,
     sql_family: SqlFamily,
-) -> Vec<SqlMigrationStep> {
+) -> SqlResult<Vec<SqlMigrationStep>> {
     let diff = DatabaseSchemaDiffer::diff(&from, &to);
     let is_sqlite = sql_family == SqlFamily::Sqlite;
 
@@ -64,11 +64,11 @@ fn fix_id_column_type_change(
     to: &DatabaseSchema, 
     _schema_name: &str,
     steps: Vec<SqlMigrationStep>
-) -> Vec<SqlMigrationStep> {
+) -> SqlResult<Vec<SqlMigrationStep>> {
     let has_id_type_change = steps.iter().find(|step|{
         match step {
             SqlMigrationStep::AlterTable(alter_table) => {
-                if let Some(current_table) = from.table(&alter_table.table) {
+                if let Ok(current_table) = from.table(&alter_table.table) {
                     let change_to_id_column = alter_table.changes.iter().find(|c|{
                         match c {
                             TableChange::AlterColumn(alter_column) => {
@@ -100,9 +100,9 @@ fn fix_id_column_type_change(
         let mut steps_from_empty = delay_foreign_key_creation(diff_from_empty);
         radical_steps.append(&mut steps_from_empty);
 
-        radical_steps
+        Ok(radical_steps)
     } else {
-        steps
+        Ok(steps)
     }
 }
 
@@ -155,21 +155,21 @@ fn fix_stupid_sqlite(
     current_database_schema: &DatabaseSchema,
     next_database_schema: &DatabaseSchema,
     schema_name: &str,
-) -> Vec<SqlMigrationStep> {
+) -> SqlResult<Vec<SqlMigrationStep>> {
     let steps = diff.into_steps();
     let mut result = Vec::new();
     for step in steps {
         match step {
             SqlMigrationStep::AlterTable(ref alter_table) if needs_fix(&alter_table) => {
-                let current_table = current_database_schema.table(&alter_table.table).unwrap();
-                let next_table = next_database_schema.table(&alter_table.table).unwrap();
+                let current_table = current_database_schema.table(&alter_table.table)?;
+                let next_table = next_database_schema.table(&alter_table.table)?;
                 let mut altered_steps = fix(&alter_table, &current_table, &next_table, &schema_name);
                 result.append(&mut altered_steps);
             }
             x => result.push(x),
         }
     }
-    result
+    Ok(result)
 }
 
 fn needs_fix(alter_table: &AlterTable) -> bool {

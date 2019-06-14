@@ -12,16 +12,16 @@ pub struct SqlDatabaseStepApplier {
 
 #[allow(unused, dead_code)]
 impl DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier {
-    fn apply_step(&self, database_migration: &SqlMigration, index: usize) -> bool {
-        self.apply_next_step(&database_migration.steps, index)
+    fn apply_step(&self, database_migration: &SqlMigration, index: usize) -> ConnectorResult<bool> {
+        Ok(self.apply_next_step(&database_migration.steps, index)?)
     }
 
-    fn unapply_step(&self, database_migration: &SqlMigration, index: usize) -> bool {
-        self.apply_next_step(&database_migration.rollback, index)
+    fn unapply_step(&self, database_migration: &SqlMigration, index: usize) -> ConnectorResult<bool> {
+        Ok(self.apply_next_step(&database_migration.rollback, index)?)
     }
 
-    fn render_steps_pretty(&self, database_migration: &SqlMigration) -> serde_json::Value {
-        render_steps_pretty(&database_migration, self.sql_family, &self.schema_name)
+    fn render_steps_pretty(&self, database_migration: &SqlMigration) -> ConnectorResult<serde_json::Value> {
+        Ok(render_steps_pretty(&database_migration, self.sql_family, &self.schema_name)?)
     }
 }
 
@@ -30,24 +30,24 @@ pub struct VirtualSqlDatabaseStepApplier {
     pub schema_name: String,
 }
 impl DatabaseMigrationStepApplier<SqlMigration> for VirtualSqlDatabaseStepApplier {
-    fn apply_step(&self, _database_migration: &SqlMigration, _index: usize) -> bool {
+    fn apply_step(&self, _database_migration: &SqlMigration, _index: usize) -> ConnectorResult<bool> {
         unimplemented!("Not allowed on a VirtualSqlDatabaseStepApplier")
     }
 
-    fn unapply_step(&self, _database_migration: &SqlMigration, _index: usize) -> bool {
+    fn unapply_step(&self, _database_migration: &SqlMigration, _index: usize) -> ConnectorResult<bool> {
         unimplemented!("Not allowed on a VirtualSqlDatabaseStepApplier")
     }
 
-    fn render_steps_pretty(&self, database_migration: &SqlMigration) -> serde_json::Value {
-        render_steps_pretty(&database_migration, self.sql_family, &self.schema_name)
+    fn render_steps_pretty(&self, database_migration: &SqlMigration) -> ConnectorResult<serde_json::Value> {
+        Ok(render_steps_pretty(&database_migration, self.sql_family, &self.schema_name)?)
     }
 }
 
 impl SqlDatabaseStepApplier {
-    fn apply_next_step(&self, steps: &Vec<SqlMigrationStep>, index: usize) -> bool {
+    fn apply_next_step(&self, steps: &Vec<SqlMigrationStep>, index: usize) -> SqlResult<bool> {
         let has_this_one = steps.get(index).is_some();
         if !has_this_one {
-            return false;
+            return Ok(false);
         }
 
         let step = &steps[index];
@@ -56,10 +56,10 @@ impl SqlDatabaseStepApplier {
         let result = self.conn.query_on_raw_connection(&self.schema_name, &sql_string, &[]);
 
         // TODO: this does not evaluate the results of SQLites PRAGMA foreign_key_check
-        result.unwrap();
+        result?;
 
         let has_more = steps.get(index + 1).is_some();
-        has_more
+        Ok(has_more)
     }
 }
 
@@ -67,7 +67,7 @@ fn render_steps_pretty(
     database_migration: &SqlMigration,
     sql_family: SqlFamily,
     schema_name: &str,
-) -> serde_json::Value {
+) -> ConnectorResult<serde_json::Value> {
     let jsons = database_migration
         .steps
         .iter()
@@ -82,7 +82,7 @@ fn render_steps_pretty(
             json_value
         })
         .collect();
-    serde_json::Value::Array(jsons)
+    Ok(serde_json::Value::Array(jsons))
 }
 
 fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &str) -> String {

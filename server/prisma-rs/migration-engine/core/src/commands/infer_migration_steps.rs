@@ -1,6 +1,7 @@
 use super::MigrationStepsResultOutput;
 use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
+use crate::*;
 use migration_connector::*;
 
 pub struct InferMigrationStepsCommand {
@@ -23,7 +24,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
             .datamodel_calculator()
             .infer(&current_datamodel, &self.input.assume_to_be_applied);
 
-        let next_datamodel = datamodel::parse(&self.input.datamodel)?;
+        let next_datamodel = parse_datamodel(&self.input.datamodel)?;
 
         let model_migration_steps = engine
             .datamodel_migration_steps_inferrer()
@@ -32,11 +33,11 @@ impl MigrationCommand for InferMigrationStepsCommand {
         let database_migration =
             connector
                 .database_migration_inferrer()
-                .infer(&assumed_datamodel, &next_datamodel, &model_migration_steps);
+                .infer(&assumed_datamodel, &next_datamodel, &model_migration_steps)?;
 
         let database_steps_json = connector
             .database_migration_step_applier()
-            .render_steps_pretty(&database_migration);
+            .render_steps_pretty(&database_migration)?;
 
         let returned_datamodel_steps = if self.input.is_watch_migration() {
             model_migration_steps

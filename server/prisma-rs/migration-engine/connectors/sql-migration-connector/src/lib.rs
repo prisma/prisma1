@@ -5,6 +5,7 @@ mod sql_database_step_applier;
 mod sql_destructive_changes_checker;
 mod sql_migration;
 mod sql_migration_persistence;
+mod error;
 
 use database_inspector::DatabaseInspector;
 use migration_connector::*;
@@ -25,6 +26,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use url::Url;
 use std::borrow::Cow;
+pub use error::*;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
@@ -181,7 +183,7 @@ struct PostgresHelper {
 impl MigrationConnector for SqlMigrationConnector {
     type DatabaseMigration = SqlMigration;
 
-    fn initialize(&self) {
+    fn initialize(&self) -> ConnectorResult<()> {
         match self.sql_family {
             SqlFamily::Sqlite => {
                 if let Some(file_path) = &self.file_path {
@@ -201,10 +203,12 @@ impl MigrationConnector for SqlMigrationConnector {
             SqlFamily::Mysql => unimplemented!(),
         }
         self.migration_persistence.init();
+        Ok(())
     }
 
-    fn reset(&self) {
+    fn reset(&self) -> ConnectorResult<()> {
         self.migration_persistence.reset();
+        Ok(())
     }
 
     fn migration_persistence(&self) -> Arc<MigrationPersistence> {
@@ -224,7 +228,7 @@ impl MigrationConnector for SqlMigrationConnector {
     }
 
     fn deserialize_database_migration(&self, json: serde_json::Value) -> SqlMigration {
-        serde_json::from_value(json).unwrap()
+        serde_json::from_value(json).expect("Deserializing the database migration failed.")
     }
 
     fn database_inspector(&self) -> Arc<DatabaseInspector> {
@@ -239,9 +243,13 @@ struct VirtualSqlMigrationConnector {
 impl MigrationConnector for VirtualSqlMigrationConnector {
     type DatabaseMigration = SqlMigration;
 
-    fn initialize(&self) {}
+    fn initialize(&self) -> ConnectorResult<()> {
+        Ok(())
+    }
 
-    fn reset(&self) {}
+    fn reset(&self) -> ConnectorResult<()> {
+        Ok(())
+    }
 
     fn migration_persistence(&self) -> Arc<MigrationPersistence> {
         Arc::new(EmptyMigrationPersistence {})
@@ -266,7 +274,7 @@ impl MigrationConnector for VirtualSqlMigrationConnector {
     }
 
     fn deserialize_database_migration(&self, json: serde_json::Value) -> SqlMigration {
-        serde_json::from_value(json).unwrap()
+        serde_json::from_value(json).expect("Deserializing the database migration failed.")
     }
 
     fn database_inspector(&self) -> Arc<DatabaseInspector> {

@@ -33,11 +33,11 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
             &assumed_datamodel,
             &next_datamodel,
             &self.input.steps_to_apply,
-        );
+        )?;
 
         let database_steps_json = connector
             .database_migration_step_applier()
-            .render_steps_pretty(&database_migration);
+            .render_steps_pretty(&database_migration)?;
 
         Ok(MigrationStepsResultOutput {
             datamodel: datamodel::render(&next_datamodel).unwrap(),

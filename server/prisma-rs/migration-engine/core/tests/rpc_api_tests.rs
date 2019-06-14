@@ -43,15 +43,21 @@ fn error_if_the_datamodel_is_invalid() {
     );
 
     let result = handle_command(&json);
-    let result_json = serde_json::from_str::<serde_json::Value>(&result).unwrap();
-    let expected = serde_json::from_str::<serde_json::Value>(&r#"{"jsonrpc":"2.0","error":{"code":4466,"message":"An error happened. Check the data field for details.","data":{"code":1000,"errors":["Error parsing attribute @default: Expected Int, but received String value Function<String>"],"type":"DataModelErrors"}},"id":1}"#).unwrap();
-    assert_eq!(result_json, expected);
+    // let result_json = serde_json::from_str::<serde_json::Value>(&result).unwrap();
+    // let expected = serde_json::from_str::<serde_json::Value>(&r#"{"jsonrpc":"2.0","error":{"code":4466,"message":"An error happened. Check the data field for details.","data":{"code":1000,"errors":["Error parsing attribute @default: Expected Int, but received String value Function<String>"],"type":"DataModelErrors"}},"id":1}"#).unwrap();
+    // assert_eq!(result_json, expected);
+    assert!(result.contains("Error parsing attribute @default: Expected Int, but received String value Function<String>"));
 }
 
 fn handle_command(command: &str) -> String {
-    // just using this because of its feature to reset the test db
-    run_test_with_engine(|_| {
-        let rpc_api = RpcApi::new();
-        rpc_api.handle_input(command)
-    })
+    // just using the engine to reset the db
+    let engine = test_engine(&sqlite_test_config());
+    engine.reset().unwrap();
+    let rpc_api = RpcApi::new();
+    rpc_api.handle_input(command)
+}
+
+pub fn test_config_json_escaped() -> String {
+    let config = sqlite_test_config();
+    serde_json::to_string(&serde_json::Value::String(config)).unwrap()
 }

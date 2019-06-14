@@ -77,7 +77,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         // TODO: this does not diff primary key columns yet
         let mut result = Vec::new();
         for previous_table in &self.previous.tables {
-            if let Some(next_table) = self.next.table(&previous_table.name) {
+            if let Ok(next_table) = self.next.table(&previous_table.name) {
                 let mut changes = Vec::new();
                 changes.append(&mut Self::drop_columns(&previous_table, &next_table));
                 changes.append(&mut Self::add_columns(&previous_table, &next_table));
