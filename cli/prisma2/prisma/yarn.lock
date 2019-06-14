@@ -51,13 +51,13 @@
     p-retry "^4.1.0"
     progress "^2.0.3"
 
-"@prisma/introspection@0.0.16":
-  version "0.0.16"
-  resolved "https://registry.yarnpkg.com/@prisma/introspection/-/introspection-0.0.16.tgz#e2fda1579ff2ea9d0547c6d20213944bb17174a9"
-  integrity sha512-DRkiubS54gOwbxTAguTUGNX5AvQONsw5i5R451Sbc737x0Lk+2LISVBcv2SLkFF/j5RQxQTobFZQF2lflv/Gow==
+"@prisma/introspection@0.0.18":
+  version "0.0.18"
+  resolved "https://registry.yarnpkg.com/@prisma/introspection/-/introspection-0.0.18.tgz#c2099880682a4c3fda4a4e65f890cb52727ccacd"
+  integrity sha512-adiljkNaEjM5pvMA1jLINPdBE1+tB1bnt4f8geHBRozBnZZ+coD3pCVMYxE3Oxnk7Jxs4jFU4mwR1XlvIGuUng==
   dependencies:
-    "@prisma/cli" "^0.0.10"
-    "@prisma/lift" "^0.0.43"
+    "@prisma/cli" "^0.0.12"
+    "@prisma/lift" "^0.0.57"
     ajv "^6.10.0"
     dotenv "^8.0.0"
     figures "^3.0.0"
@@ -66,39 +66,12 @@
     ink-text-input "^3.2.0"
     jsonwebtoken "^8.5.1"
     ora "^3.4.0"
-    prisma-datamodel "^1.36.0-alpha.8"
-    prisma-db-introspection "1.36.0-alpha.8"
+    prisma-datamodel "1.36.0-alpha.10"
+    prisma-db-introspection "1.36.0-alpha.10"
     react "^16.8.6"
     scuid "^1.1.0"
     string-width "^4.1.0"
-
-"@prisma/lift@^0.0.43":
-  version "0.0.43"
-  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.43.tgz#5f182e9b988a4e049b132d08d31f5748aa38c2b9"
-  integrity sha512-iWAY/05e+xA0DKqjJrl6hW6O9j22OUndMKTrsgIlX93l1BaHQkdsCeDxAEq/NuwN03rYrhyrcoclkpdYrbXM3A==
-  dependencies:
-    "@prisma/cli" "^0.0.10"
-    "@prisma/fetch-engine" "^0.0.19"
-    arg "^4.1.0"
-    array-flat-polyfill "^1.0.1"
-    cli-cursor "^3.0.0"
-    cli-truncate "^1.1.0"
-    dashify "2.0.0"
-    debug "^4.1.1"
-    del "^4.1.1"
-    diff "^4.0.1"
-    fast-equals "^2.0.0"
-    git-user-email "^0.2.2"
-    git-user-name "^2.0.0"
-    globby "^9.2.0"
-    indent-string "^4.0.0"
-    log-update "^3.2.0"
-    p-map "^2.1.0"
-    prisma-datamodel "^1.36.0-alpha.8"
-    prompts "^2.1.0"
-    string-width "^4.1.0"
     strip-ansi "^5.2.0"
-    strip-indent "^3.0.0"
 
 "@prisma/lift@^0.0.57":
   version "0.0.57"
@@ -137,10 +110,47 @@
     strip-indent "^3.0.0"
     supports-hyperlinks "^1.0.1"
 
-"@prisma/photon@^0.0.66":
-  version "0.0.66"
-  resolved "https://registry.yarnpkg.com/@prisma/photon/-/photon-0.0.66.tgz#8d87fe9588457c6a4319cd5e34029d379f754703"
-  integrity sha512-IaII01Asj3imhS3CPseMAbJdQCLwB71h7tZVkzENt3D/bmp4hjL3hBJSPfVFhIqS3wL0jxEaz8t2o/VsF+IIow==
+"@prisma/lift@^0.0.59":
+  version "0.0.59"
+  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.59.tgz#69386fdd2fdbfbcc0ad54bef3627368196f2ae8b"
+  integrity sha512-6CuTrZ+CJw3zE68KdNXk3wLVFupGiG3DWD/GSVvwDxxWMpXpeVNtPLWoYhmg3DW74I6mv6dRDimFqtaJGr0MTQ==
+  dependencies:
+    "@prisma/cli" "^0.0.12"
+    "@prisma/fetch-engine" "^0.0.19"
+    "@prisma/studio-server" "^0.0.7"
+    arg "^4.1.0"
+    array-flat-polyfill "^1.0.1"
+    cli-cursor "^3.0.0"
+    cli-truncate "^1.1.0"
+    dashify "2.0.0"
+    debug "^4.1.1"
+    del "^4.1.1"
+    diff "^4.0.1"
+    fast-equals "^2.0.0"
+    get-port "^5.0.0"
+    git-user-email "^0.2.2"
+    git-user-name "^2.0.0"
+    globby "^9.2.0"
+    indent-string "^4.0.0"
+    ink "^2.2.0"
+    ink-link "^1.0.0"
+    ink-spinner "^3.0.1"
+    keypress "^0.2.1"
+    log-update "^3.2.0"
+    microjob "^0.5.2"
+    p-map "^2.1.0"
+    prisma-datamodel "^1.36.0-alpha.8"
+    prompts "^2.1.0"
+    react "^16.8.6"
+    string-width "^4.1.0"
+    strip-ansi "^5.2.0"
+    strip-indent "^3.0.0"
+    supports-hyperlinks "^1.0.1"
+
+"@prisma/photon@^0.0.67":
+  version "0.0.67"
+  resolved "https://registry.yarnpkg.com/@prisma/photon/-/photon-0.0.67.tgz#0ec684fdc6c3f7dde1a815dcf1f10282cc01cdb9"
+  integrity sha512-c0cq6D97HAS5km4IWhYPp0msoI6TGd8JTTIE5b5t7lvyczQDx3/SjW3zabFFdHb1DWOtH/qk5zKb6S6EugSeaA==
   dependencies:
     "@prisma/cli" "^0.0.10"
     "@prisma/engine-core" "0.0.49"
@@ -2271,7 +2281,7 @@ postgres-interval@^1.1.0:
   dependencies:
     xtend "^4.0.0"
 
-prisma-datamodel@1.36.0-alpha.8, prisma-datamodel@^1.36.0-alpha.8:
+prisma-datamodel@1.36.0-alpha.10, prisma-datamodel@1.36.0-alpha.8, prisma-datamodel@^1.36.0-alpha.8:
   version "1.36.0-alpha.8"
   resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.36.0-alpha.8.tgz#b17804aed99b9b01c7aab5e5502d619937e557e6"
   integrity sha512-XM+WKbeECoHaEogo0itGjcdwZ9y+CLkjOD9aeTNb9MGCBG57T8RmkCq47U3JTE9U+9nvZxEZlFVGRylbetwCiQ==
@@ -2281,10 +2291,10 @@ prisma-datamodel@1.36.0-alpha.8, prisma-datamodel@^1.36.0-alpha.8:
     pluralize "^7.0.0"
     popsicle "10"
 
-prisma-db-introspection@1.36.0-alpha.8:
-  version "1.36.0-alpha.8"
-  resolved "https://registry.yarnpkg.com/prisma-db-introspection/-/prisma-db-introspection-1.36.0-alpha.8.tgz#758efea7f4fc0568d25f32482653b1e25e25e844"
-  integrity sha512-xCXjOUwwzMRzFHn39Oi5WGshD/2WY/vHZjjrCXh/tBsjbRkMlB6v8evZEC9s3esn8Zj2o4raL7JCKjSwZAWopQ==
+prisma-db-introspection@1.36.0-alpha.10:
+  version "1.36.0-alpha.10"
+  resolved "https://registry.yarnpkg.com/prisma-db-introspection/-/prisma-db-introspection-1.36.0-alpha.10.tgz#a75677ddc2dfad1269c42570dc67916f4713cde0"
+  integrity sha512-C8Q8XUS4stTbo82DrIQTw/B6/6mm5f5l+6H1TGTyVv7dka1ekx8FbSriMl9/30ycjOm+S0Kftn7QNMoY43YPJA==
   dependencies:
     "@types/mongodb" "^3.1.14"
     "@types/mysql" "^2.15.5"
@@ -2294,8 +2304,8 @@ prisma-db-introspection@1.36.0-alpha.8:
     mysql "^2.16.0"
     pg "^7.4.1"
     pluralize "^7.0.0"
-    prisma-datamodel "1.36.0-alpha.8"
-    prisma-yml "1.36.0-alpha.8"
+    prisma-datamodel "1.36.0-alpha.10"
+    prisma-yml "1.36.0-alpha.10"
     scuid "^1.0.2"
 
 prisma-json-schema@0.1.3:
@@ -2303,10 +2313,10 @@ prisma-json-schema@0.1.3:
   resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.1.3.tgz#6c302db8f464f8b92e8694d3f7dd3f41ac9afcbe"
   integrity sha512-XZrf2080oR81mY8/OC8al68HiwBm0nXlFE727JIia0ZbNqwuV4MyRYk6E0+OIa6/9KEYxZrcAmoBs3EW1cCvnA==
 
-prisma-yml@1.36.0-alpha.8:
-  version "1.36.0-alpha.8"
-  resolved "https://registry.yarnpkg.com/prisma-yml/-/prisma-yml-1.36.0-alpha.8.tgz#4eac76a4fdfbb4b9434d6ab7c2b9f91e0692208c"
-  integrity sha512-eIOcBRF93aSOuCLAOzhwjC63XvCdj+YeHV+jcDrudj8F/Hoe81WpwU644DRHH9mlh/kZrztyvUhFID5fr0F5uA==
+prisma-yml@1.36.0-alpha.10:
+  version "1.36.0-alpha.10"
+  resolved "https://registry.yarnpkg.com/prisma-yml/-/prisma-yml-1.36.0-alpha.10.tgz#9ea93f97e362591c106231eef0573b90859e6006"
+  integrity sha512-+Rs1IFXbueaa2qy5rx/kOEwreFbui7Unj89bdiYdnMS5a9l2EnQnbWEstAu7Bhg8Kvh7G3pIRPziWOBE/a/E4w==
   dependencies:
     ajv "5"
     bluebird "^3.5.1"

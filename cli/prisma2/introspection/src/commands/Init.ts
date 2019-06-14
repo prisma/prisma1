@@ -5,7 +5,7 @@ import { promptInteractively } from '../prompt'
 import { introspect } from '../introspect/util'
 import chalk from 'chalk'
 import figures = require('figures')
-import { writeFileSync, mkdirSync } from 'fs'
+import { writeFileSync, mkdirSync, existsSync } from 'fs'
 import { join } from 'path'
 
 export class Init implements Command {
@@ -28,8 +28,19 @@ export class Init implements Command {
       return null
     }
 
+    if (args['--help']) {
+      return this.help()
+    }
+
     const outputDirName = args._[0]
-    const outputDir = outputDirName ? join(process.cwd(), outputDirName) : process.cwd()
+    const outputDir = outputDirName ? join(this.env.cwd, outputDirName) : this.env.cwd
+
+    if (existsSync(join(outputDir, 'datamodel.prisma'))) {
+      throw new Error(`Can't start ${chalk.bold('prisma init')} as ${chalk.redBright(
+        join(outputDir, 'datamodel.prisma'),
+      )} exists.
+Please run ${chalk.bold('prisma init')} in an empty directory.`)
+    }
 
     if (outputDirName) {
       try {
@@ -38,10 +49,6 @@ export class Init implements Command {
       } catch (e) {
         if (e.code !== 'EEXIST') throw e
       }
-    }
-
-    if (args['--help']) {
-      return this.help()
     }
 
     try {

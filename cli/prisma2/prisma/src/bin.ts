@@ -6,7 +6,7 @@
 import { isError, HelpError, Env } from '@prisma/cli'
 import { LiftCommand, LiftSave, LiftUp, LiftDown, LiftWatch, Converter, getCompiledGenerators } from '@prisma/lift'
 import { CLI } from './CLI'
-import { Introspect } from '@prisma/introspection'
+import { Introspect, Init } from '@prisma/introspection'
 import { Version } from './Version'
 import { predefinedGenerators } from './generators'
 import { Generate } from './Generate'
@@ -26,6 +26,7 @@ async function main(): Promise<number> {
   }
   // create a new CLI with our subcommands
   const cli = CLI.new({
+    init: Init.new(env),
     lift: LiftCommand.new(
       {
         save: LiftSave.new(env),

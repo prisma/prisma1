@@ -1,6 +1,6 @@
 {
   "name": "@prisma/introspection",
-  "version": "0.0.16",
+  "version": "0.0.18",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "Apache-2.0",
@@ -24,8 +24,8 @@
     "typescript": "^3.5.1"
   },
   "dependencies": {
-    "@prisma/cli": "^0.0.10",
-    "@prisma/lift": "^0.0.43",
+    "@prisma/cli": "^0.0.12",
+    "@prisma/lift": "^0.0.57",
     "ajv": "^6.10.0",
     "dotenv": "^8.0.0",
     "figures": "^3.0.0",
