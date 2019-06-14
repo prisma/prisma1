@@ -5,7 +5,6 @@ mod migration_applier;
 mod migration_persistence;
 pub mod steps;
 
-use database_inspector::DatabaseInspector;
 pub use database_migration_inferrer::*;
 pub use database_migration_step_applier::*;
 pub use destructive_changes_checker::*;
@@ -20,6 +19,8 @@ extern crate serde_derive;
 
 pub trait MigrationConnector {
     type DatabaseMigration: DatabaseMigrationMarker + 'static;
+
+    fn connector_type(&self) -> &'static str;
 
     fn initialize(&self) -> ConnectorResult<()>;
 
@@ -41,11 +42,6 @@ pub trait MigrationConnector {
             step_applier: self.database_migration_step_applier(),
         };
         Box::new(applier)
-    }
-
-    // TODO: this is just in tests currently and should not be part of this interface. Figure out a better way to handle this.
-    fn database_inspector(&self) -> Arc<DatabaseInspector> {
-        Arc::new(DatabaseInspector::empty())
     }
 }
 

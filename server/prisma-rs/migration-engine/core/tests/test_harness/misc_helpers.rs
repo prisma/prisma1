@@ -47,7 +47,11 @@ pub fn test_engine(config: &str) -> Box<MigrationEngine> {
 }
 
 pub fn introspect_database(engine: &MigrationEngine) -> DatabaseSchema {
-    let inspector = engine.connector().database_inspector();
+    let inspector: Box<DatabaseInspector> = match engine.connector().connector_type() {
+        "postgres" => Box::new(DatabaseInspector::postgres(postgres_url())),
+        "sqlite" => Box::new(DatabaseInspector::sqlite(sqlite_test_file())),
+        _ => unimplemented!(),
+    };
     let mut result = inspector.introspect(&SCHEMA_NAME.to_string());
     // the presence of the _Migration table makes assertions harder. Therefore remove it from the result.
     result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();

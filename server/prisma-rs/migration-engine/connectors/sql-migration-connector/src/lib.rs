@@ -48,6 +48,16 @@ pub enum SqlFamily {
     Mysql,
 }
 
+impl SqlFamily {
+    fn connector_type_string(&self) -> &'static str {
+        match self {
+            SqlFamily::Postgres => "postgres",
+            SqlFamily::Mysql => "mysql",
+            SqlFamily::Sqlite => "sqlite",
+        }
+    }
+}
+
 impl SqlMigrationConnector {
     #[allow(unused)]
     pub fn exists(sql_family: SqlFamily, url: &str) -> bool {
@@ -190,6 +200,10 @@ struct PostgresHelper {
 impl MigrationConnector for SqlMigrationConnector {
     type DatabaseMigration = SqlMigration;
 
+    fn connector_type(&self) -> &'static str {
+        self.sql_family.connector_type_string()
+    }
+
     fn initialize(&self) -> ConnectorResult<()> {
         match self.sql_family {
             SqlFamily::Sqlite => {
@@ -239,10 +253,6 @@ impl MigrationConnector for SqlMigrationConnector {
     fn deserialize_database_migration(&self, json: serde_json::Value) -> SqlMigration {
         serde_json::from_value(json).expect("Deserializing the database migration failed.")
     }
-
-    fn database_inspector(&self) -> Arc<DatabaseInspector> {
-        Arc::clone(&self.database_inspector)
-    }
 }
 
 struct VirtualSqlMigrationConnector {
@@ -251,6 +261,10 @@ struct VirtualSqlMigrationConnector {
 }
 impl MigrationConnector for VirtualSqlMigrationConnector {
     type DatabaseMigration = SqlMigration;
+
+    fn connector_type(&self) -> &'static str {
+        self.sql_family.connector_type_string()
+    }
 
     fn initialize(&self) -> ConnectorResult<()> {
         Ok(())
@@ -284,9 +298,5 @@ impl MigrationConnector for VirtualSqlMigrationConnector {
 
     fn deserialize_database_migration(&self, json: serde_json::Value) -> SqlMigration {
         serde_json::from_value(json).expect("Deserializing the database migration failed.")
-    }
-
-    fn database_inspector(&self) -> Arc<DatabaseInspector> {
-        Arc::new(DatabaseInspector::empty())
     }
 }
