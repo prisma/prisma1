@@ -114,9 +114,15 @@ impl SqlMigrationConnector {
         db_name.replace_range(..1, ""); // strip leading slash
         config.connect_timeout(Duration::from_secs(5));
 
-        let root_connection = Arc::new(PostgreSql::new(config.clone(), 1).unwrap());
-        let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
-        let _ = root_connection.query_on_raw_connection("", &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
+        match PostgreSql::new(config.clone(), 1) {
+            Ok(root_connection) => {
+                let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
+                let _ = root_connection.query_on_raw_connection("", &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
+            }
+            Err(_) => {
+                // this means that the user did not have access to the root database
+            }
+        }
 
         let schema = parsed_url
             .query_pairs()
