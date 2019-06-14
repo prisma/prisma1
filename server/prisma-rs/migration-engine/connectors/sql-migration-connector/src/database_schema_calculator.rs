@@ -1,7 +1,9 @@
 use crate::SqlResult;
 use crate::database_inspector::*;
 use datamodel::*;
+use datamodel::common::*;
 use prisma_models::{DatamodelConverter, TempManifestationHolder, TempRelationHolder};
+use chrono::*;
 
 pub struct DatabaseSchemaCalculator<'a> {
     data_model: &'a Datamodel,
@@ -41,7 +43,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                                 is_required: arity == &FieldArity::Required,
                                 foreign_key: None,
                                 sequence: None,
-                                default: f.default_value.clone(),
+                                default: Some(f.migration_value()),
                             })
                         }
                         _ => None,
@@ -207,6 +209,8 @@ trait FieldExtensions {
     fn is_required(&self) -> bool;
 
     fn db_name(&self) -> String;
+
+    fn migration_value(&self) -> Value;
 }
 
 impl FieldExtensions for Field {
@@ -224,6 +228,27 @@ impl FieldExtensions for Field {
 
     fn db_name(&self) -> String {
         self.database_name.clone().unwrap_or_else(|| self.name.clone())
+    }
+    
+    fn migration_value(&self) -> Value {
+        self.default_value.clone().unwrap_or_else(||{
+            let scalar_type = match self.field_type {
+                FieldType::Base(scalar) => scalar,
+                _ => unimplemented!("This must be only called on scalar fields"),
+            };
+            match scalar_type {
+                PrismaType::Boolean => Value::Boolean(false),
+                PrismaType::Int => Value::Int(0),
+                PrismaType::Float => Value::Float(0.0),                
+                PrismaType::String => Value::String("".to_string()),
+                PrismaType::Decimal => Value::Decimal(0.0),
+                PrismaType::DateTime => {
+                    let naive = NaiveDateTime::from_timestamp(0, 0);
+                    let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+                    PrismaValue::DateTime(datetime)
+                },
+            }
+        })
     }
 }
 
