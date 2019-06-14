@@ -213,7 +213,7 @@ fn render_value(value: &Value) -> String {
             format!("'{}'", raw) // add quotes
         },
         Value::ConstantLiteral(x) => format!("'{}'", x), // this represents enum values
-        _ => unimplemented!(),
+        _ => unimplemented!("Expressions are not supported in default values"),
     }
 }
 
