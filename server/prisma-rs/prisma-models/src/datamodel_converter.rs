@@ -199,7 +199,7 @@ impl<'a> DatamodelConverter<'a> {
                                     }
                                 }
                                 (Some(_), Some(_)) => {
-                                    panic!("It's not allowed that both sides of a relation specify the inline policy")
+                                    panic!("It's not allowed that both sides of a relation specify the inline policy. The field was {} on model {}. The related field was {} on model {}.", field.name, model.name, related_field.name, related_model.name)
                                 }
                             },
                         };
