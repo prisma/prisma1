@@ -238,7 +238,7 @@ fn updating_db_name_of_a_scalar_field_must_work() {
         let dm1 = r#"
             model A {
                 id String @id
-                field String @db(name:"name1")
+                field String @map(name:"name1")
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -247,7 +247,7 @@ fn updating_db_name_of_a_scalar_field_must_work() {
         let dm2 = r#"
             model A {
                 id String @id
-                field String @db(name:"name2")
+                field String @map(name:"name2")
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -424,7 +424,7 @@ fn specifying_a_db_name_for_an_inline_relation_must_work() {
         let dm1 = r#"
             model A {
                 id Int @id
-                b B @relation(references: [id]) @db(name: "b_column")
+                b B @relation(references: [id]) @map(name: "b_column")
             }
 
             model B {

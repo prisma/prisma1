@@ -99,7 +99,7 @@ fn db_names_work() {
         r#"
             model Test {
                 id String @id
-                field String @db(name:"my_column")
+                field String @map(name:"my_column")
             }
         "#,
     );
@@ -232,7 +232,7 @@ fn explicit_relation_fields() {
 
             model Post {
                 id Int @id
-                blog Blog? @db(name:"blog_id")
+                blog Blog? @map(name:"blog_id")
             }
         "#,
     );
