@@ -4,6 +4,7 @@ import com.prisma.api.ApiSpecBase
 import com.prisma.api.util.TroubleCharacters
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
+import play.api.libs.json.Json
 
 class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
@@ -57,8 +58,8 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    updateResult.pathAsJsValue("data.updateScalarModel").toString should be(
-      s"""{"optString":"lala${TroubleCharacters.value}","optInt":1337,"optFloat":1.234,"optBoolean":true,"optEnum":"A","optDateTime":"2016-07-31T23:59:01.000Z","optJson":[1,2,3]}""")
+    updateResult.pathAsJsValue("data.updateScalarModel") should be(
+      Json.parse(s"""{"optString":"lala${TroubleCharacters.value}","optInt":1337,"optFloat":1.234,"optBoolean":true,"optEnum":"A","optDateTime":"2016-07-31T23:59:01.000Z","optJson":[1,2,3]}"""))
 
     val query = server.query(
       s"""
