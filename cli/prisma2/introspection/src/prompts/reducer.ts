@@ -3,7 +3,7 @@ import { DatabaseMetadata } from 'prisma-db-introspection/dist/common/introspect
 import { ConnectorAndDisconnect } from '../introspect/util'
 import { DatabaseCredentials, IntrospectionResult } from '../types'
 import { PromptState } from './CredentialPrompt'
-import { Steps, stepToPrevStep } from './steps'
+import { Steps, stepToPrevStep } from './steps-definition'
 
 export type ActionChooseDB = {
   type: 'choose_db'
