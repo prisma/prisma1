@@ -46,16 +46,11 @@ fn postgres(source: &Box<dyn Source>) -> PrismaResult<Executor> {
     trace!("Loading Postgres connector...");
 
     let psql = PostgreSql::try_from(source)?;
+    let db_name = psql.schema_name.clone();
     let db = SqlDatabase::new(psql);
-    let url = Url::parse(source.url())?;
-    let err_str = "No database found in connection string";
-    let mut db_name = url
-        .path_segments()
-        .ok_or(PrismaError::ConfigurationError(err_str.into()))?;
-    let db_name = db_name.next().expect(err_str);
 
     trace!("Loaded Postgres connector.");
-    Ok(sql_executor(db_name.into(), db))
+    Ok(sql_executor(db_name, db))
 }
 
 #[cfg(feature = "sql")]

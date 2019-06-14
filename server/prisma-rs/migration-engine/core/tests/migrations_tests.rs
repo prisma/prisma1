@@ -34,6 +34,30 @@ fn adding_a_scalar_field_must_work() {
         assert_eq!(table.column_bang("enum").tpe, ColumnType::String);
     });
 }
+//
+//#[test]
+//fn apply_schema() {
+//    test_each_connector(|engine| {
+//        let dm2 = r#"
+//            model Test {
+//                id String @id
+//                int Int
+//                float Float
+//                boolean Boolean
+//                string String
+//                dateTime DateTime
+//                enum MyEnum
+//            }
+//
+//            enum MyEnum {
+//                A
+//                B
+//            }
+//        "#;
+//
+//        infer_and_apply(&engine, &dm2);
+//    });
+//}
 
 #[test]
 fn adding_an_optional_field_must_work() {
