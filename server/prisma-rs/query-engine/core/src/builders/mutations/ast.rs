@@ -1,11 +1,14 @@
 //! Simple wrapper for WriteQueries
 
-use crate::{builders::utils, BuilderExt, OneBuilder, ReadQuery};
+use crate::{
+    builders::utils::{self, UuidString},
+    BuilderExt, OneBuilder, ReadQuery,
+};
 use connector::mutaction::{
     DatabaseMutactionResult as MutationResult, Identifier, TopLevelDatabaseMutaction as RootMutation,
 };
 use graphql_parser::query::Field;
-use prisma_models::ModelRef;
+use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaValue};
 use std::sync::Arc;
 
 /// A top-level write query (mutation)
@@ -49,7 +52,12 @@ impl WriteQuery {
     /// Generate a `ReadQuery` from the encapsulated `WriteQuery`
     pub fn generate_read(&self, res: MutationResult) -> Option<ReadQuery> {
         let field = match res.identifier {
-            Identifier::Id(gql_id) => utils::derive_field(&self.field, self.model(), gql_id, &self.name),
+            Identifier::Id(gql_id) => utils::derive_field(
+                &self.field,
+                self.model(),
+                search_for_id(&self.inner).unwrap_or(gql_id),
+                &self.name,
+            ),
             Identifier::Count(_) => return None, // FIXME: We need to communicate count!
             Identifier::Node(_) => return None,
             _ => unimplemented!(),
@@ -67,5 +75,22 @@ impl WriteQuery {
             }
             _ => unimplemented!(),
         }
+    }
+}
+
+fn search_for_id(root: &RootMutation) -> Option<GraphqlId> {
+    fn extract_id(model: &ModelRef, args: &PrismaArgs) -> Option<GraphqlId> {
+        args.get_field_value(&model.fields().id().name).map(|pv| match pv {
+            PrismaValue::GraphqlId(gqlid) => gqlid.clone(),
+            PrismaValue::String(s) if s.is_uuid() => GraphqlId::UUID(s.clone().as_uuid()),
+            PrismaValue::String(s) => GraphqlId::String(s.clone()),
+            PrismaValue::Int(i) => GraphqlId::Int(*i as usize),
+            _ => unreachable!(),
+        })
+    }
+
+    match root {
+        RootMutation::CreateNode(cn) => extract_id(&cn.model, &cn.non_list_args),
+        _ => None,
     }
 }

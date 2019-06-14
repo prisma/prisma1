@@ -6,16 +6,16 @@ fn db_directive() {
     let dml = r#"
     model User {
         id Int @id
-        firstName String @db("first_name")
+        firstName String @map("first_name")
 
-        @@db("user")
+        @@map("user")
     }
 
     model Post {
         id Int @id
-        text String @db(name: "post_text")
+        text String @map(name: "post_text")
 
-        @@db(name: "posti")
+        @@map(name: "posti")
     }
     "#;
 

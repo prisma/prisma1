@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 mod test_harness;
-use database_inspector::*;
+use sql_migration_connector::database_inspector::*;
 use test_harness::*;
 
 #[test]
 fn adding_a_scalar_field_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm2 = r#"
             model Test {
                 id String @id
@@ -61,7 +61,7 @@ fn adding_a_scalar_field_must_work() {
 
 #[test]
 fn adding_an_optional_field_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm2 = r#"
             model Test {
                 id String @id
@@ -76,7 +76,7 @@ fn adding_an_optional_field_must_work() {
 
 #[test]
 fn adding_an_id_field_with_a_special_name_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm2 = r#"
             model Test {
                 specialName String @id
@@ -90,7 +90,7 @@ fn adding_an_id_field_with_a_special_name_must_work() {
 
 #[test]
 fn removing_a_scalar_field_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model Test {
                 id String @id
@@ -114,7 +114,7 @@ fn removing_a_scalar_field_must_work() {
 
 #[test]
 fn can_handle_reserved_sql_keywords_for_model_name() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model Group {
                 id String @id
@@ -139,7 +139,7 @@ fn can_handle_reserved_sql_keywords_for_model_name() {
 
 #[test]
 fn can_handle_reserved_sql_keywords_for_field_name() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model Test {
                 id String @id
@@ -164,7 +164,7 @@ fn can_handle_reserved_sql_keywords_for_field_name() {
 
 #[test]
 fn update_type_of_scalar_field_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model Test {
                 id String @id
@@ -189,7 +189,7 @@ fn update_type_of_scalar_field_must_work() {
 
 #[test]
 fn changing_the_type_of_an_id_field_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -216,7 +216,7 @@ fn changing_the_type_of_an_id_field_must_work() {
                 b  B   @relation(references: [id])
             }
             model B {
-                id String @id
+                id String @id @default(cuid())
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -234,11 +234,11 @@ fn changing_the_type_of_an_id_field_must_work() {
 
 #[test]
 fn updating_db_name_of_a_scalar_field_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id String @id
-                field String @db(name:"name1")
+                field String @map(name:"name1")
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -247,7 +247,7 @@ fn updating_db_name_of_a_scalar_field_must_work() {
         let dm2 = r#"
             model A {
                 id String @id
-                field String @db(name:"name2")
+                field String @map(name:"name2")
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -259,7 +259,7 @@ fn updating_db_name_of_a_scalar_field_must_work() {
 #[test]
 fn changing_a_relation_field_to_a_scalar_field_must_work() {
     // this relies on link: INLINE which we don't support yet
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -293,7 +293,7 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
 
 #[test]
 fn changing_a_scalar_field_to_a_relation_field_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -328,7 +328,7 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
 #[test]
 fn adding_a_many_to_many_relation_must_result_in_a_prisma_style_relation_table() {
     // TODO: one model should have an id of different type. Not possible right now due to barrel limitation.
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -393,7 +393,7 @@ fn providing_an_explicit_link_table_must_work() {
 
 #[test]
 fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -420,11 +420,11 @@ fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
 
 #[test]
 fn specifying_a_db_name_for_an_inline_relation_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id Int @id
-                b B @relation(references: [id]) @db(name: "b_column")
+                b B @relation(references: [id]) @map(name: "b_column")
             }
 
             model B {
@@ -447,7 +447,7 @@ fn specifying_a_db_name_for_an_inline_relation_must_work() {
 
 #[test]
 fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -474,7 +474,7 @@ fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
 
 #[test]
 fn removing_an_inline_relation_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -508,7 +508,7 @@ fn removing_an_inline_relation_must_work() {
 #[test]
 fn moving_an_inline_relation_to_the_other_side_must_work() {
     // TODO: bring this back when relation inlining works in the new datamodel
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -557,7 +557,7 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
 #[ignore]
 fn adding_a_unique_constraint_must_work() {
     // TODO: bring back when index introspection is implemented
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -579,7 +579,7 @@ fn adding_a_unique_constraint_must_work() {
 #[ignore]
 fn removing_a_unique_constraint_must_work() {
     // TODO: bring back when index introspection is implemented
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -612,7 +612,7 @@ fn removing_a_unique_constraint_must_work() {
 
 #[test]
 fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -629,7 +629,7 @@ fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
 
 #[test]
 fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm = r#"
             model A {
                 id Int @id

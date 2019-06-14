@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 mod test_harness;
 use barrel::{types, Migration, SqlVariant};
-use database_inspector::*;
+use sql_migration_connector::database_inspector::*;
 use migration_core::MigrationEngine;
 use prisma_query::Connectional;
 use sql_migration_connector::SqlFamily;
@@ -282,7 +282,7 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
         let dm2 = r#"
             model Blog {
                 id Int @id
-                title Float @db(name: "new_title")
+                title Float @map(name: "new_title")
             }
         "#;
         let final_result = infer_and_apply(&engine, &dm2);

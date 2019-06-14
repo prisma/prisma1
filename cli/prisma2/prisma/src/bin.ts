@@ -4,27 +4,29 @@
  * Dependencies
  */
 import { isError, HelpError, Env } from '@prisma/cli'
-import { LiftCommand, LiftSave, LiftUp, LiftDown, LiftWatch, Converter } from '@prisma/lift'
+import { LiftCommand, LiftSave, LiftUp, LiftDown, LiftWatch, Converter, getCompiledGenerators } from '@prisma/lift'
 import { CLI } from './CLI'
-import { PhotonGenerate } from '@prisma/photon'
-import { Introspect } from '@prisma/introspection'
+import { Introspect, Init } from '@prisma/introspection'
 import { Version } from './Version'
-import { getCompiledGenerators } from './getCompiledGenerators'
+import { predefinedGenerators } from './generators'
 import { Generate } from './Generate'
+import chalk from 'chalk'
 
 /**
  * Main function
  */
 async function main(): Promise<number> {
+  // react shut up
+  process.env.NODE_ENV = 'production'
   // load the environment
   const env = await Env.load(process.env, process.cwd())
   if (isError(env)) {
     console.error(env)
     return 1
   }
-  const compiledGenerators = await getCompiledGenerators(env.cwd)
   // create a new CLI with our subcommands
   const cli = CLI.new({
+    init: Init.new(env),
     lift: LiftCommand.new(
       {
         save: LiftSave.new(env),
@@ -35,8 +37,8 @@ async function main(): Promise<number> {
     ),
     introspect: Introspect.new(env),
     convert: Converter.new(env),
-    dev: LiftWatch.new(env, compiledGenerators),
-    generate: Generate.new(env, compiledGenerators),
+    dev: LiftWatch.new(env, predefinedGenerators),
+    generate: Generate.new(env, predefinedGenerators),
     version: Version.new(),
   })
   // parse the arguments
@@ -67,6 +69,6 @@ main()
     }
   })
   .catch(err => {
-    console.error(err)
+    console.error(chalk.redBright.bold('Error: ') + err.message)
     process.exit(1)
   })

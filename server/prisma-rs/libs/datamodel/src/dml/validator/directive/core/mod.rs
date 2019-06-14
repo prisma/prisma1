@@ -2,7 +2,7 @@ use crate::dml;
 use crate::validator::directive::DirectiveListValidator;
 use std::collections::BTreeMap;
 
-mod db;
+mod map;
 mod default;
 mod embedded;
 mod id;
@@ -18,7 +18,7 @@ pub fn new_builtin_field_directives() -> DirectiveListValidator<dml::Field> {
         known_directives: BTreeMap::new(),
     };
 
-    validator.add(Box::new(db::DbDirectiveValidator {}));
+    validator.add(Box::new(map::MapDirectiveValidator {}));
     validator.add(Box::new(id::IdDirectiveValidator {}));
     validator.add(Box::new(scalarlist::ScalarListDirectiveValidator {}));
     validator.add(Box::new(sequence::SequenceDirectiveValidator {}));
@@ -36,7 +36,7 @@ pub fn new_builtin_model_directives() -> DirectiveListValidator<dml::Model> {
         known_directives: BTreeMap::new(),
     };
 
-    validator.add(Box::new(db::DbDirectiveValidator {}));
+    validator.add(Box::new(map::MapDirectiveValidator {}));
     validator.add(Box::new(embedded::EmbeddedDirectiveValidator {}));
 
     return validator;

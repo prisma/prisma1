@@ -6,6 +6,7 @@ mod sql_database_step_applier;
 mod sql_destructive_changes_checker;
 mod sql_migration;
 mod sql_migration_persistence;
+pub mod database_inspector;
 
 use database_inspector::DatabaseInspector;
 pub use error::*;
@@ -48,6 +49,16 @@ pub enum SqlFamily {
     Mysql,
 }
 
+impl SqlFamily {
+    fn connector_type_string(&self) -> &'static str {
+        match self {
+            SqlFamily::Postgres => "postgres",
+            SqlFamily::Mysql => "mysql",
+            SqlFamily::Sqlite => "sqlite",
+        }
+    }
+}
+
 impl SqlMigrationConnector {
     #[allow(unused)]
     pub fn exists(sql_family: SqlFamily, url: &str) -> bool {
@@ -88,7 +99,7 @@ impl SqlMigrationConnector {
         }
     }
 
-    fn postgres_helper(url: &str) -> PostgresHelper {
+    pub fn postgres_helper(url: &str) -> PostgresHelper {
         let connection_limit = 10;
         let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
         let mut config = PostgresConfig::new();
@@ -103,9 +114,15 @@ impl SqlMigrationConnector {
         db_name.replace_range(..1, ""); // strip leading slash
         config.connect_timeout(Duration::from_secs(5));
 
-        let root_connection = Arc::new(PostgreSql::new(config.clone(), 1).unwrap());
-        let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
-        let _ = root_connection.query_on_raw_connection("", &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
+        match PostgreSql::new(config.clone(), 1) {
+            Ok(root_connection) => {
+                let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
+                let _ = root_connection.query_on_raw_connection("", &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
+            }
+            Err(_) => {
+                // this means that the user did not have access to the root database
+            }
+        }
 
         let schema = parsed_url
             .query_pairs()
@@ -182,13 +199,17 @@ impl SqlMigrationConnector {
     }
 }
 
-struct PostgresHelper {
-    db_connection: Arc<Connectional>,
-    schema: String,
+pub struct PostgresHelper {
+    pub db_connection: Arc<Connectional>,
+    pub schema: String,
 }
 
 impl MigrationConnector for SqlMigrationConnector {
     type DatabaseMigration = SqlMigration;
+
+    fn connector_type(&self) -> &'static str {
+        self.sql_family.connector_type_string()
+    }
 
     fn initialize(&self) -> ConnectorResult<()> {
         match self.sql_family {
@@ -239,10 +260,6 @@ impl MigrationConnector for SqlMigrationConnector {
     fn deserialize_database_migration(&self, json: serde_json::Value) -> SqlMigration {
         serde_json::from_value(json).expect("Deserializing the database migration failed.")
     }
-
-    fn database_inspector(&self) -> Arc<DatabaseInspector> {
-        Arc::clone(&self.database_inspector)
-    }
 }
 
 struct VirtualSqlMigrationConnector {
@@ -251,6 +268,10 @@ struct VirtualSqlMigrationConnector {
 }
 impl MigrationConnector for VirtualSqlMigrationConnector {
     type DatabaseMigration = SqlMigration;
+
+    fn connector_type(&self) -> &'static str {
+        self.sql_family.connector_type_string()
+    }
 
     fn initialize(&self) -> ConnectorResult<()> {
         Ok(())
@@ -284,9 +305,5 @@ impl MigrationConnector for VirtualSqlMigrationConnector {
 
     fn deserialize_database_migration(&self, json: serde_json::Value) -> SqlMigration {
         serde_json::from_value(json).expect("Deserializing the database migration failed.")
-    }
-
-    fn database_inspector(&self) -> Arc<DatabaseInspector> {
-        Arc::new(DatabaseInspector::empty())
     }
 }

@@ -57,19 +57,22 @@ export class CLI implements Command {
 
     ${chalk.bold('Commands')}
 
+          init   Setup Prisma for your app
           lift   Migrate your datamodel
        convert   Converts a datamodel 1 to datamodel 2
     introspect   Get the datamodel of your database
       generate   Generate Photon
-           new   Setup Prisma for your app
           seed   Seed data into your database
 
     ${chalk.bold('Examples')}
 
       Initialize files for a new Prisma project
-      ${chalk.dim(`$`)} prisma new
+      ${chalk.dim(`$`)} prisma init
 
-      Deploy project changes (or new project)
-      ${chalk.dim(`$`)} prisma lift
+      Start developing and auto migrating your changes locally
+      ${chalk.dim(`$`)} prisma dev
+
+      Save your changes into a migration
+      ${chalk.dim(`$`)} prisma lift save
   `)
 }

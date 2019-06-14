@@ -246,7 +246,7 @@ pub(crate) fn derive_field(field: &Field, model: ModelRef, id: GraphqlId, mutati
     new
 }
 
-trait UuidString {
+pub trait UuidString {
     fn is_uuid(&self) -> bool;
 
     /// This panics if not UUID

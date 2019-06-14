@@ -1,12 +1,12 @@
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
 use crate::{ast, dml};
 
-/// Prismas builtin `@db` directive.
-pub struct DbDirectiveValidator {}
+/// Prismas builtin `@map` directive.
+pub struct MapDirectiveValidator {}
 
-impl<T: dml::WithDatabaseName> DirectiveValidator<T> for DbDirectiveValidator {
+impl<T: dml::WithDatabaseName> DirectiveValidator<T> for MapDirectiveValidator {
     fn directive_name(&self) -> &'static str {
-        &"db"
+        &"map"
     }
     fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Result<(), Error> {
         match args.default_arg("name")?.as_str() {
@@ -15,7 +15,7 @@ impl<T: dml::WithDatabaseName> DirectiveValidator<T> for DbDirectiveValidator {
             Err(err) => {
                 return Err(Error::new_directive_validation_error(
                     &format!("{}", err),
-                    "db",
+                    "map",
                     &err.span(),
                 ))
             }

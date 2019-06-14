@@ -153,7 +153,7 @@ fn should_add_back_relations_for_more_complex_cases() {
         id Int @id
         post Post
         category Category
-        @@db("post_to_category")
+        @@map("post_to_category")
     }
     "#;
 

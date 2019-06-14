@@ -2,7 +2,7 @@
 #![allow(unused)]
 
 use barrel::{types, Migration};
-use database_inspector::*;
+use sql_migration_connector::database_inspector::*;
 use prisma_query::connector::Sqlite as SqliteDatabaseClient;
 use prisma_query::{Connectional, ResultSet};
 use std::sync::Arc;
@@ -34,6 +34,7 @@ fn all_columns_types_must_work() {
                     is_required: true,
                     foreign_key: None,
                     sequence: None,
+                    default: None,
                 },
                 Column {
                     name: "float".to_string(),
@@ -41,6 +42,7 @@ fn all_columns_types_must_work() {
                     is_required: true,
                     foreign_key: None,
                     sequence: None,
+                    default: None,
                 },
                 Column {
                     name: "boolean".to_string(),
@@ -48,6 +50,7 @@ fn all_columns_types_must_work() {
                     is_required: true,
                     foreign_key: None,
                     sequence: None,
+                    default: None,
                 },
                 Column {
                     name: "string1".to_string(),
@@ -55,6 +58,7 @@ fn all_columns_types_must_work() {
                     is_required: true,
                     foreign_key: None,
                     sequence: None,
+                    default: None,
                 },
                 Column {
                     name: "string2".to_string(),
@@ -62,6 +66,7 @@ fn all_columns_types_must_work() {
                     is_required: true,
                     foreign_key: None,
                     sequence: None,
+                    default: None,
                 },
                 Column {
                     name: "date_time".to_string(),
@@ -69,6 +74,7 @@ fn all_columns_types_must_work() {
                     is_required: true,
                     foreign_key: None,
                     sequence: None,
+                    default: None,
                 },
             ];
 
@@ -97,6 +103,7 @@ fn is_required_must_work() {
                     is_required: true,
                     foreign_key: None,
                     sequence: None,
+                    default: None,
                 },
                 Column {
                     name: "column2".to_string(),
@@ -104,6 +111,7 @@ fn is_required_must_work() {
                     is_required: false,
                     foreign_key: None,
                     sequence: None,
+                    default: None,
                 },
             ];
             assert_eq!(user_table.columns, expected_columns);
@@ -135,6 +143,7 @@ fn foreign_keys_must_work() {
                     column: "id".to_string(),
                 }),
                 sequence: None,
+                default: None,
             }];
             assert_eq!(user_table.columns, expected_columns);
         },

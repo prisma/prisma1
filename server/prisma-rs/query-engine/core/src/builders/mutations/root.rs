@@ -2,12 +2,9 @@
 #![allow(warnings)]
 
 use crate::{
-    builders::{utils, NestedValue, ValueList, ValueMap, ValueSplit},
-    CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
-};
-use crate::{
+    builders::{utils, LookAhead, NestedValue, ValueList, ValueMap, ValueSplit},
     schema::{ModelOperation, OperationTag},
-    Query,
+    CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
@@ -177,7 +174,7 @@ impl<'field> MutationBuilder<'field> {
 
         // FIXME: Cloning is unethical and should be avoided
         Ok(WriteQuery {
-            inner: dbg!(inner),
+            inner: LookAhead::eval(inner)?,
             name: raw_name,
             field: self.field.clone(),
         })
