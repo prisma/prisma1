@@ -49,7 +49,7 @@ impl From<datamodel::errors::ErrorCollection> for CommandError {
             })
             .collect();
         CommandError::DataModelErrors {
-            code: 1000,
+            code: 1001,
             errors: errors_str,
         }
     }
