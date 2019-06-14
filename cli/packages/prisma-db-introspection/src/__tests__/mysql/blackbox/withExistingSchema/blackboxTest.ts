@@ -55,7 +55,8 @@ export default async function blackBoxTest(name: string) {
 
   const metadata = await connector.getMetadata(`schema-generator@${name}`)
 
-  console.log(metadata)
+  // Hard to test.
+  // console.log(metadata)
 
   const unnormalized = introspectionResult.getDatamodel()
 
