@@ -5,7 +5,11 @@ import { Client as PGClient } from 'pg'
 import { DatabaseType } from 'prisma-datamodel'
 import { Connectors, IConnector } from 'prisma-db-introspection'
 import { URL } from 'url'
-import { DatabaseCredentials, SchemaWithMetadata } from '../types'
+import { DatabaseCredentials, SchemaWithMetadata, IntrospectionResult } from '../types'
+import { existsSync, readFileSync } from 'fs'
+import { join } from 'path'
+import { uriToCredentials, databaseTypeToConnectorType, credentialsToUri } from '../convertCredentials'
+import { LiftEngine, DataSource, isdlToDatamodel2 } from '@prisma/lift'
 
 function replaceLocalDockerHost(credentials: DatabaseCredentials) {
   if (credentials.host) {
@@ -57,6 +61,47 @@ export interface IntermediateConnectorData extends ConnectorAndDisconnect {
   interactive: boolean
 }
 
+export async function introspect({
+  connector,
+  credentials,
+  databaseName,
+}: ConnectorData): Promise<IntrospectionResult> {
+  const before = Date.now()
+  const introspection = await connector.introspect(databaseName)
+  const sdl = await introspection.getNormalizedDatamodel()
+
+  if (credentials.type === DatabaseType.postgres && !credentials.schema) {
+    credentials.schema = databaseName
+  }
+
+  const dataSources: DataSource[] = [
+    {
+      name: 'db',
+      config: {},
+      connectorType: databaseTypeToConnectorType(credentials.type),
+      url: credentialsToUri(credentials),
+    },
+  ]
+
+  const renderedSdl = await isdlToDatamodel2(sdl, dataSources)
+  const after = Date.now()
+
+  const numTables = sdl.types.length
+
+  if (numTables === 0) {
+    throw new Error("The provided database doesn't contain any tables. Please provide another database.")
+  }
+
+  return {
+    sdl: renderedSdl,
+    numTables,
+    referenceDatamodelExists: false,
+    time: after - before,
+    credentials,
+    databaseName,
+  }
+}
+
 export async function getConnectedConnectorFromCredentials(
   credentials: DatabaseCredentials,
 ): Promise<ConnectorAndDisconnect> {
@@ -94,6 +139,29 @@ export async function getDatabaseSchemas(connector: IConnector): Promise<string[
   } catch (e) {
     throw new Error(`Could not connect to database. ${e.stack}`)
   }
+}
+
+export async function getCredentialsFromExistingDatamodel(lift: LiftEngine): Promise<undefined | DatabaseCredentials> {
+  if (existsSync(join(this.env.cwd, 'datamodel.prisma'))) {
+    const datamodel = readFileSync(join(this.env.cwd, 'datamodel.prisma'), 'utf-8')
+    const { datasources } = await lift.getConfig({
+      datamodel,
+    })
+    // For now just take the first data source
+    if (datasources && datasources.length > 1) {
+      console.error(
+        `There are more than 1 datasources listed in the datamodel ${datasources.map(d => d.name).join(', ')}, taking ${
+          datasources[0].name
+        }`,
+      )
+    }
+    if (datasources && datasources.length > 0) {
+      const uri = datasources[0].url
+      return uriToCredentials(uri)
+    }
+  }
+
+  return undefined
 }
 
 export async function getDatabaseSchemasWithMetadata(connector: IConnector): Promise<SchemaWithMetadata[]> {

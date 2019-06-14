@@ -7,18 +7,20 @@ import * as fs from 'fs'
 import ora from 'ora'
 import * as path from 'path'
 import { DatabaseType } from 'prisma-datamodel'
-import { credentialsToUri, databaseTypeToConnectorType, uriToCredentials } from './convertCredentials'
+import { credentialsToUri, databaseTypeToConnectorType } from '../convertCredentials'
 import {
   assertSchemaExists,
   ConnectorData,
   getConnectedConnectorFromCredentials,
+  getCredentialsFromExistingDatamodel,
   getDatabaseSchemas,
   populateMongoDatabase,
   prettyTime,
   sanitizeMongoUri,
-} from './introspect/util'
-import { promptInteractively } from './prompts/CredentialPrompt'
-import { DatabaseCredentials, IntrospectionResult } from './types'
+  introspect,
+} from '../introspect/util'
+import { promptInteractively } from '../prompt'
+import { DatabaseCredentials, IntrospectionResult } from '../types'
 
 type Args = {
   '--env-file': StringConstructor
@@ -120,10 +122,7 @@ export class Introspect implements Command {
       /**
        * Introspect
        */
-      const { sdl: newDatamodelSdl, numTables, referenceDatamodelExists, credentials } = await this.introspectDatabase(
-        args,
-        sdl,
-      )
+      const { sdl: newDatamodelSdl, numTables, referenceDatamodelExists } = await this.introspectDatabase(args, sdl)
 
       if (!sdl) {
         /**
@@ -150,43 +149,6 @@ ${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing
     process.exit(0)
   }
 
-  introspect = async ({ connector, credentials, databaseName }: ConnectorData): Promise<IntrospectionResult> => {
-    const before = Date.now()
-    const introspection = await connector.introspect(databaseName)
-    const sdl = await introspection.getNormalizedDatamodel()
-
-    if (credentials.type === DatabaseType.postgres && !credentials.schema) {
-      credentials.schema = databaseName
-    }
-
-    const dataSources: DataSource[] = [
-      {
-        name: 'db',
-        config: {},
-        connectorType: databaseTypeToConnectorType(credentials.type),
-        url: credentialsToUri(credentials),
-      },
-    ]
-
-    const renderedSdl = await isdlToDatamodel2(sdl, dataSources)
-    const after = Date.now()
-
-    const numTables = sdl.types.length
-
-    if (numTables === 0) {
-      throw new Error("The provided database doesn't contain any tables. Please provide another database.")
-    }
-
-    return {
-      sdl: renderedSdl,
-      numTables,
-      referenceDatamodelExists: false,
-      time: after - before,
-      credentials,
-      databaseName,
-    }
-  }
-
   getExistingDatamodel(): string | undefined {
     const datamodelPath = path.join(this.env.cwd, 'datamodel.prisma')
     if (!fs.existsSync(datamodelPath)) {
@@ -202,35 +164,12 @@ ${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing
     return fileName
   }
 
-  async getCredentialsFromExistingDatamodel(): Promise<undefined | DatabaseCredentials> {
-    if (fs.existsSync(path.join(this.env.cwd, 'datamodel.prisma'))) {
-      const datamodel = fs.readFileSync(path.join(this.env.cwd, 'datamodel.prisma'), 'utf-8')
-      const { datasources } = await this.lift.getConfig({
-        datamodel,
-      })
-      // For now just take the first data source
-      if (datasources && datasources.length > 1) {
-        console.error(
-          `There are more than 1 datasources listed in the datamodel ${datasources
-            .map(d => d.name)
-            .join(', ')}, taking ${datasources[0].name}`,
-        )
-      }
-      if (datasources && datasources.length > 0) {
-        const uri = datasources[0].url
-        return uriToCredentials(uri)
-      }
-    }
-
-    return undefined
-  }
-
   async introspectDatabase(args: Result<Args>, sdl: boolean | undefined): Promise<IntrospectionResult> {
-    const credentialsByFlag = this.getCredentialsByFlags(args) || (await this.getCredentialsFromExistingDatamodel())
+    const credentialsByFlag = this.getCredentialsByFlags(args) || (await getCredentialsFromExistingDatamodel(this.lift))
 
     // Get everything interactively
     if (!credentialsByFlag) {
-      const introspectionResult = await promptInteractively(this.introspect, 'introspect')
+      const introspectionResult = await promptInteractively(introspect, 'introspect')
 
       return introspectionResult
     }
@@ -345,7 +284,7 @@ ${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing
       spinner.start(`Introspecting database ${chalk.bold(connectorData.databaseName)}`)
     }
 
-    const introspectionResult = await this.introspect(connectorData)
+    const introspectionResult = await introspect(connectorData)
 
     if (!sdl) {
       spinner.succeed(

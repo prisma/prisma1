@@ -3,7 +3,7 @@ import { credentialsToUri, uriToCredentials } from '../../convertCredentials'
 import { getConnectedConnectorFromCredentials, getDatabaseSchemasWithMetadata } from '../../introspect/util'
 import { onFormChangedParams, OnSubmitParams, Prompt } from '../../prompt-lib/BoxPrompt'
 import { DatabaseCredentials } from '../../types'
-import { dbTypeTodbName, defaultCredentials, PromptState } from '../CredentialPrompt'
+import { dbTypeTodbName, defaultCredentials, PromptState } from '../InteractivePrompt'
 import { ActionType } from '../reducer'
 import { Steps, stepsToElements } from '../steps-definition'
 

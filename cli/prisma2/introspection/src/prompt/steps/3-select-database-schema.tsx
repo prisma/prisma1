@@ -4,7 +4,7 @@ import * as React from 'react'
 import { ConnectorData, minimalPrettyTime } from '../../introspect/util'
 import { OnSubmitParams, Prompt } from '../../prompt-lib/BoxPrompt'
 import { DatabaseCredentials } from '../../types'
-import { defaultCredentials, PromptProps, PromptState } from '../CredentialPrompt'
+import { defaultCredentials, PromptProps, PromptState } from '../InteractivePrompt'
 import { ActionType } from '../reducer'
 import { Steps, stepsToElements } from '../steps-definition'
 
@@ -70,6 +70,7 @@ function onSelectSchema(
       stopSpinner({ state: 'failed', message: 'Please select a schema' })
       return
     }
+
     try {
       const before = Date.now()
       startSpinner(`Introspecting ${selectedSchema!}`)

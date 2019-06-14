@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Prompt } from '../../prompt-lib/BoxPrompt'
 import { InitPromptResult } from '../../types'
-import { PromptProps, PromptState } from '../CredentialPrompt'
+import { PromptProps, PromptState } from '../InteractivePrompt'
 import { ActionType } from '../reducer'
 import { Steps, stepsToElements } from '../steps-definition'
 

@@ -63,7 +63,7 @@ export const defaultCredentials = (dbType: DatabaseType): DatabaseCredentials =>
 /**
  * WARNING: If you add more steps, make sure to add a `key` to the `<Prompt />`, otherwise the state between each prompt will be shared
  */
-const IntrospectionPrompt: React.FC<PromptProps> = props => {
+export const InteractivePrompt: React.FC<PromptProps> = props => {
   const [state, dispatch] = React.useReducer<React.Reducer<PromptState, ActionType>>(promptReducer, initialState)
 
   switch (state.step) {
@@ -80,21 +80,4 @@ const IntrospectionPrompt: React.FC<PromptProps> = props => {
     case Steps.SELECT_TEMPLATE:
       return renderSelectTemplate(dispatch, state, props)
   }
-}
-
-export async function promptInteractively(
-  introspectFn: (connector: ConnectorData) => Promise<IntrospectionResult>,
-  type: 'init',
-): Promise<InitPromptResult>
-export async function promptInteractively(
-  introspectFn: (connector: ConnectorData) => Promise<IntrospectionResult>,
-  type: 'introspect',
-): Promise<IntrospectionResult>
-export async function promptInteractively(
-  introspectFn: (connector: ConnectorData) => Promise<IntrospectionResult>,
-  type: PromptType,
-): Promise<IntrospectionResult | InitPromptResult> {
-  return new Promise(async resolve => {
-    render(<IntrospectionPrompt introspect={introspectFn} type={type} onSubmit={resolve} />)
-  })
 }
