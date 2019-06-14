@@ -1,7 +1,12 @@
-use database_inspector::*;
+use sql_migration_connector::database_inspector::*;
+use sql_migration_connector::SqlMigrationConnector;
 use datamodel;
 use migration_core::{parse_datamodel, MigrationEngine};
 use sql_migration_connector::SqlFamily;
+use prisma_query::Connectional;
+use std::sync::Arc;
+use prisma_query::connector::Sqlite;
+use std::convert::TryFrom;
 
 pub const SCHEMA_NAME: &str = "migration_engine";
 
@@ -11,20 +16,29 @@ pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
 
 pub fn test_each_connector<TestFn>(testFn: TestFn)
 where
-    TestFn: Fn(&MigrationEngine) -> () + std::panic::RefUnwindSafe,
+    TestFn: Fn(SqlFamily, &MigrationEngine) -> () + std::panic::RefUnwindSafe,
 {
     test_each_connector_with_ignores(Vec::new(), testFn);
 }
 
+pub fn test_only_connector<TestFn>(sql_family: SqlFamily, testFn: TestFn)
+where
+    TestFn: Fn(SqlFamily, &MigrationEngine) -> () + std::panic::RefUnwindSafe,
+{
+    let all = vec![SqlFamily::Postgres, SqlFamily::Mysql, SqlFamily::Sqlite];
+    let ignores = all.into_iter().filter(|f| f != &sql_family).collect();
+    test_each_connector_with_ignores(ignores, testFn);
+}
+
 pub fn test_each_connector_with_ignores<TestFn>(ignores: Vec<SqlFamily>, testFn: TestFn)
 where
-    TestFn: Fn(&MigrationEngine) -> () + std::panic::RefUnwindSafe,
+    TestFn: Fn(SqlFamily, &MigrationEngine) -> () + std::panic::RefUnwindSafe,
 {
     // SQLite
     if !ignores.contains(&SqlFamily::Sqlite) {
         println!("Testing with SQLite now");
         let engine = test_engine(&sqlite_test_config());
-        testFn(&engine);
+        testFn(SqlFamily::Sqlite, &engine);
     } else {
         println!("Ignoring SQLite")
     }
@@ -32,7 +46,7 @@ where
     if !ignores.contains(&SqlFamily::Postgres) {
         println!("Testing with Postgres now");
         let engine = test_engine(&postgres_test_config());
-        testFn(&engine);
+        testFn(SqlFamily::Postgres, &engine);
     } else {
         println!("Ignoring Postgres")
     }
@@ -47,11 +61,33 @@ pub fn test_engine(config: &str) -> Box<MigrationEngine> {
 }
 
 pub fn introspect_database(engine: &MigrationEngine) -> DatabaseSchema {
-    let inspector = engine.connector().database_inspector();
+    let inspector: Box<DatabaseInspector> = match engine.connector().connector_type() {
+        "postgres" => Box::new(DatabaseInspector::postgres(postgres_url())),
+        "sqlite" => Box::new(DatabaseInspector::sqlite(sqlite_test_file())),
+        _ => unimplemented!(),
+    };
     let mut result = inspector.introspect(&SCHEMA_NAME.to_string());
     // the presence of the _Migration table makes assertions harder. Therefore remove it from the result.
     result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
     result
+}
+
+pub fn connectional(sql_family: SqlFamily) -> Arc<Connectional> {
+    match sql_family {
+        SqlFamily::Postgres => postgres_connectional(),
+        SqlFamily::Sqlite => sqlite_connectional(),
+        _ => unimplemented!(),
+    }
+}
+
+fn postgres_connectional() -> Arc<Connectional> {
+    let postgres = SqlMigrationConnector::postgres_helper(&postgres_url());
+    postgres.db_connection
+}
+
+fn sqlite_connectional() -> Arc<Connectional> {
+    let url = format!("file:{}", sqlite_test_file());
+    Arc::new(Sqlite::try_from(url.as_ref()).expect("Loading SQLite failed"))
 }
 
 pub fn sqlite_test_config() -> String {

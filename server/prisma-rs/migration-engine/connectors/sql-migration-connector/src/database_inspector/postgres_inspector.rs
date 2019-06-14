@@ -1,6 +1,6 @@
-use crate::database_inspector_impl::{convert_introspected_columns, IntrospectedForeignKey};
-use crate::information_schema::InformationSchema;
-use crate::*;
+use super::database_inspector_impl::{convert_introspected_columns, IntrospectedForeignKey};
+use super::information_schema::InformationSchema;
+use super::*;
 use prisma_query::Connectional;
 use std::sync::Arc;
 

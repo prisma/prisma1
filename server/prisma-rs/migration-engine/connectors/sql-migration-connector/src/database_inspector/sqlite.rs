@@ -1,5 +1,5 @@
-use crate::database_inspector_impl::{convert_introspected_columns, IntrospectedForeignKey};
-use crate::*;
+use super::database_inspector_impl::{convert_introspected_columns, IntrospectedForeignKey};
+use super::*;
 use prisma_query::ast::ParameterizedValue;
 use prisma_query::Connectional;
 use std::sync::Arc;

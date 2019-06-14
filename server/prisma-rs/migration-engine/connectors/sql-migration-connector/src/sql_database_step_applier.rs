@@ -3,6 +3,7 @@ use barrel::Migration as BarrelMigration;
 use migration_connector::*;
 use prisma_query::Connectional;
 use std::sync::Arc;
+use datamodel::Value;
 
 pub struct SqlDatabaseStepApplier {
     pub sql_family: SqlFamily,
@@ -177,6 +178,10 @@ fn column_description_to_barrel_type(
 ) -> barrel::types::Type {
     // TODO: add foreign keys for non integer types once this is available in barrel
     let tpe_str = render_column_type(sql_family, column_description.tpe);
+    let tpe_str_with_default = match &column_description.default {
+        Some(value) => format!("{} DEFAULT {}", tpe_str.clone(), render_value(value)),
+        None => tpe_str.clone(),
+    };
     let tpe = match (sql_family, &column_description.foreign_key) {
         (SqlFamily::Postgres, Some(fk)) => {
             let complete = dbg!(format!(
@@ -189,9 +194,27 @@ fn column_description_to_barrel_type(
             let complete = dbg!(format!("{} REFERENCES {}({})", tpe_str, fk.table, fk.column));
             barrel::types::custom(string_to_static_str(complete))
         }
-        (_, None) => barrel::types::custom(string_to_static_str(tpe_str)),
+        (_, None) => barrel::types::custom(string_to_static_str(tpe_str_with_default)),
     };
     tpe.nullable(!column_description.required)
+}
+
+fn render_value(value: &Value) -> String {
+    match value {
+        Value::Boolean(x) => if *x { "true".to_string() } else { "false".to_string() },
+        Value::Int(x) => format!("{}", x),
+        Value::Float(x) => format!("{}", x),
+        Value::Decimal(x) => format!("{}", x),
+        Value::String(x) => format!("'{}'", x),
+        
+        Value::DateTime(x) => {
+            let mut raw = format!("{}", x); // this will produce a String 1970-01-01 00:00:00 UTC
+            raw.truncate(raw.len() - 4); // strip the UTC suffix
+            format!("'{}'", raw) // add quotes
+        },
+        Value::ConstantLiteral(x) => format!("'{}'", x), // this represents enum values
+        _ => unimplemented!(),
+    }
 }
 
 // TODO: this must become database specific akin to our TypeMappers in Scala

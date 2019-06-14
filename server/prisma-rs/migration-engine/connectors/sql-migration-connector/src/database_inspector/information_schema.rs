@@ -1,4 +1,4 @@
-use crate::database_inspector_impl::IntrospectedColumn;
+use super::database_inspector_impl::IntrospectedColumn;
 use prisma_query::ast::ParameterizedValue;
 use prisma_query::Connectional;
 use std::sync::Arc;

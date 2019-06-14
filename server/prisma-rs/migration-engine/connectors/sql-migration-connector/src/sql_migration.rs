@@ -1,5 +1,6 @@
 use migration_connector::DatabaseMigrationMarker;
 use serde::{Deserialize, Serialize};
+use datamodel::Value;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SqlMigration {
@@ -84,6 +85,7 @@ pub struct ColumnDescription {
     pub tpe: ColumnType,
     pub required: bool,
     pub foreign_key: Option<ForeignKey>,
+    pub default: Option<Value>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
