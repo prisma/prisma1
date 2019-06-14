@@ -2,7 +2,7 @@
 #![allow(warnings)]
 
 use crate::{
-    builders::{utils, NestedValue, ValueList, ValueMap, ValueSplit},
+    builders::{utils, LookAhead, NestedValue, ValueList, ValueMap, ValueSplit},
     CoreError, CoreResult, ManyNestedBuilder, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
@@ -152,7 +152,7 @@ impl<'field> MutationBuilder<'field> {
 
         // FIXME: Cloning is unethical and should be avoided
         Ok(WriteQuery {
-            inner: dbg!(inner),
+            inner: LookAhead::eval(inner)?,
             name: raw_name,
             field: self.field.clone(),
         })

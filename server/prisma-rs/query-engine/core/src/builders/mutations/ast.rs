@@ -8,7 +8,7 @@ use connector::mutaction::{
     DatabaseMutactionResult as MutationResult, Identifier, TopLevelDatabaseMutaction as RootMutation,
 };
 use graphql_parser::query::Field;
-use prisma_models::{GraphqlId, ModelRef, PrismaValue, PrismaArgs};
+use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaValue};
 use std::sync::Arc;
 
 /// A top-level write query (mutation)
@@ -80,15 +80,14 @@ impl WriteQuery {
 
 fn search_for_id(root: &RootMutation) -> Option<GraphqlId> {
     fn extract_id(model: &ModelRef, args: &PrismaArgs) -> Option<GraphqlId> {
-            args.get_field_value(&model.fields().id().name).map(|pv| match pv {
-                PrismaValue::GraphqlId(gqlid) => gqlid.clone(),
-                PrismaValue::String(s) if s.is_uuid() => GraphqlId::UUID(s.clone().as_uuid()),
-                PrismaValue::String(s) => GraphqlId::String(s.clone()),
-                PrismaValue::Int(i) => GraphqlId::Int(*i as usize),
-                _ => unreachable!(),
-            })
+        args.get_field_value(&model.fields().id().name).map(|pv| match pv {
+            PrismaValue::GraphqlId(gqlid) => gqlid.clone(),
+            PrismaValue::String(s) if s.is_uuid() => GraphqlId::UUID(s.clone().as_uuid()),
+            PrismaValue::String(s) => GraphqlId::String(s.clone()),
+            PrismaValue::Int(i) => GraphqlId::Int(*i as usize),
+            _ => unreachable!(),
+        })
     }
-
 
     match root {
         RootMutation::CreateNode(cn) => extract_id(&cn.model, &cn.non_list_args),
