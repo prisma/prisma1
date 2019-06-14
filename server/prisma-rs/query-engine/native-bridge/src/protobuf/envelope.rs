@@ -1,7 +1,6 @@
 use std::mem;
 
 #[repr(C)]
-#[no_mangle]
 pub struct ProtoBufEnvelope {
     pub data: *mut u8,
     pub len: usize,
