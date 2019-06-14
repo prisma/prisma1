@@ -181,17 +181,17 @@ fn column_description_to_barrel_type(
     let tpe_str_with_default = match &column_description.default {
         Some(value) => {
             match render_value(value) {
-                Some(default) => format!("{} DEFAULT {}", tpe_str.clone(), default),
+                Some(ref default) if column_description.required => format!("{} DEFAULT {}", tpe_str.clone(), default),
+                Some(_) => tpe_str.clone(), // we use the default value right now only to smoothen migrations. So we only use it when absolutely needed.
                 None => tpe_str.clone(),
-            }
-            
+            }        
         },
         None => tpe_str.clone(),
     };
     let tpe = match (sql_family, &column_description.foreign_key) {
         (SqlFamily::Postgres, Some(fk)) => {
             let complete = dbg!(format!(
-                "{} REFERENCES \"{}\".\"{}\"({})",
+                "{} REFERENCES \"{}\".\"{}\"(\"{}\")",
                 tpe_str, schema_name, fk.table, fk.column
             ));
             barrel::types::custom(string_to_static_str(complete))
