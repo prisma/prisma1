@@ -1,21 +1,12 @@
 use database_inspector::*;
 use datamodel;
-use migration_core::MigrationEngine;
+use migration_core::{MigrationEngine, parse_datamodel};
 use std::panic;
 
 pub const SCHEMA_NAME: &str = "migration_engine";
 
 pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
-    match datamodel::parse(datamodel_string) {
-        Ok(s) => s,
-        Err(errs) => {
-            for err in errs.to_iter() {
-                err.pretty_print(&mut std::io::stderr().lock(), "", datamodel_string)
-                    .unwrap();
-            }
-            panic!("Schema parsing failed. Please see error above.")
-        }
-    }
+    parse_datamodel(datamodel_string).unwrap()
 }
 
 pub fn run_test_with_engine<T, X>(test: T) -> X
