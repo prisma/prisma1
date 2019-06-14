@@ -167,15 +167,15 @@ where
         println!("Running the test function now");
         testFn(inspector);
     }
-    // println!("Testing with Postgres now");
-    // // POSTGRES
-    // {
-    //     let (inspector, connectional) = postgres();
-    //     let full_sql = migration.make::<barrel::backend::Pg>();
-    //     run_full_sql(&connectional, &full_sql);
-    //     println!("Running the test function now");
-    //     testFn(inspector);
-    // }
+    println!("Testing with Postgres now");
+    // POSTGRES
+    {
+        let (inspector, connectional) = postgres();
+        let full_sql = migration.make::<barrel::backend::Pg>();
+        run_full_sql(&connectional, &full_sql);
+        println!("Running the test function now");
+        testFn(inspector);
+    }
 }
 
 fn run_full_sql(connectional: &Arc<Connectional>, full_sql: &str) {
