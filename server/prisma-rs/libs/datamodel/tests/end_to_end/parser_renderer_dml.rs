@@ -8,7 +8,7 @@ const DATAMODEL_STRING: &str = r#"model User {
   posts     Post[]   @relation("author", onDelete: CASCADE)
   profile   Profile?
 
-  @@db("user")
+  @@map("user")
 }
 
 model Profile {
@@ -16,7 +16,7 @@ model Profile {
   user User
   bio  String
 
-  @@db("profile")
+  @@map("profile")
 }
 
 model Post {
@@ -29,7 +29,7 @@ model Post {
   published  Boolean          @default(false)
   categories PostToCategory[]
 
-  @@db("post")
+  @@map("post")
 }
 
 model Category {
@@ -38,7 +38,7 @@ model Category {
   posts PostToCategory[]
   cat   CategoryEnum
 
-  @@db("category")
+  @@map("category")
 }
 
 model PostToCategory {
@@ -46,7 +46,7 @@ model PostToCategory {
   post     Post
   category Category
 
-  @@db("post_to_category")
+  @@map("post_to_category")
 }
 
 model A {
@@ -118,7 +118,7 @@ model User {
   /// Multi line comment.
   name      String?
 
-  @@db("user")
+  @@map("user")
 }"#;
 
 #[test]
