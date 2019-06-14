@@ -1,6 +1,6 @@
 //! Simple wrapper for WriteQueries
 
-use crate::{builders::utils, BuilderExt, ReadQuery, SingleBuilder};
+use crate::{builders::utils, BuilderExt, OneBuilder, ReadQuery};
 use connector::mutaction::{
     DatabaseMutactionResult as MutationResult, Identifier, TopLevelDatabaseMutaction as RootMutation,
 };
@@ -37,7 +37,7 @@ impl WriteQuery {
     /// This function generates a pre-fetch `ReadQuery` for appropriate `WriteQuery` types
     pub fn generate_prefetch(&self) -> Option<ReadQuery> {
         match self.inner {
-            RootMutation::DeleteNode(_) => SingleBuilder::new()
+            RootMutation::DeleteNode(_) => OneBuilder::new()
                 .setup(self.model(), &self.field)
                 .build()
                 .ok()
@@ -59,7 +59,7 @@ impl WriteQuery {
             // We ignore Deletes because they were already handled
             RootMutation::DeleteNode(_) | RootMutation::DeleteNodes(_) => None,
             RootMutation::CreateNode(_) | RootMutation::UpdateNode(_) | RootMutation::UpsertNode(_) => {
-                SingleBuilder::new()
+                OneBuilder::new()
                     .setup(self.model(), &field)
                     .build()
                     .ok()

@@ -6,16 +6,19 @@ mod object_renderer;
 mod schema_renderer;
 mod type_renderer;
 
+use crate::dmmf::DMMFMapping;
 use core::schema::*;
 use enum_renderer::*;
 use field_renderer::*;
 use object_renderer::*;
 use schema_renderer::*;
-
-use std::{cell::RefCell, collections::HashMap, sync::Weak};
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    sync::{Arc, Weak},
+};
 use type_renderer::*;
 
-use crate::dmmf::DMMFMapping;
 pub use ast::*;
 
 pub struct DMMFQuerySchemaRenderer;
@@ -141,9 +144,9 @@ impl<'a> IntoRenderer<'a, DMMFFieldWrapper> for InputField {
     }
 }
 
-impl<'a> IntoRenderer<'a, DMMFFieldWrapper> for Field {
+impl<'a> IntoRenderer<'a, DMMFFieldWrapper> for FieldRef {
     fn into_renderer(&'a self) -> Box<Renderer<'a, DMMFFieldWrapper> + 'a> {
-        Box::new(DMMFFieldRenderer::Output(self))
+        Box::new(DMMFFieldRenderer::Output(Arc::clone(self)))
     }
 }
 

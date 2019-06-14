@@ -12,7 +12,7 @@ pub use read::ReadQueryExecutor;
 pub use write::WriteQueryExecutor;
 
 use crate::{
-    BuilderExt, CoreError, CoreResult, Query, ReadQuery, ReadQueryResult, RecordQuery, SingleBuilder, WriteQuery,
+    BuilderExt, CoreError, CoreResult, OneBuilder, Query, ReadQuery, ReadQueryResult, RecordQuery, WriteQuery,
     WriteQueryResult,
 };
 use connector::{filter::NodeSelector, QueryArguments};

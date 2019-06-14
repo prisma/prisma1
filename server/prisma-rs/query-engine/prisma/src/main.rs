@@ -59,6 +59,13 @@ fn main() {
                 .help("The port the query engine should bind to.")
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("legacy")
+                .long("legacy")
+                .help("Switches query schema generation to Prisma 1 compatible mode.")
+                .takes_value(false)
+                .required(false),
+        )
         .get_matches();
 
     let port = matches
@@ -71,7 +78,7 @@ fn main() {
     let now = Instant::now();
     env_logger::init();
 
-    let context = match PrismaContext::new() {
+    let context = match PrismaContext::new(matches.is_present("legacy")) {
         Ok(ctx) => ctx,
         Err(err) => {
             info!("Encountered error during initialization:");

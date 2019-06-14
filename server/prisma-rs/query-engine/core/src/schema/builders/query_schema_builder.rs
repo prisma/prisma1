@@ -107,6 +107,7 @@ impl<'a> QuerySchemaBuilder<'a> {
     /// TODO filter empty input types
     /// Consumes the builder to create the query schema.
     pub fn build(self) -> QuerySchema {
+        let internal_data_model = Arc::clone(&self.internal_data_model);
         let (query_type, query_object_ref) = self.build_query_type();
         let (mutation_type, mutation_object_ref) = self.build_mutation_type();
         let (input_objects, mut output_objects) = self.collect_types();
@@ -119,7 +120,7 @@ impl<'a> QuerySchemaBuilder<'a> {
             mutation_type,
             input_objects,
             output_objects,
-            self.internal_data_model,
+            internal_data_model,
         )
     }
 
@@ -182,10 +183,8 @@ impl<'a> QuerySchemaBuilder<'a> {
         self.argument_builder
             .where_unique_argument(Arc::clone(&model))
             .map(|arg| {
-                let field_name = self.pluralize_internal(
-                    camel_case(model.name.clone()),
-                    format!("findSingle{}", model.name.clone()),
-                );
+                let field_name =
+                    self.pluralize_internal(camel_case(model.name.clone()), format!("findOne{}", model.name.clone()));
 
                 field(
                     field_name,
@@ -193,7 +192,7 @@ impl<'a> QuerySchemaBuilder<'a> {
                     OutputType::opt(OutputType::object(
                         self.object_type_builder.map_model_object_type(&model),
                     )),
-                    Some(ModelOperation::new(Arc::clone(&model), OperationTag::FindSingle)),
+                    Some(ModelOperation::new(Arc::clone(&model), OperationTag::FindOne)),
                 )
             })
     }
@@ -225,14 +224,14 @@ impl<'a> QuerySchemaBuilder<'a> {
 
         let field_name = self.pluralize_internal(
             format!("create{}", model.name),
-            format!("createSingle{}", model.name.clone()),
+            format!("createOne{}", model.name.clone()),
         );
 
         field(
             field_name,
             args,
             OutputType::object(self.object_type_builder.map_model_object_type(&model)),
-            Some(ModelOperation::new(Arc::clone(&model), OperationTag::CreateSingle)),
+            Some(ModelOperation::new(Arc::clone(&model), OperationTag::CreateOne)),
         )
     }
 
@@ -241,7 +240,7 @@ impl<'a> QuerySchemaBuilder<'a> {
         self.argument_builder.delete_arguments(Arc::clone(&model)).map(|args| {
             let field_name = self.pluralize_internal(
                 format!("delete{}", model.name),
-                format!("deleteSingle{}", model.name.clone()),
+                format!("deleteOne{}", model.name.clone()),
             );
 
             field(
@@ -250,7 +249,7 @@ impl<'a> QuerySchemaBuilder<'a> {
                 OutputType::opt(OutputType::object(
                     self.object_type_builder.map_model_object_type(&model),
                 )),
-                Some(ModelOperation::new(Arc::clone(&model), OperationTag::DeleteSingle)),
+                Some(ModelOperation::new(Arc::clone(&model), OperationTag::DeleteOne)),
             )
         })
     }
@@ -275,7 +274,7 @@ impl<'a> QuerySchemaBuilder<'a> {
     fn update_item_field(&self, model: ModelRef) -> Option<Field> {
         self.argument_builder.update_arguments(Arc::clone(&model)).map(|args| {
             let field_name =
-                self.pluralize_internal(format!("update{}", model.name), format!("updateSingle{}", model.name));
+                self.pluralize_internal(format!("update{}", model.name), format!("updateOne{}", model.name));
 
             field(
                 field_name,
@@ -283,7 +282,7 @@ impl<'a> QuerySchemaBuilder<'a> {
                 OutputType::opt(OutputType::object(
                     self.object_type_builder.map_model_object_type(&model),
                 )),
-                Some(ModelOperation::new(Arc::clone(&model), OperationTag::UpdateSingle)),
+                Some(ModelOperation::new(Arc::clone(&model), OperationTag::UpdateOne)),
             )
         })
     }
@@ -308,13 +307,13 @@ impl<'a> QuerySchemaBuilder<'a> {
     fn upsert_item_field(&self, model: ModelRef) -> Option<Field> {
         self.argument_builder.upsert_arguments(Arc::clone(&model)).map(|args| {
             let field_name =
-                self.pluralize_internal(format!("upsert{}", model.name), format!("upsertSingle{}", model.name));
+                self.pluralize_internal(format!("upsert{}", model.name), format!("upsertOne{}", model.name));
 
             field(
                 field_name,
                 args,
                 OutputType::object(self.object_type_builder.map_model_object_type(&model)),
-                Some(ModelOperation::new(Arc::clone(&model), OperationTag::UpsertSingle)),
+                Some(ModelOperation::new(Arc::clone(&model), OperationTag::UpsertOne)),
             )
         })
     }

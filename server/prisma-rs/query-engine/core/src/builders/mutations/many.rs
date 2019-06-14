@@ -18,7 +18,7 @@ impl ManyNestedBuilder {
         kind: String,
         many: impl Iterator<Item = ValueMap>,
         mutations: &mut NestedMutactions,
-        model_operation: ModelRef,
+        model: ModelRef,
         top_level: OperationTag,
     ) -> CoreResult<()> {
         let name = name.as_str();
@@ -64,7 +64,7 @@ fn attach_create(
         non_list_args,
         list_args,
         top_is_create: match top_level {
-            OperationTag::CreateSingle => true,
+            OperationTag::CreateOne => true,
             _ => false,
         },
         relation_field: Arc::clone(&rel_field),
@@ -85,7 +85,7 @@ fn attach_connect(
         relation_field: Arc::clone(&rel_field),
         where_: map.to_node_selector(Arc::clone(&rel_model)).unwrap(),
         top_is_create: match top_level {
-            OperationTag::CreateSingle => true,
+            OperationTag::CreateOne => true,
             _ => false,
         },
     });

@@ -1,7 +1,6 @@
 use super::Builder;
 use crate::{CoreResult, MutationBuilder, Query as PrismaQuery, QuerySchemaRef};
 use graphql_parser::query::*;
-use prisma_models::InternalDataModelRef;
 use std::sync::Arc;
 
 #[derive(Debug)]

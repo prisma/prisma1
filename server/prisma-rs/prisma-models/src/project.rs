@@ -67,6 +67,14 @@ impl Project {
             .get()
             .expect("Project has no internal_data_model set!")
     }
+
+    pub fn internal_data_model_ref(&self) -> InternalDataModelRef {
+        Arc::clone(
+            self.internal_data_model
+                .get()
+                .expect("Project has no internal_data_model set!"),
+        )
+    }
 }
 
 /// Timeout in seconds.

@@ -18,13 +18,10 @@ pub fn object_type<T>(name: T, fields: Vec<Field>) -> ObjectType
 where
     T: Into<String>,
 {
-    let f = OnceCell::new();
-    f.set(fields).unwrap();
+    let object_type = init_object_type(name.into());
 
-    ObjectType {
-        name: name.into(),
-        fields: f,
-    }
+    object_type.set_fields(fields);
+    object_type
 }
 
 /// Input object type convenience wrapper function.

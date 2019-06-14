@@ -47,7 +47,7 @@ impl SimpleNestedBuilder {
                     non_list_args,
                     list_args,
                     top_is_create: match top_level {
-                        Operation::Create => true,
+                        OperationTag::CreateOne => true,
                         _ => false,
                     },
                     relation_field,
@@ -66,7 +66,7 @@ impl SimpleNestedBuilder {
                     relation_field,
                     where_,
                     top_is_create: match top_level {
-                        Operation::Create => true,
+                        OperationTag::CreateOne => true,
                         _ => false,
                     },
                 });
@@ -128,7 +128,7 @@ impl UpsertNestedBuilder {
         update: ValueMap,
         mutations: &mut NestedMutactions,
         model: ModelRef,
-        top_level: &Operation,
+        top_level: OperationTag,
     ) -> CoreResult<()> {
         let name = name.as_str();
         let f = model.fields().find_from_all(&name);
@@ -149,7 +149,7 @@ impl UpsertNestedBuilder {
                 non_list_args,
                 list_args,
                 top_is_create: match top_level {
-                    Operation::Create => true,
+                    OperationTag::CreateOne => true,
                     _ => false,
                 },
                 relation_field,

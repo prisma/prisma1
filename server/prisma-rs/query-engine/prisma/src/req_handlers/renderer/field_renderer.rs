@@ -3,14 +3,14 @@ use super::*;
 #[derive(Debug)]
 pub enum GqlFieldRenderer<'a> {
     Input(&'a InputField),
-    Output(&'a Field),
+    Output(FieldRef),
 }
 
 impl<'a> Renderer for GqlFieldRenderer<'a> {
     fn render(&self, ctx: RenderContext) -> (String, RenderContext) {
         match &self {
             GqlFieldRenderer::Input(input) => self.render_input_field(input, ctx),
-            GqlFieldRenderer::Output(output) => self.render_output_field(output, ctx),
+            GqlFieldRenderer::Output(output) => self.render_output_field(Arc::clone(output), ctx),
         }
     }
 }
@@ -22,7 +22,7 @@ impl<'a> GqlFieldRenderer<'a> {
         (format!("{}: {}", input_field.name, rendered_type), ctx)
     }
 
-    fn render_output_field(&self, field: &Field, ctx: RenderContext) -> (String, RenderContext) {
+    fn render_output_field(&self, field: FieldRef, ctx: RenderContext) -> (String, RenderContext) {
         let (rendered_args, ctx) = self.render_arguments(&field.arguments, ctx);
         let rendered_args = if rendered_args.len() == 0 {
             "".into()

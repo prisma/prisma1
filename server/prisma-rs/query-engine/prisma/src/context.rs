@@ -3,7 +3,7 @@ use core::{BuildMode, Executor, QuerySchemaBuilder, QuerySchemaRef, SupportedCap
 use datamodel::{Datamodel, Source};
 use prisma_common::{config::load as load_config, error::CommonError};
 use prisma_models::InternalDataModelRef;
-use std::{convert::TryInto, env, sync::Arc};
+use std::{convert::TryInto, sync::Arc};
 
 /// Prisma request context containing all immutable state of the process.
 /// There is usually only one context initialized per process.
@@ -30,7 +30,7 @@ impl PrismaContext {
     /// 1. The data model. This has different options on how to initialize. See data_model_loader module. The Prisma configuration (prisma.yml) is used as fallback.
     /// 2. The data model is converted to the internal data model.
     /// 3. The api query schema is constructed from the internal data model.
-    pub fn new() -> PrismaResult<Self> {
+    pub fn new(legacy: bool) -> PrismaResult<Self> {
         // Load data model in order of precedence.
         let (_, v2components, template) = load_data_model_components()?;
 
@@ -61,8 +61,9 @@ impl PrismaContext {
         let internal_data_model = template.build(db_name);
 
         // Construct query schema
+        let build_mode = if legacy { BuildMode::Legacy } else { BuildMode::Modern };
         let capabilities = SupportedCapabilities::empty(); // todo connector capabilities.
-        let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, Self::build_mode());
+        let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, build_mode);
         let query_schema: QuerySchemaRef = Arc::new(schema_builder.build());
 
         Ok(Self {
@@ -86,14 +87,5 @@ impl PrismaContext {
         })?;
 
         config.try_into().map_err(|err: CommonError| err.into())
-    }
-
-    fn build_mode() -> BuildMode {
-        if env::var("LEGACY_SCHEMA").is_ok() {
-            trace!("Generating legacy schema.");
-            BuildMode::Legacy
-        } else {
-            BuildMode::Modern
-        }
     }
 }

@@ -29,7 +29,7 @@ pub fn convert_create_envelope(
 pub fn convert_create(m: crate::protobuf::prisma::CreateNode, project: ProjectRef) -> CreateNode {
     let model = project.internal_data_model().find_model(&m.model_name).unwrap();
     CreateNode {
-        model: model,
+        model,
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
         nested_mutactions: convert_nested_mutactions(m.nested, Arc::clone(&project)),
@@ -210,7 +210,10 @@ pub fn convert_nested_delete_nodes(
 }
 
 pub fn convert_reset(_: crate::protobuf::prisma::ResetData, project: ProjectRef) -> TopLevelDatabaseMutaction {
-    let mutaction = ResetData { project };
+    let mutaction = ResetData {
+        internal_data_model: project.internal_data_model_ref(),
+    };
+
     TopLevelDatabaseMutaction::ResetData(mutaction)
 }
 

@@ -183,7 +183,7 @@ pub(crate) fn collect_nested_queries<'field>(
                         let model = f.related_model();
                         let parent = Some(Arc::clone(&f));
 
-                        Builder::infer(&model, x, parent).map(|r| Ok(r))
+                        Builder::infer_nested(&model, x, parent).map(|r| Ok(r))
                     }
                     _ => Some(Err(CoreError::QueryValidationError(format!(
                         "Selected field {} not found on model {}",

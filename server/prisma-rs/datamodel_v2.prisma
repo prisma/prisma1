@@ -1,30 +1,110 @@
 datasource chinook {
   provider = "sqlite"
-  url = "file:../db/flavian.db"
+  url = "file:../db/Chinook.db"
 }
 
-model Author {
-  id    Int     @id
-  name  String?
-  posts Post[]
-  blog  Blog
+model Album {
+  id Int @id @map(name:"AlbumId")
+  Title String
+  Artist Artist @map(name:"ArtistId")
+  Tracks Track[]
 }
 
-model Post {
-  id    Int      @id
-  title String
-  tags  String[]
-  blog  Blog
+model Track {
+  id Int @id @map(name:"TrackId")
+  Name String
+  Album Album? @map(name: "AlbumId")
+  AlbumId Int?
+  Mediamodel Mediamodel @map(name: "MediamodelId")
+  Genre Genre? @map(name: "GenreId")
+  Composer String?
+  Milliseconds Int
+  UnitPrice Float
+  Playlists PlaylistTrack[]
+  InvoiceLines InvoiceLine[]
 }
 
-model Blog {
-  id        Int      @id
-  name      String
-  viewCount Int
-  posts     Post[]
-  authors   Author[]
+model Mediamodel {
+  id Int @id @map(name:"MediamodelId")
+  Name String?
 }
 
-model PostNews {
-  id        Int      @id
+model Genre {
+  id Int @id @map(name:"GenreId")
+  Name String?
+  Tracks Track[]
+}
+
+model Artist {
+  id Int @id @map(name:"ArtistId")
+  Name String?
+  Albums Album[]
+}
+
+model Customer {
+  id Int @id @map(name:"CustomerId")
+  FirstName String
+  LastName String
+  Company String?
+  Address String?
+  City String?
+  State String?
+  Country String?
+  PostalCode String?
+  Phone String?
+  Fax String?
+  Email String
+  SupportRep Employee? @map(name: "SupportRepId")
+  Invoices Invoice[]
+}
+
+model Employee {
+  id Int @id @map(name:"EmployeeId")
+  FirstName String
+  LastName String
+  Title String?
+  BirthDate DateTime?
+  HireDate DateTime?
+  Address String?
+  City String?
+  State String?
+  Country String?
+  PostalCode String?
+  Phone String?
+  Fax String?
+  Email String?
+  Customers Customer[]
+}
+
+model Invoice {
+  id Int @id @map(name:"InvoiceId")
+  Customer Customer @map(name: "CustomerId")
+  InvoiceDate DateTime
+  BillingAddress String?
+  BillingCity String?
+  BillingState String?
+  BillingCountry String?
+  BillingPostalCode String?
+  Total Float
+  Lines InvoiceLine[]
+}
+
+model InvoiceLine {
+  id Int @id @map(name:"InvoiceLineId")
+  Invoice Invoice @map(name: "InvoiceId")
+  Track Track @map(name: "TrackId")
+  UnitPrice Float
+  Quantity Int
+}
+
+model Playlist {
+  id Int @id @map(name:"PlaylistId")
+  Name String?
+  Tracks PlaylistTrack[]
+}
+
+model PlaylistTrack {
+  id Int @id
+  Playlist Playlist @map(name: "PlaylistId")
+  Track Track @map(name: "TrackId")
 }

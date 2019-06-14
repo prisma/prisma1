@@ -1,16 +1,19 @@
-use core::schema::*;
-use std::{cell::RefCell, collections::HashMap, sync::Weak};
-
 mod enum_renderer;
 mod field_renderer;
 mod object_renderer;
 mod schema_renderer;
 mod type_renderer;
 
+use core::schema::*;
 use enum_renderer::*;
 use field_renderer::*;
 use object_renderer::*;
 use schema_renderer::*;
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    sync::{Arc, Weak},
+};
 use type_renderer::*;
 
 #[allow(dead_code)]
@@ -21,7 +24,8 @@ impl QuerySchemaRenderer<String> for GraphQLSchemaRenderer {
         let context = RenderContext::new();
         let (_, result) = query_schema.into_renderer().render(context);
 
-        result.format()
+        // Add custom scalar types (required for graphql.js implementations)
+        format!("{}\n\nscalar DateTime\nscalar Json\nscalar UUID", result.format())
     }
 }
 
@@ -127,9 +131,9 @@ impl<'a> IntoRenderer<'a> for &'a InputField {
     }
 }
 
-impl<'a> IntoRenderer<'a> for &'a Field {
+impl<'a> IntoRenderer<'a> for FieldRef {
     fn into_renderer(&self) -> GqlRenderer<'a> {
-        GqlRenderer::Field(GqlFieldRenderer::Output(self))
+        GqlRenderer::Field(GqlFieldRenderer::Output(Arc::clone(self)))
     }
 }
 

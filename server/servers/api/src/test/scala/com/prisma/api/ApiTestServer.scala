@@ -149,7 +149,7 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
   def startPrismaProcess(project: Project): java.lang.Process = {
     import java.lang.ProcessBuilder.Redirect
 
-    val pb         = new java.lang.ProcessBuilder(prismaBinaryPath)
+    val pb         = new java.lang.ProcessBuilder(prismaBinaryPath, "--legacy")
     val workingDir = new java.io.File(".")
 
     // Important: Rust requires UTF-8 encoding (encodeToString uses Latin-1)
