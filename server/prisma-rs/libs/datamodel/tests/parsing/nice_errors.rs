@@ -81,7 +81,7 @@ fn nice_error_missing_directive_name() {
     let error = parse_error(dml);
 
     error.assert_is(ValidationError::new_parser_error(
-        &vec!["directive name"],
+        &vec!["directive"],
         &Span::new(43, 43),
     ));
 }

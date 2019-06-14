@@ -17,7 +17,7 @@ fn id_should_error_if_the_field_is_not_required() {
     errors.assert_is(ValidationError::new_directive_validation_error(
         "Fields that are marked as id must be required.",
         "id",
-        &Span::new(36, 43),
+        &Span::new(36, 38),
     ));
 }
 

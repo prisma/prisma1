@@ -20,7 +20,7 @@ fn should_fail_on_ambiguous_relations() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous relation detected.",
         "User",
-        &Span::new(45, 66),
+        &Span::new(45, 57),
     ));
 }
 
@@ -43,7 +43,7 @@ fn should_fail_on_ambiguous_named_relations() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous relation detected.",
         "User",
-        &Span::new(45, 81),
+        &Span::new(45, 90),
     ));
 }
 
@@ -68,7 +68,7 @@ fn should_fail_on_ambiguous_named_relations_2() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous relation detected.",
         "User",
-        &Span::new(45, 78),
+        &Span::new(45, 87),
     ));
 }
 
@@ -88,7 +88,7 @@ fn should_fail_on_ambiguous_self_relation() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous self relation detected.",
         "User",
-        &Span::new(45, 65),
+        &Span::new(45, 56),
     ));
 }
 
@@ -108,7 +108,7 @@ fn should_fail_on_ambiguous_named_self_relation() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous self relation detected.",
         "User",
-        &Span::new(45, 82),
+        &Span::new(45, 91),
     ));
 }
 
@@ -132,7 +132,7 @@ fn should_fail_on_conflicting_back_relation_field_name() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Automatic opposite related field generation would cause a naming conflict. Please add an explicit opposite relation field.",
         "User",
-        &Span::new(90, 112),
+        &Span::new(90, 107),
     ));
 }
 
@@ -185,7 +185,7 @@ fn should_fail_on_named_generated_back_relation_fields() {
         ValidationError::new_model_validation_error(
             "Named relations require an opposite field.",
             "Todo",
-            &Span::new(45, 87),
+            &Span::new(45, 92),
         ),
     );
 }

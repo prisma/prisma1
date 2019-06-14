@@ -15,11 +15,11 @@ fn shound_fail_on_directive_duplication() {
 
     error.assert_is_at(
         0,
-        ValidationError::new_duplicate_directive_error("id", &ast::Span::new(23, 26)),
+        ValidationError::new_duplicate_directive_error("id", &ast::Span::new(23, 25)),
     );
     error.assert_is_at(
         1,
-        ValidationError::new_duplicate_directive_error("id", &ast::Span::new(77, 84)),
+        ValidationError::new_duplicate_directive_error("id", &ast::Span::new(77, 79)),
     );
 }
 
@@ -38,11 +38,11 @@ fn shound_fail_on_directive_duplication_recursive() {
 
     error.assert_is_at(
         0,
-        ValidationError::new_duplicate_directive_error("default", &ast::Span::new(40, 55)),
+        ValidationError::new_duplicate_directive_error("default", &ast::Span::new(40, 60)),
     );
     error.assert_is_at(
         1,
-        ValidationError::new_duplicate_directive_error("default", &ast::Span::new(128, 143)),
+        ValidationError::new_duplicate_directive_error("default", &ast::Span::new(128, 148)),
     );
 }
 

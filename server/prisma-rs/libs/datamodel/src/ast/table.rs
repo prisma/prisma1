@@ -1,16 +1,17 @@
 use super::renderer::LineWriteable;
 use super::string_builder::StringBuilder;
 use std::cmp::max;
+use std::ops::Add;
 
 const COLUMN_SPACING: usize = 1;
 
-enum Row {
+pub enum Row {
     Regular(Vec<String>),
     Interleaved(String),
 }
 
 pub struct TableFormat {
-    table: Vec<Row>,
+    pub table: Vec<Row>,
     row: i32,
     line_ending: bool,
 }
@@ -31,6 +32,27 @@ impl TableFormat {
         }
     }
 
+    pub fn column_locked_writer_for(&mut self, index: usize) -> ColumnLockedWriter {
+        ColumnLockedWriter {
+            formatter: self,
+            column: index
+        }
+    }
+
+    pub fn column_locked_writer(&mut self) -> ColumnLockedWriter {
+        let index = match &self.table[self.row as usize] {
+            Row::Regular(row) => {
+                row.len() - 1
+            },
+            Row::Interleaved(_) => panic!("Cannot lock col in interleaved mode")
+        };
+
+        ColumnLockedWriter {
+            formatter: self,
+            column: index
+        }
+    }
+
     pub fn interleave(&mut self, text: &str) {
         self.table.push(Row::Interleaved(String::from(text)));
         // We've just ended a line.
@@ -39,6 +61,29 @@ impl TableFormat {
 
         // Prepare next new line.
         self.end_line();
+    }
+
+    // Safely appends to the column with the given index.
+    pub fn append_to(&mut self, text: &str, index: usize) {
+        if self.line_ending {
+            self.start_new_line();
+            self.line_ending = false;
+        }
+
+        match &mut self.table[self.row as usize] {
+            Row::Regular(row) => {
+                while row.len() <= index {
+                    row.push(String::new());
+                }
+
+                if row[index].is_empty() {
+                    row[index] = String::from(text);
+                } else {
+                    row[index] = format!("{}{}", &row[index], text);
+                }
+            },
+            Row::Interleaved(_) => panic!("Cannot append to col in interleaved mode")
+        }
     }
 
     fn start_new_line(&mut self) {
@@ -112,6 +157,10 @@ impl LineWriteable for TableFormat {
 
         self.line_ending = true;
     }
+
+    fn line_empty(&self) -> bool {
+        self.line_ending
+    }
 }
 
 pub struct TableFormatInterleaveWrapper<'a> {
@@ -127,5 +176,35 @@ impl<'a> LineWriteable for TableFormatInterleaveWrapper<'a> {
     fn end_line(&mut self) {
         self.formatter.interleave(&self.string_builder.to_string());
         self.string_builder = StringBuilder::new();
+    }
+
+    fn line_empty(&self) -> bool {
+        self.formatter.line_empty()
+    }
+}
+
+pub struct ColumnLockedWriter<'a> {
+    formatter: &'a mut TableFormat,
+    column: usize
+}
+
+impl<'a> LineWriteable for ColumnLockedWriter<'a> {
+    fn write(&mut self, text: &str) {
+        self.formatter.append_to(text, self.column);
+    }
+
+    fn end_line(&mut self) {
+        self.formatter.end_line();
+    }
+
+    fn line_empty(&self) -> bool {
+        if self.formatter.line_empty() {
+            return true 
+        } else {
+            match &self.formatter.table.last().unwrap() {
+                Row::Regular(row) => row.len() <= self.column || row[self.column].is_empty(),
+                Row::Interleaved(s) => s.is_empty()
+            }
+        }
     }
 }

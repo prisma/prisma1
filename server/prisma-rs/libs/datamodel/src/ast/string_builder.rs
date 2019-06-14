@@ -24,4 +24,8 @@ impl LineWriteable for StringBuilder {
     fn end_line(&mut self) {
         unimplemented!("Cannot render new line in string builder.")
     }
+
+    fn line_empty(&self) -> bool {
+        self.buffer.len() == 0
+    }
 }
