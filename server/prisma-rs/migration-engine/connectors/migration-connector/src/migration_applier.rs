@@ -33,7 +33,7 @@ impl<T> MigrationApplier<T> for MigrationApplierImpl<T> {
                 migration_updates.status = MigrationStatus::MigrationFailure;
                 migration_updates.errors = vec![format!("{:?}", err)];
                 self.migration_persistence.update(&migration_updates);
-                Ok(())
+                Err(err)
             }
         }
 
@@ -57,7 +57,7 @@ impl<T> MigrationApplier<T> for MigrationApplierImpl<T> {
                 migration_updates.status = MigrationStatus::RollbackFailure;
                 migration_updates.errors = vec![format!("{:?}", err)];
                 self.migration_persistence.update(&migration_updates);
-                Ok(())
+                Err(err)
             }
         }
 
