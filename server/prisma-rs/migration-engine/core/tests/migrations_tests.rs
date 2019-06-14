@@ -216,7 +216,7 @@ fn changing_the_type_of_an_id_field_must_work() {
                 b  B   @relation(references: [id])
             }
             model B {
-                id String @id
+                id String @id @default(cuid())
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);

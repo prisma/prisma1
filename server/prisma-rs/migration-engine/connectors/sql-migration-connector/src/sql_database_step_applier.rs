@@ -179,7 +179,13 @@ fn column_description_to_barrel_type(
     // TODO: add foreign keys for non integer types once this is available in barrel
     let tpe_str = render_column_type(sql_family, column_description.tpe);
     let tpe_str_with_default = match &column_description.default {
-        Some(value) => format!("{} DEFAULT {}", tpe_str.clone(), render_value(value)),
+        Some(value) => {
+            match render_value(value) {
+                Some(default) => format!("{} DEFAULT {}", tpe_str.clone(), default),
+                None => tpe_str.clone(),
+            }
+            
+        },
         None => tpe_str.clone(),
     };
     let tpe = match (sql_family, &column_description.foreign_key) {
@@ -199,21 +205,22 @@ fn column_description_to_barrel_type(
     tpe.nullable(!column_description.required)
 }
 
-fn render_value(value: &Value) -> String {
+// TODO: this returns None for expressions
+fn render_value(value: &Value) -> Option<String> {
     match value {
-        Value::Boolean(x) => if *x { "true".to_string() } else { "false".to_string() },
-        Value::Int(x) => format!("{}", x),
-        Value::Float(x) => format!("{}", x),
-        Value::Decimal(x) => format!("{}", x),
-        Value::String(x) => format!("'{}'", x),
+        Value::Boolean(x) => Some(if *x { "true".to_string() } else { "false".to_string() }),
+        Value::Int(x) => Some(format!("{}", x)),
+        Value::Float(x) => Some(format!("{}", x)),
+        Value::Decimal(x) => Some(format!("{}", x)),
+        Value::String(x) => Some(format!("'{}'", x)),
         
         Value::DateTime(x) => {
             let mut raw = format!("{}", x); // this will produce a String 1970-01-01 00:00:00 UTC
             raw.truncate(raw.len() - 4); // strip the UTC suffix
-            format!("'{}'", raw) // add quotes
+            Some(format!("'{}'", raw)) // add quotes
         },
-        Value::ConstantLiteral(x) => format!("'{}'", x), // this represents enum values
-        _ => unimplemented!("Expressions are not supported in default values"),
+        Value::ConstantLiteral(x) => Some(format!("'{}'", x)), // this represents enum values
+        _ => None,
     }
 }
 
