@@ -169,18 +169,9 @@ fn parse_field_type(token: &pest::iterators::Pair<'_, Rule>) -> (FieldArity, Str
     };
 }
 
-// Field parsing
-fn parse_default_value(token: &pest::iterators::Pair<'_, Rule>) -> Value {
-    return match_first! { token, current,
-        Rule::expression => parse_expression(&current),
-        _ => unreachable!("Encounterd impossible value during parsing: {:?}", current.tokens())
-    };
-}
-
 fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     let mut name: Option<String> = None;
     let mut directives: Vec<Directive> = Vec::new();
-    let mut default_value: Option<Value> = None;
     let mut field_type: Option<((FieldArity, String), Span)> = None;
     let mut comments: Vec<String> = Vec::new();
 
@@ -189,7 +180,6 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
         Rule::field_type => {
             field_type = Some((parse_field_type(&current), Span::from_pest(&current.as_span())))
         },
-        Rule::default_value => default_value = Some(parse_default_value(&current)),
         Rule::directive => directives.push(parse_directive(&current)),
         Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible field declaration during parsing: {:?}", current.tokens())
@@ -201,7 +191,7 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
             field_type_span: field_type_span,
             name,
             arity,
-            default_value,
+            default_value: None,
             directives,
             documentation: doc_comments_to_string(&comments),
             span: Span::from_pest(&token.as_span()),
@@ -220,6 +210,7 @@ fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
+        Rule::MODEL_KEYWORD => { }, 
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::directive => directives.push(parse_directive(&current)),
         Rule::field_declaration => fields.push(parse_field(&current)),
@@ -250,6 +241,7 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
+        Rule::ENUM_KEYWORD => { },
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::directive => directives.push(parse_directive(&current)),
         Rule::enum_field_declaration => values.push(current.as_str().to_string()),
@@ -302,6 +294,7 @@ fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
+        Rule::DATASOURCE_KEYWORD => { },
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::key_value => properties.push(parse_key_value(&current)),
         Rule::doc_comment => comments.push(parse_doc_comment(&current)),
@@ -329,6 +322,7 @@ fn parse_generator(token: &pest::iterators::Pair<'_, Rule>) -> GeneratorConfig {
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
+        Rule::GENERATOR_KEYWORD => { },
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::key_value => properties.push(parse_key_value(&current)),
         Rule::doc_comment => comments.push(parse_doc_comment(&current)),
@@ -357,6 +351,7 @@ fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
+        Rule::TYPE_KEYWORD => { },
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::base_type => {
             base_type = Some((parse_base_type(&current), Span::from_pest(&current.as_span())))
@@ -461,7 +456,6 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::base_type => "type",
         Rule::list_type => "list type",
         Rule::field_type => "field type",
-        Rule::default_value => "default value",
         Rule::field_declaration => "field declaration",
         Rule::type_declaration => "type declaration",
         Rule::key_value => "configuration property",
@@ -469,12 +463,21 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::string_escaped_interpolation => "string interpolation",
         Rule::doc_comment => "documentation comment",
 
+        // Those are helpers, so we get better error messages: 
+        Rule::BLOCK_OPEN => "Start of block (\"{\")",
+        Rule::BLOCK_CLOSE => "End of block (\"}\")",
+        Rule::MODEL_KEYWORD => "\"model\" keyword",
+        Rule::TYPE_KEYWORD => "\"type\" keyword",
+        Rule::ENUM_KEYWORD => "\"enum\" keyword",
+        Rule::GENERATOR_KEYWORD => "\"generator\" keyword",
+        Rule::DATASOURCE_KEYWORD => "\"datasource\" keyword",
+
         // Those are top level things and will never surface.
         Rule::datamodel => "datamodel declaration",
         Rule::string_interpolated => "string interpolated",
 
         // Atomic and helper rules should not surface, we still add them for debugging.
-        Rule::WHITESPACE => "whitespace",
+        Rule::WHITESPACE => "",
         Rule::string_escaped_predefined => "escaped unicode char",
         Rule::string_escape => "escaped unicode char",
         Rule::string_interpolate_escape => "string interpolation",
@@ -483,6 +486,6 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::boolean_true => "boolean true",
         Rule::boolean_false => "boolean false",
         Rule::doc_content => "documentation comment content",
-        Rule::COMMENT => "comment",
+        Rule::COMMENT => "",
     }
 }

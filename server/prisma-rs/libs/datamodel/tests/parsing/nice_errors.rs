@@ -13,7 +13,7 @@ fn nice_error_for_missing_model_keyword() {
     let error = parse_error(dml);
 
     error.assert_is(ValidationError::new_parser_error(
-        &vec!["end of input", "documentation comment"],
+        &vec!["end of input", "type declaration", "model declaration", "enum declaration", "source definition", "generator definition"],
         &Span::new(5, 5),
     ));
 }
@@ -31,7 +31,7 @@ fn nice_error_for_missing_model_keyword_2() {
     let error = parse_error(dml);
 
     error.assert_is(ValidationError::new_parser_error(
-        &vec!["end of input", "documentation comment"],
+        &vec!["end of input", "type declaration", "model declaration", "enum declaration", "source definition", "generator definition"],
         &Span::new(47, 47),
     ));
 }
@@ -48,7 +48,7 @@ fn nice_error_on_incorrect_enum_field() {
     let error = parse_error(dml);
 
     error.assert_is(ValidationError::new_parser_error(
-        &vec!["enum field declaration"],
+        &vec!["End of block (\"}\")", "enum field declaration"],
         &Span::new(26, 26),
     ));
 }
@@ -97,8 +97,8 @@ fn nice_error_missing_braces() {
     let error = parse_error(dml);
 
     error.assert_is(ValidationError::new_parser_error(
-        &vec!["end of input", "documentation comment"],
-        &Span::new(5, 5),
+        &vec!["Start of block (\"{\")"],
+        &Span::new(25, 25),
     ));
 }
 
@@ -143,7 +143,7 @@ fn nice_error_broken_field_type_legacy_required() {
     let error = parse_error(dml);
 
     error.assert_is(ValidationError::new_parser_error(
-        &vec!["default value", "field declaration"],
+        &vec!["End of block (\"}\")", "field declaration"],
         &Span::new(32, 32),
     ));
 }
