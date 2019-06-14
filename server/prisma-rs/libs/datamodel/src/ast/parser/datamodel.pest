@@ -3,10 +3,17 @@
 // ######################################
 
 // Treat every whitespace the same for now.
-WHITESPACE = _{ SPACE_SEPARATOR | NEWLINE }
+WHITESPACE = @{ SPACE_SEPARATOR | NEWLINE }
 // Comment ignores everything until end of line.
-// TODO: As soon as we include the comments in the AST, we need to move from silent (_) to atomic (@)
-COMMENT = _{ (!"///") ~ "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+COMMENT = @{ (!"///") ~ "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+BLOCK_OPEN = @{ "{" }
+BLOCK_CLOSE = @{ "}" }
+MODEL_KEYWORD = @{ "model" }
+TYPE_KEYWORD = @{ "type" }
+ENUM_KEYWORD = @{ "enum" }
+GENERATOR_KEYWORD = @{ "generator" }
+DATASOURCE_KEYWORD = @{ "datasource" }
+
 
 doc_content = @{ (!NEWLINE ~ ANY)* ~ NEWLINE }
 doc_comment = { "///" ~ doc_content }
@@ -69,38 +76,37 @@ list_type = { identifier ~ "[]" }
 field_type = { list_type | optional_type | base_type }
 
 // Field
-default_value = { "=" ~ expression }
 // TODO: We want to force a line break after a field declaration.
 // For this, we have to rely on pests new '-' operator.
 // Progress tracked here: https://github.com/pest-parser/pest/issues/271
-field_declaration = { doc_comment* ~ identifier ~ field_type ~ default_value? ~ ( "@" ~ directive )* }
+field_declaration = { doc_comment* ~ identifier ~ field_type ~ ( "@" ~ directive )* }
 
 // ######################################
 // Custom type declarations
 // ######################################
-type_declaration = { doc_comment* ~ "type" ~ identifier ~ "=" ~ base_type ~ ( "@" ~ directive )* }
+type_declaration = { doc_comment* ~ TYPE_KEYWORD ~ identifier ~ "=" ~ base_type ~ ( "@" ~ directive )* }
 
 // ######################################
 // Model declarations
 // ######################################
-model_declaration = { doc_comment* ~ "model" ~ identifier ~ "{" ~ ( field_declaration | ( "@@" ~ directive )  )* ~ "}" }
+model_declaration = { doc_comment* ~ MODEL_KEYWORD ~ identifier ~ BLOCK_OPEN ~ ( field_declaration | ( "@@" ~ directive )  )* ~ BLOCK_CLOSE }
 
 // ######################################
 // Enum declarations
 // ######################################
 enum_field_declaration = @{ identifier }
-enum_declaration = { doc_comment* ~ "enum" ~ identifier ~ "{" ~ (enum_field_declaration | ( "@@" ~ directive )  )* ~ "}" }
+enum_declaration = { doc_comment* ~ ENUM_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (enum_field_declaration | ( "@@" ~ directive )  )* ~ BLOCK_CLOSE }
 
 // ######################################
 // Source block
 // ######################################
 key_value = { identifier ~ "=" ~ expression }
-source_block = { doc_comment* ~ "datasource" ~ identifier ~ "{" ~ key_value* ~ "}" }
+source_block = { doc_comment* ~ DATASOURCE_KEYWORD ~ identifier ~ BLOCK_OPEN ~ key_value* ~ BLOCK_CLOSE }
 
 // ######################################
 // Generator block
 // ######################################
-generator_block = { doc_comment* ~ "generator" ~ identifier ~ "{" ~ key_value* ~ "}" }
+generator_block = { doc_comment* ~ GENERATOR_KEYWORD ~ identifier ~ BLOCK_OPEN ~ key_value* ~ BLOCK_CLOSE }
 
 // ######################################
 // Datamodel

@@ -7,6 +7,10 @@ macro_rules! match_children (
         // We only need a reference to the pair later for logging.
         for $current in $token.clone().into_inner() {
             match $current.as_rule() {
+                Rule::WHITESPACE => { },
+                Rule::COMMENT => { },
+                Rule::BLOCK_OPEN => { },
+                Rule::BLOCK_CLOSE => { },
                 $(
                     $pattern => $result
                 ),*
@@ -21,7 +25,14 @@ macro_rules! match_first (
     ($token:ident, $current:ident, $($pattern:pat => $result:expr),*) => ( {
             // Explicit clone, as into_inner consumes the pair.
         // We only need a reference to the pair later for logging.
-            let $current = $token.clone().into_inner().next().unwrap();
+            let $current = $token.clone()
+                .into_inner()
+                .filter(|rule| 
+                    rule.as_rule() != Rule::BLOCK_CLOSE && 
+                    rule.as_rule() != Rule::BLOCK_OPEN && 
+                    rule.as_rule() != Rule::WHITESPACE && 
+                    rule.as_rule() != Rule::COMMENT)
+                .next().unwrap();
             match $current.as_rule() {
                 $(
                     $pattern => $result

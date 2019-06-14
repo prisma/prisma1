@@ -15,7 +15,6 @@ pub struct Renderer<'a> {
 }
 
 // TODO: It would be soooo cool if we could pass format strings around.
-
 impl<'a> Renderer<'a> {
     pub fn new(stream: &'a mut std::io::Write, indent_width: usize) -> Renderer<'a> {
         Renderer {
