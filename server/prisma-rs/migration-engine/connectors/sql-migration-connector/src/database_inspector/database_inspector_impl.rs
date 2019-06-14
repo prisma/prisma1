@@ -1,4 +1,4 @@
-use crate::*;
+use super::*;
 
 pub fn convert_introspected_columns(
     columns: Vec<IntrospectedColumn>,
@@ -21,6 +21,7 @@ pub fn convert_introspected_columns(
                 is_required: c.is_required,
                 foreign_key: foreign_key,
                 sequence: None,
+                default: None,
             }
         })
         .collect()

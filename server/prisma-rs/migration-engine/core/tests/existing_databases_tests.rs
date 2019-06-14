@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 mod test_harness;
 use barrel::{types, Migration, SqlVariant};
-use database_inspector::*;
+use sql_migration_connector::database_inspector::*;
 use migration_core::MigrationEngine;
 use prisma_query::Connectional;
 use sql_migration_connector::SqlFamily;

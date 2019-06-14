@@ -4,7 +4,7 @@ use test_harness::*;
 
 #[test]
 fn unapply_must_work() {
-    test_each_connector(|engine| {
+    test_each_connector(|_,engine| {
         let dm1 = r#"
             model Test {
                 id String @id

@@ -1,5 +1,5 @@
 use crate::*;
-use database_inspector::{Column, DatabaseSchema, Table};
+use crate::database_inspector::{Column, DatabaseSchema, Table};
 
 const MIGRATION_TABLE_NAME: &str = "_Migration";
 
@@ -123,7 +123,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         let mut result = Vec::new();
         for next_column in &next.columns {
             if let Some(previous_column) = previous.column(&next_column.name) {
-                if previous_column != next_column {
+                if previous_column.differs_in_something_except_default(next_column) {
                     let change = AlterColumn {
                         name: previous_column.name.clone(),
                         column: Self::column_description(next_column),
@@ -149,6 +149,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
             tpe: Self::convert_column_type(column.tpe),
             required: column.is_required,
             foreign_key: fk,
+            default: column.default.clone(),
         }
     }
 

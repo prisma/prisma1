@@ -1,5 +1,5 @@
 use super::introspect_database;
-use database_inspector::*;
+use sql_migration_connector::database_inspector::*;
 use migration_connector::MigrationStep;
 use migration_core::commands::*;
 use migration_core::MigrationEngine;
