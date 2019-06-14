@@ -37,7 +37,6 @@ impl<'field> MutationBuilder<'field> {
         }
 
         let args = into_tree(&self.field.arguments);
-
         let raw_name = self.field.alias.as_ref().unwrap_or_else(|| &self.field.name).clone();
         let model_operation = parse_model_action(&raw_name, Arc::clone(&self.model))?;
 
@@ -61,8 +60,15 @@ impl<'field> MutationBuilder<'field> {
                 let list_args = lists.into_iter().map(|la| la.convert()).collect();
                 let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
 
+                let where_ = ValueMap(shift_data(&args, "where")?)
+                    .to_node_selector(Arc::clone(&model))
+                    .map_or(
+                        Err(CoreError::QueryValidationError("No `where` on connect".into())),
+                        |w| Ok(w),
+                    )?;
+
                 TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
-                    where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
+                    where_,
                     non_list_args,
                     list_args,
                     nested_mutactions,
@@ -87,9 +93,16 @@ impl<'field> MutationBuilder<'field> {
                     list_args,
                 })
             }
-            OperationTag::DeleteSingle => TopLevelDatabaseMutaction::DeleteNode(DeleteNode {
-                where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
-            }),
+            OperationTag::DeleteSingle => {
+                let where_ = ValueMap(shift_data(&args, "where")?)
+                    .to_node_selector(Arc::clone(&model))
+                    .map_or(
+                        Err(CoreError::QueryValidationError("No `where` on connect".into())),
+                        |w| Ok(w),
+                    )?;
+
+                TopLevelDatabaseMutaction::DeleteNode(DeleteNode { where_ })
+            }
             OperationTag::DeleteMany => {
                 let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
                 let filter = query_args
@@ -154,31 +167,6 @@ fn handle_reset(field: &Field, internal_data_model: InternalDataModelRef) -> Cor
         field: field.clone(),
     })
 }
-
-/// A simple enum to discriminate top-level actions
-//pub enum Operation {
-//    Create,
-//    Update,
-//    Delete,
-//    Upsert,
-//    UpdateMany,
-//    DeleteMany,
-//    Reset,
-//}
-
-//impl From<&str> for Operation {
-//    fn from(s: &str) -> Self {
-//        match s {
-//            "create" => Operation::Create,
-//            "update" => Operation::Update,
-//            "updateMany" => Operation::UpdateMany,
-//            "delete" => Operation::Delete,
-//            "deleteMany" => Operation::DeleteMany,
-//            "upsert" => Operation::Upsert,
-//            _ => unimplemented!(),
-//        }
-//    }
-//}
 
 /// Convert arguments provided by graphql-ast into a tree
 fn into_tree(from: &Vec<(String, Value)>) -> BTreeMap<String, Value> {

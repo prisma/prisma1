@@ -19,7 +19,7 @@ pub fn load_connector(
     };
     let url = source.url();
     let exists = SqlMigrationConnector::exists(sql_family, &url);
-    match dbg!((exists, must_exist)) {
+    match (exists, must_exist) {
         (true, _) => Ok(SqlMigrationConnector::new(sql_family, &url)),
         (false, false) => Ok(SqlMigrationConnector::virtual_variant(sql_family, &url)),
         (false, true) => Ok(SqlMigrationConnector::new(sql_family, &url)), // this is only right for SQLite

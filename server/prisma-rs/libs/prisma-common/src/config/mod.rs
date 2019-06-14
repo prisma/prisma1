@@ -79,7 +79,6 @@ pub struct PrismaConfig {
 }
 
 /// Allows a legacy config to be transformed into the new data sources format.
-/// WIP: Default is not yet supported in data sources.
 impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
     type Error = CommonError;
 
@@ -112,14 +111,17 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
                         None => config.user.clone(),
                     };
 
-                    let url = format!("postgresql://{}@{}:{}/{}?sslmode=prefer", auth_pair, config.host, config.port, db_name);
+                    let url = format!("postgresql://{}@{}:{}/{}?sslmode=prefer&schema={}", auth_pair, config.host, config.port, db_name, config.schema.clone().unwrap_or("public".into()));
                     let source = PostgresSourceDefinition::new().create( &name, &url, &Arguments::empty(&vec![]), &None);
 
                     source.map_err(|err| err.into())
                 },
 
                 PrismaDatabase::ConnectionString(ref config) if config.connector == "postgres-native" => {
-                    let source = PostgresSourceDefinition::new().create(&name, &config.uri.to_string(), &Arguments::empty(&vec![]), &None);
+                    let mut uri = config.uri.clone();
+                    uri.query_pairs_mut().append_pair("schema", &config.schema.clone().unwrap_or("public".into()));
+
+                    let source = PostgresSourceDefinition::new().create(&name, &uri.to_string(), &Arguments::empty(&vec![]), &None);
                     source.map_err(|err| err.into())
                 },
 

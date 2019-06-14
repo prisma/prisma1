@@ -9,7 +9,7 @@ pub trait MigrationCommand {
 
     fn new(input: Self::Input) -> Box<Self>;
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output>;
+    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output>;
 
     fn has_source_config() -> bool {
         true
@@ -33,6 +33,7 @@ pub type CommandResult<T> = Result<T, CommandError>;
 pub enum CommandError {
     DataModelErrors { code: i64, errors: Vec<String> },
     InitializationError { code: i64, error: String },
+    Generic { code: i64, error: String },
 }
 
 impl From<datamodel::errors::ErrorCollection> for CommandError {
@@ -48,8 +49,17 @@ impl From<datamodel::errors::ErrorCollection> for CommandError {
             })
             .collect();
         CommandError::DataModelErrors {
-            code: 1000,
+            code: 1001,
             errors: errors_str,
+        }
+    }
+}
+
+impl From<migration_connector::ConnectorError> for CommandError {
+    fn from(error: migration_connector::ConnectorError) -> CommandError {
+        CommandError::Generic {
+            code: 1000,
+            error: format!("{:?}", error),
         }
     }
 }

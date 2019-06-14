@@ -12,6 +12,7 @@ import { PostgresIntrospectionResult } from './postgresIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
 import IDatabaseClient from '../../IDatabaseClient'
 import PostgresDatabaseClient from './postgresDatabaseClient'
+import { DatabaseMetadata } from '../../../common/introspectionResult'
 import * as debug from 'debug'
 
 let log = debug('PostgresIntrospection')
@@ -182,5 +183,20 @@ export class PostgresConnector extends RelationalConnector {
         allocationSize: 1,
       }
     })
+  }
+
+  public async getMetadata(schemaName: string): Promise<DatabaseMetadata> {
+    const schemaSizeQuery = `
+      SELECT 
+        SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)))::BIGINT as size
+        FROM pg_tables WHERE schemaname = $1::text`
+
+    const [{ size }] = await this.query(schemaSizeQuery, [schemaName])
+    const count = await super.countTables(schemaName)
+
+    return {
+      countOfTables: count,
+      sizeInBytes: size,
+    }
   }
 }

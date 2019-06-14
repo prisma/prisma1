@@ -14,7 +14,7 @@ impl MigrationCommand for DmmfToDmlCommand {
         Box::new(DmmfToDmlCommand { input })
     }
 
-    fn execute(&self, _engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
+    fn execute(&self, _engine: &MigrationEngine) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let datamodel = datamodel::dmmf::parse_from_dmmf(&self.input.dmmf);
         let config = datamodel::config_from_mcf_json_value(self.input.config.clone());

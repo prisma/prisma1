@@ -12,16 +12,20 @@ pub struct SqlDatabaseStepApplier {
 
 #[allow(unused, dead_code)]
 impl DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier {
-    fn apply_step(&self, database_migration: &SqlMigration, index: usize) -> bool {
-        self.apply_next_step(&database_migration.steps, index)
+    fn apply_step(&self, database_migration: &SqlMigration, index: usize) -> ConnectorResult<bool> {
+        Ok(self.apply_next_step(&database_migration.steps, index)?)
     }
 
-    fn unapply_step(&self, database_migration: &SqlMigration, index: usize) -> bool {
-        self.apply_next_step(&database_migration.rollback, index)
+    fn unapply_step(&self, database_migration: &SqlMigration, index: usize) -> ConnectorResult<bool> {
+        Ok(self.apply_next_step(&database_migration.rollback, index)?)
     }
 
-    fn render_steps_pretty(&self, database_migration: &SqlMigration) -> serde_json::Value {
-        render_steps_pretty(&database_migration, self.sql_family, &self.schema_name)
+    fn render_steps_pretty(&self, database_migration: &SqlMigration) -> ConnectorResult<serde_json::Value> {
+        Ok(render_steps_pretty(
+            &database_migration,
+            self.sql_family,
+            &self.schema_name,
+        )?)
     }
 }
 
@@ -30,24 +34,28 @@ pub struct VirtualSqlDatabaseStepApplier {
     pub schema_name: String,
 }
 impl DatabaseMigrationStepApplier<SqlMigration> for VirtualSqlDatabaseStepApplier {
-    fn apply_step(&self, _database_migration: &SqlMigration, _index: usize) -> bool {
+    fn apply_step(&self, _database_migration: &SqlMigration, _index: usize) -> ConnectorResult<bool> {
         unimplemented!("Not allowed on a VirtualSqlDatabaseStepApplier")
     }
 
-    fn unapply_step(&self, _database_migration: &SqlMigration, _index: usize) -> bool {
+    fn unapply_step(&self, _database_migration: &SqlMigration, _index: usize) -> ConnectorResult<bool> {
         unimplemented!("Not allowed on a VirtualSqlDatabaseStepApplier")
     }
 
-    fn render_steps_pretty(&self, database_migration: &SqlMigration) -> serde_json::Value {
-        render_steps_pretty(&database_migration, self.sql_family, &self.schema_name)
+    fn render_steps_pretty(&self, database_migration: &SqlMigration) -> ConnectorResult<serde_json::Value> {
+        Ok(render_steps_pretty(
+            &database_migration,
+            self.sql_family,
+            &self.schema_name,
+        )?)
     }
 }
 
 impl SqlDatabaseStepApplier {
-    fn apply_next_step(&self, steps: &Vec<SqlMigrationStep>, index: usize) -> bool {
+    fn apply_next_step(&self, steps: &Vec<SqlMigrationStep>, index: usize) -> SqlResult<bool> {
         let has_this_one = steps.get(index).is_some();
         if !has_this_one {
-            return false;
+            return Ok(false);
         }
 
         let step = &steps[index];
@@ -56,10 +64,10 @@ impl SqlDatabaseStepApplier {
         let result = self.conn.query_on_raw_connection(&self.schema_name, &sql_string, &[]);
 
         // TODO: this does not evaluate the results of SQLites PRAGMA foreign_key_check
-        result.unwrap();
+        result?;
 
         let has_more = steps.get(index + 1).is_some();
-        has_more
+        Ok(has_more)
     }
 }
 
@@ -67,7 +75,7 @@ fn render_steps_pretty(
     database_migration: &SqlMigration,
     sql_family: SqlFamily,
     schema_name: &str,
-) -> serde_json::Value {
+) -> ConnectorResult<serde_json::Value> {
     let jsons = database_migration
         .steps
         .iter()
@@ -82,11 +90,13 @@ fn render_steps_pretty(
             json_value
         })
         .collect();
-    serde_json::Value::Array(jsons)
+    Ok(serde_json::Value::Array(jsons))
 }
 
 fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &str) -> String {
     let mut migration = BarrelMigration::new().schema(schema_name.clone());
+
+    let schema_name = schema_name.to_string();
 
     match step {
         SqlMigrationStep::CreateTable(CreateTable {
@@ -98,7 +108,7 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
             let primary_columns = primary_columns.clone();
             migration.create_table(name.to_string(), move |t| {
                 for column in cloned_columns.clone() {
-                    let tpe = column_description_to_barrel_type(&column);
+                    let tpe = column_description_to_barrel_type(sql_family, schema_name.to_string(), &column);
                     t.add_column(column.name, tpe);
                 }
                 if primary_columns.len() > 0 {
@@ -116,6 +126,13 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
             migration.drop_table(name.to_string());
             make_sql_string(migration, sql_family)
         }
+        SqlMigrationStep::DropTables(DropTables { names }) => {
+            let fully_qualified_names: Vec<String> = names
+                .iter()
+                .map(|name| format!("\"{}\".\"{}\"", schema_name, name))
+                .collect();
+            format!("DROP TABLE {};", fully_qualified_names.join(","))
+        }
         SqlMigrationStep::RenameTable { name, new_name } => {
             migration.rename_table(name.to_string(), new_name.to_string());
             make_sql_string(migration, sql_family)
@@ -126,13 +143,13 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
                 for change in changes.clone() {
                     match change {
                         TableChange::AddColumn(AddColumn { column }) => {
-                            let tpe = column_description_to_barrel_type(&column);
+                            let tpe = column_description_to_barrel_type(sql_family, schema_name.to_string(), &column);
                             t.add_column(column.name, tpe);
                         }
                         TableChange::DropColumn(DropColumn { name }) => t.drop_column(name),
                         TableChange::AlterColumn(AlterColumn { name, column }) => {
                             t.drop_column(name);
-                            let tpe = column_description_to_barrel_type(&column);
+                            let tpe = column_description_to_barrel_type(sql_family, schema_name.to_string(), &column);
                             t.add_column(column.name, tpe);
                         }
                     }
@@ -153,30 +170,56 @@ fn make_sql_string(migration: BarrelMigration, sql_family: SqlFamily) -> String 
     }
 }
 
-fn column_description_to_barrel_type(column_description: &ColumnDescription) -> barrel::types::Type {
+fn column_description_to_barrel_type(
+    sql_family: SqlFamily,
+    schema_name: String,
+    column_description: &ColumnDescription,
+) -> barrel::types::Type {
     // TODO: add foreign keys for non integer types once this is available in barrel
-    let tpe = match &column_description.foreign_key {
-        Some(fk) => {
-            let tpe_str = render_column_type(column_description.tpe);
+    let tpe_str = render_column_type(sql_family, column_description.tpe);
+    let tpe = match (sql_family, &column_description.foreign_key) {
+        (SqlFamily::Postgres, Some(fk)) => {
+            let complete = dbg!(format!(
+                "{} REFERENCES \"{}\".\"{}\"({})",
+                tpe_str, schema_name, fk.table, fk.column
+            ));
+            barrel::types::custom(string_to_static_str(complete))
+        }
+        (_, Some(fk)) => {
             let complete = dbg!(format!("{} REFERENCES {}({})", tpe_str, fk.table, fk.column));
             barrel::types::custom(string_to_static_str(complete))
         }
-        None => {
-            let tpe_str = render_column_type(column_description.tpe);
-            barrel::types::custom(string_to_static_str(tpe_str))
-        }
+        (_, None) => barrel::types::custom(string_to_static_str(tpe_str)),
     };
     tpe.nullable(!column_description.required)
 }
 
 // TODO: this must become database specific akin to our TypeMappers in Scala
-fn render_column_type(t: ColumnType) -> String {
+fn render_column_type(sql_family: SqlFamily, t: ColumnType) -> String {
+    match sql_family {
+        SqlFamily::Sqlite => render_column_type_sqlite(t),
+        SqlFamily::Postgres => render_column_type_postgres(t),
+        _ => unimplemented!(),
+    }
+}
+
+fn render_column_type_sqlite(t: ColumnType) -> String {
     match t {
         ColumnType::Boolean => format!("BOOLEAN"),
         ColumnType::DateTime => format!("DATE"),
         ColumnType::Float => format!("REAL"),
         ColumnType::Int => format!("INTEGER"),
         ColumnType::String => format!("TEXT"),
+    }
+}
+
+fn render_column_type_postgres(t: ColumnType) -> String {
+    match t {
+        ColumnType::Boolean => format!("boolean"),
+        ColumnType::DateTime => format!("timestamp(3)"),
+        ColumnType::Float => format!("Decimal(65,30)"),
+        ColumnType::Int => format!("integer"),
+        ColumnType::String => format!("text"),
     }
 }
 

@@ -211,7 +211,7 @@ dependencies = [
 
 [[package]]
 name = "barrel"
-version = "0.5.8"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -570,10 +570,11 @@ dependencies = [
 name = "database-inspector"
 version = "0.1.0"
 dependencies = [
- "barrel 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "barrel 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "postgres 0.16.0-rc.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)",
- "rusqlite 0.18.0 (git+https://github.com/pimeys/rusqlite)",
  "time 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 1.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1141,7 +1142,7 @@ dependencies = [
 name = "migration-core"
 version = "0.1.0"
 dependencies = [
- "barrel 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "barrel 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "boolinator 2.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "database-inspector 0.1.0",
@@ -1767,6 +1768,14 @@ dependencies = [
  "url 1.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "url_serde 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "prisma-fmt"
+version = "0.1.0"
+dependencies = [
+ "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "datamodel 0.1.0",
 ]
 
 [[package]]
@@ -2439,7 +2448,7 @@ dependencies = [
 name = "sql-migration-connector"
 version = "0.1.0"
 dependencies = [
- "barrel 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "barrel 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "database-inspector 0.1.0",
  "datamodel 0.1.0",
@@ -3276,7 +3285,7 @@ dependencies = [
 "checksum autocfg 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "0e49efa51329a5fd37e7c79db4621af617cd4e3e5bc224939808d076077077bf"
 "checksum backtrace 0.3.30 (registry+https://github.com/rust-lang/crates.io-index)" = "ada4c783bb7e7443c14e0480f429ae2cc99da95065aeab7ee1b81ada0419404f"
 "checksum backtrace-sys 0.1.28 (registry+https://github.com/rust-lang/crates.io-index)" = "797c830ac25ccc92a7f8a7b9862bde440715531514594a6154e3d4a54dd769b6"
-"checksum barrel 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)" = "1d8b66fd0f3d416a716d31a19cd1ce66be952a3cba4e20fa71e8ed2259baa726"
+"checksum barrel 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "5497422862a693058ae19670b3e99e999ef048cd3f26f9ffceca2ed103ccc0ad"
 "checksum base64 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0b25d992356d2eb0ed82172f5248873db5560c4721f564b13cb5193bda5e668e"
 "checksum base64 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)" = "489d6c0ed21b11d038c31b6ceccca973e65d73ba3bd8ecb9a2babf5546164643"
 "checksum bit-vec 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f59bbe95d4e52a6398ec21238d31577f2b28a9d86807f06ca59d191d8440d0bb"

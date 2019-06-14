@@ -8,9 +8,9 @@ mod error;
 mod protobuf;
 
 use error::*;
+use lazy_static::lazy_static;
 use prisma_common::config::{self, PrismaConfig};
 use protobuf::{ProtoBufEnvelope, ProtoBufInterface};
-use lazy_static::lazy_static;
 use std::{ffi::CStr, os::raw::c_char, slice};
 
 pub type BridgeResult<T> = Result<T, BridgeError>;

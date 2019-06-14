@@ -1,15 +1,17 @@
 #![allow(non_snake_case)]
 mod test_harness;
-use barrel::{backend::Sqlite as Squirrel, types, Migration};
+use barrel::{types, Migration, SqlVariant};
 use database_inspector::*;
-use prisma_query::connector::Sqlite as SqliteDatabaseClient;
+use migration_core::MigrationEngine;
 use prisma_query::Connectional;
+use sql_migration_connector::SqlFamily;
+use std::sync::Arc;
 use test_harness::*;
 
 #[test]
 fn adding_a_model_for_an_existing_table_must_work() {
-    run_test_with_engine(|engine| {
-        let initial_result = execute(|migration| {
+    test_each_backend(|engine, barrel| {
+        let initial_result = barrel.execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
             });
@@ -31,7 +33,7 @@ fn bigint_columns_must_work() {
 
 #[test]
 fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
-    run_test_with_engine(|engine| {
+    test_each_backend(|engine, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
@@ -42,12 +44,12 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
             }
         "#;
         let initial_result = infer_and_apply(&engine, &dm1);
-        assert_eq!(initial_result.table("Post").is_some(), true);
+        assert!(initial_result.has_table("Post"));
 
-        let result = execute(|migration| {
+        let result = barrel.execute(|migration| {
             migration.drop_table("Post");
         });
-        assert_eq!(result.table("Post").is_some(), false);
+        assert!(!result.has_table("Post"));
 
         let dm2 = r#"
             model Blog {
@@ -61,8 +63,8 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
 
 #[test]
 fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
-    run_test_with_engine(|engine| {
-        let initial_result = execute(|migration| {
+    test_each_backend(|engine, barrel| {
+        let initial_result = barrel.execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
                 t.add_column("title", types::text());
@@ -81,8 +83,8 @@ fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
 
 #[test]
 fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
-    run_test_with_engine(|engine| {
-        let initial_result = execute(|migration| {
+    test_each_backend(|engine, barrel| {
+        let initial_result = barrel.execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
                 t.add_column("title", types::integer().nullable(true));
@@ -108,8 +110,8 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
 
 #[test]
 fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional() {
-    run_test_with_engine(|engine| {
-        let initial_result = execute(|migration| {
+    test_each_backend(|engine, barrel| {
+        let initial_result = barrel.execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
                 t.add_column("title", types::text());
@@ -132,23 +134,23 @@ fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional
 
 #[test]
 fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
-    run_test_with_engine(|engine| {
+    test_each_backend(|engine, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
             }
         "#;
         let initial_result = infer_and_apply(&engine, &dm1);
-        assert_eq!(initial_result.table("Blog_tags").is_some(), false);
+        assert!(!initial_result.has_table("Blog_tags"));
 
-        let result = execute(|migration| {
+        let result = barrel.execute(|migration| {
             migration.create_table("Blog_tags", |t| {
-                t.add_column("nodeId", types::foreign("Blog(id)"));
+                t.add_column("nodeId", types::foreign("Blog", "id")); // TODO: barrel does not render this one correctly
                 t.add_column("position", types::integer());
                 t.add_column("value", types::text());
             });
         });
-        assert_eq!(result.table("Blog_tags").is_some(), true);
+        assert!(result.has_table("Blog_tags"));
 
         let dm2 = r#"
             model Blog {
@@ -163,7 +165,7 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
 
 #[test]
 fn delete_a_field_for_a_non_existent_column_must_work() {
-    run_test_with_engine(|engine| {
+    test_each_backend(|engine, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
@@ -173,7 +175,7 @@ fn delete_a_field_for_a_non_existent_column_must_work() {
         let initial_result = infer_and_apply(&engine, &dm1);
         assert_eq!(initial_result.table_bang("Blog").column("title").is_some(), true);
 
-        let result = execute(|migration| {
+        let result = barrel.execute(|migration| {
             // sqlite does not support dropping columns. So we are emulating it..
             migration.drop_table("Blog");
             migration.create_table("Blog", |t| {
@@ -194,7 +196,7 @@ fn delete_a_field_for_a_non_existent_column_must_work() {
 
 #[test]
 fn deleting_a_scalar_list_field_for_a_non_existent_list_table_must_work() {
-    run_test_with_engine(|engine| {
+    test_each_backend(|engine, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
@@ -202,12 +204,12 @@ fn deleting_a_scalar_list_field_for_a_non_existent_list_table_must_work() {
             }
         "#;
         let initial_result = infer_and_apply(&engine, &dm1);
-        assert_eq!(initial_result.table("Blog_tags").is_some(), true);
+        assert!(initial_result.has_table("Blog_tags"));
 
-        let result = execute(|migration| {
+        let result = barrel.execute(|migration| {
             migration.drop_table("Blog_tags");
         });
-        assert_eq!(result.table("Blog_tags").is_some(), false);
+        assert!(!result.has_table("Blog_tags"));
 
         let dm2 = r#"
             model Blog {
@@ -221,7 +223,7 @@ fn deleting_a_scalar_list_field_for_a_non_existent_list_table_must_work() {
 
 #[test]
 fn updating_a_field_for_a_non_existent_column() {
-    run_test_with_engine(|engine| {
+    test_each_backend(|engine, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
@@ -232,7 +234,7 @@ fn updating_a_field_for_a_non_existent_column() {
         let initial_column = initial_result.table_bang("Blog").column_bang("title");
         assert_eq!(initial_column.tpe, ColumnType::String);
 
-        let result = execute(|migration| {
+        let result = barrel.execute(|migration| {
             // sqlite does not support dropping columns. So we are emulating it..
             migration.drop_table("Blog");
             migration.create_table("Blog", |t| {
@@ -256,7 +258,7 @@ fn updating_a_field_for_a_non_existent_column() {
 
 #[test]
 fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
-    run_test_with_engine(|engine| {
+    test_each_backend(|engine, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
@@ -267,7 +269,7 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
         let initial_column = initial_result.table_bang("Blog").column_bang("title");
         assert_eq!(initial_column.tpe, ColumnType::String);
 
-        let result = execute(|migration| {
+        let result = barrel.execute(|migration| {
             // sqlite does not support renaming columns. So we are emulating it..
             migration.drop_table("Blog");
             migration.create_table("Blog", |t| {
@@ -288,32 +290,100 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
         assert_eq!(final_column.tpe, ColumnType::Float);
         assert_eq!(final_result.table_bang("Blog").column("title").is_some(), false);
         // TODO: assert uniqueness
-    });
+    })
 }
 
-fn execute<F>(mut migrationFn: F) -> DatabaseSchema
+fn test_each_backend<TestFn>(testFn: TestFn)
 where
-    F: FnMut(&mut Migration) -> (),
+    TestFn: Fn(&MigrationEngine, &BarrelMigrationExecutor) -> () + std::panic::RefUnwindSafe,
 {
-    let test_mode = false;
-    let schema_name = "existing_db_tests";
-    let conn = std::sync::Arc::new(SqliteDatabaseClient::new(sqlite_test_file(), 32, test_mode).unwrap());
-    conn.with_connection(&schema_name, |c| {
-        let mut migration = Migration::new().schema(schema_name);
+    test_each_backend_with_ignores(Vec::new(), testFn);
+}
+
+fn test_each_backend_with_ignores<TestFn>(ignores: Vec<SqlFamily>, testFn: TestFn)
+where
+    TestFn: Fn(&MigrationEngine, &BarrelMigrationExecutor) -> () + std::panic::RefUnwindSafe,
+{
+    // SQLite
+    if !ignores.contains(&SqlFamily::Sqlite) {
+        println!("Testing with SQLite now");
+        let (inspector, connectional) = sqlite();
+        println!("Running the test function now");
+        let engine = test_engine(&sqlite_test_config());
+        let barrel_migration_executor = BarrelMigrationExecutor {
+            inspector,
+            connectional,
+            sql_variant: SqlVariant::Sqlite,
+        };
+        testFn(&engine, &barrel_migration_executor);
+    } else {
+        println!("Ignoring SQLite")
+    }
+    // POSTGRES
+    if !ignores.contains(&SqlFamily::Postgres) {
+        println!("Testing with Postgres now");
+        let (inspector, connectional) = postgres();
+        println!("Running the test function now");
+        let engine = test_engine(&postgres_test_config());
+        let barrel_migration_executor = BarrelMigrationExecutor {
+            inspector,
+            connectional,
+            sql_variant: SqlVariant::Pg,
+        };
+        testFn(&engine, &barrel_migration_executor);
+    } else {
+        println!("Ignoring Postgres")
+    }
+}
+
+fn sqlite() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
+    let database_file_path = sqlite_test_file();
+    let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
+
+    let inspector = DatabaseInspector::sqlite(database_file_path);
+    let connectional = Arc::clone(&inspector.connectional);
+
+    (Arc::new(inspector), connectional)
+}
+
+fn postgres() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
+    let url = postgres_url();
+    let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA_NAME));
+    let setup_connectional = DatabaseInspector::postgres(url.to_string()).connectional;
+    let _ = setup_connectional.query_on_raw_connection(&SCHEMA_NAME, &drop_schema, &[]);
+
+    let inspector = DatabaseInspector::postgres(url.to_string());
+    let connectional = Arc::clone(&inspector.connectional);
+
+    (Arc::new(inspector), connectional)
+}
+
+struct BarrelMigrationExecutor {
+    inspector: Arc<DatabaseInspector>,
+    connectional: Arc<Connectional>,
+    sql_variant: barrel::backend::SqlVariant,
+}
+
+impl BarrelMigrationExecutor {
+    fn execute<F>(&self, mut migrationFn: F) -> DatabaseSchema
+    where
+        F: FnMut(&mut Migration) -> (),
+    {
+        let mut migration = Migration::new().schema(SCHEMA_NAME);
         migrationFn(&mut migration);
-        let full_sql = migration.make::<Squirrel>();
-        for sql in full_sql.split(";") {
-            dbg!(sql);
-            if sql != "" {
-                c.query_raw(&sql, &[]).unwrap();
-            }
+        let full_sql = dbg!(migration.make_from(self.sql_variant));
+        run_full_sql(&self.connectional, &full_sql);
+        let mut result = self.inspector.introspect(&SCHEMA_NAME.to_string());
+        // the presence of the _Migration table makes assertions harder. Therefore remove it.
+        result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
+        result
+    }
+}
+
+fn run_full_sql(connectional: &Arc<Connectional>, full_sql: &str) {
+    for sql in full_sql.split(";") {
+        if sql != "" {
+            connectional.query_on_raw_connection(&SCHEMA_NAME, &sql, &[]).unwrap();
         }
-        Ok(())
-    })
-    .unwrap();
-    let inspector = DatabaseInspectorImpl { connection: conn };
-    let mut result = inspector.introspect(&schema_name.to_string());
-    // the presence of the _Migration table makes assertions harder. Therefore remove it.
-    result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
-    result
+    }
 }

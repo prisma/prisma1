@@ -4,12 +4,12 @@ use migration_connector::MigrationStep;
 use migration_core::commands::*;
 use migration_core::MigrationEngine;
 
-pub fn infer_and_apply(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSchema {
+pub fn infer_and_apply(engine: &MigrationEngine, datamodel: &str) -> DatabaseSchema {
     infer_and_apply_with_migration_id(&engine, &datamodel, "the-migration-id")
 }
 
 pub fn infer_and_apply_with_migration_id(
-    engine: &Box<MigrationEngine>,
+    engine: &MigrationEngine,
     datamodel: &str,
     migration_id: &str,
 ) -> DatabaseSchema {
@@ -23,7 +23,7 @@ pub fn infer_and_apply_with_migration_id(
     apply_migration(&engine, steps, migration_id)
 }
 
-pub fn run_infer_command(engine: &Box<MigrationEngine>, input: InferMigrationStepsInput) -> Vec<MigrationStep> {
+pub fn run_infer_command(engine: &MigrationEngine, input: InferMigrationStepsInput) -> Vec<MigrationStep> {
     let cmd = InferMigrationStepsCommand::new(input);
     let output = cmd.execute(&engine).expect("InferMigration failed");
     assert!(
@@ -34,7 +34,7 @@ pub fn run_infer_command(engine: &Box<MigrationEngine>, input: InferMigrationSte
     output.datamodel_steps
 }
 
-pub fn apply_migration(engine: &Box<MigrationEngine>, steps: Vec<MigrationStep>, migration_id: &str) -> DatabaseSchema {
+pub fn apply_migration(engine: &MigrationEngine, steps: Vec<MigrationStep>, migration_id: &str) -> DatabaseSchema {
     let input = ApplyMigrationInput {
         migration_id: migration_id.to_string(),
         steps: steps,
@@ -50,7 +50,7 @@ pub fn apply_migration(engine: &Box<MigrationEngine>, steps: Vec<MigrationStep>,
     introspect_database(&engine)
 }
 
-pub fn unapply_migration(engine: &Box<MigrationEngine>) -> DatabaseSchema {
+pub fn unapply_migration(engine: &MigrationEngine) -> DatabaseSchema {
     let input = UnapplyMigrationInput {};
     let cmd = UnapplyMigrationCommand::new(input);
     let _ = cmd.execute(&engine);

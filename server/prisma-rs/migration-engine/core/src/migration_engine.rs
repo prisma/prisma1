@@ -1,4 +1,5 @@
 use super::connector_loader::load_connector;
+use crate::commands::CommandResult;
 use crate::migration::datamodel_calculator::*;
 use crate::migration::datamodel_migration_steps_inferrer::*;
 use datamodel::dml::*;
@@ -27,8 +28,14 @@ impl MigrationEngine {
         Box::new(engine)
     }
 
-    pub fn init(&self) {
-        self.connector().initialize()
+    pub fn init(&self) -> CommandResult<()> {
+        self.connector().initialize()?;
+        Ok(())
+    }
+
+    pub fn reset(&self) -> CommandResult<()> {
+        self.connector().reset()?;
+        Ok(())
     }
 
     pub fn datamodel_migration_steps_inferrer(&self) -> Arc<DataModelMigrationStepsInferrer> {

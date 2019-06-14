@@ -191,7 +191,6 @@ impl ValueMap {
 
             // These are actions (create, update, ...)
             for (action, nested) in obj.iter() {
-
                 // We handle upserts specifically because they're weird
                 if action == "upsert" {
                     let name = name.clone();

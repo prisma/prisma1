@@ -90,6 +90,13 @@ pub struct MigrationUpdateParams {
     pub finished_at: Option<DateTime<Utc>>,
 }
 
+impl MigrationUpdateParams {
+    pub fn mark_as_finished(&mut self) {
+        self.status = MigrationStatus::MigrationSuccess;
+        self.finished_at = Some(Migration::timestamp_without_nanos());
+    }
+}
+
 pub trait IsWatchMigration {
     fn is_watch_migration(&self) -> bool;
 }
@@ -124,11 +131,6 @@ impl Migration {
         }
     }
 
-    pub fn mark_as_finished(&mut self) {
-        self.status = MigrationStatus::Success;
-        self.finished_at = Some(Self::timestamp_without_nanos());
-    }
-
     // SQLite does not store nano precision. Therefore we cut it so we can assert equality in our tests.
     pub fn timestamp_without_nanos() -> DateTime<Utc> {
         let timestamp = Utc::now().timestamp_millis();
@@ -149,8 +151,9 @@ impl IsWatchMigration for Migration {
 #[derive(Debug, Serialize, PartialEq, Clone, Copy)]
 pub enum MigrationStatus {
     Pending,
-    InProgress,
-    Success,
+    MigrationInProgress,
+    MigrationSuccess,
+    MigrationFailure,
     RollingBack,
     RollbackSuccess,
     RollbackFailure,
@@ -160,8 +163,9 @@ impl MigrationStatus {
     pub fn code(&self) -> &str {
         match self {
             MigrationStatus::Pending => "Pending",
-            MigrationStatus::InProgress => "InProgress",
-            MigrationStatus::Success => "Success",
+            MigrationStatus::MigrationInProgress => "MigrationInProgress",
+            MigrationStatus::MigrationSuccess => "MigrationSuccess",
+            MigrationStatus::MigrationFailure => "MigrationFailure",
             MigrationStatus::RollingBack => "RollingBack",
             MigrationStatus::RollbackSuccess => "RollbackSuccess",
             MigrationStatus::RollbackFailure => "RollbackFailure",
@@ -171,8 +175,9 @@ impl MigrationStatus {
     pub fn from_str(s: String) -> MigrationStatus {
         match s.as_ref() {
             "Pending" => MigrationStatus::Pending,
-            "InProgress" => MigrationStatus::InProgress,
-            "Success" => MigrationStatus::Success,
+            "MigrationInProgress" => MigrationStatus::MigrationInProgress,
+            "MigrationSuccess" => MigrationStatus::MigrationSuccess,
+            "MigrationFailure" => MigrationStatus::MigrationFailure,
             "RollingBack" => MigrationStatus::RollingBack,
             "RollbackSuccess" => MigrationStatus::RollbackSuccess,
             "RollbackFailure" => MigrationStatus::RollbackFailure,

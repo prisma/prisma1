@@ -1,6 +1,7 @@
 use super::MigrationStepsResultOutput;
 use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
+use crate::*;
 use migration_connector::*;
 
 pub struct InferMigrationStepsCommand {
@@ -15,7 +16,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
         Box::new(InferMigrationStepsCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
+    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
         let current_datamodel = migration_persistence.current_datamodel();
@@ -23,20 +24,21 @@ impl MigrationCommand for InferMigrationStepsCommand {
             .datamodel_calculator()
             .infer(&current_datamodel, &self.input.assume_to_be_applied);
 
-        let next_datamodel = datamodel::parse(&self.input.datamodel)?;
+        let next_datamodel = parse_datamodel(&self.input.datamodel)?;
 
         let model_migration_steps = engine
             .datamodel_migration_steps_inferrer()
             .infer(&assumed_datamodel, &next_datamodel);
 
-        let database_migration =
-            connector
-                .database_migration_inferrer()
-                .infer(&assumed_datamodel, &next_datamodel, &model_migration_steps);
+        let database_migration = connector.database_migration_inferrer().infer(
+            &assumed_datamodel,
+            &next_datamodel,
+            &model_migration_steps,
+        )?;
 
         let database_steps_json = connector
             .database_migration_step_applier()
-            .render_steps_pretty(&database_migration);
+            .render_steps_pretty(&database_migration)?;
 
         let returned_datamodel_steps = if self.input.is_watch_migration() {
             model_migration_steps

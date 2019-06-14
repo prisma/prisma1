@@ -13,7 +13,7 @@ impl MigrationCommand for UnapplyMigrationCommand {
         Box::new(UnapplyMigrationCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
+    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let connector = engine.connector();
         let result = match connector.migration_persistence().last() {

@@ -1,68 +1,68 @@
 extern crate datamodel;
 
 const DATAMODEL_STRING: &str = r#"model User {
-    id         Int       @id
-    createdAt  DateTime
-    email      String    @unique
-    name       String?
-    posts      Post[]    @relation(onDelete: CASCADE)
-    profile    Profile?
+  id        Int      @id
+  createdAt DateTime
+  email     String   @unique
+  name      String?
+  posts     Post[]   @relation(onDelete: CASCADE)
+  profile   Profile?
 
-    @@db("user")
+  @@db("user")
 }
 
 model Profile {
-    id    Int     @id
-    user  User
-    bio   String
+  id   Int    @id
+  user User
+  bio  String
 
-    @@db("profile")
+  @@db("profile")
 }
 
 model Post {
-    id          Int               @id
-    createdAt   DateTime
-    updatedAt   DateTime
-    title       String            @default("Default-Title")
-    wasLiked    Boolean           @default(false)
-    author      User              @relation("author")
-    published   Boolean           @default(false)
-    categories  PostToCategory[]
+  id         Int              @id
+  createdAt  DateTime
+  updatedAt  DateTime
+  title      String           @default("Default-Title")
+  wasLiked   Boolean          @default(false)
+  author     User             @relation("author")
+  published  Boolean          @default(false)
+  categories PostToCategory[]
 
-    @@db("post")
+  @@db("post")
 }
 
 model Category {
-    id     Int               @id
-    name   String
-    posts  PostToCategory[]
-    cat    CategoryEnum
+  id    Int              @id
+  name  String
+  posts PostToCategory[]
+  cat   CategoryEnum
 
-    @@db("category")
+  @@db("category")
 }
 
 model PostToCategory {
-    id        Int       @id
-    post      Post
-    category  Category
+  id       Int      @id
+  post     Post
+  category Category
 
-    @@db("post_to_category")
+  @@db("post_to_category")
 }
 
 model A {
-    id  Int  @id
-    b   B
+  id Int @id
+  b  B
 }
 
 model B {
-    id  Int  @id
-    a   A
+  id Int @id
+  a  A
 }
 
 enum CategoryEnum {
-    A
-    B
-    C
+  A
+  B
+  C
 }"#;
 
 #[test]
@@ -76,24 +76,24 @@ fn test_parser_renderer_via_ast() {
 }
 
 const MANY_TO_MANY_DATAMODEL: &str = r#"model Blog {
-    id         Int       @id
-    name       String
-    viewCount  Int
-    posts      Post[]
-    authors    Author[]  @relation("AuthorToBlogs")
+  id        Int      @id
+  name      String
+  viewCount Int
+  posts     Post[]
+  authors   Author[] @relation("AuthorToBlogs")
 }
 
 model Author {
-    id       Int      @id
-    name     String?
-    authors  Blog[]   @relation("AuthorToBlogs")
+  id      Int     @id
+  name    String?
+  authors Blog[]  @relation("AuthorToBlogs")
 }
 
 model Post {
-    id     Int       @id
-    title  String
-    tags   String[]
-    blog   Blog
+  id    Int      @id
+  title String
+  tags  String[]
+  blog  Blog
 }"#;
 
 #[test]
@@ -106,12 +106,12 @@ fn test_parser_renderer_many_to_many_via_ast() {
     assert_eq!(rendered, MANY_TO_MANY_DATAMODEL);
 }
 
-const DATAMODEL_WITH_TYPES: &str = r#"type  ID  =  Int  @id
+const DATAMODEL_WITH_TYPES: &str = r#"type ID = Int @id
 
 model Author {
-    id       ID
-    name     String?
-    authors  Blog[]   @relation("AuthorToBlogs")
+  id      ID
+  name    String?
+  authors Blog[]  @relation("AuthorToBlogs")
 }"#;
 
 #[test]
@@ -125,14 +125,14 @@ fn test_parser_renderer_types_via_ast() {
 }
 
 const DATAMODEL_WITH_SOURCE: &str = r#"datasource pg1 {
-    provider  =  "Postgres"
-    url       =  "https://localhost/postgres1"
+  provider = "Postgres"
+  url      = "https://localhost/postgres1"
 }
 
 model Author {
-    id       ID
-    name     String?
-    authors  Blog[]   @relation("AuthorToBlogs")
+  id      ID
+  name    String?
+  authors Blog[]  @relation("AuthorToBlogs")
 }"#;
 
 #[test]
@@ -147,16 +147,16 @@ fn test_parser_renderer_sources_via_ast() {
 
 const DATAMODEL_WITH_SOURCE_AND_COMMENTS: &str = r#"/// Super cool postgres source.
 datasource pg1 {
-    provider  =  "postgres"
-    url       =  "https://localhost/postgres1"
+  provider = "postgres"
+  url      = "https://localhost/postgres1"
 }
 
 /// My author model.
 model Author {
-    id         Int       @id
-    /// Name of the author.
-    name       String?
-    createdAt  DateTime  @default(now())
+  id        Int      @id
+  /// Name of the author.
+  name      String?
+  createdAt DateTime @default(now())
 }"#;
 
 #[test]

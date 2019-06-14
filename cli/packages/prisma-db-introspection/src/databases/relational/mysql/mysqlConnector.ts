@@ -10,6 +10,7 @@ import { Connection } from 'mysql'
 import { DatabaseType, capitalize } from 'prisma-datamodel'
 import { MysqlIntrospectionResult } from './mysqlIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
+import { DatabaseMetadata } from '../../../common/introspectionResult'
 import IDatabaseClient from '../../IDatabaseClient'
 import MysqlDatabaseClient from './mysqlDatabaseClient'
 
@@ -182,5 +183,21 @@ export class MysqlConnector extends RelationalConnector {
 
   protected async listSequences(schemaName: string): Promise<ISequenceInfo[]> {
     return []
+  }
+
+  public async getMetadata(schemaName: string): Promise<DatabaseMetadata> {
+    const schemaSizeQuery = `
+    SELECT 
+      SUM(data_length + index_length) as size 
+      FROM information_schema.TABLES 
+      WHERE table_schema = ?`
+
+    const [{ size }] = await this.query(schemaSizeQuery, [schemaName])
+    const count = await super.countTables(schemaName)
+
+    return {
+      countOfTables: count,
+      sizeInBytes: size,
+    }
   }
 }
