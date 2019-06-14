@@ -99,7 +99,7 @@ impl SqlMigrationConnector {
         }
     }
 
-    fn postgres_helper(url: &str) -> PostgresHelper {
+    pub fn postgres_helper(url: &str) -> PostgresHelper {
         let connection_limit = 10;
         let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
         let mut config = PostgresConfig::new();
@@ -193,9 +193,9 @@ impl SqlMigrationConnector {
     }
 }
 
-struct PostgresHelper {
-    db_connection: Arc<Connectional>,
-    schema: String,
+pub struct PostgresHelper {
+    pub db_connection: Arc<Connectional>,
+    pub schema: String,
 }
 
 impl MigrationConnector for SqlMigrationConnector {
