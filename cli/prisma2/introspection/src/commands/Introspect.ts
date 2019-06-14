@@ -165,7 +165,8 @@ ${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing
   }
 
   async introspectDatabase(args: Result<Args>, sdl: boolean | undefined): Promise<IntrospectionResult> {
-    const credentialsByFlag = this.getCredentialsByFlags(args) || (await getCredentialsFromExistingDatamodel(this.lift))
+    const credentialsByFlag =
+      this.getCredentialsByFlags(args) || (await getCredentialsFromExistingDatamodel(this.env, this.lift))
 
     // Get everything interactively
     if (!credentialsByFlag) {

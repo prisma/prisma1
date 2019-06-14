@@ -1,15 +1,16 @@
+import { Env } from '@prisma/cli'
+import { DataSource, isdlToDatamodel2, LiftEngine } from '@prisma/lift'
 import chalk from 'chalk'
+import { existsSync, readFileSync } from 'fs'
 import { MongoClient } from 'mongodb'
 import { Connection, createConnection } from 'mysql'
+import { join } from 'path'
 import { Client as PGClient } from 'pg'
 import { DatabaseType } from 'prisma-datamodel'
 import { Connectors, IConnector } from 'prisma-db-introspection'
 import { URL } from 'url'
-import { DatabaseCredentials, SchemaWithMetadata, IntrospectionResult } from '../types'
-import { existsSync, readFileSync } from 'fs'
-import { join } from 'path'
-import { uriToCredentials, databaseTypeToConnectorType, credentialsToUri } from '../convertCredentials'
-import { LiftEngine, DataSource, isdlToDatamodel2 } from '@prisma/lift'
+import { credentialsToUri, databaseTypeToConnectorType, uriToCredentials } from '../convertCredentials'
+import { DatabaseCredentials, IntrospectionResult, SchemaWithMetadata } from '../types'
 
 function replaceLocalDockerHost(credentials: DatabaseCredentials) {
   if (credentials.host) {
@@ -141,9 +142,12 @@ export async function getDatabaseSchemas(connector: IConnector): Promise<string[
   }
 }
 
-export async function getCredentialsFromExistingDatamodel(lift: LiftEngine): Promise<undefined | DatabaseCredentials> {
-  if (existsSync(join(this.env.cwd, 'datamodel.prisma'))) {
-    const datamodel = readFileSync(join(this.env.cwd, 'datamodel.prisma'), 'utf-8')
+export async function getCredentialsFromExistingDatamodel(
+  env: Env,
+  lift: LiftEngine,
+): Promise<undefined | DatabaseCredentials> {
+  if (existsSync(join(env.cwd, 'datamodel.prisma'))) {
+    const datamodel = readFileSync(join(env.cwd, 'datamodel.prisma'), 'utf-8')
     const { datasources } = await lift.getConfig({
       datamodel,
     })
