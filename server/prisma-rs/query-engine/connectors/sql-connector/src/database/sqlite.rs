@@ -4,7 +4,7 @@ use crate::{
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use datamodel::configuration::Source;
-use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
+use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, ProjectRef, TypeIdentifier};
 use prisma_query::{
     ast::Query,
     visitor::{self, Visitor},
@@ -77,10 +77,10 @@ impl<'a> Transaction for SqliteTransaction<'a> {
         Ok(result)
     }
 
-    fn truncate(&mut self, project: ProjectRef) -> SqlResult<()> {
+    fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> SqlResult<()> {
         self.write(Query::from("PRAGMA foreign_keys = OFF"))?;
 
-        for delete in MutationBuilder::truncate_tables(project) {
+        for delete in MutationBuilder::truncate_tables(internal_data_model) {
             self.delete(delete)?;
         }
 

@@ -1,5 +1,6 @@
+use super::*;
 use once_cell::sync::OnceCell;
-use prisma_models::{ModelRef, OrderBy, ScalarField, SortOrder};
+use prisma_models::{InternalDataModelRef, ModelRef, OrderBy, ScalarField, SortOrder};
 use std::{
     boxed::Box,
     sync::{Arc, Weak},
@@ -10,6 +11,9 @@ pub type ObjectTypeRef = Weak<ObjectType>;
 
 pub type InputObjectTypeStrongRef = Arc<InputObjectType>;
 pub type InputObjectTypeRef = Weak<InputObjectType>;
+
+pub type QuerySchemaRef = Arc<QuerySchema>;
+pub type FieldRef = Arc<Field>;
 
 /// The query schema.
 /// Defines which operations (query/mutations) are possible on a database, based on the (internal) data model.
@@ -34,6 +38,8 @@ pub struct QuerySchema {
 
     /// Stores all strong refs to the output object types.
     output_object_types: Vec<ObjectTypeStrongRef>,
+
+    pub internal_data_model: InternalDataModelRef,
 }
 
 impl QuerySchema {
@@ -42,12 +48,48 @@ impl QuerySchema {
         mutation: OutputType,
         input_object_types: Vec<InputObjectTypeStrongRef>,
         output_object_types: Vec<ObjectTypeStrongRef>,
+        internal_data_model: InternalDataModelRef,
     ) -> Self {
         QuerySchema {
             query,
             mutation,
             input_object_types,
             output_object_types,
+            internal_data_model,
+        }
+    }
+
+    pub fn find_mutation_field<T>(&self, name: T) -> Option<FieldRef>
+    where
+        T: Into<String>,
+    {
+        let name = name.into();
+        self.mutation()
+            .get_fields()
+            .into_iter()
+            .find(|f| f.name == name)
+            .cloned()
+    }
+
+    pub fn find_query_field<T>(&self, name: T) -> Option<FieldRef>
+    where
+        T: Into<String>,
+    {
+        let name = name.into();
+        self.query().get_fields().into_iter().find(|f| f.name == name).cloned()
+    }
+
+    fn mutation(&self) -> ObjectTypeStrongRef {
+        match self.mutation {
+            OutputType::Object(ref o) => o.into_arc(),
+            _ => unreachable!(),
+        }
+    }
+
+    fn query(&self) -> ObjectTypeStrongRef {
+        match self.query {
+            OutputType::Object(ref o) => o.into_arc(),
+            _ => unreachable!(),
         }
     }
 
@@ -92,16 +134,18 @@ pub struct ObjectType {
     pub name: String,
 
     #[debug_stub = "#Fields Cell#"]
-    pub fields: OnceCell<Vec<Field>>,
+    pub fields: OnceCell<Vec<FieldRef>>,
 }
 
 impl ObjectType {
-    pub fn get_fields(&self) -> &Vec<Field> {
+    pub fn get_fields(&self) -> &Vec<FieldRef> {
         self.fields.get().unwrap()
     }
 
     pub fn set_fields(&self, fields: Vec<Field>) {
-        self.fields.set(fields).unwrap();
+        self.fields
+            .set(fields.into_iter().map(|f| Arc::new(f)).collect())
+            .unwrap();
     }
 
     /// True if fields are empty, false otherwise.
@@ -119,7 +163,7 @@ pub struct Field {
 }
 
 /// Designates a specific top-level operation on a corresponding model.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ModelOperation {
     pub model: ModelRef,
     pub operation: OperationTag,
@@ -133,15 +177,15 @@ impl ModelOperation {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum OperationTag {
-    FindSingle,
+    FindOne,
     FindMany,
-    CreateSingle,
+    CreateOne,
     CreateMany,
-    UpdateSingle,
+    UpdateOne,
     UpdateMany,
-    DeleteSingle,
+    DeleteOne,
     DeleteMany,
-    UpsertSingle,
+    UpsertOne,
 }
 
 #[derive(Debug)]

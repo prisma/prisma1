@@ -199,12 +199,11 @@ impl MutationBuilder {
         })
     }
 
-    pub fn truncate_tables(project: ProjectRef) -> Vec<Delete> {
-        let models = project.internal_data_model().models();
+    pub fn truncate_tables(internal_data_model: InternalDataModelRef) -> Vec<Delete> {
+        let models = internal_data_model.models();
         let mut deletes = Vec::new();
 
-        deletes = project
-            .internal_data_model()
+        deletes = internal_data_model
             .relations()
             .iter()
             .map(|r| r.relation_table())

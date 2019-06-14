@@ -29,7 +29,7 @@ pub fn convert_create_envelope(
 pub fn convert_create(m: crate::protobuf::prisma::CreateNode, project: ProjectRef) -> CreateNode {
     let model = project.internal_data_model().find_model(&m.model_name).unwrap();
     CreateNode {
-        model: model,
+        model,
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
         nested_mutactions: convert_nested_mutactions(m.nested, Arc::clone(&project)),
@@ -136,6 +136,7 @@ pub fn convert_update_nodes(m: crate::protobuf::prisma::UpdateNodes, project: Pr
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
     };
+
     TopLevelDatabaseMutaction::UpdateNodes(update_nodes)
 }
 
@@ -158,6 +159,7 @@ pub fn convert_upsert(m: crate::protobuf::prisma::UpsertNode, project: ProjectRe
         create: convert_create(m.create, Arc::clone(&project)),
         update: convert_update(m.update, project),
     };
+
     TopLevelDatabaseMutaction::UpsertNode(upsert_node)
 }
 
@@ -175,6 +177,7 @@ pub fn convert_delete(m: crate::protobuf::prisma::DeleteNode, project: ProjectRe
     let delete_node = DeleteNode {
         where_: convert_node_select(m.where_, project),
     };
+
     TopLevelDatabaseMutaction::DeleteNode(delete_node)
 }
 
@@ -191,6 +194,7 @@ pub fn convert_delete_nodes(m: crate::protobuf::prisma::DeleteNodes, project: Pr
         model: Arc::clone(&model),
         filter: m.filter.into_filter(model),
     };
+
     TopLevelDatabaseMutaction::DeleteNodes(delete_nodes)
 }
 
@@ -206,7 +210,10 @@ pub fn convert_nested_delete_nodes(
 }
 
 pub fn convert_reset(_: crate::protobuf::prisma::ResetData, project: ProjectRef) -> TopLevelDatabaseMutaction {
-    let mutaction = ResetData { project };
+    let mutaction = ResetData {
+        internal_data_model: project.internal_data_model_ref(),
+    };
+
     TopLevelDatabaseMutaction::ResetData(mutaction)
 }
 

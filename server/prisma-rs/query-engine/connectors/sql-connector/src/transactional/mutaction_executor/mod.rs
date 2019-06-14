@@ -80,7 +80,7 @@ where
                     })
                 }
                 TopLevelDatabaseMutaction::ResetData(ref rd) => {
-                    conn.truncate(Arc::clone(&rd.project))?;
+                    conn.truncate(Arc::clone(&rd.internal_data_model))?;
 
                     Ok(DatabaseMutactionResult {
                         identifier: Identifier::None,

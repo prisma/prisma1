@@ -6,12 +6,12 @@ use prisma_models::ModelRef;
 use std::sync::Arc;
 
 #[derive(Debug, Default)]
-pub struct SingleBuilder<'f> {
+pub struct OneBuilder<'f> {
     model: Option<ModelRef>,
     field: Option<&'f Field>,
 }
 
-impl<'f> SingleBuilder<'f> {
+impl<'f> OneBuilder<'f> {
     pub fn setup(self, model: ModelRef, field: &'f Field) -> Self {
         Self {
             model: Some(model),
@@ -20,7 +20,7 @@ impl<'f> SingleBuilder<'f> {
     }
 }
 
-impl<'f> BuilderExt for SingleBuilder<'f> {
+impl<'f> BuilderExt for OneBuilder<'f> {
     type Output = RecordQuery;
 
     fn new() -> Self {

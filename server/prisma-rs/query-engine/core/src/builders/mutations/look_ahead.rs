@@ -15,9 +15,6 @@ use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaValue, Project};
 
-use crate::Inflector;
-use rust_inflector::Inflector as RustInflector;
-
 use std::{collections::BTreeMap, sync::Arc};
 
 pub struct LookAhead;

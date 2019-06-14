@@ -1,9 +1,9 @@
 use crate::{data_model_loader::*, exec_loader, PrismaError, PrismaResult};
-use core::{BuildMode, Executor, QuerySchema, QuerySchemaBuilder, SupportedCapabilities};
+use core::{BuildMode, Executor, QuerySchemaBuilder, QuerySchemaRef, SupportedCapabilities};
 use datamodel::{Datamodel, Source};
 use prisma_common::{config::load as load_config, error::CommonError};
 use prisma_models::InternalDataModelRef;
-use std::convert::TryInto;
+use std::{convert::TryInto, sync::Arc};
 
 /// Prisma request context containing all immutable state of the process.
 /// There is usually only one context initialized per process.
@@ -13,7 +13,7 @@ pub struct PrismaContext {
     pub internal_data_model: InternalDataModelRef,
 
     /// The api query schema.
-    pub query_schema: QuerySchema,
+    pub query_schema: QuerySchemaRef,
 
     /// DML-based v2 datamodel.
     /// Setting this option will make the /dmmf route available.
@@ -30,7 +30,7 @@ impl PrismaContext {
     /// 1. The data model. This has different options on how to initialize. See data_model_loader module. The Prisma configuration (prisma.yml) is used as fallback.
     /// 2. The data model is converted to the internal data model.
     /// 3. The api query schema is constructed from the internal data model.
-    pub fn new() -> PrismaResult<Self> {
+    pub fn new(legacy: bool) -> PrismaResult<Self> {
         // Load data model in order of precedence.
         let (_, v2components, template) = load_data_model_components()?;
 
@@ -61,9 +61,10 @@ impl PrismaContext {
         let internal_data_model = template.build(db_name);
 
         // Construct query schema
+        let build_mode = if legacy { BuildMode::Legacy } else { BuildMode::Modern };
         let capabilities = SupportedCapabilities::empty(); // todo connector capabilities.
-        let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, BuildMode::Legacy);
-        let query_schema = schema_builder.build();
+        let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, build_mode);
+        let query_schema: QuerySchemaRef = Arc::new(schema_builder.build());
 
         Ok(Self {
             internal_data_model,

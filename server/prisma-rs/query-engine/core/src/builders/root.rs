@@ -1,13 +1,12 @@
 use super::Builder;
-use crate::{CoreResult, MutationBuilder, Query as PrismaQuery};
+use crate::{CoreResult, MutationBuilder, Query as PrismaQuery, QuerySchemaRef};
 use graphql_parser::query::*;
-use prisma_models::InternalDataModelRef;
 use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct RootBuilder {
     pub query: Document,
-    pub internal_data_model: InternalDataModelRef,
+    pub query_schema: QuerySchemaRef,
     pub operation_name: Option<String>,
 }
 
@@ -51,7 +50,7 @@ impl RootBuilder {
             .map(|item| {
                 // First query-level fields map to a model in our internal_data_model, either a plural or singular
                 match item {
-                    Selection::Field(root_field) => Builder::new(Arc::clone(&self.internal_data_model), root_field)?
+                    Selection::Field(root_field) => Builder::new(Arc::clone(&self.query_schema), root_field)?
                         .build()
                         .map(|q| PrismaQuery::Read(q)),
                     _ => unimplemented!(),
@@ -65,7 +64,7 @@ impl RootBuilder {
         root_fields
             .iter()
             .map(|item| match item {
-                Selection::Field(root_field) => MutationBuilder::new(Arc::clone(&self.internal_data_model), root_field)
+                Selection::Field(root_field) => MutationBuilder::new(Arc::clone(&self.query_schema), root_field)
                     .build()
                     .map(|q| PrismaQuery::Write(q)),
                 _ => unimplemented!(),

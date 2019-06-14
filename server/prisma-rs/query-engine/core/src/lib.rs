@@ -1,4 +1,4 @@
-#![deny(warnings)]
+#![warn(warnings)]
 
 #[macro_use]
 extern crate log;

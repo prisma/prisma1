@@ -1,16 +1,13 @@
 use super::{PrismaRequest, RequestHandler};
-use crate::{context::PrismaContext, error::PrismaError, PrismaResult};
+use crate::{context::PrismaContext, error::PrismaError, serializer::json, PrismaResult};
 use core::{
     ir::{self, Builder},
     RootBuilder,
 };
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
 use serde_json::{Map, Value};
-
-use crate::serializer::json;
+use std::{collections::HashMap, sync::Arc};
 
 type JsonMap = Map<String, Value>;
 
@@ -51,7 +48,7 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
 
     let rb = RootBuilder {
         query: query_doc,
-        internal_data_model: ctx.internal_data_model.clone(),
+        query_schema: Arc::clone(&ctx.query_schema),
         operation_name: req.body.operation_name,
     };
 
