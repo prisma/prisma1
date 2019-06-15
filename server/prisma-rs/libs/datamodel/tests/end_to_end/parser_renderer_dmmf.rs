@@ -153,6 +153,102 @@ fn test_dmmf_roundtrip_with_generator() {
     assert_eq!(DATAMODEL_WITH_GENERATOR, rendered);
 }
 
+const DMFF_WITHOUT_RELATION_NAME: &str = r#"
+{
+  "enums": [],
+  "models": [
+    {
+      "name": "User",
+      "isEmbedded": false,
+      "dbName": null,
+      "fields": [
+        {
+          "name": "id",
+          "kind": "scalar",
+          "dbName": null,
+          "isList": false,
+          "isRequired": true,
+          "isUnique": false,
+          "isId": true,
+          "type": "Int",
+          "isGenerated": false,
+          "isUpdatedAt": false
+        },
+        {
+          "name": "posts",
+          "kind": "object",
+          "dbName": null,
+          "isList": true,
+          "isRequired": false,
+          "isUnique": false,
+          "isId": false,
+          "type": "Post",
+          "relationToFields": [],
+          "relationOnDelete": "NONE",
+          "isGenerated": false,
+          "isUpdatedAt": false
+        }
+      ],
+      "isGenerated": false
+    },
+    {
+      "name": "Post",
+      "isEmbedded": false,
+      "dbName": null,
+      "fields": [
+        {
+          "name": "id",
+          "kind": "scalar",
+          "dbName": null,
+          "isList": false,
+          "isRequired": true,
+          "isUnique": false,
+          "isId": true,
+          "type": "Int",
+          "isGenerated": false,
+          "isUpdatedAt": false
+        },
+        {
+          "name": "user",
+          "kind": "object",
+          "dbName": null,
+          "isList": false,
+          "isRequired": true,
+          "isUnique": false,
+          "isId": false,
+          "type": "User",
+          "relationToFields": [
+            "id"
+          ],
+          "relationOnDelete": "NONE",
+          "isGenerated": false,
+          "isUpdatedAt": false
+        }
+      ],
+      "isGenerated": false
+    }
+  ]
+}
+"#;
+
+const DML_WITHOUT_RELATION_NAME: &str = r#"model User {
+  id    Int    @id
+  posts Post[]
+}
+
+model Post {
+  id   Int  @id
+  user User
+}"#;
+
+#[test]
+fn should_serialize_dmmf_without_relation_name_correctly() {
+    let dml = datamodel::dmmf::parse_from_dmmf(DMFF_WITHOUT_RELATION_NAME);
+    let rendered = datamodel::render(&dml).unwrap();
+
+    assert_eq!(DML_WITHOUT_RELATION_NAME, rendered);
+}
+
 fn dmmf_roundtrip(input: &str) -> String {
     let dml = datamodel::parse(input).unwrap();
     let config = datamodel::load_configuration(input).unwrap();

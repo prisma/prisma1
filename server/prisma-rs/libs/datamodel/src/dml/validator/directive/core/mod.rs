@@ -2,10 +2,10 @@ use crate::dml;
 use crate::validator::directive::DirectiveListValidator;
 use std::collections::BTreeMap;
 
-mod map;
 mod default;
 mod embedded;
 mod id;
+mod map;
 mod relation;
 mod scalarlist;
 mod sequence;
