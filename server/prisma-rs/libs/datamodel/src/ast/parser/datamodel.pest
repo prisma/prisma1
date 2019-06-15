@@ -71,7 +71,7 @@ directive_arguments = { "(" ~ (((argument | argument_value) ~ ("," ~ argument)*)
 // This is a poor-mans version of namespacing
 directive_name = @{ (identifier ~ ".")? ~ identifier }
 // A directive either has one unnamed argument or any number of named arguments or no argument.
-directive = { (directive_name ~ directive_arguments+ | directive_name) }
+directive = { (directive_name ~ directive_arguments | directive_name) }
 
 // ######################################
 // Field declarations

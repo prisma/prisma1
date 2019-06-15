@@ -27,10 +27,10 @@ macro_rules! match_first (
         // We only need a reference to the pair later for logging.
             let $current = $token.clone()
                 .into_inner()
-                .filter(|rule| 
-                    rule.as_rule() != Rule::BLOCK_CLOSE && 
-                    rule.as_rule() != Rule::BLOCK_OPEN && 
-                    rule.as_rule() != Rule::WHITESPACE && 
+                .filter(|rule|
+                    rule.as_rule() != Rule::BLOCK_CLOSE &&
+                    rule.as_rule() != Rule::BLOCK_OPEN &&
+                    rule.as_rule() != Rule::WHITESPACE &&
                     rule.as_rule() != Rule::COMMENT)
                 .next().unwrap();
             match $current.as_rule() {

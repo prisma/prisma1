@@ -13,7 +13,14 @@ fn nice_error_for_missing_model_keyword() {
     let error = parse_error(dml);
 
     error.assert_is(ValidationError::new_parser_error(
-        &vec!["end of input", "type declaration", "model declaration", "enum declaration", "source definition", "generator definition"],
+        &vec![
+            "end of input",
+            "type declaration",
+            "model declaration",
+            "enum declaration",
+            "source definition",
+            "generator definition",
+        ],
         &Span::new(5, 5),
     ));
 }
@@ -31,7 +38,14 @@ fn nice_error_for_missing_model_keyword_2() {
     let error = parse_error(dml);
 
     error.assert_is(ValidationError::new_parser_error(
-        &vec!["end of input", "type declaration", "model declaration", "enum declaration", "source definition", "generator definition"],
+        &vec![
+            "end of input",
+            "type declaration",
+            "model declaration",
+            "enum declaration",
+            "source definition",
+            "generator definition",
+        ],
         &Span::new(47, 47),
     ));
 }

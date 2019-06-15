@@ -210,7 +210,7 @@ fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
-        Rule::MODEL_KEYWORD => { }, 
+        Rule::MODEL_KEYWORD => { },
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::directive => directives.push(parse_directive(&current)),
         Rule::field_declaration => fields.push(parse_field(&current)),
@@ -463,7 +463,7 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::string_escaped_interpolation => "string interpolation",
         Rule::doc_comment => "documentation comment",
 
-        // Those are helpers, so we get better error messages: 
+        // Those are helpers, so we get better error messages:
         Rule::BLOCK_OPEN => "Start of block (\"{\")",
         Rule::BLOCK_CLOSE => "End of block (\"}\")",
         Rule::MODEL_KEYWORD => "\"model\" keyword",
