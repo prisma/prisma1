@@ -12,7 +12,7 @@ fn infer_CreateModel_if_it_does_not_exist_yet() {
     let dm2 = parse(
         r#"
         model Test {
-            id String @id @default(cuid())
+            id Int @id
         }
     "#,
     );
@@ -27,7 +27,7 @@ fn infer_CreateModel_if_it_does_not_exist_yet() {
         MigrationStep::CreateField(CreateField {
             model: "Test".to_string(),
             name: "id".to_string(),
-            tpe: FieldType::Base(ScalarType::String),
+            tpe: FieldType::Base(ScalarType::Int),
             arity: FieldArity::Required,
             db_name: None,
             is_created_at: None,
