@@ -46,37 +46,26 @@ fn main() {
         .expect("Error while parsing tab width.");
 
     // TODO: This is really ugly, clean it up.
-    let (datamodel_string, file_name): (String, String) = if let Some(file_name) = file_name {
-        (
-            fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name)),
-            String::from(file_name),
-        )
+    let datamodel_string: String = if let Some(file_name) = file_name {
+        fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name))
     } else {
         let mut buf = String::new();
         io::stdin()
             .read_to_string(&mut buf)
             .expect("Unable to read from stdin.");
-        (buf, String::from("(from stdin)"))
+        buf
     };
 
-    let ast = datamodel::parse_to_ast(&datamodel_string);
+    let file_name = matches.value_of("output");
 
-    match &ast {
-        Err(error) => {
-            error
-                .pretty_print(&mut std::io::stderr().lock(), &file_name, &datamodel_string)
-                .expect("Failed to write errors to stderr");
-        }
-        Ok(ast) => {
-            let file_name = matches.value_of("output");
-
-            if let Some(file_name) = file_name {
-                let file = std::fs::File::open(file_name).expect(&format!("Unable to open file {}", file_name));
-                let mut stream = std::io::BufWriter::new(file);
-                datamodel::render_ast_to(&mut stream, ast, tab_width);
-            } else {
-                datamodel::render_ast_to(&mut std::io::stdout().lock(), ast, tab_width);
-            }
-        }
+    if let Some(file_name) = file_name {
+        let file = std::fs::File::open(file_name).expect(&format!("Unable to open file {}", file_name));
+        let mut stream = std::io::BufWriter::new(file);
+        datamodel::ast::reformat::Reformatter::reformat_to(&datamodel_string, &mut stream, tab_width);
+    } else {
+        datamodel::ast::reformat::Reformatter::reformat_to(&datamodel_string, &mut std::io::stdout().lock(), tab_width);
     }
+
+    std::process::exit(0);
+
 }
