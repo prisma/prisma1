@@ -98,7 +98,7 @@ fn db_names_work() {
     let datamodel = convert(
         r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 field String @map(name:"my_column")
             }
         "#,
@@ -120,7 +120,7 @@ fn scalar_lists_work() {
     let datamodel = convert(
         r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 intList Int[]
             }
         "#,
@@ -140,7 +140,7 @@ fn unique_works() {
     let datamodel = convert(
         r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 unique String @unique
             }
         "#,
@@ -190,7 +190,7 @@ fn createdAt_works() {
     let datamodel = convert(
         r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 createdAt DateTime @default(now())
             }
         "#,
@@ -208,7 +208,7 @@ fn updatedAt_works() {
     let datamodel = convert(
         r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 updatedAt DateTime @updatedAt
             }
         "#,

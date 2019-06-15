@@ -10,7 +10,7 @@ use crate::{
 pub struct Validator {}
 
 /// State error message. Seeing this error means something went really wrong internally. It's the datamodel equivalent of a bluescreen.
-const STATE_ERROR: &str = "Failed lookup of model or field during internal processing. This means that the internal representation was mutated incorrectly.";
+const STATE_ERROR: &str = "Failed lookup of model, field or optional property during internal processing. This means that the internal representation was mutated incorrectly.";
 
 impl Validator {
     /// Creates a new instance, with all builtin directives registered.
@@ -35,6 +35,9 @@ impl Validator {
             {
                 errors.push(err);
             }
+            if let Err(err) = self.validate_id_fields_valid(ast_schema, model) {
+                errors.push(err);
+            }
             if let Err(err) = self.validate_relations_not_ambiguous(ast_schema, model) {
                 errors.push(err);
             }
@@ -50,7 +53,6 @@ impl Validator {
         }
     }
 
-    #[allow(unused)]
     fn validate_model_has_id(&self, ast_model: &ast::Model, model: &dml::Model) -> Result<(), ValidationError> {
         if model.is_relation_model() {
             return Ok(());
@@ -66,6 +68,35 @@ impl Validator {
         } else {
             Ok(())
         }
+    }
+
+    fn validate_id_fields_valid(&self, ast_schema: &ast::Datamodel, model: &dml::Model) -> Result<(), ValidationError> {
+        for id_field in model.id_fields() {
+            let is_valid = match (&id_field.default_value, &id_field.field_type, &id_field.arity) {
+                (
+                    Some(dml::Value::Expression(name, return_type, args)),
+                    dml::FieldType::Base(dml::ScalarType::String),
+                    dml::FieldArity::Required,
+                ) => {
+                    let name_eq = name == "cuid" || name == "uuid";
+                    let type_eq = return_type == &dml::ScalarType::String;
+                    let args_eq = args.len() == 0;
+
+                    name_eq && type_eq && args_eq
+                }
+                (None, dml::FieldType::Base(dml::ScalarType::Int), dml::FieldArity::Required) => true,
+                _ => false,
+            };
+
+            if !is_valid {
+                return Err(ValidationError::new_model_validation_error(
+                    "Invalid ID field. ID field must be one of: Int @id, String @id @default(cuid()), String @id @default(uuid()).", 
+                    &model.name,
+                    &ast_schema.find_field(&model.name, &id_field.name).expect(STATE_ERROR).span));
+            }
+        }
+
+        Ok(())
     }
 
     /// Ensures that embedded types do not have back relations

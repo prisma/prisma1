@@ -33,7 +33,7 @@ fn db_directive() {
 fn unique_directive() {
     let dml = r#"
         model Test {
-            id String @id
+            id Int @id
             unique String @unique
         }
     "#;
@@ -43,7 +43,7 @@ fn unique_directive() {
 
     test_model
         .assert_has_field("id")
-        .assert_base_type(&PrismaType::String)
+        .assert_base_type(&PrismaType::Int)
         .assert_is_unique(false)
         .assert_is_id(true);
     test_model

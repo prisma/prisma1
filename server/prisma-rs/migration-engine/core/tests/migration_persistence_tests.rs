@@ -52,7 +52,7 @@ fn create_should_allow_to_create_a_new_migration() {
         let datamodel = datamodel::parse(
             r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
             }
         "#,
         )
