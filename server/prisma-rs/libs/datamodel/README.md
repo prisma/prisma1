@@ -59,6 +59,8 @@ For a parsed, validated and standardised datamodel, the following guarantees hol
 - All relations are be named.
 - All relations have a valid list of `to_fields` on the referencing side. An empty list indicates the back relation field. If the user does not give any `references` argument, the `to_fields` will point to the related types id fields.
 
+**These Guarantees do not hold if a datamodel is loaded from DMMF**
+
 ## Usage
 
 Please see [`lib.rs`](src/lib.rs) for all convenience method.
