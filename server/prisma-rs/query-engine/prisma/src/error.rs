@@ -32,6 +32,9 @@ pub enum PrismaError {
 
     #[fail(display = "{}", _0)]
     IOError(Error),
+
+    #[fail(display = "{}", _0)]
+    InvocationError(String),
 }
 
 /// Pretty print helper errors.

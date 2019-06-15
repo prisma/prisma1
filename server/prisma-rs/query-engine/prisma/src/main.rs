@@ -19,13 +19,17 @@ mod req_handlers;
 mod serializer;
 mod utilities;
 
+use crate::data_model_loader::*;
 use actix_web::{
     http::{Method, StatusCode},
     server, App, HttpRequest, HttpResponse, Json, Responder,
 };
-use clap::{App as ClapApp, Arg};
+use clap::{App as ClapApp, Arg, ArgMatches, SubCommand};
 use context::PrismaContext;
-use core::schema::QuerySchemaRenderer;
+use core::{
+    schema::{QuerySchemaBuilder, QuerySchemaRef, QuerySchemaRenderer, SupportedCapabilities},
+    BuildMode,
+};
 use error::*;
 use req_handlers::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 use serde_json;
@@ -66,8 +70,67 @@ fn main() {
                 .takes_value(false)
                 .required(false),
         )
+        .subcommand(
+            SubCommand::with_name("cli")
+                .about("Doesn't start a server, but allows running specific commands against Prisma.")
+                .arg(
+                    Arg::with_name("dmmf")
+                        .long("dmmf")
+                        .help("Output the DMMF from the loaded data model.")
+                        .takes_value(false)
+                        .required(false),
+                ),
+        )
         .get_matches();
 
+    let result = if matches.is_present("cli") {
+        start_cli(matches.subcommand_matches("cli").unwrap())
+    } else {
+        start_server(matches)
+    };
+
+    if let Err(err) = result {
+        info!("Encountered error during initialization:");
+        err.pretty_print();
+        process::exit(1);
+    };
+}
+
+/// Start Prisma in CLI mode with given args.
+fn start_cli(matches: &ArgMatches) -> PrismaResult<()> {
+    if matches.is_present("dmmf") {
+        let (_, v2components, template) = load_data_model_components()?;
+
+        match v2components {
+            Some(v2) => {
+                // temporary code duplication
+                let internal_data_model = template.build("".into());
+                let capabilities = SupportedCapabilities::empty();
+                let build_mode = if matches.is_present("legacy") {
+                    BuildMode::Legacy
+                } else {
+                    BuildMode::Modern
+                };
+
+                let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, build_mode);
+                let query_schema: QuerySchemaRef = Arc::new(schema_builder.build());
+                let dmmf = dmmf::render_dmmf(&v2.datamodel, query_schema);
+                let serialized = serde_json::to_string_pretty(&dmmf).unwrap();
+
+                println!("{}", serialized);
+                Ok(())
+            }
+            None => Err(PrismaError::InvocationError(
+                "DMMF cli command can only be invoked if a v2 data model was configured.".into(),
+            )),
+        }
+    } else {
+        Err(PrismaError::InvocationError("Please specify a subcommand.".into()))
+    }
+}
+
+/// Start Prisma in server mode with given args.
+fn start_server(matches: ArgMatches) -> PrismaResult<()> {
     let port = matches
         .value_of("port")
         .map(|p| p.to_owned())
@@ -78,15 +141,7 @@ fn main() {
     let now = Instant::now();
     env_logger::init();
 
-    let context = match PrismaContext::new(matches.is_present("legacy")) {
-        Ok(ctx) => ctx,
-        Err(err) => {
-            info!("Encountered error during initialization:");
-            err.pretty_print();
-            process::exit(1);
-        }
-    };
-
+    let context = PrismaContext::new(matches.is_present("legacy"))?;
     let request_context = Arc::new(RequestContext {
         context,
         graphql_request_handler: GraphQlRequestHandler,
@@ -113,6 +168,7 @@ fn main() {
     info!("Started http server on {}:{}", address.0, address.1);
 
     let _ = sys.run();
+    Ok(())
 }
 
 /// Main handler for query engine requests.
@@ -140,7 +196,7 @@ fn http_handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<Request
 fn sdl_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
     let request_context = req.state();
 
-    let rendered = GraphQLSchemaRenderer::render(&request_context.context.query_schema);
+    let rendered = GraphQLSchemaRenderer::render(Arc::clone(&request_context.context.query_schema));
     HttpResponse::Ok().content_type("application/text").body(rendered)
 }
 
@@ -150,7 +206,7 @@ fn dmmf_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
     let request_context = req.state();
     match request_context.context.dm {
         Some(ref dm) => {
-            let dmmf = dmmf::render_dmmf(dm, &request_context.context.query_schema);
+            let dmmf = dmmf::render_dmmf(dm, Arc::clone(&request_context.context.query_schema));
             let serialized = serde_json::to_string(&dmmf).unwrap();
 
             HttpResponse::Ok().content_type("application/json").body(serialized)
