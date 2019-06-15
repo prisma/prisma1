@@ -35,21 +35,19 @@ impl TableFormat {
     pub fn column_locked_writer_for(&mut self, index: usize) -> ColumnLockedWriter {
         ColumnLockedWriter {
             formatter: self,
-            column: index
+            column: index,
         }
     }
 
     pub fn column_locked_writer(&mut self) -> ColumnLockedWriter {
         let index = match &self.table[self.row as usize] {
-            Row::Regular(row) => {
-                row.len() - 1
-            },
-            Row::Interleaved(_) => panic!("Cannot lock col in interleaved mode")
+            Row::Regular(row) => row.len() - 1,
+            Row::Interleaved(_) => panic!("Cannot lock col in interleaved mode"),
         };
 
         ColumnLockedWriter {
             formatter: self,
-            column: index
+            column: index,
         }
     }
 
@@ -81,8 +79,8 @@ impl TableFormat {
                 } else {
                     row[index] = format!("{}{}", &row[index], text);
                 }
-            },
-            Row::Interleaved(_) => panic!("Cannot append to col in interleaved mode")
+            }
+            Row::Interleaved(_) => panic!("Cannot append to col in interleaved mode"),
         }
     }
 
@@ -185,7 +183,7 @@ impl<'a> LineWriteable for TableFormatInterleaveWrapper<'a> {
 
 pub struct ColumnLockedWriter<'a> {
     formatter: &'a mut TableFormat,
-    column: usize
+    column: usize,
 }
 
 impl<'a> LineWriteable for ColumnLockedWriter<'a> {
@@ -199,11 +197,11 @@ impl<'a> LineWriteable for ColumnLockedWriter<'a> {
 
     fn line_empty(&self) -> bool {
         if self.formatter.line_empty() {
-            return true 
+            return true;
         } else {
             match &self.formatter.table.last().unwrap() {
                 Row::Regular(row) => row.len() <= self.column || row[self.column].is_empty(),
-                Row::Interleaved(s) => s.is_empty()
+                Row::Interleaved(s) => s.is_empty(),
             }
         }
     }
