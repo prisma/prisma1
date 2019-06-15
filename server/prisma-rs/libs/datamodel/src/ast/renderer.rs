@@ -6,7 +6,7 @@ pub trait LineWriteable {
     fn write(&mut self, param: &str);
     fn line_empty(&self) -> bool;
     fn end_line(&mut self);
-    fn maybe_end_line(&mut self); 
+    fn maybe_end_line(&mut self);
 }
 
 pub struct Renderer<'a> {
@@ -350,12 +350,14 @@ impl<'a> LineWriteable for Renderer<'a> {
     fn write(&mut self, param: &str) {
         self.is_new = false;
         // TODO: Proper result handling.
-        for _i in 0..std::cmp::max(self.new_line, self.maybe_new_line) {
-            writeln!(self.stream, "").expect("Writer error.");
+        if self.new_line > 0 || self.maybe_new_line > 0 {
+            for _i in 0..std::cmp::max(self.new_line, self.maybe_new_line) {
+                writeln!(self.stream, "").expect("Writer error.");
+            }
             write!(self.stream, "{}", " ".repeat(self.indent * self.indent_width)).expect("Writer error.");
+            self.new_line = 0;
+            self.maybe_new_line = 0;
         }
-        self.new_line = 0;
-        self.maybe_new_line = 0;
 
         write!(self.stream, "{}", param).expect("Writer error.");
     }

@@ -13,7 +13,7 @@ pub struct TableFormat {
     pub table: Vec<Row>,
     row: i32,
     line_ending: bool,
-    maybe_new_line: bool
+    maybe_new_line: bool,
 }
 
 impl TableFormat {
