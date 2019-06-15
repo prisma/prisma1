@@ -63,8 +63,13 @@ impl Model {
     }
 
     /// Finds the name of all id fields
-    pub fn id_fields(&self) -> impl std::iter::Iterator<Item = &String> {
+    pub fn id_field_names(&self) -> impl std::iter::Iterator<Item = &String> {
         self.fields().filter(|x| x.id_info.is_some()).map(|x| &x.name)
+    }
+
+    /// Finds the name of all id fields
+    pub fn id_fields(&self) -> impl std::iter::Iterator<Item = &Field> {
+        self.fields().filter(|x| x.id_info.is_some())
     }
 
     /// Finds a field with a certain relation guarantee.
