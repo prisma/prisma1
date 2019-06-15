@@ -6,12 +6,15 @@ pub trait LineWriteable {
     fn write(&mut self, param: &str);
     fn line_empty(&self) -> bool;
     fn end_line(&mut self);
+    fn maybe_end_line(&mut self); 
 }
 
 pub struct Renderer<'a> {
     stream: &'a mut std::io::Write,
     indent: usize,
-    new_line: bool,
+    new_line: usize,
+    is_new: bool,
+    maybe_new_line: usize,
     indent_width: usize,
 }
 
@@ -22,7 +25,9 @@ impl<'a> Renderer<'a> {
             stream,
             indent: 0,
             indent_width,
-            new_line: false,
+            new_line: 0,
+            maybe_new_line: 0,
+            is_new: true,
         }
     }
 
@@ -343,25 +348,27 @@ impl<'a> Renderer<'a> {
 
 impl<'a> LineWriteable for Renderer<'a> {
     fn write(&mut self, param: &str) {
+        self.is_new = false;
         // TODO: Proper result handling.
-        if self.new_line {
+        for _i in 0..std::cmp::max(self.new_line, self.maybe_new_line) {
             writeln!(self.stream, "").expect("Writer error.");
             write!(self.stream, "{}", " ".repeat(self.indent * self.indent_width)).expect("Writer error.");
-            self.new_line = false;
         }
+        self.new_line = 0;
+        self.maybe_new_line = 0;
+
         write!(self.stream, "{}", param).expect("Writer error.");
     }
 
     fn end_line(&mut self) {
-        if self.new_line {
-            // If endline is called twice, we explicitely drop a new line without indent.
-            writeln!(self.stream, "").expect("Writer error.");
-        }
-        // Otherwise we just set a flag and wait for the next write.
-        self.new_line = true;
+        self.new_line = self.new_line + 1;
+    }
+
+    fn maybe_end_line(&mut self) {
+        self.maybe_new_line = self.maybe_new_line + 1;
     }
 
     fn line_empty(&self) -> bool {
-        self.new_line
+        self.new_line != 0 || self.maybe_new_line != 0 || self.is_new
     }
 }

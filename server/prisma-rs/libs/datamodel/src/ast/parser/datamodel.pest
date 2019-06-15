@@ -92,7 +92,7 @@ field_declaration = { doc_comment* ~ identifier ~ (field_type ~ ( "@" ~ directiv
 // ######################################
 // Custom type declarations
 // ######################################
-type_declaration = { doc_comment* ~ TYPE_KEYWORD ~ identifier ~ "=" ~ base_type ~ ( "@" ~ directive )* }
+type_declaration = { doc_comment* ~ TYPE_KEYWORD ~ identifier ~ "=" ~ (base_type ~ ( "@" ~ directive )+ | base_type)  }
 
 // ######################################
 // Model declarations
