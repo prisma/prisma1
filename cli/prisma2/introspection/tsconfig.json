@@ -12,7 +12,7 @@
     "downlevelIteration": true,
     "resolveJsonModule": true,
     "jsx": "react",
-    "allowSyntheticDefaultImports": true
+    "esModuleInterop": true
   },
   "exclude": ["node_modules", "dist"]
 }
