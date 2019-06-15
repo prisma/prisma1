@@ -42,7 +42,7 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
             let related_model = datamodel
                 .find_model(&relation_info.to)
                 .expect(&format!("Related model not found: {}.", relation_info.to));
-            let mut all_related_ids: Vec<&String> = related_model.id_fields().collect();
+            let mut all_related_ids: Vec<&String> = related_model.id_field_names().collect();
 
             if !relation_info.name.is_empty()
                 && relation_info.name != DefaultNames::relation_name(&relation_info.to, &parent_model.name)
