@@ -43,7 +43,7 @@ fn should_fail_on_ambiguous_named_relations() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous relation detected.",
         "User",
-        &Span::new(45, 90),
+        &Span::new(45, 81),
     ));
 }
 
@@ -68,7 +68,7 @@ fn should_fail_on_ambiguous_named_relations_2() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous relation detected.",
         "User",
-        &Span::new(45, 87),
+        &Span::new(45, 78),
     ));
 }
 
@@ -108,7 +108,7 @@ fn should_fail_on_ambiguous_named_self_relation() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous self relation detected.",
         "User",
-        &Span::new(45, 91),
+        &Span::new(45, 82),
     ));
 }
 
@@ -185,7 +185,7 @@ fn should_fail_on_named_generated_back_relation_fields() {
         ValidationError::new_model_validation_error(
             "Named relations require an opposite field.",
             "Todo",
-            &Span::new(45, 92),
+            &Span::new(45, 87),
         ),
     );
 }
