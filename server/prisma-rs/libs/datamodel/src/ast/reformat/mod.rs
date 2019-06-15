@@ -6,7 +6,6 @@ use pest::Parser;
 use std::cell::RefCell;
 
 type Token<'a> = pest::iterators::Pair<'a, Rule>;
-type Tokens<'a> = pest::iterators::Pairs<'a, Rule>;
 
 pub struct Reformatter {}
 
@@ -14,15 +13,22 @@ fn count_lines(text: &str) -> usize {
     text.as_bytes().iter().filter(|&&c| c == b'\n').count()
 }
 
-fn newlines(target: &mut LineWriteable, text: &str, identifier: &str) {
-    for i in 0..count_lines(text) {
+fn newlines(target: &mut LineWriteable, text: &str, _identifier: &str) {
+    for _i in 0..count_lines(text) {
         // target.write(&format!("{}{}", i, identifier));
         target.end_line();
     }
 }
 
 fn comment(target: &mut LineWriteable, comment_text: &str) {
-    target.write(&comment_text[0..comment_text.len() - 1]); // slice away line break.
+    let trimmed = &comment_text[0..comment_text.len() - 1]; // slice away line break.
+
+    if !target.line_empty() {
+        // Prefix with whitespace seperator.
+        target.write(&format!(" {}", trimmed));
+    } else {
+        target.write(trimmed); 
+    }
     target.end_line();
 }
 
@@ -50,6 +56,7 @@ impl Reformatter {
                         // For all other ones, reset types_table.
                         types_table.render(target.get_mut());
                         types_table = TableFormat::new();
+                        target.get_mut().maybe_end_line();
                     }
                 }
             };
@@ -69,7 +76,14 @@ impl Reformatter {
                         newlines(target.get_mut(), current.as_str(), "d")
                     }
                 }
-                Rule::COMMENT => comment(target.get_mut(), current.as_str()),
+                Rule::COMMENT => {
+
+                    if types_mode {
+                        comment(&mut types_table.interleave_writer(), current.as_str());
+                    } else {
+                        comment(target.get_mut(), current.as_str());
+                    }
+                },
                 Rule::model_declaration => Self::reformat_model(target, &current),
                 Rule::enum_declaration => Self::reformat_enum(target, &current),
                 Rule::source_block => Self::reformat_config_block(target.get_mut(), &current),
@@ -107,6 +121,7 @@ impl Reformatter {
                 Rule::BLOCK_OPEN => {
                     skip_whitespace = false;
                     target.write(" {");
+                    target.maybe_end_line();
                     target.indent_up();
                 }
                 Rule::BLOCK_CLOSE => {}
@@ -138,6 +153,8 @@ impl Reformatter {
         table.render(target);
         target.indent_down();
         target.write("}");
+        target.maybe_end_line();
+        target.maybe_end_line();
     }
 
     pub fn reformat_key_value(target: &mut TableFormat, token: &Token) {
@@ -178,9 +195,15 @@ impl Reformatter {
                 Rule::identifier => {
                     // Begin.
                     target.get_mut().write(&format!("model {} {{", current.as_str()));
+                    target.get_mut().maybe_end_line();
                     target.get_mut().indent_up();
                 }
-                Rule::directive => Self::reformat_directive(target.get_mut(), &current, "@@"),
+                Rule::directive => {
+                    // Directives reset the table.
+                    table.get_mut().render(target.get_mut());
+                    table = RefCell::new(TableFormat::new());
+                    Self::reformat_directive(target.get_mut(), &current, "@@");
+                },
                 Rule::field_declaration => Self::reformat_field(&mut table, &current),
                 // Doc comments are to be placed OUTSIDE of table block.
                 Rule::doc_comment => comment(target.get_mut(), current.as_str()),
@@ -208,7 +231,9 @@ impl Reformatter {
         // End.
         table.get_mut().render(target.get_mut());
         target.get_mut().indent_down();
-        target.get_mut().write("}")
+        target.get_mut().write("}");
+        target.get_mut().maybe_end_line();
+        target.get_mut().maybe_end_line();
     }
 
     // TODO: This is very similar to model reformating.
@@ -219,7 +244,7 @@ impl Reformatter {
 
         for current in token.clone().into_inner() {
             match current.as_rule() {
-                Rule::MODEL_KEYWORD => {
+                Rule::ENUM_KEYWORD => {
                     skip_whitespace = true;
                 }
                 Rule::BLOCK_OPEN => {
@@ -230,9 +255,14 @@ impl Reformatter {
                 Rule::identifier => {
                     // Begin.
                     target.get_mut().write(&format!("enum {} {{", current.as_str()));
+                    target.get_mut().maybe_end_line();
                     target.get_mut().indent_up();
                 }
-                Rule::directive => Self::reformat_directive(target.get_mut(), &current, "@@"),
+                Rule::directive => {
+                    table.render(target.get_mut());
+                    table = TableFormat::new();
+                    Self::reformat_directive(target.get_mut(), &current, "@@");
+                },
                 Rule::enum_field_declaration => table.write(current.as_str()),
                 // Doc comments are to be placed OUTSIDE of table block.
                 Rule::doc_comment => comment(target.get_mut(), current.as_str()),
@@ -260,11 +290,14 @@ impl Reformatter {
         // End.
         table.render(target.get_mut());
         target.get_mut().indent_down();
-        target.get_mut().write("}")
+        target.get_mut().write("}");
+        target.get_mut().maybe_end_line();
+        target.get_mut().maybe_end_line();
     }
 
     pub fn reformat_field(target: &mut RefCell<TableFormat>, token: &Token) {
         let mut identifier = None;
+        let mut directives_started = false;
 
         for current in token.clone().into_inner() {
             match current.as_rule() {
@@ -276,31 +309,51 @@ impl Reformatter {
                     target.get_mut().write(&Self::reformat_field_type(&current));
                 }
                 Rule::directive => {
+                    directives_started = true;
                     Self::reformat_directive(&mut target.get_mut().column_locked_writer_for(2), &current, "@")
                 }
                 Rule::doc_comment => comment(&mut target.get_mut().interleave_writer(), current.as_str()),
-                Rule::COMMENT => comment(&mut target.get_mut().interleave_writer(), current.as_str()),
+                Rule::COMMENT => {
+                    if directives_started {
+                        comment(&mut target.get_mut().column_locked_writer_for(2), current.as_str());
+                    } else {
+                        comment(target.get_mut(), current.as_str());
+                    }
+                },
                 Rule::WHITESPACE => newlines(target.get_mut(), current.as_str(), "f"),
                 _ => unreachable!("Encounterd impossible field during parsing: {:?}", current.tokens()),
             }
         }
+
+        target.get_mut().maybe_end_line();
     }
 
     pub fn reformat_type_declaration(target: &mut TableFormat, token: &Token) {
         let mut identifier = None;
+        let mut directives_started = false;
 
         for current in token.clone().into_inner() {
             match current.as_rule() {
-                Rule::TYPE_KEYWORD => target.write("type"),
+                Rule::TYPE_KEYWORD => { },
                 Rule::identifier => identifier = Some(String::from(current.as_str())),
                 Rule::base_type => {
+                    target.write("type");
                     target.write(&identifier.clone().expect("Unknown field identifier."));
                     target.write("=");
                     target.write(&Self::get_identifier(&current));
                 }
-                Rule::directive => Self::reformat_directive(&mut target.column_locked_writer_for(4), &current, "@"),
+                Rule::directive => {
+                    directives_started = true;
+                    Self::reformat_directive(&mut target.column_locked_writer_for(4), &current, "@");
+                },
                 Rule::doc_comment => comment(&mut target.interleave_writer(), current.as_str()),
-                Rule::COMMENT => comment(&mut target.interleave_writer(), current.as_str()),
+                Rule::COMMENT => {
+                    if directives_started {
+                        comment(&mut target.column_locked_writer_for(4), current.as_str());
+                    } else {
+                        comment(&mut target.interleave_writer(), current.as_str());
+                    }
+                },
                 Rule::WHITESPACE => newlines(target, current.as_str(), "t"),
                 _ => unreachable!(
                     "Encounterd impossible custom type during parsing: {:?}",
@@ -308,6 +361,8 @@ impl Reformatter {
                 ),
             }
         }
+
+        target.maybe_end_line();
     }
 
     pub fn reformat_field_type(token: &Token) -> String {

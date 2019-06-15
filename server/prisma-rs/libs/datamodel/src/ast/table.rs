@@ -1,7 +1,6 @@
 use super::renderer::LineWriteable;
 use super::string_builder::StringBuilder;
 use std::cmp::max;
-use std::ops::Add;
 
 const COLUMN_SPACING: usize = 1;
 
@@ -14,6 +13,7 @@ pub struct TableFormat {
     pub table: Vec<Row>,
     row: i32,
     line_ending: bool,
+    maybe_new_line: bool
 }
 
 impl TableFormat {
@@ -22,6 +22,7 @@ impl TableFormat {
             table: Vec::new(),
             row: -1,
             line_ending: true,
+            maybe_new_line: false,
         }
     }
 
@@ -40,6 +41,11 @@ impl TableFormat {
     }
 
     pub fn column_locked_writer(&mut self) -> ColumnLockedWriter {
+        if self.table.len() == 0 {
+            self.start_new_line();
+            self.write("");
+        }
+
         let index = match &self.table[self.row as usize] {
             Row::Regular(row) => row.len() - 1,
             Row::Interleaved(_) => panic!("Cannot lock col in interleaved mode"),
@@ -55,6 +61,7 @@ impl TableFormat {
         self.table.push(Row::Interleaved(String::from(text)));
         // We've just ended a line.
         self.line_ending = false;
+        self.maybe_new_line = false;
         self.row = self.row + 1;
 
         // Prepare next new line.
@@ -63,9 +70,10 @@ impl TableFormat {
 
     // Safely appends to the column with the given index.
     pub fn append_to(&mut self, text: &str, index: usize) {
-        if self.line_ending {
+        if self.line_ending || self.maybe_new_line {
             self.start_new_line();
             self.line_ending = false;
+            self.maybe_new_line = false;
         }
 
         match &mut self.table[self.row as usize] {
@@ -134,9 +142,10 @@ impl TableFormat {
 
 impl LineWriteable for TableFormat {
     fn write(&mut self, text: &str) {
-        if self.line_ending {
+        if self.line_ending || self.maybe_new_line {
             self.start_new_line();
             self.line_ending = false;
+            self.maybe_new_line = false;
         }
 
         let trimmed = text.trim();
@@ -151,6 +160,7 @@ impl LineWriteable for TableFormat {
         // Lazy line ending.
         if self.line_ending {
             self.start_new_line();
+            self.maybe_new_line = false;
         }
 
         self.line_ending = true;
@@ -158,6 +168,10 @@ impl LineWriteable for TableFormat {
 
     fn line_empty(&self) -> bool {
         self.line_ending
+    }
+
+    fn maybe_end_line(&mut self) {
+        self.maybe_new_line = true
     }
 }
 
@@ -176,8 +190,12 @@ impl<'a> LineWriteable for TableFormatInterleaveWrapper<'a> {
         self.string_builder = StringBuilder::new();
     }
 
+    fn maybe_end_line(&mut self) {
+        self.formatter.maybe_end_line();
+    }
+
     fn line_empty(&self) -> bool {
-        self.formatter.line_empty()
+        true
     }
 }
 
@@ -193,6 +211,10 @@ impl<'a> LineWriteable for ColumnLockedWriter<'a> {
 
     fn end_line(&mut self) {
         self.formatter.end_line();
+    }
+
+    fn maybe_end_line(&mut self) {
+        self.formatter.maybe_end_line();
     }
 
     fn line_empty(&self) -> bool {
