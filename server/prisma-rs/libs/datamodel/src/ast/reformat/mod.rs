@@ -16,7 +16,7 @@ fn count_lines(text: &str) -> usize {
 
 fn newlines(target: &mut LineWriteable, text: &str, identifier: &str) {
     for i in 0..count_lines(text) {
-        //    target.write(&format!("{}{}", i, identifier));
+        // target.write(&format!("{}{}", i, identifier));
         target.end_line();
     }
 }
@@ -34,15 +34,52 @@ impl Reformatter {
     }
 
     pub fn reformat_top(target: &mut RefCell<Renderer>, token: &Token) {
+        let mut types_table = TableFormat::new();
+        let mut types_mode = false;
+
         for current in token.clone().into_inner() {
             match current.as_rule() {
-                Rule::WHITESPACE => newlines(target.get_mut(), current.as_str(), "d"),
+                Rule::WHITESPACE => {}
+                Rule::COMMENT => {}
+                Rule::type_declaration => {
+                    types_mode = true;
+                }
+                _ => {
+                    if types_mode {
+                        types_mode = false;
+                        // For all other ones, reset types_table.
+                        types_table.render(target.get_mut());
+                        types_table = TableFormat::new();
+                    }
+                }
+            };
+            match current.as_rule() {
+                Rule::WHITESPACE => {
+                    if types_mode {
+                        let lines = count_lines(current.as_str());
+
+                        if lines > 1 || (lines == 1 && types_table.line_empty()) {
+                            // Reset the table layout on more than one newline.
+                            types_table.render(target.get_mut());
+                            types_table = TableFormat::new();
+                        }
+
+                        newlines(&mut types_table, current.as_str(), "m");
+                    } else {
+                        newlines(target.get_mut(), current.as_str(), "d")
+                    }
+                }
                 Rule::COMMENT => comment(target.get_mut(), current.as_str()),
                 Rule::model_declaration => Self::reformat_model(target, &current),
-                Rule::enum_declaration => unimplemented!(),
-                Rule::source_block => unimplemented!(),
-                Rule::generator_block => unimplemented!(),
-                Rule::type_declaration => unimplemented!(),
+                Rule::enum_declaration => Self::reformat_enum(target, &current),
+                Rule::source_block => Self::reformat_config_block(target.get_mut(), &current),
+                Rule::generator_block => Self::reformat_config_block(target.get_mut(), &current),
+                Rule::type_declaration => {
+                    if !types_mode {
+                        panic!("Renderer not in type mode.");
+                    }
+                    Self::reformat_type_declaration(&mut types_table, &current);
+                }
                 Rule::EOI => {}
                 _ => unreachable!(
                     "Encounterd impossible datamodel declaration during parsing: {:?}",
@@ -69,10 +106,12 @@ impl Reformatter {
                 }
                 Rule::BLOCK_OPEN => {
                     skip_whitespace = false;
+                    target.write(" {");
+                    target.indent_up();
                 }
                 Rule::BLOCK_CLOSE => {}
                 Rule::identifier => target.write(current.as_str()),
-                Rule::key_value => unimplemented!(),
+                Rule::key_value => Self::reformat_key_value(&mut table, &current),
                 Rule::doc_comment => comment(target, current.as_str()),
                 Rule::WHITESPACE => {
                     if !skip_whitespace {
@@ -88,11 +127,36 @@ impl Reformatter {
                         newlines(&mut table, current.as_str(), "m");
                     }
                 }
+                Rule::COMMENT => comment(&mut table.interleave_writer(), current.as_str()),
                 _ => unreachable!(
                     "Encounterd impossible source declaration during parsing: {:?}",
                     current.tokens()
                 ),
             };
+        }
+
+        table.render(target);
+        target.indent_down();
+        target.write("}");
+    }
+
+    pub fn reformat_key_value(target: &mut TableFormat, token: &Token) {
+        for current in token.clone().into_inner() {
+            match current.as_rule() {
+                Rule::identifier => {
+                    target.write(current.as_str());
+                    target.write("=");
+                }
+                Rule::expression => {
+                    Self::reformat_expression(&mut target.column_locked_writer_for(2), &current);
+                }
+                Rule::WHITESPACE => {}
+                Rule::COMMENT => panic!("Comments inside config key/value not supported yet."),
+                _ => unreachable!(
+                    "Encounterd impossible source property declaration during parsing: {:?}",
+                    current.tokens()
+                ),
+            }
         }
     }
 
@@ -147,6 +211,58 @@ impl Reformatter {
         target.get_mut().write("}")
     }
 
+    // TODO: This is very similar to model reformating.
+    pub fn reformat_enum(target: &mut RefCell<Renderer>, token: &Token) {
+        let mut table = TableFormat::new();
+        // Switch to skip whitespace in 'enum xxxx {'
+        let mut skip_whitespace = false;
+
+        for current in token.clone().into_inner() {
+            match current.as_rule() {
+                Rule::MODEL_KEYWORD => {
+                    skip_whitespace = true;
+                }
+                Rule::BLOCK_OPEN => {
+                    skip_whitespace = false;
+                }
+                Rule::BLOCK_CLOSE => {}
+
+                Rule::identifier => {
+                    // Begin.
+                    target.get_mut().write(&format!("enum {} {{", current.as_str()));
+                    target.get_mut().indent_up();
+                }
+                Rule::directive => Self::reformat_directive(target.get_mut(), &current, "@@"),
+                Rule::enum_field_declaration => table.write(current.as_str()),
+                // Doc comments are to be placed OUTSIDE of table block.
+                Rule::doc_comment => comment(target.get_mut(), current.as_str()),
+                Rule::WHITESPACE => {
+                    if !skip_whitespace {
+                        let lines = count_lines(current.as_str());
+
+                        if lines > 1 || (lines == 1 && table.line_empty()) {
+                            // Reset the table layout on more than one newline.
+                            table.render(target.get_mut());
+                            table = TableFormat::new();
+                        }
+
+                        newlines(&mut table, current.as_str(), "m");
+                    }
+                }
+                Rule::COMMENT => comment(&mut table.interleave_writer(), current.as_str()),
+                _ => unreachable!(
+                    "Encounterd impossible enum declaration during parsing: {:?}",
+                    current.tokens()
+                ),
+            }
+        }
+
+        // End.
+        table.render(target.get_mut());
+        target.get_mut().indent_down();
+        target.get_mut().write("}")
+    }
+
     pub fn reformat_field(target: &mut RefCell<TableFormat>, token: &Token) {
         let mut identifier = None;
 
@@ -166,6 +282,30 @@ impl Reformatter {
                 Rule::COMMENT => comment(&mut target.get_mut().interleave_writer(), current.as_str()),
                 Rule::WHITESPACE => newlines(target.get_mut(), current.as_str(), "f"),
                 _ => unreachable!("Encounterd impossible field during parsing: {:?}", current.tokens()),
+            }
+        }
+    }
+
+    pub fn reformat_type_declaration(target: &mut TableFormat, token: &Token) {
+        let mut identifier = None;
+
+        for current in token.clone().into_inner() {
+            match current.as_rule() {
+                Rule::TYPE_KEYWORD => target.write("type"),
+                Rule::identifier => identifier = Some(String::from(current.as_str())),
+                Rule::base_type => {
+                    target.write(&identifier.clone().expect("Unknown field identifier."));
+                    target.write("=");
+                    target.write(&Self::get_identifier(&current));
+                }
+                Rule::directive => Self::reformat_directive(&mut target.column_locked_writer_for(4), &current, "@"),
+                Rule::doc_comment => comment(&mut target.interleave_writer(), current.as_str()),
+                Rule::COMMENT => comment(&mut target.interleave_writer(), current.as_str()),
+                Rule::WHITESPACE => newlines(target, current.as_str(), "t"),
+                _ => unreachable!(
+                    "Encounterd impossible custom type during parsing: {:?}",
+                    current.tokens()
+                ),
             }
         }
     }
@@ -279,7 +419,7 @@ impl Reformatter {
                 Rule::WHITESPACE => {}
                 Rule::COMMENT => panic!("Comments inside attributes not supported yet."),
                 _ => unreachable!(
-                    "Encounterd impossible directive argument during parsing: {:?}",
+                    "Encounterd impossible argument value during parsing: {:?}",
                     current.tokens()
                 ),
             };
@@ -338,7 +478,7 @@ impl Reformatter {
                     if expr_count > 0 {
                         target.write(", ");
                     }
-                    Self::reformat_arg_value(target, &token);
+                    Self::reformat_arg_value(target, &current);
                     expr_count = expr_count + 1;
                 }
                 Rule::WHITESPACE => {}

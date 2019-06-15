@@ -87,12 +87,12 @@ field_type = { list_type | optional_type | base_type }
 // TODO: We want to force a line break after a field declaration.
 // For this, we have to rely on pests new '-' operator.
 // Progress tracked here: https://github.com/pest-parser/pest/issues/271
-field_declaration = { doc_comment* ~ identifier ~ field_type ~ ( "@" ~ directive )* }
+field_declaration = { doc_comment* ~ identifier ~ (field_type ~ ( "@" ~ directive )+ | field_type) }
 
 // ######################################
 // Custom type declarations
 // ######################################
-type_declaration = { doc_comment* ~ TYPE_KEYWORD ~ identifier ~ "=" ~ (base_type ~ ( "@" ~ directive )+ | base_type) }
+type_declaration = { doc_comment* ~ TYPE_KEYWORD ~ identifier ~ "=" ~ base_type ~ ( "@" ~ directive )* }
 
 // ######################################
 // Model declarations
