@@ -12,3 +12,4 @@ export {
   CompiledGeneratorDefinition,
 } from './types'
 export { arg, format, isError } from './utils'
+export { getCwd, getDatamodel } from './getCwd'

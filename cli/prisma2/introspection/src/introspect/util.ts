@@ -146,8 +146,8 @@ export async function getCredentialsFromExistingDatamodel(
   env: Env,
   lift: LiftEngine,
 ): Promise<undefined | DatabaseCredentials> {
-  if (existsSync(join(env.cwd, 'datamodel.prisma'))) {
-    const datamodel = readFileSync(join(env.cwd, 'datamodel.prisma'), 'utf-8')
+  if (existsSync(join(env.cwd, 'project.prisma'))) {
+    const datamodel = readFileSync(join(env.cwd, 'project.prisma'), 'utf-8')
     const { datasources } = await lift.getConfig({
       datamodel,
     })

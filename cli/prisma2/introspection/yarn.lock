@@ -319,14 +319,14 @@
     p-retry "^4.1.0"
     progress "^2.0.3"
 
-"@prisma/lift@^0.0.70":
-  version "0.0.70"
-  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.70.tgz#77e036fdd5039195d71b563299f85dd0add354c1"
-  integrity sha512-NLQM1GR7pakhaEXrZ3XcQbINZlhSrBOcT7CoLvhiXHazAJGKAgkG7D2HP6eVhWtkJP7YmCwTyl4fGNnjuHdgRg==
+"@prisma/lift@^0.0.76":
+  version "0.0.76"
+  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.76.tgz#d944c25d24773732b9ab71868ecbb43a19933f47"
+  integrity sha512-GfG6Z6ifhwmhnyjb/efNKkwBcuAPc4vg5iqg81EtPM0wwH/F/IfEsCz7N4CP/8TaGSIreT7wEo+W6LjD93RATA==
   dependencies:
     "@prisma/cli" "^0.0.12"
     "@prisma/fetch-engine" "^0.0.19"
-    "@prisma/studio-server" "^0.0.14"
+    "@prisma/studio-server" "^0.0.15"
     arg "^4.1.0"
     array-flat-polyfill "^1.0.1"
     cli-cursor "^3.0.0"
@@ -356,19 +356,19 @@
     strip-indent "^3.0.0"
     supports-hyperlinks "^1.0.1"
 
-"@prisma/studio-server@^0.0.14":
-  version "0.0.14"
-  resolved "https://registry.yarnpkg.com/@prisma/studio-server/-/studio-server-0.0.14.tgz#960d983aef7926ff2e21d1172a5ee51cb3de0125"
-  integrity sha512-aH14EPTiO9XF874Rdsyb9wxJQrOSboOBrYVHFylo5+A0bgl1UsgxsGmTJUqYf++ZU13z28iIECekqtBYI/vZJA==
+"@prisma/studio-server@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@prisma/studio-server/-/studio-server-0.0.15.tgz#9d81c58764bfe6d230020be4dd1831186f15c6ab"
+  integrity sha512-eQoQftBbdZaZ1WqeBn+mGgqa5UdEamAbT2hmIPpzkWIF/rtqsys/3lYcNA1UoWW9uqEaVnyB9AE+DdXUl8UJdw==
   dependencies:
-    "@prisma/studio" "^0.0.5"
+    "@prisma/studio" "^0.0.7"
     express "^4.17.1"
     express-ws "^4.0.0"
 
-"@prisma/studio@^0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@prisma/studio/-/studio-0.0.5.tgz#f88855c751fa8233d7d2098936e897a45569297a"
-  integrity sha512-LrJ3Jecsdt/lLum8uxFZQdnt1KK7/P2kJ6sWSpyccpHGOKfvVSOkjcGGqSgww+4Zr5aHdT5XjRUQUfpoEx3pBg==
+"@prisma/studio@^0.0.7":
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/@prisma/studio/-/studio-0.0.7.tgz#f2d0a26c73ad3b9aa1b5da6d53410d0f4127bb3a"
+  integrity sha512-6GWSNvxgwvBkdaZbxdtCiFs7jOMHTzBnKrir4S+4AdkKCLyUeYJJQtEwZBO9c89Qn/Ym2msAK9Y1RRRoyZxGyw==
 
 "@types/babel__core@^7.1.0":
   version "7.1.2"

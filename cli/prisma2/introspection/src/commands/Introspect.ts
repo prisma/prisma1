@@ -150,7 +150,7 @@ ${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing
   }
 
   getExistingDatamodel(): string | undefined {
-    const datamodelPath = path.join(this.env.cwd, 'datamodel.prisma')
+    const datamodelPath = path.join(this.env.cwd, 'project.prisma')
     if (!fs.existsSync(datamodelPath)) {
       return undefined
     }

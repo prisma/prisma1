@@ -42,6 +42,13 @@ export class Init implements Command {
 Please run ${chalk.bold('prisma init')} in an empty directory.`)
     }
 
+    if (existsSync(join(outputDir, 'project.prisma'))) {
+      throw new Error(`Can't start ${chalk.bold('prisma init')} as ${chalk.redBright(
+        join(outputDir, 'project.prisma'),
+      )} exists.
+Please run ${chalk.bold('prisma init')} in an empty directory.`)
+    }
+
     if (outputDirName) {
       try {
         // Create the output directories if needed (mkdir -p)
@@ -54,7 +61,7 @@ Please run ${chalk.bold('prisma init')} in an empty directory.`)
     try {
       const result = await promptInteractively(introspect, 'init')
 
-      writeFileSync(join(outputDir, 'datamodel.prisma'), result.introspectionResult.sdl)
+      writeFileSync(join(outputDir, 'project.prisma'), result.introspectionResult.sdl)
       writeFileSync(join(outputDir, 'main.ts'), '')
       writeFileSync(join(outputDir, 'tsconfig.json'), '')
 
@@ -73,10 +80,10 @@ ${chalk.green(`${figures.tick} Your all set!`)}
 
   ${chalk.bold('We created the following files for you:')}
 
-  ${chalk.bold('datamodel.prisma')}    ${chalk.dim('The datamodel describes your database schema')}
+  ${chalk.bold('project.prisma')}    ${chalk.dim('The datamodel describes your database schema')}
   ${chalk.bold('main.ts')}             ${chalk.dim('A simple script to get you started')}
   ${chalk.bold('tsconfig.json')}       ${chalk.dim('TypeScript configuration')}
-  ${chalk.bold('/node_modules')}       ${chalk.dim('Required Node dependencies (includes Photon)')}
+  ${chalk.bold('node_modules')}       ${chalk.dim('Required Node dependencies (includes Photon)')}
 
   ${'─'.repeat(50)}
 

@@ -14,6 +14,7 @@ const photogen: GeneratorDefinitionWithPackage = {
 
 export const predefinedGenerators: Dictionary<GeneratorDefinitionWithPackage> = {
   photon: photon,
+  'photon-js': photon,
   javascript: photon,
   typescript: photon,
   photogen,

@@ -3,7 +3,7 @@
 /**
  * Dependencies
  */
-import { isError, HelpError, Env } from '@prisma/cli'
+import { isError, HelpError, Env, getCwd } from '@prisma/cli'
 import { LiftCommand, LiftSave, LiftUp, LiftDown, LiftWatch, Converter, getCompiledGenerators } from '@prisma/lift'
 import { CLI } from './CLI'
 import { Introspect, Init } from '@prisma/introspection'
@@ -19,7 +19,7 @@ async function main(): Promise<number> {
   // react shut up
   process.env.NODE_ENV = 'production'
   // load the environment
-  const env = await Env.load(process.env, process.cwd())
+  const env = await Env.load(process.env, await getCwd())
   if (isError(env)) {
     console.error(env)
     return 1
@@ -42,7 +42,7 @@ async function main(): Promise<number> {
     version: Version.new(),
   })
   // parse the arguments
-  var result = await cli.parse(process.argv.slice(2))
+  const result = await cli.parse(process.argv.slice(2))
   if (result instanceof HelpError) {
     console.error(result.message)
     return 1
