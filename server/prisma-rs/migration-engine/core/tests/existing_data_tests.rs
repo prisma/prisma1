@@ -9,7 +9,7 @@ fn adding_a_required_field_if_there_is_data() {
     test_each_connector(|sql_family, engine|{
         let dm = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
             }
 
             enum MyEnum {
@@ -25,7 +25,7 @@ fn adding_a_required_field_if_there_is_data() {
 
         let dm = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 int Int
                 float Float
                 boolean Boolean
@@ -48,7 +48,7 @@ fn adding_a_required_field_must_use_the_default_value_for_migrations() {
     test_each_connector(|sql_family, engine|{
         let dm = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
             }
 
             enum MyEnum {
@@ -65,7 +65,7 @@ fn adding_a_required_field_must_use_the_default_value_for_migrations() {
 
         let dm = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 int Int @default(1)
                 float Float @default(2)
                 boolean Boolean @default(true)
