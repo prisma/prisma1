@@ -4,7 +4,7 @@ use crate::{
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use datamodel::configuration::Source;
-use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, ProjectRef, TypeIdentifier};
+use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, TypeIdentifier};
 use prisma_query::{
     ast::Query,
     visitor::{self, Visitor},
