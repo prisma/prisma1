@@ -1,5 +1,4 @@
 use crate::*;
-use barrel::Migration as BarrelMigration;
 use migration_connector::*;
 use prisma_query::Connectional;
 use std::sync::Arc;
@@ -95,12 +94,6 @@ fn render_steps_pretty(
 }
 
 fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &str) -> String {
-    let mut migration = match sql_family {
-        SqlFamily::Mysql => BarrelMigration::new(), // barrel does not render correctly with schema set
-        _ => BarrelMigration::new().schema(schema_name.clone()),
-    };
-    
-
     let schema_name = schema_name.to_string();
 
     match step {
@@ -124,11 +117,10 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
                     .collect();
                 lines.push(format!("PRIMARY KEY ({})", column_names.join(",")))
             }
-            format!("CREATE TABLE {}.{}({})", quote(&schema_name, sql_family), quote(name, sql_family), lines.join(","))
+            format!("CREATE TABLE {}.{}({});", quote(&schema_name, sql_family), quote(name, sql_family), lines.join(","))
         }
         SqlMigrationStep::DropTable(DropTable { name }) => {
-            migration.drop_table(name.to_string());
-            make_sql_string(migration, sql_family)
+            format!("DROP TABLE {}.{};", quote(&schema_name, sql_family), quote(name, sql_family))
         }
         SqlMigrationStep::DropTables(DropTables { names }) => {
             let fully_qualified_names: Vec<String> = names
@@ -138,43 +130,36 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
             format!("DROP TABLE {};", fully_qualified_names.join(","))
         }
         SqlMigrationStep::RenameTable { name, new_name } => {
-            migration.rename_table(name.to_string(), new_name.to_string());
-            make_sql_string(migration, sql_family)
+            let new_name = match sql_family {
+                SqlFamily::Sqlite => format!("{}", quote(new_name, sql_family)),
+                _ => format!("{}.{}", quote(&schema_name, sql_family), quote(new_name, sql_family)),
+            };
+            format!("ALTER TABLE {}.{} RENAME TO {};", quote(&schema_name, sql_family), quote(name, sql_family), new_name)
         }
         SqlMigrationStep::AlterTable(AlterTable { table, changes }) => {
-            let changes = changes.clone();
-            migration.change_table(table.to_string(), move |t| {
-                for change in changes.clone() {
-                    match change {
-                        TableChange::AddColumn(AddColumn { column }) => {
-                            let col_sql = render_column(sql_family, schema_name.to_string(), &column, true);
-                            t.inject_custom(format!("ADD COLUMN {}", col_sql));
-                        }
-                        TableChange::DropColumn(DropColumn { name }) => {
-                            // TODO: this does not work on MySQL for columns with foreign keys. Here the FK must be dropped first by name.
-                            let name = quote(&name, sql_family); 
-                            t.inject_custom(format!("DROP COLUMN {}", name));
-                        },
-                        TableChange::AlterColumn(AlterColumn { name, column }) => {
-                            let name = quote(&name, sql_family); 
-                            t.inject_custom(format!("DROP COLUMN {}", name));
-                            let col_sql = render_column(sql_family, schema_name.to_string(), &column, true);
-                            t.inject_custom(format!("ADD COLUMN {}", col_sql));
-                        }
+            let mut lines = Vec::new();
+            for change in changes.clone() {
+                match change {
+                    TableChange::AddColumn(AddColumn { column }) => {
+                        let col_sql = render_column(sql_family, schema_name.to_string(), &column, true);
+                        lines.push(format!("ADD COLUMN {}", col_sql));
+                    }
+                    TableChange::DropColumn(DropColumn { name }) => {
+                        // TODO: this does not work on MySQL for columns with foreign keys. Here the FK must be dropped first by name.
+                        let name = quote(&name, sql_family); 
+                        lines.push(format!("DROP COLUMN {}", name));
+                    },
+                    TableChange::AlterColumn(AlterColumn { name, column }) => {
+                        let name = quote(&name, sql_family); 
+                        lines.push(format!("DROP COLUMN {}", name));
+                        let col_sql = render_column(sql_family, schema_name.to_string(), &column, true);
+                        lines.push(format!("ADD COLUMN {}", col_sql));
                     }
                 }
-            });
-            make_sql_string(migration, sql_family)
+            }
+            format!("ALTER TABLE {}.{} {};", quote(&schema_name, sql_family), quote(table, sql_family), lines.join(","))
         }
         SqlMigrationStep::RawSql { raw } => raw.to_string(),
-    }
-}
-
-fn make_sql_string(migration: BarrelMigration, sql_family: SqlFamily) -> String {
-    match sql_family {
-        SqlFamily::Sqlite => migration.make::<barrel::backend::Sqlite>(),
-        SqlFamily::Postgres => migration.make::<barrel::backend::Pg>(),
-        SqlFamily::Mysql => migration.make::<barrel::backend::MySql>(),
     }
 }
 
