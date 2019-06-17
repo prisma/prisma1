@@ -1,7 +1,8 @@
 use crate::{
     ast::{self, WithIdentifier},
-    errors::ErrorCollection,
-    errors::ValidationError,
+    common::FromStrAndSpan,
+    dml,
+    errors::{ErrorCollection, ValidationError},
 };
 use std::collections::HashMap;
 
@@ -21,19 +22,26 @@ impl Precheck {
         for top in &datamodel.models {
             match top {
                 ast::Top::Enum(enum_type) => {
+                    Self::assert_not_scalar_type(&enum_type.name, &mut errors);
                     models.check_duplicate("", &enum_type.name.name, &top, &mut errors);
                     Self::precheck_enum(&enum_type, &mut errors);
                 }
                 ast::Top::Model(model) => {
+                    Self::assert_not_scalar_type(&model.name, &mut errors);
                     models.check_duplicate("", &model.name.name, &top, &mut errors);
                     Self::precheck_model(&model, &mut errors);
                 }
-                ast::Top::Type(custom_type) => models.check_duplicate("", &custom_type.name.name, &top, &mut errors),
+                ast::Top::Type(custom_type) => {
+                    Self::assert_not_scalar_type(&custom_type.name, &mut errors);
+                    models.check_duplicate("", &custom_type.name.name, &top, &mut errors);
+                }
                 ast::Top::Source(source) => {
+                    Self::assert_not_scalar_type(&source.name, &mut errors);
                     sources.check_duplicate("", &source.name.name, &top, &mut errors);
                     Self::precheck_source_config(&source, &mut errors);
                 }
                 ast::Top::Generator(generator) => {
+                    Self::assert_not_scalar_type(&generator.name, &mut errors);
                     generators.check_duplicate("", &generator.name.name, &top, &mut errors);
                     Self::precheck_generator_config(&generator, &mut errors);
                 }
@@ -41,6 +49,15 @@ impl Precheck {
         }
 
         errors.ok()
+    }
+
+    pub fn assert_not_scalar_type(identifier: &ast::Identifier, errors: &mut ErrorCollection) {
+        if let Ok(_) = dml::ScalarType::from_str_and_span(&identifier.name, &identifier.span) {
+            errors.push(ValidationError::new_reserved_scalar_type_error(
+                &identifier.name,
+                &identifier.span,
+            ));
+        }
     }
 
     pub fn precheck_enum<'a>(enum_type: &'a ast::Enum, errors: &mut ErrorCollection) {

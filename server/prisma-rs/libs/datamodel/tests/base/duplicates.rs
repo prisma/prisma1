@@ -98,3 +98,50 @@ fn fail_on_duplicate_enum_value() {
         &Span::new(57, 66),
     ));
 }
+
+#[test]
+fn fail_on_reserved_name_for_enum() {
+    let dml = r#"
+    enum String {
+        Admin
+        Moderator
+    }
+    "#;
+
+    let errors = parse_error(dml);
+
+    errors.assert_is(ValidationError::new_reserved_scalar_type_error(
+        "String",
+        &Span::new(10, 16),
+    ));
+}
+
+#[test]
+fn fail_on_reserved_name_for_model() {
+    let dml = r#"
+    model DateTime {
+        id DateTime @id
+    }
+    "#;
+
+    let errors = parse_error(dml);
+
+    errors.assert_is(ValidationError::new_reserved_scalar_type_error(
+        "DateTime",
+        &Span::new(11, 19),
+    ));
+}
+
+#[test]
+fn fail_on_reserved_name_fo_custom_type() {
+    let dml = r#"
+    type Int = String
+    "#;
+
+    let errors = parse_error(dml);
+
+    errors.assert_is(ValidationError::new_reserved_scalar_type_error(
+        "Int",
+        &Span::new(10, 13),
+    ));
+}
