@@ -77,7 +77,14 @@ impl LowerDmlToAst {
     fn lower_enum(&self, enm: &dml::Enum, datamodel: &dml::Datamodel) -> Result<ast::Enum, ErrorCollection> {
         Ok(ast::Enum {
             name: enm.name.clone(),
-            values: enm.values.iter().map(|v| ast::EnumValue { name: v.clone(), span: ast::Span::empty() }).collect(),
+            values: enm
+                .values
+                .iter()
+                .map(|v| ast::EnumValue {
+                    name: v.clone(),
+                    span: ast::Span::empty(),
+                })
+                .collect(),
             directives: self.directives.enm.serialize(enm, datamodel)?,
             documentation: enm.documentation.clone().map(|text| ast::Comment { text }),
             span: ast::Span::empty(),
