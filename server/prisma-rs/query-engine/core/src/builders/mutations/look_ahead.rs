@@ -52,19 +52,21 @@ fn create_connect(cn: &mut CreateNode) -> CoreResult<()> {
 
 fn nested_create_connect(ncn: &mut NestedCreateNode) -> CoreResult<()> {
     let connects = std::mem::replace(&mut ncn.nested_mutactions.connects, vec![]);
-
     let mut new = vec![];
+
     connect_fold_into(
         &ncn.relation_field.model(),
         &mut ncn.non_list_args,
         &mut new,
         connects.into_iter(),
     )?;
+
     ncn.nested_mutactions.connects = new;
 
     for cn in ncn.nested_mutactions.creates.iter_mut() {
         nested_create_connect(cn)?;
     }
+
     Ok(())
 }
 

@@ -143,7 +143,7 @@ impl<'a> ObjectTypeBuilder<'a> {
         vec![
             self.where_argument(&model),
             self.order_by_argument(&model),
-            argument("skip", InputType::opt(InputType::string())),
+            argument("skip", InputType::opt(InputType::int())),
             argument("after", InputType::opt(InputType::string())),
             argument("before", InputType::opt(InputType::string())),
             argument("first", InputType::opt(InputType::int())),
