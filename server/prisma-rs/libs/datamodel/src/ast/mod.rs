@@ -49,7 +49,7 @@ pub trait WithSpan {
 }
 
 trait WithKeyValueConfig {
-    fn properties(&self) ->& Vec<Argument>;
+    fn properties(&self) -> &Vec<Argument>;
 }
 
 /// The arity of a field.
@@ -185,7 +185,6 @@ impl WithSpan for Directive {
     }
 }
 
-
 /// Trait for an AST node which can have directives.
 pub trait WithDirectives {
     fn directives(&self) -> &Vec<Directive>;
@@ -274,7 +273,7 @@ pub struct EnumValue {
     /// The name of the enum value.
     pub name: String,
     /// The location of this enum value in the text representation.
-    pub span: Span
+    pub span: Span,
 }
 
 impl WithSpan for EnumValue {
@@ -396,7 +395,7 @@ impl WithSpan for Top {
             Top::Model(x) => x.span(),
             Top::Source(x) => x.span(),
             Top::Generator(x) => x.span(),
-            Top::Type(x) => x.span()
+            Top::Type(x) => x.span(),
         }
     }
 }
@@ -408,7 +407,7 @@ impl Top {
             Top::Model(_) => "Model",
             Top::Source(_) => "Source",
             Top::Generator(_) => "Generator",
-            Top::Type(_) => "Type"
+            Top::Type(_) => "Type",
         }
     }
 }
