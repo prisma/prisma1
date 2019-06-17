@@ -153,7 +153,7 @@ pub fn mysql_test_config() -> String {
 pub fn postgres_url() -> String {
     dbg!(format!(
         "postgresql://postgres:prisma@{}:5432/db?schema={}",
-        db_host(),
+        db_host_postgres(),
         SCHEMA_NAME
     ))
 }
@@ -161,14 +161,21 @@ pub fn postgres_url() -> String {
 pub fn mysql_url() -> String {
     dbg!(format!(
         "mysql://root:prisma@{}:3306/{}",
-        db_host(),
+        db_host_mysql(),
         SCHEMA_NAME
     ))
 }
 
-fn db_host() -> String {
+fn db_host_postgres() -> String {
     match std::env::var("IS_BUILDKITE") {
-        Ok(_) => "test-db".to_string(),
+        Ok(_) => "test-db-postgres".to_string(),
+        Err(_) => "127.0.0.1".to_string(),
+    }
+}
+
+fn db_host_mysql() -> String {
+    match std::env::var("IS_BUILDKITE") {
+        Ok(_) => "test-db-mysql".to_string(),
         Err(_) => "127.0.0.1".to_string(),
     }
 }
