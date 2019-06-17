@@ -199,10 +199,10 @@ impl ValueValidator {
     pub fn as_date_time(&self) -> Result<DateTime<Utc>, ValidationError> {
         match &self.value {
             MaybeExpression::Value(ast::Value::StringValue(value, _)) => {
-                self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "dateTime")
+                self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "datetime")
             }
             MaybeExpression::Value(ast::Value::Any(value, _)) => {
-                self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "dateTime")
+                self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "datetime")
             }
             _ => Err(self.construct_error("dateTime")),
         }
