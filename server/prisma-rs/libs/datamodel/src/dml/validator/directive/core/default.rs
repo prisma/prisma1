@@ -9,7 +9,10 @@ impl DirectiveValidator<dml::Field> for DefaultDirectiveValidator {
         &"default"
     }
     fn validate_and_apply(&self, args: &Args, field: &mut dml::Field) -> Result<(), Error> {
-        // TODO: This is most likely duplicate code.
+        // If we allow list default values, we need to adjust the types below properly for that case.
+        if field.arity == dml::FieldArity::List {
+            return self.error("Cannot set a default value on list field.", &args.span());
+        }
 
         if let dml::FieldType::Base(scalar_type) = &field.field_type {
             match args.default_arg("value")?.as_type(&scalar_type) {
