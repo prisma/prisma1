@@ -1,5 +1,4 @@
 use crate::*;
-use barrel::Migration as BarrelMigration;
 use migration_connector::*;
 use prisma_query::Connectional;
 use std::sync::Arc;
@@ -95,8 +94,6 @@ fn render_steps_pretty(
 }
 
 fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &str) -> String {
-    let mut migration = BarrelMigration::new().schema(schema_name.clone());
-
     let schema_name = schema_name.to_string();
 
     match step {
@@ -107,102 +104,123 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
         }) => {
             let cloned_columns = columns.clone();
             let primary_columns = primary_columns.clone();
-            migration.create_table(name.to_string(), move |t| {
-                for column in cloned_columns.clone() {
-                    let tpe = column_description_to_barrel_type(sql_family, schema_name.to_string(), &column);
-                    t.add_column(column.name, tpe);
-                }
-                if primary_columns.len() > 0 {
-                    let column_names: Vec<String> = primary_columns
-                        .clone()
-                        .into_iter()
-                        .map(|col| format!("\"{}\"", col))
-                        .collect();
-                    t.inject_custom(format!("PRIMARY KEY ({})", column_names.join(",")));
-                }
-            });
-            make_sql_string(migration, sql_family)
+            let mut lines = Vec::new();
+            for column in cloned_columns.clone() {
+                let col_sql = render_column(sql_family, schema_name.to_string(), &column, false);
+                lines.push(col_sql);
+            }
+            if primary_columns.len() > 0 {
+                let column_names: Vec<String> = primary_columns
+                    .clone()
+                    .into_iter()
+                    .map(|col| quote(&col, sql_family))
+                    .collect();
+                lines.push(format!("PRIMARY KEY ({})", column_names.join(",")))
+            }
+            format!("CREATE TABLE {}.{}({});", quote(&schema_name, sql_family), quote(name, sql_family), lines.join(","))
         }
         SqlMigrationStep::DropTable(DropTable { name }) => {
-            migration.drop_table(name.to_string());
-            make_sql_string(migration, sql_family)
+            format!("DROP TABLE {}.{};", quote(&schema_name, sql_family), quote(name, sql_family))
         }
         SqlMigrationStep::DropTables(DropTables { names }) => {
             let fully_qualified_names: Vec<String> = names
                 .iter()
-                .map(|name| format!("\"{}\".\"{}\"", schema_name, name))
+                .map(|name| format!("{}.{}", quote(&schema_name, sql_family), quote(name, sql_family)))
                 .collect();
             format!("DROP TABLE {};", fully_qualified_names.join(","))
         }
         SqlMigrationStep::RenameTable { name, new_name } => {
-            migration.rename_table(name.to_string(), new_name.to_string());
-            make_sql_string(migration, sql_family)
+            let new_name = match sql_family {
+                SqlFamily::Sqlite => format!("{}", quote(new_name, sql_family)),
+                _ => format!("{}.{}", quote(&schema_name, sql_family), quote(new_name, sql_family)),
+            };
+            format!("ALTER TABLE {}.{} RENAME TO {};", quote(&schema_name, sql_family), quote(name, sql_family), new_name)
         }
         SqlMigrationStep::AlterTable(AlterTable { table, changes }) => {
-            let changes = changes.clone();
-            migration.change_table(table.to_string(), move |t| {
-                for change in changes.clone() {
-                    match change {
-                        TableChange::AddColumn(AddColumn { column }) => {
-                            let tpe = column_description_to_barrel_type(sql_family, schema_name.to_string(), &column);
-                            t.add_column(column.name, tpe);
-                        }
-                        TableChange::DropColumn(DropColumn { name }) => t.drop_column(name),
-                        TableChange::AlterColumn(AlterColumn { name, column }) => {
-                            t.drop_column(name);
-                            let tpe = column_description_to_barrel_type(sql_family, schema_name.to_string(), &column);
-                            t.add_column(column.name, tpe);
-                        }
+            let mut lines = Vec::new();
+            for change in changes.clone() {
+                match change {
+                    TableChange::AddColumn(AddColumn { column }) => {
+                        let col_sql = render_column(sql_family, schema_name.to_string(), &column, true);
+                        lines.push(format!("ADD COLUMN {}", col_sql));
+                    }
+                    TableChange::DropColumn(DropColumn { name }) => {
+                        // TODO: this does not work on MySQL for columns with foreign keys. Here the FK must be dropped first by name.
+                        let name = quote(&name, sql_family); 
+                        lines.push(format!("DROP COLUMN {}", name));
+                    },
+                    TableChange::AlterColumn(AlterColumn { name, column }) => {
+                        let name = quote(&name, sql_family); 
+                        lines.push(format!("DROP COLUMN {}", name));
+                        let col_sql = render_column(sql_family, schema_name.to_string(), &column, true);
+                        lines.push(format!("ADD COLUMN {}", col_sql));
                     }
                 }
-            });
-            make_sql_string(migration, sql_family)
+            }
+            format!("ALTER TABLE {}.{} {};", quote(&schema_name, sql_family), quote(table, sql_family), lines.join(","))
         }
         SqlMigrationStep::RawSql { raw } => raw.to_string(),
     }
 }
 
-fn make_sql_string(migration: BarrelMigration, sql_family: SqlFamily) -> String {
-    // TODO: this should pattern match on the connector type once we have this information available
+fn quote(name: &str, sql_family: SqlFamily) -> String {
     match sql_family {
-        SqlFamily::Sqlite => migration.make::<barrel::backend::Sqlite>(),
-        SqlFamily::Postgres => migration.make::<barrel::backend::Pg>(),
-        SqlFamily::Mysql => migration.make::<barrel::backend::MySql>(),
+        SqlFamily::Sqlite => format!("\"{}\"", name),
+        SqlFamily::Postgres => format!("\"{}\"", name),
+        SqlFamily::Mysql => format!("`{}`", name),
     }
 }
 
-fn column_description_to_barrel_type(
+fn render_column(
     sql_family: SqlFamily,
     schema_name: String,
     column_description: &ColumnDescription,
-) -> barrel::types::Type {
-    // TODO: add foreign keys for non integer types once this is available in barrel
+    add_fk_prefix: bool,
+) -> String {
+    let column_name = quote(&column_description.name, sql_family);
     let tpe_str = render_column_type(sql_family, column_description.tpe);
-    let tpe_str_with_default = match &column_description.default {
+    let nullability_str = if column_description.required {
+        "NOT NULL"
+    } else {
+        ""
+    };
+    let default_str = match &column_description.default {
         Some(value) => {
             match render_value(value) {
-                Some(ref default) if column_description.required => format!("{} DEFAULT {}", tpe_str.clone(), default),
-                Some(_) => tpe_str.clone(), // we use the default value right now only to smoothen migrations. So we only use it when absolutely needed.
-                None => tpe_str.clone(),
+                Some(ref default) if column_description.required => format!("DEFAULT {}", default),
+                Some(_) => "".to_string(), // we use the default value right now only to smoothen migrations. So we only use it when absolutely needed.
+                None => "".to_string(),
             }        
         },
-        None => tpe_str.clone(),
+        None => "".to_string(),
     };
-    let tpe = match (sql_family, &column_description.foreign_key) {
+    let references_str = match (sql_family, &column_description.foreign_key) {
         (SqlFamily::Postgres, Some(fk)) => {
-            let complete = dbg!(format!(
-                "{} REFERENCES \"{}\".\"{}\"(\"{}\")",
-                tpe_str, schema_name, fk.table, fk.column
-            ));
-            barrel::types::custom(string_to_static_str(complete))
+            format!(
+                "REFERENCES \"{}\".\"{}\"(\"{}\")",
+                schema_name, fk.table, fk.column
+            )
         }
-        (_, Some(fk)) => {
-            let complete = dbg!(format!("{} REFERENCES {}({})", tpe_str, fk.table, fk.column));
-            barrel::types::custom(string_to_static_str(complete))
+        (SqlFamily::Mysql, Some(fk)) => {
+            format!(
+                "REFERENCES `{}`.`{}`(`{}`)",
+                schema_name, fk.table, fk.column
+            )
         }
-        (_, None) => barrel::types::custom(string_to_static_str(tpe_str_with_default)),
+        (SqlFamily::Sqlite, Some(fk)) => {
+            format!("REFERENCES {}({})", fk.table, fk.column)
+        }
+        (_, None) => "".to_string(),
     };
-    tpe.nullable(!column_description.required)
+    match (sql_family, &column_description.foreign_key) {
+        (SqlFamily::Mysql, Some(_)) => {
+            let add = if add_fk_prefix { "ADD" } else { "" };
+            let fk_line = format!("{} FOREIGN KEY ({}) {}", add, column_name, references_str);
+            format!("{} {} {} {},{}", column_name, tpe_str, nullability_str, default_str, fk_line)
+        }
+        _ =>
+            format!("{} {} {} {} {}", column_name, tpe_str, nullability_str, default_str, references_str),
+    }
 }
 
 // TODO: this returns None for expressions
@@ -229,7 +247,7 @@ fn render_column_type(sql_family: SqlFamily, t: ColumnType) -> String {
     match sql_family {
         SqlFamily::Sqlite => render_column_type_sqlite(t),
         SqlFamily::Postgres => render_column_type_postgres(t),
-        _ => unimplemented!(),
+        SqlFamily::Mysql => render_column_type_mysql(t),
     }
 }
 
@@ -253,6 +271,12 @@ fn render_column_type_postgres(t: ColumnType) -> String {
     }
 }
 
-fn string_to_static_str(s: String) -> &'static str {
-    Box::leak(s.into_boxed_str())
+fn render_column_type_mysql(t: ColumnType) -> String {
+    match t {
+        ColumnType::Boolean => format!("boolean"),
+        ColumnType::DateTime => format!("datetime(3)"),
+        ColumnType::Float => format!("Decimal(65,30)"),
+        ColumnType::Int => format!("int"),
+        ColumnType::String => format!("varchar(1000)"), // we use varchar right now as mediumtext doesn't allow default values
+    }
 }

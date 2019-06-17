@@ -50,6 +50,14 @@ where
     } else {
         println!("Ignoring Postgres")
     }
+    // MYSQL
+    if !ignores.contains(&SqlFamily::Mysql) {
+        println!("Testing with MySQL now");
+        let engine = test_engine(&mysql_test_config());
+        testFn(SqlFamily::Mysql, &engine);
+    } else {
+        println!("Ignoring MySQL")
+    }
 }
 
 pub fn test_engine(config: &str) -> Box<MigrationEngine> {
@@ -64,6 +72,7 @@ pub fn introspect_database(engine: &MigrationEngine) -> DatabaseSchema {
     let inspector: Box<DatabaseInspector> = match engine.connector().connector_type() {
         "postgres" => Box::new(DatabaseInspector::postgres(postgres_url())),
         "sqlite" => Box::new(DatabaseInspector::sqlite(sqlite_test_file())),
+        "mysql" => Box::new(DatabaseInspector::mysql(mysql_url())),
         _ => unimplemented!(),
     };
     let mut result = inspector.introspect(&SCHEMA_NAME.to_string());
@@ -76,7 +85,7 @@ pub fn connectional(sql_family: SqlFamily) -> Arc<Connectional> {
     match sql_family {
         SqlFamily::Postgres => postgres_connectional(),
         SqlFamily::Sqlite => sqlite_connectional(),
-        _ => unimplemented!(),
+        SqlFamily::Mysql => mysql_connectional(),
     }
 }
 
@@ -88,6 +97,11 @@ fn postgres_connectional() -> Arc<Connectional> {
 fn sqlite_connectional() -> Arc<Connectional> {
     let url = format!("file:{}", sqlite_test_file());
     Arc::new(Sqlite::try_from(url.as_ref()).expect("Loading SQLite failed"))
+}
+
+fn mysql_connectional() -> Arc<Connectional> {
+    let helper = SqlMigrationConnector::mysql_helper(&mysql_url());
+    helper.db_connection
 }
 
 pub fn sqlite_test_config() -> String {
@@ -123,17 +137,45 @@ pub fn postgres_test_config() -> String {
     )
 }
 
+pub fn mysql_test_config() -> String {
+    format!(
+        r#"
+        datasource my_db {{
+            provider = "mysql"
+            url = "{}"
+            default = true
+        }}
+    "#,
+        mysql_url()
+    )
+}
+
 pub fn postgres_url() -> String {
     dbg!(format!(
         "postgresql://postgres:prisma@{}:5432/db?schema={}",
-        db_host(),
+        db_host_postgres(),
         SCHEMA_NAME
     ))
 }
 
-fn db_host() -> String {
+pub fn mysql_url() -> String {
+    dbg!(format!(
+        "mysql://root:prisma@{}:3306/{}",
+        db_host_mysql(),
+        SCHEMA_NAME
+    ))
+}
+
+fn db_host_postgres() -> String {
     match std::env::var("IS_BUILDKITE") {
-        Ok(_) => "test-db".to_string(),
+        Ok(_) => "test-db-postgres".to_string(),
+        Err(_) => "127.0.0.1".to_string(),
+    }
+}
+
+fn db_host_mysql() -> String {
+    match std::env::var("IS_BUILDKITE") {
+        Ok(_) => "test-db-mysql".to_string(),
         Err(_) => "127.0.0.1".to_string(),
     }
 }

@@ -102,10 +102,35 @@ pub enum ColumnType {
     DateTime,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone)]
 pub struct ForeignKey {
+    pub name: Option<String>,
     pub table: String,
     pub column: String,
+}
+
+impl PartialEq for ForeignKey {
+    fn eq(&self, other: &ForeignKey) -> bool {
+        self.table == other.table && self.column == other.column
+    }
+}
+
+impl ForeignKey {
+    pub fn new(table: String, column: String) -> ForeignKey {
+        ForeignKey {
+            name: None,
+            table,
+            column
+        }
+    }
+
+    pub fn with_foreign_key(name: String, table: String, column: String) -> ForeignKey {
+        ForeignKey {
+            name: Some(name),
+            table,
+            column
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]

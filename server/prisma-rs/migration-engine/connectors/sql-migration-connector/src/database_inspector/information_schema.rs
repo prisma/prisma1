@@ -95,9 +95,11 @@ impl InformationSchema {
         );
 
         let result_set = self.connectional.query_on_raw_connection(&schema, &sql, &[]).unwrap();
-        result_set
+        let mut pks: Vec<String> = result_set
             .into_iter()
             .map(|row| row.get_as_string("key_column").unwrap())
-            .collect()
+            .collect();
+        pks.dedup(); // this query yields duplicates on MySQL
+        pks
     }
 }

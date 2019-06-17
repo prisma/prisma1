@@ -26,8 +26,8 @@ fn adding_a_required_field_if_there_is_data() {
         let dm = r#"
             model Test {
                 id String @id @default(cuid())
-                int Int
-                float Float
+                myint Int
+                myfloat Float
                 boolean Boolean
                 string String
                 dateTime DateTime
@@ -66,8 +66,8 @@ fn adding_a_required_field_must_use_the_default_value_for_migrations() {
         let dm = r#"
             model Test {
                 id String @id @default(cuid())
-                int Int @default(1)
-                float Float @default(2)
+                myint Int @default(1)
+                myfloat Float @default(2)
                 boolean Boolean @default(true)
                 string String @default("test_string")
                 dateTime DateTime 
@@ -95,7 +95,7 @@ fn adding_a_required_field_must_use_the_default_value_for_migrations() {
             let query = Select::from_table(table_for_select).so_that(conditions);
             let result_set = conn.query_on_connection(SCHEMA_NAME, query.into()).unwrap();
             let row = result_set.into_iter().next().unwrap();
-            assert_eq!(row.get_as_integer("int").unwrap(), 1);
+            assert_eq!(row.get_as_integer("myint").unwrap(), 1);
             assert_eq!(row.get_as_string("string").unwrap(), "test_string");
         }
     });

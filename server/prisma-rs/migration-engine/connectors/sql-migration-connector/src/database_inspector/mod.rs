@@ -4,17 +4,19 @@ mod database_inspector_impl;
 mod empty_impl;
 mod information_schema;
 mod postgres_inspector;
-mod sqlite;
+mod sqlite_inspector;
 mod database_schema;
+mod mysql_inspector;
 
 pub use database_inspector_impl::*;
 pub use empty_impl::*;
 pub use database_schema::*;
 use postgres::Config as PostgresConfig;
 use postgres_inspector::Postgres;
-use prisma_query::connector::{PostgreSql as PostgresDriver, Sqlite as SqliteDriver};
+use mysql_inspector::MysqlInspector;
+use prisma_query::connector::{PostgreSql as PostgresDriver, Sqlite as SqliteDriver, Mysql as MysqlDriver };
 use prisma_query::Connectional;
-use sqlite::Sqlite;
+use sqlite_inspector::Sqlite;
 use std::borrow::Cow;
 use std::sync::Arc;
 use std::time::Duration;
@@ -80,5 +82,14 @@ impl DatabaseInspector {
 
     pub fn postgres_with_connectional(connectional: Arc<Connectional>) -> Postgres {
         Postgres::new(connectional)
+    }
+
+    pub fn mysql(url: String) -> MysqlInspector {
+        let connectional = MysqlDriver::new_from_url(&url).unwrap();
+        Self::mysql_with_connectional(Arc::new(connectional))
+    }
+
+    pub fn mysql_with_connectional(connectional: Arc<Connectional>) -> MysqlInspector {
+        MysqlInspector::new(connectional)
     }
 }

@@ -31,9 +31,8 @@ impl MigrationPersistence for SqlMigrationPersistence {
                 barrel::SqlVariant::Pg
             }
             SqlFamily::Mysql => {
-                // m.create_table_if_not_exists(TABLE_NAME, |t| migration_table_setup(self.sql_family, t));
-                // barrel::SqlVariant::Mysql
-                unimplemented!()
+                m.create_table(TABLE_NAME, migration_table_setup_mysql);
+                barrel::SqlVariant::Mysql
             }
         };
         let sql_str = dbg!(m.make_from(barrel_variant));
@@ -53,7 +52,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
         // TODO: this is the wrong place to do that
         match self.sql_family {
             SqlFamily::Postgres => {
-                let sql_str = dbg!(format!(r#"DROP SCHEMA "{}" CASCADE;"#, self.schema_name)); // TODO: this is not vendor agnostic yet
+                let sql_str = dbg!(format!(r#"DROP SCHEMA "{}" CASCADE;"#, self.schema_name));
                 let _ = self
                     .connection
                     .query_on_raw_connection(&self.schema_name, &sql_str, &[]);
@@ -63,7 +62,12 @@ impl MigrationPersistence for SqlMigrationPersistence {
                     let _ = dbg!(std::fs::remove_file(file_path)); // ignore potential errors
                 }
             }
-            SqlFamily::Mysql => {}
+            SqlFamily::Mysql => {
+                let sql_str = dbg!(format!(r#"DROP SCHEMA `{}`;"#, self.schema_name));
+                let _ = self
+                    .connection
+                    .query_on_raw_connection(&self.schema_name, &sql_str, &[]);
+            }
         }
     }
 
@@ -123,7 +127,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
             .value(FINISHED_AT_COLUMN, ParameterizedValue::Null);
 
         match self.sql_family {
-            SqlFamily::Sqlite => {
+            SqlFamily::Sqlite | SqlFamily::Mysql => {
                 let id = self
                     .connection
                     .execute_on_connection(&self.schema_name, insert.into())
@@ -143,7 +147,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
                     cloned.revision = row.get_as_integer("revision").unwrap() as usize;
                 });
             }
-            SqlFamily::Mysql => unimplemented!(),
+            // SqlFamily::Mysql => unimplemented!(),
         }
         cloned
     }
@@ -182,6 +186,10 @@ fn migration_table_setup_postgres(t: &mut barrel::Table) {
     migration_table_setup(t, types::custom("timestamp(3)"));
 }
 
+fn migration_table_setup_mysql(t: &mut barrel::Table) {
+    migration_table_setup(t, types::custom("datetime(3)"));
+}
+
 fn migration_table_setup(t: &mut barrel::Table, datetime_type: barrel::types::Type) {
     t.add_column(REVISION_COLUMN, types::primary());
     t.add_column(NAME_COLUMN, types::text());
@@ -211,7 +219,7 @@ impl SqlMigrationPersistence {
         match self.sql_family {
             SqlFamily::Sqlite => ParameterizedValue::Integer(datetime.timestamp_millis()),
             SqlFamily::Postgres => ParameterizedValue::DateTime(datetime),
-            _ => unimplemented!(),
+            SqlFamily::Mysql => ParameterizedValue::DateTime(datetime),
         }
     }
 }

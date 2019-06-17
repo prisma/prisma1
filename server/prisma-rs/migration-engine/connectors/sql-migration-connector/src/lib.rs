@@ -12,7 +12,7 @@ use database_inspector::DatabaseInspector;
 pub use error::*;
 use migration_connector::*;
 use postgres::Config as PostgresConfig;
-use prisma_query::connector::{PostgreSql, Sqlite};
+use prisma_query::connector::{PostgreSql, Sqlite, Mysql};
 use prisma_query::Connectional;
 use serde_json;
 use sql_database_migration_inferrer::*;
@@ -78,7 +78,10 @@ impl SqlMigrationConnector {
                     .query_on_raw_connection("", &check_sql, &[]);
                 result_set.into_iter().next().is_some()
             }
-            _ => unimplemented!(),
+            SqlFamily::Mysql => {
+                // TODO: implement this actually
+                false
+            }
         }
     }
 
@@ -92,14 +95,19 @@ impl SqlMigrationConnector {
                 Self::create_connector(conn, sql_family, schema_name, Some(file_path))
             }
             SqlFamily::Postgres => {
+                assert!(url.starts_with("postgresql:"), "the url for postgres must start with 'postgresql:'");
                 let postgres_helper = Self::postgres_helper(&url);
                 Self::create_connector(postgres_helper.db_connection, sql_family, postgres_helper.schema, None)
             }
-            _ => unimplemented!(),
+            SqlFamily::Mysql => {
+                assert!(url.starts_with("mysql:"), "the url for mysql must start with 'mysql:'");
+                let helper = Self::mysql_helper(&url);
+                Self::create_connector(helper.db_connection, sql_family, helper.schema, None)
+            }
         }
     }
 
-    pub fn postgres_helper(url: &str) -> PostgresHelper {
+    pub fn postgres_helper(url: &str) -> DatabaseHelper {
         let connection_limit = 10;
         let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
         let mut config = PostgresConfig::new();
@@ -133,9 +141,40 @@ impl SqlMigrationConnector {
             .to_string();
 
         config.dbname(&db_name);
-        let db_connection = Arc::new(PostgreSql::new(config, connection_limit).unwrap());
+        let db_connection = Arc::new(PostgreSql::new(config, connection_limit).expect("Connecting to Postgres failed"));
 
-        PostgresHelper { db_connection, schema }
+        DatabaseHelper { db_connection, schema }
+    }
+
+    pub fn mysql_helper(url: &str) -> DatabaseHelper {
+        let mut builder = mysql::OptsBuilder::new();
+        let parsed_url = Url::parse(url).expect("url parsing failed");
+
+        builder.ip_or_hostname(parsed_url.host_str());
+        builder.tcp_port(parsed_url.port().unwrap_or(3306));
+        builder.user(Some(parsed_url.username()));
+        builder.pass(parsed_url.password());
+        builder.verify_peer(false);
+        builder.stmt_cache_size(Some(1000));
+
+        let db_name = parsed_url.path_segments().and_then(|mut segments| segments.next()).expect("db name must be set");
+
+        let root_connection = Mysql::new(builder);
+        match root_connection {
+            Ok(root_connection) => {
+                let db_sql = format!("CREATE SCHEMA IF NOT EXISTS `{}`;", &db_name);
+                root_connection.query_on_raw_connection("", &db_sql, &[]).expect("Creating the schema failed");
+            }
+            Err(_) => {
+                // this means that the user did not have root access
+            }
+        }
+        let mysql = Mysql::new_from_url(&url).expect("Connecting to MySQL failed");
+
+        DatabaseHelper {
+            db_connection: Arc::new(mysql),
+            schema: db_name.to_string(),
+        }
     }
 
     pub fn virtual_variant(
@@ -166,7 +205,7 @@ impl SqlMigrationConnector {
         let inspector: Arc<DatabaseInspector> = match sql_family {
             SqlFamily::Sqlite => Arc::new(DatabaseInspector::sqlite_with_connectional(Arc::clone(&conn))),
             SqlFamily::Postgres => Arc::new(DatabaseInspector::postgres_with_connectional(Arc::clone(&conn))),
-            _ => unimplemented!(),
+            SqlFamily::Mysql => Arc::new(DatabaseInspector::mysql_with_connectional(Arc::clone(&conn))),
         };
         let migration_persistence = Arc::new(SqlMigrationPersistence {
             sql_family,
@@ -199,7 +238,7 @@ impl SqlMigrationConnector {
     }
 }
 
-pub struct PostgresHelper {
+pub struct DatabaseHelper {
     pub db_connection: Arc<Connectional>,
     pub schema: String,
 }
@@ -230,7 +269,12 @@ impl MigrationConnector for SqlMigrationConnector {
                     .query_on_raw_connection(&self.schema_name, &schema_sql, &[])
                     .expect("Creation of Postgres Schema failed");
             }
-            SqlFamily::Mysql => unimplemented!(),
+            SqlFamily::Mysql => {
+                let schema_sql = dbg!(format!("CREATE SCHEMA IF NOT EXISTS `{}` DEFAULT CHARACTER SET latin1;", &self.schema_name));
+                self.connectional
+                    .query_on_raw_connection(&self.schema_name, &schema_sql, &[])
+                    .expect("Creation of Mysql Schema failed");
+            },
         }
         self.migration_persistence.init();
         Ok(())

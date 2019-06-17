@@ -12,6 +12,7 @@ pub fn convert_introspected_columns(
                 .iter()
                 .find(|fk| fk.column == c.name && fk.table == c.table)
                 .map(|fk| ForeignKey {
+                    name: Some(fk.name.clone()),
                     table: fk.referenced_table.clone(),
                     column: fk.referenced_column.clone(),
                 });
