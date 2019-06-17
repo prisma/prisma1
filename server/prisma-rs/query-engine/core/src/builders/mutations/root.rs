@@ -3,18 +3,18 @@
 
 use crate::{
     builders::{utils, LookAhead, NestedValue, ValueList, ValueMap, ValueSplit},
+    extend_defaults,
     schema::{ModelOperation, OperationTag},
     CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaValue, Project};
-//use rust_inflector::Inflector as RustInflector;
 use std::{collections::BTreeMap, sync::Arc};
 
 /// A TopLevelMutation builder
 ///
-/// It takes a graphql field and model
+/// It takes a GraphQL field and model
 /// and builds a mutation tree from it
 #[derive(Debug)]
 pub struct MutationBuilder<'field> {
@@ -42,7 +42,9 @@ impl<'field> MutationBuilder<'field> {
             match model_operation.operation {
                 OperationTag::CreateOne => {
                     let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
-                    let non_list_args = values.to_prisma_values().into();
+                    let mut non_list_args = values.to_prisma_values();
+                    extend_defaults(&model, &mut non_list_args);
+
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
                     let nested_mutactions = build_nested_root(
                         model.name.as_str(),
@@ -53,7 +55,7 @@ impl<'field> MutationBuilder<'field> {
 
                     TopLevelDatabaseMutaction::CreateNode(CreateNode {
                         model: Arc::clone(&model),
-                        non_list_args,
+                        non_list_args: non_list_args.into(),
                         list_args,
                         nested_mutactions,
                     })

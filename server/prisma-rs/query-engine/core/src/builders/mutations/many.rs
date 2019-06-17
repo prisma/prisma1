@@ -2,6 +2,7 @@
 
 use crate::{
     builders::{build_nested_root, utils, ValueMap, ValueSplit},
+    extend_defaults,
     schema::OperationTag,
     CoreError, CoreResult,
 };
@@ -56,12 +57,14 @@ fn attach_create(
     top_level: OperationTag,
 ) -> CoreResult<()> {
     let ValueSplit { values, lists, nested } = map.split();
-    let non_list_args = values.to_prisma_values().into();
+    let mut non_list_args = values.to_prisma_values();
+    extend_defaults(&rel_model, &mut non_list_args);
+
     let list_args = lists.into_iter().map(|la| la.convert()).collect();
     let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&rel_model), top_level)?;
 
     mutations.creates.push(NestedCreateNode {
-        non_list_args,
+        non_list_args: non_list_args.into(),
         list_args,
         top_is_create: match top_level {
             OperationTag::CreateOne => true,
