@@ -60,3 +60,41 @@ fn fail_on_model_type_conflict() {
         &Span::new(34, 38),
     ));
 }
+
+#[test]
+fn fail_on_duplicate_field() {
+    let dml = r#"
+    model User {
+        id Int @id
+        firstName String
+        firstName String
+    }
+    "#;
+
+    let errors = parse_error(dml);
+
+    errors.assert_is(ValidationError::new_duplicate_field_error(
+        "User",
+        "firstName",
+        &Span::new(70, 79),
+    ));
+}
+
+#[test]
+fn fail_on_duplicate_enum_value() {
+    let dml = r#"
+    enum Role {
+        Admin
+        Moderator
+        Moderator
+    }
+    "#;
+
+    let errors = parse_error(dml);
+
+    errors.assert_is(ValidationError::new_duplicate_enum_value_error(
+        "Role",
+        "Moderator",
+        &Span::new(57, 66),
+    ));
+}
