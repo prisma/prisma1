@@ -205,10 +205,7 @@ fn changing_the_type_of_an_id_field_must_work() {
         assert_eq!(column.tpe, ColumnType::Int);
         assert_eq!(
             column.foreign_key,
-            Some(ForeignKey {
-                table: "B".to_string(),
-                column: "id".to_string()
-            })
+            Some(ForeignKey::new("B".to_string(), "id".to_string()))
         );
 
         let dm2 = r#"
@@ -225,10 +222,7 @@ fn changing_the_type_of_an_id_field_must_work() {
         assert_eq!(column.tpe, ColumnType::String);
         assert_eq!(
             column.foreign_key,
-            Some(ForeignKey {
-                table: "B".to_string(),
-                column: "id".to_string()
-            })
+            Some(ForeignKey::new("B".to_string(), "id".to_string()))
         );
     });
 }
@@ -347,19 +341,13 @@ fn adding_a_many_to_many_relation_must_result_in_a_prisma_style_relation_table()
         assert_eq!(aColumn.tpe, ColumnType::Int);
         assert_eq!(
             aColumn.foreign_key,
-            Some(ForeignKey {
-                table: "A".to_string(),
-                column: "id".to_string()
-            })
+            Some(ForeignKey::new("A".to_string(), "id".to_string()))
         );
         let bColumn = relation_table.column_bang("B");
         assert_eq!(bColumn.tpe, ColumnType::Int);
         assert_eq!(
             bColumn.foreign_key,
-            Some(ForeignKey {
-                table: "B".to_string(),
-                column: "id".to_string()
-            })
+            Some(ForeignKey::new("B".to_string(), "id".to_string()))
         );
     });
 }
@@ -411,10 +399,7 @@ fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
         assert_eq!(column.tpe, ColumnType::Int);
         assert_eq!(
             column.foreign_key,
-            Some(ForeignKey {
-                table: "B".to_string(),
-                column: "id".to_string()
-            })
+            Some(ForeignKey::new("B".to_string(), "id".to_string()))
         );
     });
 }
@@ -438,10 +423,7 @@ fn specifying_a_db_name_for_an_inline_relation_must_work() {
         assert_eq!(column.tpe, ColumnType::Int);
         assert_eq!(
             column.foreign_key,
-            Some(ForeignKey {
-                table: "B".to_string(),
-                column: "id".to_string()
-            })
+            Some(ForeignKey::new("B".to_string(), "id".to_string()))
         );
     });
 }
@@ -465,10 +447,7 @@ fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
         assert_eq!(column.tpe, ColumnType::String);
         assert_eq!(
             column.foreign_key,
-            Some(ForeignKey {
-                table: "B".to_string(),
-                column: "id".to_string()
-            })
+            Some(ForeignKey::new("B".to_string(), "id".to_string()))
         );
     });
 }
@@ -524,10 +503,7 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(
             column.foreign_key,
-            Some(ForeignKey {
-                table: "B".to_string(),
-                column: "id".to_string()
-            })
+            Some(ForeignKey::new("B".to_string(), "id".to_string()))
         );
 
         let dm2 = r#"
@@ -545,10 +521,7 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
         let column = result.table_bang("B").column_bang("a");
         assert_eq!(
             column.foreign_key,
-            Some(ForeignKey {
-                table: "A".to_string(),
-                column: "id".to_string()
-            })
+            Some(ForeignKey::new("A".to_string(), "id".to_string()))
         );
     });
 }

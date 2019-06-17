@@ -4,7 +4,7 @@ mod database_inspector_impl;
 mod empty_impl;
 mod information_schema;
 mod postgres_inspector;
-mod sqlite;
+mod sqlite_inspector;
 mod database_schema;
 mod mysql_inspector;
 
@@ -16,7 +16,7 @@ use postgres_inspector::Postgres;
 use mysql_inspector::MysqlInspector;
 use prisma_query::connector::{PostgreSql as PostgresDriver, Sqlite as SqliteDriver, Mysql as MysqlDriver };
 use prisma_query::Connectional;
-use sqlite::Sqlite;
+use sqlite_inspector::Sqlite;
 use std::borrow::Cow;
 use std::sync::Arc;
 use std::time::Duration;
