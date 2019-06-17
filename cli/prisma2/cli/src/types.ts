@@ -17,6 +17,7 @@ export type Dictionary<T> = {
 export type GeneratorConfig = {
   output: string | null
   name: string
+  provider: string
   config: Dictionary<string>
 }
 
@@ -31,6 +32,7 @@ export type GeneratorFunction = (options: GeneratorOptions) => Promise<string>
 export type GeneratorDefinition = {
   prettyName?: string // used to print in prisma dev command
   generate: GeneratorFunction
+  defaultOutput: string
 }
 
 export type GeneratorDefinitionWithPackage = {

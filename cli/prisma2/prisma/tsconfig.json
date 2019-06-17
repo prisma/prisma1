@@ -9,7 +9,8 @@
     "noImplicitAny": false,
     "outDir": "dist",
     "rootDir": "src",
-    "declaration": true
+    "declaration": true,
+    "skipLibCheck": true
   },
   "exclude": ["dist", "build", "runtime"]
 }
