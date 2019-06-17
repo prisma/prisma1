@@ -4,7 +4,6 @@ use std::{
     io::{self, Read},
 };
 
-extern crate clap;
 use clap::{App, Arg};
 use serde;
 use serde_json;
