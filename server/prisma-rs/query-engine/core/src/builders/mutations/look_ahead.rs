@@ -13,7 +13,7 @@ use crate::{
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
-use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaValue, Project};
+use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue};
 
 use std::{collections::BTreeMap, sync::Arc};
 
@@ -25,6 +25,10 @@ impl LookAhead {
                 create_connect(&mut cn)?;
                 TopLevelDatabaseMutaction::CreateNode(cn)
             }
+            TopLevelDatabaseMutaction::UpdateNode(mut un) => {
+                update_nested_connect(&mut un)?;
+                TopLevelDatabaseMutaction::UpdateNode(un)
+            }
             who_even_cares => who_even_cares,
         })
     }
@@ -35,18 +39,65 @@ fn create_connect(cn: &mut CreateNode) -> CoreResult<()> {
     let connects = std::mem::replace(&mut cn.nested_mutactions.connects, vec![]);
 
     let mut new = vec![];
-    for conn in connects.into_iter() {
-        let rf = cn
-            .model
+    connect_fold_into(&cn.model, &mut cn.non_list_args, &mut new, connects.into_iter())?;
+    cn.nested_mutactions.connects = new;
+
+    // Now recursively traverse all other creates
+    for ncn in cn.nested_mutactions.creates.iter_mut() {
+        nested_create_connect(ncn)?;
+    }
+
+    Ok(())
+}
+
+fn nested_create_connect(ncn: &mut NestedCreateNode) -> CoreResult<()> {
+    let connects = std::mem::replace(&mut ncn.nested_mutactions.connects, vec![]);
+
+    let mut new = vec![];
+    connect_fold_into(
+        &ncn.relation_field.model(),
+        &mut ncn.non_list_args,
+        &mut new,
+        connects.into_iter(),
+    )?;
+    ncn.nested_mutactions.connects = new;
+
+    for cn in ncn.nested_mutactions.creates.iter_mut() {
+        nested_create_connect(cn)?;
+    }
+    Ok(())
+}
+
+fn update_nested_connect(un: &mut UpdateNode) -> CoreResult<()> {
+    for ncn in un.nested_mutactions.creates.iter_mut() {
+        nested_create_connect(ncn)?;
+    }
+
+    Ok(())
+}
+
+/// Fold require `connect` operations into their parent
+///
+/// This function requires the model definition of the parent,
+/// an argument set to fold into, a vector for non-required operations
+/// and a set of connects to evaluate.
+fn connect_fold_into(
+    model: &ModelRef,
+    args: &mut PrismaArgs,
+    nested: &mut Vec<NestedConnect>,
+    connects: impl Iterator<Item = NestedConnect>,
+) -> CoreResult<()> {
+    for conn in connects {
+        let rf = model
             .fields()
             .find_from_relation_fields(conn.relation_field.name.as_str())?;
+
         if rf.is_required {
-            cn.non_list_args.insert(rf.name.clone(), conn.where_.value);
+            args.insert(rf.name.clone(), conn.where_.value);
         } else {
-            new.push(conn);
+            nested.push(conn);
         }
     }
 
-    cn.nested_mutactions.connects = new;
     Ok(())
 }
