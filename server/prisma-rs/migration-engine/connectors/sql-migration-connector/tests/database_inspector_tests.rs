@@ -217,7 +217,7 @@ fn sqlite() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
 }
 
 fn postgres() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
-    let url = format!("postgresql://postgres:prisma@127.0.0.1:5432/db?schema={}", SCHEMA);
+    let url = format!("postgresql://postgres:prisma@{}:5432/db?schema={}", db_host_postgres(), SCHEMA);
     let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA));
     let setup_connectional = DatabaseInspector::postgres(url.to_string()).connectional;
     let _ = setup_connectional.query_on_raw_connection(&SCHEMA, &drop_schema, &[]);
@@ -229,14 +229,14 @@ fn postgres() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
 }
 
 fn mysql() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
-    let url_without_db = "mysql://root:prisma@127.0.0.1:3306";
+    let url_without_db = format!("mysql://root:prisma@{}:3306", db_host_mysql());
     let drop_database = dbg!(format!("DROP DATABASE IF EXISTS `{}`;", SCHEMA));
     let create_database = dbg!(format!("CREATE DATABASE `{}`;", SCHEMA));
     let setup_connectional = DatabaseInspector::mysql(url_without_db.to_string()).connectional;
     let _ = setup_connectional.query_on_raw_connection(&SCHEMA, &drop_database, &[]);
     let _ = setup_connectional.query_on_raw_connection(&SCHEMA, &create_database, &[]);
 
-    let url = format!("mysql://root:prisma@127.0.0.1:3306/{}", SCHEMA);
+    let url = format!("mysql://root:prisma@{}:3306/{}", db_host_mysql(),  SCHEMA);
     let inspector = DatabaseInspector::mysql(url.to_string());
     let connectional = Arc::clone(&inspector.connectional);
 
@@ -245,4 +245,18 @@ fn mysql() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
 
 fn string_to_static_str(s: String) -> &'static str {
     Box::leak(s.into_boxed_str())
+}
+
+fn db_host_postgres() -> String {
+    match std::env::var("IS_BUILDKITE") {
+        Ok(_) => "test-db-postgres".to_string(),
+        Err(_) => "127.0.0.1".to_string(),
+    }
+}
+
+fn db_host_mysql() -> String {
+    match std::env::var("IS_BUILDKITE") {
+        Ok(_) => "test-db-mysql".to_string(),
+        Err(_) => "127.0.0.1".to_string(),
+    }
 }
