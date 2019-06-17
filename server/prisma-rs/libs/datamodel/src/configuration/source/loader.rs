@@ -40,7 +40,7 @@ impl SourceLoader {
             if provider == decl.connector_type() {
                 return Ok(Some(decl.create(
                     // The name in front of the block is the name of the concrete instantiation.
-                    &ast_source.name,
+                    &ast_source.name.name,
                     &url,
                     &Arguments::new(&ast_source.properties, ast_source.span),
                     &ast_source.documentation.clone().map(|comment| comment.text),
@@ -67,7 +67,7 @@ impl SourceLoader {
                     Ok(None) => { /* Source was disabled. */ }
                     // Lift error to source.
                     Err(ValidationError::ArgumentNotFound { argument_name, span }) => errors.push(
-                        ValidationError::new_source_argument_not_found_error(&argument_name, &src.name, &span),
+                        ValidationError::new_source_argument_not_found_error(&argument_name, &src.name.name, &span),
                     ),
                     Err(err) => errors.push(err),
                 },

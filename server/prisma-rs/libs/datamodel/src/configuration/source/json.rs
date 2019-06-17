@@ -27,7 +27,7 @@ fn source_from_json(source: &SourceConfig, loader: &configuration::SourceLoader)
     }
 
     let ast_source = ast::SourceConfig {
-        name: source.name.clone(),
+        name: ast::Identifier::new(&source.name),
         properties: arguments,
         documentation: source.documentation.clone().map(|text| ast::Comment { text }),
         span: ast::Span::empty(),

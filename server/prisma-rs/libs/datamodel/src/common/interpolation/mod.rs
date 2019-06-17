@@ -45,16 +45,38 @@ impl StringInterpolator {
             Ok(mut string_wrapped) => {
                 let string_components = string_wrapped.next().unwrap();
 
-                match_children! { string_components, current,
-                    // Explicit handling of escaped `${`, like `\${...}`.
-                    Rule::string_escaped_interpolation => parts.push(String::from("${")),
-                    Rule::string_any => parts.push(String::from(current.as_str())),
-                    Rule::expression => {
-                        let value = parse_expr_and_lift_span(&current, span.start)?;
-                        parts.push(String::from(ValueValidator::new(&value)?.raw()))
-                    },
-                    Rule::EOI => {},
-                    _ => panic!("Encounterd impossible interpolated string during parsing: {:?}", current.tokens())
+                for current in string_components.into_inner() {
+                    match current.as_rule() {
+                        Rule::string_interpolate_escape => {
+                            for child in current.into_inner() {
+                                match child.as_rule() {
+                                    Rule::WHITESPACE => {}
+                                    Rule::COMMENT => {}
+                                    Rule::INTERPOLATION_START => {}
+                                    Rule::INTERPOLATION_END => {}
+                                    Rule::expression => {
+                                        let value = parse_expr_and_lift_span(&child, span.start)?;
+                                        parts.push(String::from(ValueValidator::new(&value)?.raw()))
+                                    }
+                                    Rule::EOI => {}
+                                    _ => panic!("Encounterd impossible interpolation sequence: {:?}", child.tokens()),
+                                };
+                            }
+                        }
+                        // Explicit handling of escaped `${`, like `\${...}`.
+                        Rule::string_escaped_interpolation => parts.push(String::from("${")),
+                        Rule::string_any => parts.push(String::from(current.as_str())),
+                        Rule::expression => {
+                            let value = parse_expr_and_lift_span(&current, span.start)?;
+                            parts.push(String::from(ValueValidator::new(&value)?.raw()))
+                        }
+                        // No whitespace, no comments.
+                        Rule::EOI => {}
+                        _ => panic!(
+                            "Encounterd impossible interpolated string during parsing: {:?}",
+                            current.tokens()
+                        ),
+                    };
                 }
 
                 Ok(Value::StringValue(parts.join(""), span.clone()))

@@ -80,6 +80,10 @@ main()
     }
   })
   .catch(err => {
-    console.error(chalk.redBright.bold('Error: ') + err.message)
+    if (debugLib.enabled('prisma')) {
+      console.error(chalk.redBright.bold('Error: ') + err.stack)
+    } else {
+      console.error(chalk.redBright.bold('Error: ') + err.message)
+    }
     process.exit(1)
   })

@@ -38,11 +38,11 @@ fn shound_fail_on_directive_duplication_recursive() {
 
     error.assert_is_at(
         0,
-        ValidationError::new_duplicate_directive_error("default", &ast::Span::new(40, 55)),
+        ValidationError::new_duplicate_directive_error("default", &ast::Span::new(40, 47)),
     );
     error.assert_is_at(
         1,
-        ValidationError::new_duplicate_directive_error("default", &ast::Span::new(128, 143)),
+        ValidationError::new_duplicate_directive_error("default", &ast::Span::new(128, 135)),
     );
 }
 

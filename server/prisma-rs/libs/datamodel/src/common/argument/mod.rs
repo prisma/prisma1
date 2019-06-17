@@ -37,7 +37,7 @@ impl<'a> Arguments<'a> {
     /// Gets the arg with the given name.
     pub fn arg(&self, name: &str) -> Result<value::ValueValidator, ValidationError> {
         for arg in self.arguments {
-            if arg.name == name {
+            if arg.name.name == name {
                 return value::ValueValidator::new(&arg.value);
             }
         }
