@@ -66,7 +66,7 @@ impl LowerDmlToAst {
         }
 
         Ok(ast::Model {
-            name: model.name.clone(),
+            name: ast::Identifier::new(&model.name),
             fields: fields,
             directives: self.directives.model.serialize(model, datamodel)?,
             documentation: model.documentation.clone().map(|text| ast::Comment { text }),
@@ -76,7 +76,7 @@ impl LowerDmlToAst {
 
     fn lower_enum(&self, enm: &dml::Enum, datamodel: &dml::Datamodel) -> Result<ast::Enum, ErrorCollection> {
         Ok(ast::Enum {
-            name: enm.name.clone(),
+            name: ast::Identifier::new(&enm.name),
             values: enm
                 .values
                 .iter()
@@ -98,13 +98,12 @@ impl LowerDmlToAst {
         datamodel: &dml::Datamodel,
     ) -> Result<ast::Field, ErrorCollection> {
         Ok(ast::Field {
-            name: field.name.clone(),
+            name: ast::Identifier::new(&field.name),
             arity: self.lower_field_arity(&field.arity),
             default_value: field.default_value.clone().map(|v| v.into()),
             directives: self.directives.field.serialize(field, datamodel)?,
             field_type: self.lower_type(&field.field_type, field, model, &datamodel),
             documentation: field.documentation.clone().map(|text| ast::Comment { text }),
-            field_type_span: ast::Span::empty(),
             span: ast::Span::empty(),
         })
     }
@@ -125,10 +124,10 @@ impl LowerDmlToAst {
         field: &dml::Field,
         model: &dml::Model,
         datamodel: &dml::Datamodel,
-    ) -> String {
+    ) -> ast::Identifier {
         match field_type {
-            dml::FieldType::Base(tpe) => tpe.to_string(),
-            dml::FieldType::Enum(tpe) => tpe.clone(),
+            dml::FieldType::Base(tpe) => ast::Identifier::new(&tpe.to_string()),
+            dml::FieldType::Enum(tpe) => ast::Identifier::new(&tpe.to_string()),
             dml::FieldType::Relation(rel) => {
                 let related_model = datamodel.find_model(&rel.to).expect(STATE_ERROR);
 
@@ -144,14 +143,14 @@ impl LowerDmlToAst {
                         .expect(STATE_ERROR);
 
                     if let dml::FieldType::Relation(rel) = &other_field.field_type {
-                        rel.to.clone()
+                        ast::Identifier::new(&rel.to)
                     } else {
                         panic!(STATE_ERROR);
                     }
                 } else if related_model.is_generated {
                     panic!("Error during rendering model: We found a relation to a generated model, but we do not know how to handle it. This is an internal error.")
                 } else {
-                    rel.to.clone()
+                    ast::Identifier::new(&rel.to)
                 }
             }
             _ => unimplemented!("Connector specific types are not supported atm."),

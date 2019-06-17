@@ -145,12 +145,12 @@ impl ValueValidator {
     pub fn as_int(&self) -> Result<i32, ValidationError> {
         match &self.value {
             MaybeExpression::Value(ast::Value::NumericValue(value, _)) => {
-                self.wrap_error_from_result(value.parse::<i32>(), "Numeric")
+                self.wrap_error_from_result(value.parse::<i32>(), "numeric")
             }
             MaybeExpression::Value(ast::Value::Any(value, _)) => {
-                self.wrap_error_from_result(value.parse::<i32>(), "Numeric")
+                self.wrap_error_from_result(value.parse::<i32>(), "numeric")
             }
-            _ => Err(self.construct_error("Numeric")),
+            _ => Err(self.construct_error("numeric")),
         }
     }
 
@@ -158,12 +158,12 @@ impl ValueValidator {
     pub fn as_float(&self) -> Result<f32, ValidationError> {
         match &self.value {
             MaybeExpression::Value(ast::Value::NumericValue(value, _)) => {
-                self.wrap_error_from_result(value.parse::<f32>(), "Numeric")
+                self.wrap_error_from_result(value.parse::<f32>(), "numeric")
             }
             MaybeExpression::Value(ast::Value::Any(value, _)) => {
-                self.wrap_error_from_result(value.parse::<f32>(), "Numeric")
+                self.wrap_error_from_result(value.parse::<f32>(), "numeric")
             }
-            _ => Err(self.construct_error("Numeric")),
+            _ => Err(self.construct_error("numeric")),
         }
     }
 
@@ -172,12 +172,12 @@ impl ValueValidator {
     pub fn as_decimal(&self) -> Result<f32, ValidationError> {
         match &self.value {
             MaybeExpression::Value(ast::Value::NumericValue(value, _)) => {
-                self.wrap_error_from_result(value.parse::<f32>(), "Numeric")
+                self.wrap_error_from_result(value.parse::<f32>(), "numeric")
             }
             MaybeExpression::Value(ast::Value::Any(value, _)) => {
-                self.wrap_error_from_result(value.parse::<f32>(), "Numeric")
+                self.wrap_error_from_result(value.parse::<f32>(), "numeric")
             }
-            _ => Err(self.construct_error("Numeric")),
+            _ => Err(self.construct_error("numeric")),
         }
     }
 
@@ -185,12 +185,12 @@ impl ValueValidator {
     pub fn as_bool(&self) -> Result<bool, ValidationError> {
         match &self.value {
             MaybeExpression::Value(ast::Value::BooleanValue(value, _)) => {
-                self.wrap_error_from_result(value.parse::<bool>(), "Boolean")
+                self.wrap_error_from_result(value.parse::<bool>(), "boolean")
             }
             MaybeExpression::Value(ast::Value::Any(value, _)) => {
-                self.wrap_error_from_result(value.parse::<bool>(), "Boolean")
+                self.wrap_error_from_result(value.parse::<bool>(), "boolean")
             }
-            _ => Err(self.construct_error("Boolean")),
+            _ => Err(self.construct_error("boolean")),
         }
     }
 
@@ -199,12 +199,12 @@ impl ValueValidator {
     pub fn as_date_time(&self) -> Result<DateTime<Utc>, ValidationError> {
         match &self.value {
             MaybeExpression::Value(ast::Value::StringValue(value, _)) => {
-                self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "DateTime")
+                self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "dateTime")
             }
             MaybeExpression::Value(ast::Value::Any(value, _)) => {
-                self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "DateTime")
+                self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "dateTime")
             }
-            _ => Err(self.construct_error("DateTime")),
+            _ => Err(self.construct_error("dateTime")),
         }
     }
 
@@ -213,7 +213,7 @@ impl ValueValidator {
         match &self.value {
             MaybeExpression::Value(ast::Value::ConstantValue(value, _)) => Ok(value.to_string()),
             MaybeExpression::Value(ast::Value::Any(value, _)) => Ok(value.to_string()),
-            _ => Err(self.construct_error("Constant Literal")),
+            _ => Err(self.construct_error("constant literal")),
         }
     }
 
