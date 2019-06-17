@@ -7,7 +7,7 @@ use crate::{
     CoreError, CoreResult,
 };
 use connector::mutaction::*;
-use prisma_models::{Field as ModelField, ModelRef};
+use prisma_models::{Field as ModelField, ModelRef, PrismaArgs};
 use std::sync::Arc;
 
 pub struct SimpleNestedBuilder;
@@ -44,8 +44,12 @@ impl SimpleNestedBuilder {
         match kind {
             "create" => {
                 extend_defaults(&model, &mut non_list_args);
+
+                let mut non_list_args: PrismaArgs = non_list_args.into();
+                non_list_args.add_datetimes(Arc::clone(&model));
+
                 mutations.creates.push(NestedCreateNode {
-                    non_list_args: non_list_args.into(),
+                    non_list_args,
                     list_args,
                     top_is_create: match top_level {
                         OperationTag::CreateOne => true,
@@ -141,15 +145,18 @@ impl UpsertNestedBuilder {
         let where_ = where_map.to_node_selector(Arc::clone(&related_model));
         let create = {
             let ValueSplit { values, lists, nested } = create.split();
-            let mut non_list_args = values.to_prisma_values().into();
+            let mut non_list_args = values.to_prisma_values();
             extend_defaults(&model, &mut non_list_args);
+
+            let mut non_list_args: PrismaArgs = non_list_args.into();
+            non_list_args.add_datetimes(Arc::clone(&model));
 
             let list_args = lists.into_iter().map(|la| la.convert()).collect();
             let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), top_level)?;
             let relation_field = Arc::clone(&relation_field);
 
             NestedCreateNode {
-                non_list_args: non_list_args.into(),
+                non_list_args,
                 list_args,
                 top_is_create: match top_level {
                     OperationTag::CreateOne => true,

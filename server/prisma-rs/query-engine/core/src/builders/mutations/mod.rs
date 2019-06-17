@@ -29,7 +29,7 @@ pub(crate) fn extend_defaults(model: &ModelRef, args: &mut BTreeMap<String, Pris
         .fields()
         .scalar()
         .into_iter()
-        .filter_map(|sf| sf.default_value.clone().map(|dv| (sf.name.clone(), dv)))
+        .filter_map(|sf| dbg!(&sf).default_value.clone().map(|dv| (sf.name.clone(), dv)))
         .collect();
 
     // Fold defaults into args, if field is not already set.

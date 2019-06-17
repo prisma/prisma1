@@ -9,7 +9,7 @@ use crate::{
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
-use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaValue, Project};
+use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue, Project};
 use std::{collections::BTreeMap, sync::Arc};
 
 /// A TopLevelMutation builder
@@ -45,6 +45,9 @@ impl<'field> MutationBuilder<'field> {
                     let mut non_list_args = values.to_prisma_values();
                     extend_defaults(&model, &mut non_list_args);
 
+                    let mut non_list_args: PrismaArgs = non_list_args.into();
+                    non_list_args.add_datetimes(Arc::clone(&model));
+
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
                     let nested_mutactions = build_nested_root(
                         model.name.as_str(),
@@ -55,7 +58,7 @@ impl<'field> MutationBuilder<'field> {
 
                     TopLevelDatabaseMutaction::CreateNode(CreateNode {
                         model: Arc::clone(&model),
-                        non_list_args: non_list_args.into(),
+                        non_list_args,
                         list_args,
                         nested_mutactions,
                     })
@@ -131,7 +134,12 @@ impl<'field> MutationBuilder<'field> {
 
                     let create = {
                         let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "create")?).split();
-                        let non_list_args = values.to_prisma_values().into();
+                        let mut non_list_args = values.to_prisma_values();
+                        extend_defaults(&model, &mut non_list_args);
+
+                        let mut non_list_args: PrismaArgs = non_list_args.into();
+                        non_list_args.add_datetimes(Arc::clone(&model));
+
                         let list_args = lists.into_iter().map(|la| la.convert()).collect();
                         let nested_mutactions = build_nested_root(
                             model.name.as_str(),

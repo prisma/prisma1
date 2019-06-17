@@ -7,7 +7,7 @@ use crate::{
     CoreError, CoreResult,
 };
 use connector::mutaction::*;
-use prisma_models::{Field, ModelRef, RelationFieldRef};
+use prisma_models::{Field, ModelRef, PrismaArgs, RelationFieldRef};
 use std::sync::Arc;
 
 pub struct ManyNestedBuilder;
@@ -60,11 +60,14 @@ fn attach_create(
     let mut non_list_args = values.to_prisma_values();
     extend_defaults(&rel_model, &mut non_list_args);
 
+    let mut non_list_args: PrismaArgs = non_list_args.into();
+    non_list_args.add_datetimes(Arc::clone(&rel_model));
+
     let list_args = lists.into_iter().map(|la| la.convert()).collect();
     let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&rel_model), top_level)?;
 
     mutations.creates.push(NestedCreateNode {
-        non_list_args: non_list_args.into(),
+        non_list_args,
         list_args,
         top_is_create: match top_level {
             OperationTag::CreateOne => true,
