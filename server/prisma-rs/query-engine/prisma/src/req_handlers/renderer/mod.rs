@@ -20,7 +20,7 @@ use type_renderer::*;
 pub struct GraphQLSchemaRenderer;
 
 impl QuerySchemaRenderer<String> for GraphQLSchemaRenderer {
-    fn render(query_schema: &QuerySchema) -> String {
+    fn render(query_schema: QuerySchemaRef) -> String {
         let context = RenderContext::new();
         let (_, result) = query_schema.into_renderer().render(context);
 
@@ -84,7 +84,7 @@ impl RenderContext {
 }
 
 enum GqlRenderer<'a> {
-    Schema(GqlSchemaRenderer<'a>),
+    Schema(GqlSchemaRenderer),
     Object(GqlObjectRenderer),
     Type(GqlTypeRenderer<'a>),
     Field(GqlFieldRenderer<'a>),
@@ -107,9 +107,9 @@ trait IntoRenderer<'a> {
     fn into_renderer(&'a self) -> GqlRenderer<'a>;
 }
 
-impl<'a> IntoRenderer<'a> for &'a QuerySchema {
+impl<'a> IntoRenderer<'a> for QuerySchemaRef {
     fn into_renderer(&self) -> GqlRenderer<'a> {
-        GqlRenderer::Schema(GqlSchemaRenderer::new(self))
+        GqlRenderer::Schema(GqlSchemaRenderer::new(Arc::clone(self)))
     }
 }
 

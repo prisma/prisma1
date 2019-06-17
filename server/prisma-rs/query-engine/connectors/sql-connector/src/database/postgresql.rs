@@ -11,7 +11,7 @@ use postgres::{
     Client, Config, Row as PostgresRow, Transaction as PostgresTransaction,
 };
 use prisma_common::config::{ConnectionLimit, ConnectionStringConfig, ExplicitConfig, PrismaDatabase};
-use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, ProjectRef, TypeIdentifier};
+use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, TypeIdentifier};
 use prisma_query::{
     ast::Query,
     visitor::{self, Visitor},

@@ -1,10 +1,10 @@
 use super::*;
 
-pub struct DMMFSchemaRenderer<'schema> {
-    query_schema: &'schema QuerySchema,
+pub struct DMMFSchemaRenderer {
+    query_schema: QuerySchemaRef,
 }
 
-impl<'schema> Renderer<'schema, ()> for DMMFSchemaRenderer<'schema> {
+impl<'a> Renderer<'a, ()> for DMMFSchemaRenderer {
     fn render(&self, ctx: RenderContext) -> ((), RenderContext) {
         let (_, ctx) = self.query_schema.query.into_renderer().render(ctx);
         let (_, ctx) = self.query_schema.mutation.into_renderer().render(ctx);
@@ -13,8 +13,8 @@ impl<'schema> Renderer<'schema, ()> for DMMFSchemaRenderer<'schema> {
     }
 }
 
-impl<'schema> DMMFSchemaRenderer<'schema> {
-    pub fn new(query_schema: &'schema QuerySchema) -> DMMFSchemaRenderer<'schema> {
+impl DMMFSchemaRenderer {
+    pub fn new(query_schema: QuerySchemaRef) -> DMMFSchemaRenderer {
         DMMFSchemaRenderer { query_schema }
     }
 }

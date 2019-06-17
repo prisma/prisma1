@@ -7,7 +7,7 @@ fn unapply_must_work() {
     test_each_connector(|_,engine| {
         let dm1 = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 field String
             }
         "#;
@@ -16,7 +16,7 @@ fn unapply_must_work() {
 
         let dm2 = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
             }
         "#;
         let result2 = infer_and_apply(&engine, &dm2);

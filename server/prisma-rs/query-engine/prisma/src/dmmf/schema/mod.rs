@@ -24,7 +24,7 @@ pub use ast::*;
 pub struct DMMFQuerySchemaRenderer;
 
 impl QuerySchemaRenderer<(DMMFSchema, Vec<DMMFMapping>)> for DMMFQuerySchemaRenderer {
-    fn render(query_schema: &QuerySchema) -> (DMMFSchema, Vec<DMMFMapping>) {
+    fn render(query_schema: QuerySchemaRef) -> (DMMFSchema, Vec<DMMFMapping>) {
         let ctx = RenderContext::new();
         let (_, ctx) = query_schema.into_renderer().render(ctx);
 
@@ -114,9 +114,9 @@ trait IntoRenderer<'a, T> {
     fn into_renderer(&'a self) -> Box<dyn Renderer<'a, T> + 'a>;
 }
 
-impl<'a> IntoRenderer<'a, ()> for QuerySchema {
+impl<'a> IntoRenderer<'a, ()> for QuerySchemaRef {
     fn into_renderer(&'a self) -> Box<Renderer<'a, ()> + 'a> {
-        Box::new(DMMFSchemaRenderer::new(self))
+        Box::new(DMMFSchemaRenderer::new(Arc::clone(self)))
     }
 }
 

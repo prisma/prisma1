@@ -12,7 +12,7 @@ fn infer_CreateModel_if_it_does_not_exist_yet() {
     let dm2 = parse(
         r#"
         model Test {
-            id String @id
+            id Int @id
         }
     "#,
     );
@@ -27,7 +27,7 @@ fn infer_CreateModel_if_it_does_not_exist_yet() {
         MigrationStep::CreateField(CreateField {
             model: "Test".to_string(),
             name: "id".to_string(),
-            tpe: FieldType::Base(ScalarType::String),
+            tpe: FieldType::Base(ScalarType::Int),
             arity: FieldArity::Required,
             db_name: None,
             is_created_at: None,
@@ -49,7 +49,7 @@ fn infer_DeleteModel() {
     let dm1 = parse(
         r#"
         model Test {
-            id String @id
+            id String @id @default(cuid())
         }
     "#,
     );
@@ -68,14 +68,14 @@ fn infer_UpdateModel() {
     let dm1 = parse(
         r#"
         model Post {
-            id String @id
+            id String @id @default(cuid())
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Post{
-            id String @id
+            id String @id @default(cuid())
             
             @@embedded
         }
@@ -97,14 +97,14 @@ fn infer_CreateField_if_it_does_not_exist_yet() {
     let dm1 = parse(
         r#"
         model Test {
-            id String @id
+            id String @id @default(cuid())
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Test {
-            id String @id
+            id String @id @default(cuid())
             field Int?
         }
     "#,
@@ -132,21 +132,21 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
     let dm1 = parse(
         r#"
         model Blog {
-            id String @id
+            id String @id @default(cuid())
         }
         model Post {
-            id String @id
+            id String @id @default(cuid())
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Blog {
-            id String @id
+            id String @id @default(cuid())
             posts Post[]
         }
         model Post {
-            id String @id
+            id String @id @default(cuid())
             blog Blog?
         }
     "#,
@@ -199,7 +199,7 @@ fn infer_DeleteField() {
     let dm1 = parse(
         r#"
         model Test {
-            id String @id
+            id String @id @default(cuid())
             field Int?
         }
     "#,
@@ -207,7 +207,7 @@ fn infer_DeleteField() {
     let dm2 = parse(
         r#"
         model Test {
-            id String @id
+            id String @id @default(cuid())
         }
     "#,
     );
@@ -225,7 +225,7 @@ fn infer_UpdateField_simple() {
     let dm1 = parse(
         r#"
         model Test {
-            id String @id
+            id String @id @default(cuid())
             field Int?
         }
     "#,
@@ -233,7 +233,7 @@ fn infer_UpdateField_simple() {
     let dm2 = parse(
         r#"
         model Test {
-            id String @id
+            id String @id @default(cuid())
             field Boolean @default(false)
         }
     "#,

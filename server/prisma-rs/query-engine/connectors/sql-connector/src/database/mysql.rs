@@ -7,7 +7,7 @@ use connector::{error::*, ConnectorResult};
 use datamodel::configuration::Source;
 use mysql_client as my;
 use prisma_common::config::{ConnectionLimit, ConnectionStringConfig, ExplicitConfig, PrismaDatabase};
-use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, ProjectRef, TypeIdentifier};
+use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, TypeIdentifier};
 use prisma_query::{
     ast::*,
     visitor::{self, Visitor},

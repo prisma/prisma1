@@ -1,6 +1,6 @@
 mod schema;
 
-use core::schema::{QuerySchema, QuerySchemaRenderer};
+use core::schema::{QuerySchemaRef, QuerySchemaRenderer};
 use datamodel;
 use schema::*;
 use serde::{ser::SerializeMap, Serialize, Serializer};
@@ -72,7 +72,7 @@ impl Serialize for DMMFMapping {
     }
 }
 
-pub fn render_dmmf<'a>(dml: &'a datamodel::Datamodel, query_schema: &QuerySchema) -> DataModelMetaFormat {
+pub fn render_dmmf<'a>(dml: &'a datamodel::Datamodel, query_schema: QuerySchemaRef) -> DataModelMetaFormat {
     let (schema, mappings) = DMMFQuerySchemaRenderer::render(query_schema);
     let datamodel_json = datamodel::dmmf::render_to_dmmf_value(&dml);
 

@@ -8,7 +8,7 @@ fn adding_a_scalar_field_must_work() {
     test_each_connector(|_,engine| {
         let dm2 = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 int Int
                 float Float
                 boolean Boolean
@@ -40,7 +40,7 @@ fn adding_a_scalar_field_must_work() {
 //    test_each_connector(|engine| {
 //        let dm2 = r#"
 //            model Test {
-//                id String @id
+//                id String @id @default(cuid())
 //                int Int
 //                float Float
 //                boolean Boolean
@@ -64,7 +64,7 @@ fn adding_an_optional_field_must_work() {
     test_each_connector(|_,engine| {
         let dm2 = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 field String?
             }
         "#;
@@ -79,7 +79,7 @@ fn adding_an_id_field_with_a_special_name_must_work() {
     test_each_connector(|_,engine| {
         let dm2 = r#"
             model Test {
-                specialName String @id
+                specialName String @id @default(cuid())
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -93,7 +93,7 @@ fn removing_a_scalar_field_must_work() {
     test_each_connector(|_,engine| {
         let dm1 = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 field String
             }
         "#;
@@ -103,7 +103,7 @@ fn removing_a_scalar_field_must_work() {
 
         let dm2 = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -117,7 +117,7 @@ fn can_handle_reserved_sql_keywords_for_model_name() {
     test_each_connector(|_,engine| {
         let dm1 = r#"
             model Group {
-                id String @id
+                id String @id @default(cuid())
                 field String
             }
         "#;
@@ -127,7 +127,7 @@ fn can_handle_reserved_sql_keywords_for_model_name() {
 
         let dm2 = r#"
             model Group {
-                id String @id
+                id String @id @default(cuid())
                 field Int
             }
         "#;
@@ -142,7 +142,7 @@ fn can_handle_reserved_sql_keywords_for_field_name() {
     test_each_connector(|_,engine| {
         let dm1 = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 Group String
             }
         "#;
@@ -152,7 +152,7 @@ fn can_handle_reserved_sql_keywords_for_field_name() {
 
         let dm2 = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 Group Int
             }
         "#;
@@ -167,7 +167,7 @@ fn update_type_of_scalar_field_must_work() {
     test_each_connector(|_,engine| {
         let dm1 = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 field String
             }
         "#;
@@ -177,7 +177,7 @@ fn update_type_of_scalar_field_must_work() {
 
         let dm2 = r#"
             model Test {
-                id String @id
+                id String @id @default(cuid())
                 field Int
             }
         "#;
@@ -237,7 +237,7 @@ fn updating_db_name_of_a_scalar_field_must_work() {
     test_each_connector(|_,engine| {
         let dm1 = r#"
             model A {
-                id String @id
+                id String @id @default(cuid())
                 field String @map(name:"name1")
             }
         "#;
@@ -246,7 +246,7 @@ fn updating_db_name_of_a_scalar_field_must_work() {
 
         let dm2 = r#"
             model A {
-                id String @id
+                id String @id @default(cuid())
                 field String @map(name:"name2")
             }
         "#;
@@ -455,7 +455,7 @@ fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
             }
 
             model B {
-                id String @id
+                id String @id @default(cuid())
                 a A // todo: remove when implicit back relation field is implemented
             }
         "#;
@@ -642,7 +642,7 @@ fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
 
         let dm = r#"
             model A {
-                id String @id
+                id String @id @default(cuid())
                 strings String[]
             }
         "#;

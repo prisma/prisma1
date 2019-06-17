@@ -105,7 +105,7 @@ impl Standardiser {
                     }
 
                     if embed_here {
-                        rel.to_fields = related_model.id_fields().map(|x| x.clone()).collect()
+                        rel.to_fields = related_model.id_field_names().map(|x| x.clone()).collect()
                     }
                 }
             }
@@ -184,7 +184,7 @@ impl Standardiser {
             &NameNormalizer::camel_case(&model.name),
             dml::FieldType::Relation(dml::RelationInfo {
                 to: model.name.clone(),
-                to_fields: model.id_fields().map(|s| s.clone()).collect(),
+                to_fields: model.id_field_names().map(|s| s.clone()).collect(),
                 name: String::from(relation_name), // Will be corrected in later step
                 on_delete: dml::OnDeleteStrategy::None,
             }),

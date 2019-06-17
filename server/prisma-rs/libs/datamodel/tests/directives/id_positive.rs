@@ -73,3 +73,37 @@ fn id_should_also_work_on_embedded_types() {
         .assert_id_sequence(None)
         .assert_id_strategy(IdStrategy::Auto);
 }
+
+#[test]
+fn should_allow_string_ids_with_cuid() {
+    let dml = r#"
+    model Model {
+        id String @id @default(cuid())
+    }
+    "#;
+
+    let datamodel = parse(dml);
+    let user_model = datamodel.assert_has_model("Model");
+    user_model
+        .assert_has_field("id")
+        .assert_is_id(true)
+        .assert_base_type(&ScalarType::String)
+        .assert_default_value(Value::Expression(String::from("cuid"), ScalarType::String, Vec::new()));
+}
+
+#[test]
+fn should_allow_string_ids_with_uuid() {
+    let dml = r#"
+    model Model {
+        id String @id @default(uuid())
+    }
+    "#;
+
+    let datamodel = parse(dml);
+    let user_model = datamodel.assert_has_model("Model");
+    user_model
+        .assert_has_field("id")
+        .assert_is_id(true)
+        .assert_base_type(&ScalarType::String)
+        .assert_default_value(Value::Expression(String::from("uuid"), ScalarType::String, Vec::new()));
+}
