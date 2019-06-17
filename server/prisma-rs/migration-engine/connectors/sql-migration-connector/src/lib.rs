@@ -146,7 +146,7 @@ impl SqlMigrationConnector {
         DatabaseHelper { db_connection, schema }
     }
 
-    fn mysql_helper(url: &str) -> DatabaseHelper {
+    pub fn mysql_helper(url: &str) -> DatabaseHelper {
         let mut builder = mysql::OptsBuilder::new();
         let parsed_url = Url::parse(url).expect("url parsing failed");
 

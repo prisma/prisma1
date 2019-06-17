@@ -72,6 +72,7 @@ pub fn introspect_database(engine: &MigrationEngine) -> DatabaseSchema {
     let inspector: Box<DatabaseInspector> = match engine.connector().connector_type() {
         "postgres" => Box::new(DatabaseInspector::postgres(postgres_url())),
         "sqlite" => Box::new(DatabaseInspector::sqlite(sqlite_test_file())),
+        "mysql" => Box::new(DatabaseInspector::mysql(mysql_url())),
         _ => unimplemented!(),
     };
     let mut result = inspector.introspect(&SCHEMA_NAME.to_string());
@@ -84,7 +85,7 @@ pub fn connectional(sql_family: SqlFamily) -> Arc<Connectional> {
     match sql_family {
         SqlFamily::Postgres => postgres_connectional(),
         SqlFamily::Sqlite => sqlite_connectional(),
-        _ => unimplemented!(),
+        SqlFamily::Mysql => mysql_connectional(),
     }
 }
 
@@ -96,6 +97,11 @@ fn postgres_connectional() -> Arc<Connectional> {
 fn sqlite_connectional() -> Arc<Connectional> {
     let url = format!("file:{}", sqlite_test_file());
     Arc::new(Sqlite::try_from(url.as_ref()).expect("Loading SQLite failed"))
+}
+
+fn mysql_connectional() -> Arc<Connectional> {
+    let helper = SqlMigrationConnector::mysql_helper(&mysql_url());
+    helper.db_connection
 }
 
 pub fn sqlite_test_config() -> String {

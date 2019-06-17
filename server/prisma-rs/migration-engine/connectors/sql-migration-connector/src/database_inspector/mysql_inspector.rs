@@ -69,7 +69,7 @@ impl MysqlInspector {
             table
         );
 
-        let result_set = dbg!(self.connectional.query_on_raw_connection(&schema, &sql, &[]).unwrap());
+        let result_set = self.connectional.query_on_raw_connection(&schema, &sql, &[]).unwrap();
         result_set
             .into_iter()
             .map(|row| IntrospectedForeignKey {
