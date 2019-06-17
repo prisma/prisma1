@@ -1798,7 +1798,7 @@ dependencies = [
 [[package]]
 name = "prisma-query"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-query.git#d1a48e18e2ed9607f2980870abc5638084cbcb12"
+source = "git+https://github.com/prisma/prisma-query.git#5a95ce6f508b30205a75b092cf10163cfd19a7cd"
 dependencies = [
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2440,6 +2440,7 @@ dependencies = [
  "datamodel 0.1.0",
  "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "migration-connector 0.1.0",
+ "mysql 16.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "postgres 0.16.0-rc.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "prisma-models 0.0.0",
  "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)",

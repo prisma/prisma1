@@ -50,6 +50,14 @@ where
     } else {
         println!("Ignoring Postgres")
     }
+    // MYSQL
+    if !ignores.contains(&SqlFamily::Mysql) {
+        println!("Testing with MySQL now");
+        let engine = test_engine(&mysql_test_config());
+        testFn(SqlFamily::Mysql, &engine);
+    } else {
+        println!("Ignoring MySQL")
+    }
 }
 
 pub fn test_engine(config: &str) -> Box<MigrationEngine> {
@@ -123,9 +131,30 @@ pub fn postgres_test_config() -> String {
     )
 }
 
+pub fn mysql_test_config() -> String {
+    format!(
+        r#"
+        datasource my_db {{
+            provider = "mysql"
+            url = "{}"
+            default = true
+        }}
+    "#,
+        mysql_url()
+    )
+}
+
 pub fn postgres_url() -> String {
     dbg!(format!(
         "postgresql://postgres:prisma@{}:5432/db?schema={}",
+        db_host(),
+        SCHEMA_NAME
+    ))
+}
+
+pub fn mysql_url() -> String {
+    dbg!(format!(
+        "mysql://root:prisma@{}:3306/{}",
         db_host(),
         SCHEMA_NAME
     ))
