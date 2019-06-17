@@ -76,6 +76,10 @@ fn update_nested_connect(un: &mut UpdateNode) -> CoreResult<()> {
     Ok(())
 }
 
+fn flip_create_order(ncn: NestedCreateNode) -> CoreResult<()> {
+    Ok(())
+}
+
 /// Fold require `connect` operations into their parent
 ///
 /// This function requires the model definition of the parent,
