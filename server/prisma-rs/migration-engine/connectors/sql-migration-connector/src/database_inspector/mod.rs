@@ -6,12 +6,14 @@ mod information_schema;
 mod postgres_inspector;
 mod sqlite;
 mod database_schema;
+mod mysql_inspector;
 
 pub use database_inspector_impl::*;
 pub use empty_impl::*;
 pub use database_schema::*;
 use postgres::Config as PostgresConfig;
 use postgres_inspector::Postgres;
+use mysql_inspector::MysqlInspector;
 use prisma_query::connector::{PostgreSql as PostgresDriver, Sqlite as SqliteDriver};
 use prisma_query::Connectional;
 use sqlite::Sqlite;
@@ -80,5 +82,13 @@ impl DatabaseInspector {
 
     pub fn postgres_with_connectional(connectional: Arc<Connectional>) -> Postgres {
         Postgres::new(connectional)
+    }
+
+    pub fn mysql(url: String) -> MysqlInspector {
+        unimplemented!()
+    }
+
+    pub fn mysql_with_connectional(connectional: Arc<Connectional>) -> MysqlInspector {
+        unimplemented!()
     }
 }
