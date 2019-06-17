@@ -17,11 +17,10 @@ fn should_fail_on_ambiguous_relations() {
 
     let errors = parse_error(dml);
 
-    errors.assert_is(ValidationError::new_model_validation_error(
-        "Ambiguous relation detected.",
-        "User",
-        &Span::new(45, 57),
-    ));
+    errors.assert_is_at(
+        0,
+        ValidationError::new_model_validation_error("Ambiguous relation detected.", "User", &Span::new(45, 57)),
+    );
 }
 
 #[test]
@@ -40,11 +39,10 @@ fn should_fail_on_ambiguous_named_relations() {
 
     let errors = parse_error(dml);
 
-    errors.assert_is(ValidationError::new_model_validation_error(
-        "Ambiguous relation detected.",
-        "User",
-        &Span::new(45, 81),
-    ));
+    errors.assert_is_at(
+        0,
+        ValidationError::new_model_validation_error("Ambiguous relation detected.", "User", &Span::new(45, 81)),
+    );
 }
 
 #[test]
@@ -65,11 +63,10 @@ fn should_fail_on_ambiguous_named_relations_2() {
 
     let errors = parse_error(dml);
 
-    errors.assert_is(ValidationError::new_model_validation_error(
-        "Ambiguous relation detected.",
-        "User",
-        &Span::new(45, 78),
-    ));
+    errors.assert_is_at(
+        0,
+        ValidationError::new_model_validation_error("Ambiguous relation detected.", "User", &Span::new(45, 78)),
+    );
 }
 
 #[test]

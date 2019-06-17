@@ -39,22 +39,41 @@ impl ValidationPipeline {
     /// * Resolve and check default values
     /// * Resolve and check all field types
     pub fn validate(&self, ast_schema: &ast::Datamodel) -> Result<dml::Datamodel, ErrorCollection> {
+        let mut all_errors = ErrorCollection::new();
+
         // Phase 0 is parsing.
         // Phase 1 is source block loading.
 
         // Phase 2: Prechecks.
-        precheck::Precheck::precheck(&ast_schema)?;
+        if let Err(mut err) = precheck::Precheck::precheck(&ast_schema) {
+            all_errors.append(&mut err);
+        }
 
         // Phase 3: Lift AST to DML.
-        let mut schema = self.lifter.lift(ast_schema)?;
+        let mut schema = match self.lifter.lift(ast_schema) {
+            Err(mut err) => {
+                // Cannot continue on lifter error.
+                all_errors.append(&mut err);
+                return Err(all_errors);
+            }
+            Ok(schema) => schema,
+        };
 
         // Phase 4: Validation
-        self.validator.validate(ast_schema, &mut schema)?;
+        if let Err(mut err) = self.validator.validate(ast_schema, &mut schema) {
+            all_errors.append(&mut err);
+        }
 
         // TODO: Move consistency stuff into different module.
         // Phase 5: Consistency fixes. These don't fail.
-        self.standardiser.standardise(ast_schema, &mut schema)?;
+        if let Err(mut err) = self.standardiser.standardise(ast_schema, &mut schema) {
+            all_errors.append(&mut err);
+        }
 
-        Ok(schema)
+        if all_errors.has_errors() {
+            Err(all_errors)
+        } else {
+            Ok(schema)
+        }
     }
 }

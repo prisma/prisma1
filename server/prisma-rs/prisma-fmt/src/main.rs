@@ -6,6 +6,15 @@ use std::{
 
 extern crate clap;
 use clap::{App, Arg};
+use serde;
+use serde_json;
+
+#[derive(serde::Serialize)]
+struct MiniError {
+    start: usize,
+    end: usize,
+    text: String,
+}
 
 fn main() {
     let matches = App::new("Prisma Datamodel v2 formatter")
@@ -19,6 +28,13 @@ fn main() {
                 .value_name("INPUT_FILE")
                 .required(false)
                 .help("Specifies the input file to use. If none is given, the input is read from stdin."),
+        )
+        .arg(
+            Arg::with_name("lint")
+                .short("l")
+                .long("lint")
+                .required(false)
+                .help("Specifies linter mode."),
         )
         .arg(
             Arg::with_name("output")
@@ -38,34 +54,63 @@ fn main() {
         )
         .get_matches();
 
-    let file_name = matches.value_of("input");
-    let tab_width = matches
-        .value_of("tabwidth")
-        .unwrap_or("2")
-        .parse::<usize>()
-        .expect("Error while parsing tab width.");
-
-    // TODO: This is really ugly, clean it up.
-    let datamodel_string: String = if let Some(file_name) = file_name {
-        fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name))
-    } else {
-        let mut buf = String::new();
+    if matches.is_present("lint") {
+        // Linter
+        let mut datamodel_string = String::new();
         io::stdin()
-            .read_to_string(&mut buf)
+            .read_to_string(&mut datamodel_string)
             .expect("Unable to read from stdin.");
-        buf
-    };
 
-    let file_name = matches.value_of("output");
+        if let Err(err) = datamodel::parse(&datamodel_string) {
+            let errs: Vec<MiniError> = err
+                .errors
+                .iter()
+                .map(|err: &datamodel::errors::ValidationError| MiniError {
+                    start: err.span().start,
+                    end: err.span().end,
+                    text: format!("{}", err),
+                })
+                .collect();
+            let json = serde_json::to_string(&errs).expect("Failed to render JSON");
+            print!("{}", json)
+        } else {
+            print!("[]");
+        }
 
-    if let Some(file_name) = file_name {
-        let file = std::fs::File::open(file_name).expect(&format!("Unable to open file {}", file_name));
-        let mut stream = std::io::BufWriter::new(file);
-        datamodel::ast::reformat::Reformatter::reformat_to(&datamodel_string, &mut stream, tab_width);
+        std::process::exit(0);
     } else {
-        datamodel::ast::reformat::Reformatter::reformat_to(&datamodel_string, &mut std::io::stdout().lock(), tab_width);
+        // Formatter
+        let file_name = matches.value_of("input");
+        let tab_width = matches
+            .value_of("tabwidth")
+            .unwrap_or("2")
+            .parse::<usize>()
+            .expect("Error while parsing tab width.");
+
+        // TODO: This is really ugly, clean it up.
+        let datamodel_string: String = if let Some(file_name) = file_name {
+            fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name))
+        } else {
+            let mut buf = String::new();
+            io::stdin()
+                .read_to_string(&mut buf)
+                .expect("Unable to read from stdin.");
+            buf
+        };
+
+        let file_name = matches.value_of("output");
+
+        if let Some(file_name) = file_name {
+            let file = std::fs::File::open(file_name).expect(&format!("Unable to open file {}", file_name));
+            let mut stream = std::io::BufWriter::new(file);
+            datamodel::ast::reformat::Reformatter::reformat_to(&datamodel_string, &mut stream, tab_width);
+        } else {
+            datamodel::ast::reformat::Reformatter::reformat_to(
+                &datamodel_string,
+                &mut std::io::stdout().lock(),
+                tab_width,
+            );
+        }
+        std::process::exit(0);
     }
-
-    std::process::exit(0);
-
 }
