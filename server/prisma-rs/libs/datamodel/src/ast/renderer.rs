@@ -194,7 +194,7 @@ impl<'a> Renderer<'a> {
         self.indent_up();
 
         for value in &enm.values {
-            self.write(&value);
+            self.write(&value.name);
             self.end_line();
         }
 

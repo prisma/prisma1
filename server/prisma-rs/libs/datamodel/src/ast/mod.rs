@@ -44,6 +44,14 @@ impl std::fmt::Display for Span {
     }
 }
 
+pub trait WithSpan {
+    fn span(&self) -> &Span;
+}
+
+trait WithKeyValueConfig {
+    fn properties(&self) ->& Vec<Argument>;
+}
+
 /// The arity of a field.
 #[derive(Debug)]
 pub enum FieldArity {
@@ -171,6 +179,13 @@ impl Directive {
     }
 }
 
+impl WithSpan for Directive {
+    fn span(&self) -> &Span {
+        &self.span
+    }
+}
+
+
 /// Trait for an AST node which can have directives.
 pub trait WithDirectives {
     fn directives(&self) -> &Vec<Directive>;
@@ -202,6 +217,12 @@ pub struct Field {
     pub span: Span,
 }
 
+impl WithSpan for Field {
+    fn span(&self) -> &Span {
+        &self.span
+    }
+}
+
 impl WithDirectives for Field {
     fn directives(&self) -> &Vec<Directive> {
         &self.directives
@@ -220,13 +241,19 @@ pub struct Enum {
     /// The name of the enum.
     pub name: String,
     /// The values of the enum.
-    pub values: Vec<String>,
+    pub values: Vec<EnumValue>,
     /// The directives of this enum.
     pub directives: Vec<Directive>,
     /// The comments for this enum.
     pub documentation: Option<Comment>,
     /// The location of this enum in the text representation.
     pub span: Span,
+}
+
+impl WithSpan for Enum {
+    fn span(&self) -> &Span {
+        &self.span
+    }
 }
 
 impl WithDirectives for Enum {
@@ -238,6 +265,21 @@ impl WithDirectives for Enum {
 impl WithDocumentation for Enum {
     fn documentation(&self) -> &Option<Comment> {
         &self.documentation
+    }
+}
+
+/// An enum value definition.
+#[derive(Debug)]
+pub struct EnumValue {
+    /// The name of the enum value.
+    pub name: String,
+    /// The location of this enum value in the text representation.
+    pub span: Span
+}
+
+impl WithSpan for EnumValue {
+    fn span(&self) -> &Span {
+        &self.span
     }
 }
 
@@ -254,6 +296,12 @@ pub struct Model {
     pub documentation: Option<Comment>,
     /// The location of this model in the text representation.
     pub span: Span,
+}
+
+impl WithSpan for Model {
+    fn span(&self) -> &Span {
+        &self.span
+    }
 }
 
 impl WithDirectives for Model {
@@ -281,6 +329,18 @@ pub struct SourceConfig {
     pub span: Span,
 }
 
+impl WithKeyValueConfig for SourceConfig {
+    fn properties(&self) -> &Vec<Argument> {
+        &self.properties
+    }
+}
+
+impl WithSpan for SourceConfig {
+    fn span(&self) -> &Span {
+        &self.span
+    }
+}
+
 impl WithDocumentation for SourceConfig {
     fn documentation(&self) -> &Option<Comment> {
         &self.documentation
@@ -300,6 +360,18 @@ pub struct GeneratorConfig {
     pub span: Span,
 }
 
+impl WithKeyValueConfig for GeneratorConfig {
+    fn properties(&self) -> &Vec<Argument> {
+        &self.properties
+    }
+}
+
+impl WithSpan for GeneratorConfig {
+    fn span(&self) -> &Span {
+        &self.span
+    }
+}
+
 impl WithDocumentation for GeneratorConfig {
     fn documentation(&self) -> &Option<Comment> {
         &self.documentation
@@ -315,6 +387,30 @@ pub enum Top {
     Source(SourceConfig),
     Generator(GeneratorConfig),
     Type(Field),
+}
+
+impl WithSpan for Top {
+    fn span(&self) -> &Span {
+        match self {
+            Top::Enum(x) => x.span(),
+            Top::Model(x) => x.span(),
+            Top::Source(x) => x.span(),
+            Top::Generator(x) => x.span(),
+            Top::Type(x) => x.span()
+        }
+    }
+}
+
+impl Top {
+    pub fn get_type(&self) -> &str {
+        match self {
+            Top::Enum(_) => "Enum",
+            Top::Model(_) => "Model",
+            Top::Source(_) => "Source",
+            Top::Generator(_) => "Generator",
+            Top::Type(_) => "Type"
+        }
+    }
 }
 
 /// A prisma datamodel.

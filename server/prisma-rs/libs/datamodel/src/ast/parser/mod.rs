@@ -237,14 +237,14 @@ fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
 fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
     let mut name: Option<String> = None;
     let mut directives: Vec<Directive> = vec![];
-    let mut values: Vec<String> = vec![];
+    let mut values: Vec<EnumValue> = vec![];
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
         Rule::ENUM_KEYWORD => { },
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::directive => directives.push(parse_directive(&current)),
-        Rule::enum_field_declaration => values.push(current.as_str().to_string()),
+        Rule::enum_field_declaration => values.push(EnumValue { name: current.as_str().to_string(), span: Span::from_pest(&current.as_span()) }),
         Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible enum declaration during parsing: {:?}", current.tokens())
     }

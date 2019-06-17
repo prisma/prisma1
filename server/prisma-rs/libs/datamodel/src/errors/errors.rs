@@ -32,6 +32,18 @@ pub enum ValidationError {
     #[fail(display = "Attribute @{} is defined twice.", directive_name)]
     DuplicateDirectiveError { directive_name: String, span: Span },
 
+    #[fail(display = "{} {} cannot be defined, as {} {} is already defined.", top_type, top_name, existing_top_type, top_name)]
+    DuplicateTopError { top_type: String, existing_top_type: String, top_name: String, span: Span },
+
+    #[fail(display = "Key {} is already defined in {}.", key_name, conf_block_name)]
+    DuplicateConfigKeyError { conf_block_name: String, key_name: String, span: Span },
+
+    #[fail(display = "Field {} is already defined on model {}.", field_name, model_name)]
+    DuplicateFieldError { model_name: String, field_name: String, span: Span },
+
+    #[fail(display = "Value {} is already defined on enum {}.", value_name, enum_name)]
+    DuplicateEnumValueError { enum_name: String, value_name: String, span: Span },
+
     #[fail(display = "Attribute not known: @{}", directive_name)]
     DirectiveNotKnownError { directive_name: String, span: Span },
 
@@ -131,6 +143,40 @@ impl ValidationError {
         };
     }
 
+    pub fn new_duplicate_top_error(top_type: &str, top_name: &str, existing_top_type: &str, span: &Span) -> ValidationError {
+        return ValidationError::DuplicateTopError {
+            top_type: String::from(top_type),
+            top_name: String::from(top_name),
+            existing_top_type: String::from(existing_top_type),
+            span: span.clone()
+        };
+    }
+
+    pub fn new_duplicate_config_key_error(conf_block_name: &str, key_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::DuplicateConfigKeyError {
+            conf_block_name: String::from(conf_block_name),
+            key_name: String::from(key_name),
+            span: span.clone()
+        };
+    }
+
+    pub fn new_duplicate_enum_value_error(enum_name: &str, value_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::DuplicateEnumValueError {
+            enum_name: String::from(enum_name),
+            value_name: String::from(value_name),
+            span: span.clone()
+        };
+    }
+
+    pub fn new_duplicate_field_error(model_name: &str, field_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::DuplicateFieldError {
+            model_name: String::from(model_name),
+            field_name: String::from(field_name),
+            span: span.clone()
+        };
+    }
+
+
     pub fn new_model_validation_error(message: &str, model_name: &str, span: &Span) -> ValidationError {
         return ValidationError::ModelValidationError {
             message: String::from(message),
@@ -207,7 +253,11 @@ impl ValidationError {
             ValidationError::ValueParserError { expected_type: _, parser_error: _, raw: _, span } => span,
             ValidationError::ValidationError { message: _, span } => span,
             ValidationError::ModelValidationError { model_name: _, message: _, span } => span,
-            ValidationError::DuplicateDirectiveError { directive_name: _, span } => span
+            ValidationError::DuplicateDirectiveError { directive_name: _, span } => span,
+            ValidationError::DuplicateConfigKeyError { conf_block_name: _, key_name: _, span } => span,
+            ValidationError::DuplicateTopError { top_type: _, top_name: _, existing_top_type: _, span } => span,
+            ValidationError::DuplicateFieldError { model_name: _, field_name: _, span } => span,
+            ValidationError::DuplicateEnumValueError { enum_name: _, value_name: _, span } => span
         }
     }
     pub fn description(&self) -> String {
