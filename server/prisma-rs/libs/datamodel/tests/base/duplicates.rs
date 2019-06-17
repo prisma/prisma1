@@ -120,7 +120,7 @@ fn fail_on_reserved_name_for_enum() {
 fn fail_on_reserved_name_for_model() {
     let dml = r#"
     model DateTime {
-        id DateTime @id
+        id Int @id
     }
     "#;
 

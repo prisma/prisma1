@@ -439,7 +439,6 @@ pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
 }
 
 pub fn get_expected_from_error(positives: &Vec<Rule>) -> Vec<&'static str> {
-    dbg!(positives);
     positives
         .iter()
         .map(|r| rule_to_string(r))
