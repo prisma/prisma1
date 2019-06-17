@@ -50,19 +50,16 @@ impl StringInterpolator {
                         Rule::string_interpolate_escape => {
                             for child in current.into_inner() {
                                 match child.as_rule() {
-                                    Rule::WHITESPACE => { },
-                                    Rule::COMMENT => { },
-                                    Rule::INTERPOLATION_START => { },
-                                    Rule::INTERPOLATION_END =>  { },
+                                    Rule::WHITESPACE => {}
+                                    Rule::COMMENT => {}
+                                    Rule::INTERPOLATION_START => {}
+                                    Rule::INTERPOLATION_END => {}
                                     Rule::expression => {
                                         let value = parse_expr_and_lift_span(&child, span.start)?;
                                         parts.push(String::from(ValueValidator::new(&value)?.raw()))
                                     }
                                     Rule::EOI => {}
-                                    _ => panic!(
-                                        "Encounterd impossible interpolation sequence: {:?}",
-                                        child.tokens()
-                                    )
+                                    _ => panic!("Encounterd impossible interpolation sequence: {:?}", child.tokens()),
                                 };
                             }
                         }

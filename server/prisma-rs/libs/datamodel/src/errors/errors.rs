@@ -11,55 +11,56 @@ use colored::Colorize;
 /// For fancy printing, please use the `pretty_print_error` function.
 #[derive(Debug, Fail, Clone, PartialEq)]
 pub enum ValidationError {
-    #[fail(display = "Argument {} is missing.", argument_name)]
+    #[fail(display = "Argument \"{}\" is missing.", argument_name)]
     ArgumentNotFound { argument_name: String, span: Span },
 
-    #[fail(display = "Function {} takes {} arguments, received {}", function_name, required_count, given_count)]
+    #[fail(display = "Function \"{}\" takes {} arguments, but received {}.", function_name, required_count, given_count)]
     ArgumentCountMissmatch { function_name: String, required_count: usize, given_count: usize, span: Span },
 
-    #[fail(display = "Argument {} is missing in attribute @{}.", argument_name, directive_name)]
+    #[fail(display = "Argument \"{}\" is missing in attribute \"@{}\".", argument_name, directive_name)]
     DirectiveArgumentNotFound { argument_name: String, directive_name: String, span: Span },
 
-    #[fail(display = "Argument {} is missing in data source block {}", argument_name, source_name)]
+    #[fail(display = "Argument \"{}\" is missing in data source block \"{}\".", argument_name, source_name)]
     SourceArgumentNotFound { argument_name: String, source_name: String, span: Span },
 
-    #[fail(display = "Argument {} is missing in generator block {}", argument_name, generator_name)]
+    #[fail(display = "Argument \"{}\" is missing in generator block \"{}\".", argument_name, generator_name)]
     GeneratorArgumentNotFound { argument_name: String, generator_name: String, span: Span },
 
-    #[fail(display = "Error parsing attribute @{}: {}", directive_name, message)]
+    #[fail(display = "Error parsing attribute \"@{}\": {}", directive_name, message)]
     DirectiveValidationError { message: String, directive_name: String, span: Span },
 
-    #[fail(display = "Attribute @{} is defined twice.", directive_name)]
+    #[fail(display = "Attribute \"@{}\" is defined twice.", directive_name)]
     DuplicateDirectiveError { directive_name: String, span: Span },
 
-    #[fail(display = "{} {} cannot be defined, as {} {} is already defined.", top_type, top_name, existing_top_type, top_name)]
+    #[fail(display = "The {} \"{}\" cannot be defined, as {} \"{}\" is already defined.", top_type, top_name, existing_top_type, top_name)]
     DuplicateTopError { top_type: String, existing_top_type: String, top_name: String, span: Span },
 
-    #[fail(display = "Key {} is already defined in {}.", key_name, conf_block_name)]
+    // conf_block_name is pre-populated with "" in precheck.ts.
+    #[fail(display = "Key \"{}\" is already defined in {}.", key_name, conf_block_name)]
     DuplicateConfigKeyError { conf_block_name: String, key_name: String, span: Span },
 
-    #[fail(display = "Field {} is already defined on model {}.", field_name, model_name)]
+    #[fail(display = "Field \"{}\" is already defined on model \"{}\".", field_name, model_name)]
     DuplicateFieldError { model_name: String, field_name: String, span: Span },
 
-    #[fail(display = "Value {} is already defined on enum {}.", value_name, enum_name)]
+    #[fail(display = "Value \"{}\" is already defined on enum \"{}\".", value_name, enum_name)]
     DuplicateEnumValueError { enum_name: String, value_name: String, span: Span },
 
-    #[fail(display = "Attribute not known: @{}", directive_name)]
+    #[fail(display = "Attribute not known: \"@{}\"", directive_name)]
     DirectiveNotKnownError { directive_name: String, span: Span },
 
-    #[fail(display = "Function not known: {}", function_name)]
+    #[fail(display = "Function not known: \"{}\"", function_name)]
     FunctionNotKnownError { function_name: String, span: Span },
 
-    #[fail(display = "Datasource provider not known: {}", source_name)]
+    #[fail(display = "Datasource provider not known: \"{}\"", source_name)]
     SourceNotKnownError { source_name: String, span: Span },
 
-    #[fail(display = "{} is not a valid value for {}.", raw_value, literal_type)]
+    #[fail(display = "\"{}\" is not a valid value for {}.", raw_value, literal_type)]
     LiteralParseError { literal_type: String, raw_value: String, span: Span },
 
-    #[fail(display = "Type {} is neither a built-in type, nor refers to another model or enum.", type_name)]
+    #[fail(display = "Type \"{}\" is neither a built-in type, nor refers to another model, custom type, or enum.", type_name)]
     TypeNotFoundError { type_name: String, span: Span },
 
-    #[fail(display = "Type {} is not a built-in type.", type_name)]
+    #[fail(display = "Type \"{}\" is not a built-in type.", type_name)]
     ScalarTypeNotFoundError { type_name: String, span: Span },
 
     #[fail(display = "Unexpected token. Expected one of: {}.", expected_str)]
@@ -68,13 +69,13 @@ pub enum ValidationError {
     #[fail(display = "{}", message)]
     FunctionalEvaluationError { message: String, span: Span },
 
-    #[fail(display = "Expected {}, but received {} value {}", expected_type, received_type, raw)]
+    #[fail(display = "Expected a {} value, but received {} value \"{}\"", expected_type, received_type, raw)]
     TypeMismatchError { expected_type: String, received_type: String, raw: String, span: Span },
 
-    #[fail(display = "Expected {}, but failed while parsing {}: {}", expected_type, raw, parser_error)]
+    #[fail(display = "Expected a {} value, but failed while parsing \"{}\": {}", expected_type, raw, parser_error)]
     ValueParserError { expected_type: String, parser_error: String, raw: String, span: Span },
 
-    #[fail(display = "Error validating {}: {}", model_name, message)]
+    #[fail(display = "Error validating model \"{}\": {}", model_name, message)]
     ModelValidationError { message: String, model_name: String, span: Span  },
 
     #[fail(display = "Error validating: {}", message)]
@@ -143,7 +144,7 @@ impl ValidationError {
         };
     }
 
-    pub fn new_duplicate_top_error(top_type: &str, top_name: &str, existing_top_type: &str, span: &Span) -> ValidationError {
+    pub fn new_duplicate_top_error(top_type: &str, existing_top_type: &str, top_name: &str, span: &Span) -> ValidationError {
         return ValidationError::DuplicateTopError {
             top_type: String::from(top_type),
             top_name: String::from(top_name),

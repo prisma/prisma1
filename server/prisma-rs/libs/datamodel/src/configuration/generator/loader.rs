@@ -17,15 +17,15 @@ impl GeneratorLoader {
 
         for prop in &ast_generator.properties {
             // Exclude reserved options.
-            if prop.name == "provider" || prop.name == "output" {
+            if prop.name.name == "provider" || prop.name.name == "output" {
                 continue;
             }
 
-            properties.insert(prop.name.clone(), prop.value.to_string());
+            properties.insert(prop.name.name.clone(), prop.value.to_string());
         }
 
         Ok(Generator {
-            name: ast_generator.name.clone(),
+            name: ast_generator.name.name.clone(),
             provider: provider,
             output: output,
             config: properties,
@@ -46,7 +46,7 @@ impl GeneratorLoader {
         }
 
         ast::GeneratorConfig {
-            name: generator.name.clone(),
+            name: ast::Identifier::new(&generator.name),
             properties: arguments,
             documentation: generator.documentation.clone().map(|text| ast::Comment { text }),
             span: ast::Span::empty(),
@@ -63,7 +63,7 @@ impl GeneratorLoader {
                     Ok(loaded_gen) => generators.push(loaded_gen),
                     // Lift error.
                     Err(ValidationError::ArgumentNotFound { argument_name, span }) => errors.push(
-                        ValidationError::new_generator_argument_not_found_error(&argument_name, &gen.name, &span),
+                        ValidationError::new_generator_argument_not_found_error(&argument_name, &gen.name.name, &span),
                     ),
                     Err(err) => errors.push(err),
                 },
