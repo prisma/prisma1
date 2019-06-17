@@ -1,5 +1,16 @@
 #!/usr/bin/env ts-node
 
+// do this before facebook's yoga
+import debugLib from 'debug'
+
+const debug = debugLib('prisma')
+process.on('uncaughtException', e => {
+  debug(e)
+})
+process.on('unhandledRejection', e => {
+  debug(e)
+})
+
 /**
  * Dependencies
  */
