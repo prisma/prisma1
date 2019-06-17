@@ -9,7 +9,7 @@
 
 use crate::{
     builders::{utils, NestedValue, ValueList, ValueMap, ValueSplit},
-    CoreError, CoreResult, ManyNestedBuilder, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
+    CoreError, CoreResult, ManyNestedBuilder, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery, WriteQuerySet
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
@@ -19,8 +19,8 @@ use std::{collections::BTreeMap, sync::Arc};
 
 pub struct LookAhead;
 impl LookAhead {
-    pub fn eval(input: TopLevelDatabaseMutaction) -> CoreResult<TopLevelDatabaseMutaction> {
-        Ok(match input {
+    pub fn eval(mut input: WriteQuery) -> CoreResult<WriteQuerySet> {
+        input.inner = match input.inner {
             TopLevelDatabaseMutaction::CreateNode(mut cn) => {
                 create_connect(&mut cn)?;
                 TopLevelDatabaseMutaction::CreateNode(cn)
@@ -30,7 +30,9 @@ impl LookAhead {
                 TopLevelDatabaseMutaction::UpdateNode(un)
             }
             who_even_cares => who_even_cares,
-        })
+        };
+
+        flip_create_order(input)
     }
 }
 
@@ -80,8 +82,73 @@ fn flip_create_order(ncn: NestedCreateNode) -> CoreResult<()> {
     Ok(())
 }
 
-fn flip_create_order(ncn: NestedCreateNode) -> CoreResult<()> {
+fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
+    match wq.inner {
+        TopLevelDatabaseMutaction::CreateNode(mut cn) => {
+            let creates = std::mem::replace(&mut cn.nested_mutactions.creates, vec![]);
+            let mut normal = vec![];
+            let mut required = vec![];
+            for nc in creates.into_iter() {
+                if nc.relation_field.is_required {
+                    required.push(nc);
+                } else {
+                    normal.push(nc);
+                }
+            }
+            cn.nested_mutactions.creates = normal;
 
+            let wq = WriteQuery {
+                inner: TopLevelDatabaseMutaction::CreateNode(cn),
+                ..wq
+            };
+
+            let wqs: WriteQuerySet = required
+                .into_iter()
+                .fold(WriteQuerySet::Query(wq), |mut acc, req| {
+                    match acc {
+                        WriteQuerySet::Query(q) => WriteQuerySet::Dependents {
+                            self_: WriteQuery {
+                                inner: hoist_nested_create(req),
+                                name: q.name.clone(),
+                                field: q.field.clone(),
+                            },
+                            next: Box::new(WriteQuerySet::Query(q))
+                        },
+                        WriteQuerySet::Dependents { self_: _, ref next } => {
+                            let (name, field) = get_name_field(&next);
+
+                            WriteQuerySet::Dependents {
+                                self_: WriteQuery {
+                                    inner: hoist_nested_create(req),
+                                    name,
+                                    field
+                                },
+                                next: Box::new(acc)
+                            }
+                        }
+                    }
+                });
+
+            Ok(wqs)
+        },
+        _ => unimplemented!()
+    }
+}
+
+fn hoist_nested_create(nc: NestedCreateNode) -> TopLevelDatabaseMutaction {
+    TopLevelDatabaseMutaction::CreateNode(CreateNode {
+        model: nc.relation_field.model(),
+        non_list_args: nc.non_list_args,
+        list_args: nc.list_args,
+        nested_mutactions: nc.nested_mutactions,
+    })
+}
+
+fn get_name_field(next: &WriteQuerySet) -> (String, Field) {
+    match next {
+        WriteQuerySet::Dependents { self_: _, next } => get_name_field(&next),
+        WriteQuerySet::Query(q) => (q.name.clone(), q.field.clone())
+    }
 }
 
 /// Fold require `connect` operations into their parent

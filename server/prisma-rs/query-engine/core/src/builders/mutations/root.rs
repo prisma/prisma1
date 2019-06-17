@@ -175,13 +175,11 @@ impl<'field> MutationBuilder<'field> {
             };
 
         // FIXME: Cloning is unethical and should be avoided
-        Ok(WriteQuerySet::Query(
-            WriteQuery {
-                inner: LookAhead::eval(inner)?,
-                name: raw_name,
-                field: self.field.clone(),
-            }
-        ))
+        LookAhead::eval(WriteQuery {
+            inner,
+            name: raw_name,
+            field: self.field.clone(),
+        })
     }
 }
 
