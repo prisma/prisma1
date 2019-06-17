@@ -138,10 +138,10 @@ impl<T: 'static> DirectiveListValidator<T> {
         for directive in ast.directives() {
             for other_directive in ast.directives() {
                 if directive as *const ast::Directive != other_directive as *const ast::Directive {
-                    if directive.name == other_directive.name {
+                    if directive.name.name == other_directive.name.name {
                         errors.push(ValidationError::new_duplicate_directive_error(
-                            &directive.name,
-                            &directive.span,
+                            &directive.name.name,
+                            &directive.name.span,
                         ));
                     }
                 }
@@ -151,7 +151,7 @@ impl<T: 'static> DirectiveListValidator<T> {
         errors.ok()?;
 
         for directive in ast.directives() {
-            match self.known_directives.get(directive.name.as_str()) {
+            match self.known_directives.get(&directive.name.name) {
                 Some(validator) => {
                     let directive_validation_result =
                         validator.validate_and_apply(&Arguments::new(&directive.arguments, directive.span), t);
@@ -159,7 +159,7 @@ impl<T: 'static> DirectiveListValidator<T> {
                         Err(ValidationError::ArgumentNotFound { argument_name, span }) => {
                             errors.push(ValidationError::new_directive_argument_not_found_error(
                                 &argument_name,
-                                &directive.name,
+                                &directive.name.name,
                                 &span,
                             ))
                         }
@@ -170,8 +170,8 @@ impl<T: 'static> DirectiveListValidator<T> {
                     }
                 }
                 None => errors.push(ValidationError::new_directive_not_known_error(
-                    &directive.name,
-                    &directive.span,
+                    &directive.name.name,
+                    &directive.name.span,
                 )),
             };
         }

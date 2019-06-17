@@ -13,6 +13,19 @@ pub struct PrismaDatamodelParser;
 use crate::ast::*;
 use crate::errors::ValidationError;
 
+trait ToIdentifier {
+    fn to_id(&self) -> Identifier;
+}
+
+impl ToIdentifier for pest::iterators::Pair<'_, Rule> {
+    fn to_id(&self) -> Identifier {
+        Identifier {
+            name: String::from(self.as_str()),
+            span: Span::from_pest(&self.as_span()),
+        }
+    }
+}
+
 fn parse_string_literal(token: &pest::iterators::Pair<'_, Rule>) -> String {
     return match_first! { token, current,
         Rule::string_content => current.as_str().to_string(),
@@ -96,11 +109,11 @@ fn doc_comments_to_string(comments: &Vec<String>) -> Option<Comment> {
 // Directive parsing
 
 fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
-    let mut name: Option<String> = None;
+    let mut name: Option<Identifier> = None;
     let mut argument: Option<Value> = None;
 
     match_children! { token, current,
-        Rule::argument_name => name = Some(current.as_str().to_string()),
+        Rule::argument_name => name = Some(current.to_id()),
         Rule::argument_value => argument = Some(parse_arg_value(&current)),
         _ => unreachable!("Encounterd impossible directive argument during parsing: {:?}", current.tokens())
     };
@@ -124,7 +137,7 @@ fn parse_directive_args(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut
         Rule::argument => arguments.push(parse_directive_arg(&current)),
         // This is a an unnamed arg.
         Rule::argument_value => arguments.push(Argument {
-            name: String::from(""),
+            name: Identifier::new(""),
             value: parse_arg_value(&current),
             span: Span::from_pest(&current.as_span())
         }),
@@ -133,11 +146,11 @@ fn parse_directive_args(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut
 }
 
 fn parse_directive(token: &pest::iterators::Pair<'_, Rule>) -> Directive {
-    let mut name: Option<String> = None;
+    let mut name: Option<Identifier> = None;
     let mut arguments: Vec<Argument> = vec![];
 
     match_children! { token, current,
-        Rule::directive_name => name = Some(current.as_str().to_string()),
+        Rule::directive_name => name = Some(current.to_id()),
         Rule::directive_arguments => parse_directive_args(&current, &mut arguments),
         _ => unreachable!("Encounterd impossible directive during parsing: {:?}", current.tokens())
     };
@@ -170,13 +183,13 @@ fn parse_field_type(token: &pest::iterators::Pair<'_, Rule>) -> (FieldArity, Str
 }
 
 fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
-    let mut name: Option<String> = None;
+    let mut name: Option<Identifier> = None;
     let mut directives: Vec<Directive> = Vec::new();
     let mut field_type: Option<((FieldArity, String), Span)> = None;
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
-        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::identifier => name = Some(current.to_id()),
         Rule::field_type => {
             field_type = Some((parse_field_type(&current), Span::from_pest(&current.as_span())))
         },
@@ -187,8 +200,10 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
 
     return match (name, field_type) {
         (Some(name), Some(((arity, field_type), field_type_span))) => Field {
-            field_type: field_type,
-            field_type_span: field_type_span,
+            field_type: Identifier {
+                name: field_type,
+                span: field_type_span,
+            },
             name,
             arity,
             default_value: None,
@@ -204,14 +219,14 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
 }
 // Model parsing
 fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
-    let mut name: Option<String> = None;
+    let mut name: Option<Identifier> = None;
     let mut directives: Vec<Directive> = vec![];
     let mut fields: Vec<Field> = vec![];
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
         Rule::MODEL_KEYWORD => { },
-        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::identifier => name = Some(current.to_id()),
         Rule::directive => directives.push(parse_directive(&current)),
         Rule::field_declaration => fields.push(parse_field(&current)),
         Rule::doc_comment => comments.push(parse_doc_comment(&current)),
@@ -235,16 +250,16 @@ fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
 
 // Enum parsing
 fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
-    let mut name: Option<String> = None;
+    let mut name: Option<Identifier> = None;
     let mut directives: Vec<Directive> = vec![];
-    let mut values: Vec<String> = vec![];
+    let mut values: Vec<EnumValue> = vec![];
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
         Rule::ENUM_KEYWORD => { },
-        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::identifier => name = Some(current.to_id()),
         Rule::directive => directives.push(parse_directive(&current)),
-        Rule::enum_field_declaration => values.push(current.as_str().to_string()),
+        Rule::enum_field_declaration => values.push(EnumValue { name: current.as_str().to_string(), span: Span::from_pest(&current.as_span()) }),
         Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible enum declaration during parsing: {:?}", current.tokens())
     }
@@ -265,11 +280,11 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
 }
 
 fn parse_key_value(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
-    let mut name: Option<String> = None;
+    let mut name: Option<Identifier> = None;
     let mut value: Option<Value> = None;
 
     match_children! { token, current,
-        Rule::identifier => name = Some(String::from(current.as_str())),
+        Rule::identifier => name = Some(current.to_id()),
         Rule::expression => value = Some(parse_expression(&current)),
         _ => unreachable!("Encounterd impossible source property declaration during parsing: {:?}", current.tokens())
     }
@@ -289,13 +304,13 @@ fn parse_key_value(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
 
 // Source parsing
 fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
-    let mut name: Option<String> = None;
+    let mut name: Option<Identifier> = None;
     let mut properties: Vec<Argument> = vec![];
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
         Rule::DATASOURCE_KEYWORD => { },
-        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::identifier => name = Some(current.to_id()),
         Rule::key_value => properties.push(parse_key_value(&current)),
         Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible source declaration during parsing: {:?}", current.tokens())
@@ -317,13 +332,13 @@ fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
 
 // Generator parsing
 fn parse_generator(token: &pest::iterators::Pair<'_, Rule>) -> GeneratorConfig {
-    let mut name: Option<String> = None;
+    let mut name: Option<Identifier> = None;
     let mut properties: Vec<Argument> = vec![];
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
         Rule::GENERATOR_KEYWORD => { },
-        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::identifier => name = Some(current.to_id()),
         Rule::key_value => properties.push(parse_key_value(&current)),
         Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible generator declaration during parsing: {:?}", current.tokens())
@@ -345,14 +360,14 @@ fn parse_generator(token: &pest::iterators::Pair<'_, Rule>) -> GeneratorConfig {
 
 // Custom type parsing
 fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Field {
-    let mut name: Option<String> = None;
+    let mut name: Option<Identifier> = None;
     let mut directives: Vec<Directive> = vec![];
     let mut base_type: Option<(String, Span)> = None;
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
         Rule::TYPE_KEYWORD => { },
-        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::identifier => name = Some(current.to_id()),
         Rule::base_type => {
             base_type = Some((parse_base_type(&current), Span::from_pest(&current.as_span())))
         },
@@ -363,8 +378,10 @@ fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Field {
 
     return match (name, base_type) {
         (Some(name), Some((field_type, field_type_span))) => Field {
-            field_type: field_type,
-            field_type_span: field_type_span,
+            field_type: Identifier {
+                name: field_type,
+                span: field_type_span,
+            },
             name,
             arity: FieldArity::Required,
             default_value: None,
@@ -471,6 +488,8 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::ENUM_KEYWORD => "\"enum\" keyword",
         Rule::GENERATOR_KEYWORD => "\"generator\" keyword",
         Rule::DATASOURCE_KEYWORD => "\"datasource\" keyword",
+        Rule::INTERPOLATION_START => "string interpolation start",
+        Rule::INTERPOLATION_END => "string interpolation end",
 
         // Those are top level things and will never surface.
         Rule::datamodel => "datamodel declaration",

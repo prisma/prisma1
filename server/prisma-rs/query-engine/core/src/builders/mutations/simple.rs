@@ -2,12 +2,12 @@
 
 use crate::{
     builders::{build_nested_root, utils, ValueMap, ValueSplit},
+    extend_defaults,
     schema::OperationTag,
     CoreError, CoreResult,
 };
 use connector::mutaction::*;
-use prisma_models::{Field as ModelField, ModelRef};
-
+use prisma_models::{Field as ModelField, ModelRef, PrismaArgs};
 use std::sync::Arc;
 
 pub struct SimpleNestedBuilder;
@@ -37,12 +37,17 @@ impl SimpleNestedBuilder {
             wat => panic!("Invalid state: `{:#?}`", wat),
         };
 
-        let non_list_args = values.clone().to_prisma_values().into();
+        let mut non_list_args = values.clone().to_prisma_values();
         let list_args = lists.into_iter().map(|la| la.convert()).collect();
         let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&relation_model), top_level)?;
 
         match kind {
             "create" => {
+                extend_defaults(&model, &mut non_list_args);
+
+                let mut non_list_args: PrismaArgs = non_list_args.into();
+                non_list_args.add_datetimes(Arc::clone(&model));
+
                 mutations.creates.push(NestedCreateNode {
                     non_list_args,
                     list_args,
@@ -78,7 +83,7 @@ impl SimpleNestedBuilder {
             "update" => {
                 mutations.updates.push(NestedUpdateNode {
                     relation_field,
-                    non_list_args,
+                    non_list_args: non_list_args.into(),
                     list_args,
                     where_,
                     nested_mutactions,
@@ -107,7 +112,7 @@ impl SimpleNestedBuilder {
                 mutations.update_manys.push(NestedUpdateNodes {
                     relation_field,
                     filter,
-                    non_list_args,
+                    non_list_args: non_list_args.into(),
                     list_args,
                 });
             }
@@ -140,7 +145,12 @@ impl UpsertNestedBuilder {
         let where_ = where_map.to_node_selector(Arc::clone(&related_model));
         let create = {
             let ValueSplit { values, lists, nested } = create.split();
-            let non_list_args = values.to_prisma_values().into();
+            let mut non_list_args = values.to_prisma_values();
+            extend_defaults(&model, &mut non_list_args);
+
+            let mut non_list_args: PrismaArgs = non_list_args.into();
+            non_list_args.add_datetimes(Arc::clone(&model));
+
             let list_args = lists.into_iter().map(|la| la.convert()).collect();
             let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), top_level)?;
             let relation_field = Arc::clone(&relation_field);

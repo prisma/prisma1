@@ -49,13 +49,13 @@ export class Generate implements Command {
     for (const generator of generators) {
       console.log(`Generating ${chalk.bold(generator.prettyName!)}`)
       const before = Date.now()
-      try {
-        await generator.generate()
-        const after = Date.now()
-        console.log(`Done in ${formatms(after - before)}`)
-      } catch (e) {
-        console.error(e)
-      }
+      // try {
+      await generator.generate()
+      const after = Date.now()
+      console.log(`Done in ${formatms(after - before)}`)
+      // } catch (e) {
+      //   console.error(e)
+      // }
     }
 
     return ''

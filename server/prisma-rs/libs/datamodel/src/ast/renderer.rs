@@ -87,7 +87,7 @@ impl<'a> Renderer<'a> {
         Self::render_documentation(self, source);
 
         self.write("datasource ");
-        self.write(&source.name);
+        self.write(&source.name.name);
         self.write(" {");
         self.end_line();
         self.indent_up();
@@ -95,7 +95,7 @@ impl<'a> Renderer<'a> {
         let mut formatter = TableFormat::new();
 
         for property in &source.properties {
-            formatter.write(&property.name);
+            formatter.write(&property.name.name);
             formatter.write(" = ");
             formatter.write(&Self::render_value_to_string(&property.value));
             formatter.end_line();
@@ -112,7 +112,7 @@ impl<'a> Renderer<'a> {
         Self::render_documentation(self, generator);
 
         self.write("generator ");
-        self.write(&generator.name);
+        self.write(&generator.name.name);
         self.write(" {");
         self.end_line();
         self.indent_up();
@@ -120,7 +120,7 @@ impl<'a> Renderer<'a> {
         let mut formatter = TableFormat::new();
 
         for property in &generator.properties {
-            formatter.write(&property.name);
+            formatter.write(&property.name.name);
             formatter.write(" = ");
             formatter.write(&Self::render_value_to_string(&property.value));
             formatter.end_line();
@@ -137,9 +137,9 @@ impl<'a> Renderer<'a> {
         Self::render_documentation(&mut target.interleave_writer(), field);
 
         target.write("type ");
-        target.write(&field.name);
+        target.write(&field.name.name);
         target.write(&" = ");
-        target.write(&field.field_type);
+        target.write(&field.field_type.name);
 
         // Attributes
         if field.directives.len() > 0 {
@@ -159,7 +159,7 @@ impl<'a> Renderer<'a> {
         Self::render_documentation(self, model);
 
         self.write("model ");
-        self.write(&model.name);
+        self.write(&model.name.name);
         self.write(" {");
         self.end_line();
         self.indent_up();
@@ -188,13 +188,13 @@ impl<'a> Renderer<'a> {
         Self::render_documentation(self, enm);
 
         self.write("enum ");
-        self.write(&enm.name);
+        self.write(&enm.name.name);
         self.write(" {");
         self.end_line();
         self.indent_up();
 
         for value in &enm.values {
-            self.write(&value);
+            self.write(&value.name);
             self.end_line();
         }
 
@@ -214,13 +214,13 @@ impl<'a> Renderer<'a> {
     pub fn render_field(target: &mut TableFormat, field: &ast::Field) {
         Self::render_documentation(&mut target.interleave_writer(), field);
 
-        target.write(&field.name);
+        target.write(&field.name.name);
 
         // Type
         {
             let mut type_builder = StringBuilder::new();
 
-            type_builder.write(&field.field_type);
+            type_builder.write(&field.field_type.name);
             Self::render_field_arity(&mut type_builder, &field.arity);
 
             target.write(&type_builder.to_string());
@@ -251,7 +251,7 @@ impl<'a> Renderer<'a> {
 
     pub fn render_field_directive(target: &mut LineWriteable, directive: &ast::Directive) {
         target.write("@");
-        target.write(&directive.name);
+        target.write(&directive.name.name);
 
         if directive.arguments.len() > 0 {
             target.write("(");
@@ -262,7 +262,7 @@ impl<'a> Renderer<'a> {
 
     pub fn render_block_directive(&mut self, directive: &ast::Directive) {
         self.write("@@");
-        self.write(&directive.name);
+        self.write(&directive.name.name);
 
         if directive.arguments.len() > 0 {
             self.write("(");
@@ -282,8 +282,8 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_argument(target: &mut LineWriteable, args: &ast::Argument) {
-        if args.name != "" {
-            target.write(&args.name);
+        if args.name.name != "" {
+            target.write(&args.name.name);
             target.write(&": ");
         }
 

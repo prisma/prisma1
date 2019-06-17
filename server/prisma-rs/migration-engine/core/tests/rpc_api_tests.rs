@@ -46,8 +46,9 @@ fn error_if_the_datamodel_is_invalid() {
     // let result_json = serde_json::from_str::<serde_json::Value>(&result).unwrap();
     // let expected = serde_json::from_str::<serde_json::Value>(&r#"{"jsonrpc":"2.0","error":{"code":4466,"message":"An error happened. Check the data field for details.","data":{"code":1000,"errors":["Error parsing attribute @default: Expected Int, but received String value Function<String>"],"type":"DataModelErrors"}},"id":1}"#).unwrap();
     // assert_eq!(result_json, expected);
+    dbg!(&result);
     assert!(
-        result.contains("Error parsing attribute @default: Expected Int, but received String value Function<String>")
+        result.contains("Error parsing attribute \\\"@default\\\": Expected a Int value, but received String value \\\"Function<String>\\\".")
     );
 }
 

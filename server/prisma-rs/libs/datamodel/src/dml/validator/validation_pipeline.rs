@@ -43,8 +43,7 @@ impl ValidationPipeline {
         // Phase 1 is source block loading.
 
         // Phase 2: Prechecks.
-        // TODO: Precheck no duplicate models, fields or directives.
-        // TODO: Maybe we move prechecks into different module.
+        precheck::Precheck::precheck(&ast_schema)?;
 
         // Phase 3: Lift AST to DML.
         let mut schema = self.lifter.lift(ast_schema)?;

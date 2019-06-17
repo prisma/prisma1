@@ -15,7 +15,7 @@ impl SourceSerializer {
         }
 
         ast::SourceConfig {
-            name: source.name().clone(),
+            name: ast::Identifier::new(source.name()),
             properties: arguments,
             documentation: source.documentation().clone().map(|text| ast::Comment { text }),
             span: ast::Span::empty(),
