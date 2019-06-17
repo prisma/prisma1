@@ -13,7 +13,7 @@
 // Treat every whitespace the same for now.
 WHITESPACE = @{ SPACE_SEPARATOR | NEWLINE }
 // Comment ignores everything until end of line.
-COMMENT = @{ (!"///") ~ "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+COMMENT = @{ (!"///") ~ "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE? }
 BLOCK_OPEN = @{ "{" }
 BLOCK_CLOSE = @{ "}" }
 MODEL_KEYWORD = @{ "model" }
@@ -134,9 +134,10 @@ datamodel = { SOI ~ (model_declaration | enum_declaration | source_block | gener
 // Greedy match escaped interpolation or any char. Do not match interpolation.
 string_any = @{ ANY }
 string_escaped_interpolation = @{ "\\"  ~ INTERPOLATION_START }
-string_interpolated = { SOI ~ (
+// String is marked as compount atomic. We do not allow whitespace or similar.
+string_interpolated = ${ SOI ~ (
                             // This is basically everything except an expression, using the escape trick from above.
                             (!(INTERPOLATION_START) ~ ( string_escaped_interpolation | string_any))+ | 
-                            // This is an expression.
-                            (INTERPOLATION_START ~ expression ~ INTERPOLATION_END)
+                            // This is an expression. It's no more atomic.
+                            string_interpolate_escape
                         )* ~ EOI }
