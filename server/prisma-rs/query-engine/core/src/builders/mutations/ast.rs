@@ -11,6 +11,40 @@ use graphql_parser::query::Field;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaValue};
 use std::sync::Arc;
 
+/// A structure to express mutation dependencies
+///
+/// When we run a mutation, it can have some prerequisites
+/// to being runnable. The simplest examples of this is
+/// when creating a node that has a required relation to
+/// another model, which should also be created.
+/// In this case, we first need to create the _other_ model,
+/// then we can run the self mutation and turn the create
+/// into a connect action, that is then merged into the
+/// previous create.
+///
+/// This sounds complicated (and it is!) but we solve this in steps.
+///
+/// 1. We traverse the mutation AST and generate naive queries
+/// 2. We let the [`look_ahead`] module pass over the tree which will
+///    fold required connects into their update/ create parents,
+///    as well as generating these `WriteQuerySet::Dependents` items.
+/// 3. When the query pipeline yields mutations to the executor,
+///    it then simply has to traverse this tree and execute dependent
+///    mutations in reverse-order. This also needs to take id-mapping
+///    into account (i.e. a create -> create needs to yield the child ID
+///    to it's parent so it can finish the transaction)
+///
+/// To further understand how the mutation execution works, I recommend
+/// reading the [`pipeline`] docs!
+#[derive(Debug, Clone)]
+pub enum WriteQuerySet {
+    Query(WriteQuery),
+    Dependents {
+        self_: WriteQuery,
+        next: Box<WriteQuerySet>,
+    }
+}
+
 /// A top-level write query (mutation)
 #[derive(Debug, Clone)]
 pub struct WriteQuery {

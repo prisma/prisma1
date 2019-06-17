@@ -5,7 +5,7 @@ use crate::{
     builders::{utils, LookAhead, NestedValue, ValueList, ValueMap, ValueSplit},
     extend_defaults,
     schema::{ModelOperation, OperationTag},
-    CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
+    CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery, WriteQuerySet,
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
@@ -27,7 +27,7 @@ impl<'field> MutationBuilder<'field> {
         Self { field, query_schema }
     }
 
-    pub fn build(self) -> CoreResult<WriteQuery> {
+    pub fn build(self) -> CoreResult<WriteQuerySet> {
         // Handle `resetData` separately
         if &self.field.name == "resetData" {
             return handle_reset(&self.field, Arc::clone(&self.query_schema.internal_data_model));
@@ -175,21 +175,23 @@ impl<'field> MutationBuilder<'field> {
             };
 
         // FIXME: Cloning is unethical and should be avoided
-        Ok(WriteQuery {
-            inner: LookAhead::eval(inner)?,
-            name: raw_name,
-            field: self.field.clone(),
-        })
+        Ok(WriteQuerySet::Query(
+            WriteQuery {
+                inner: LookAhead::eval(inner)?,
+                name: raw_name,
+                field: self.field.clone(),
+            }
+        ))
     }
 }
 
 /// A trap-door function that handles `resetData` without doing a whole bunch of other stuff
-fn handle_reset(field: &Field, internal_data_model: InternalDataModelRef) -> CoreResult<WriteQuery> {
-    Ok(WriteQuery {
+fn handle_reset(field: &Field, internal_data_model: InternalDataModelRef) -> CoreResult<WriteQuerySet> {
+    Ok(WriteQuerySet::Query(WriteQuery {
         inner: TopLevelDatabaseMutaction::ResetData(ResetData { internal_data_model }),
         name: "resetData".into(),
         field: field.clone(),
-    })
+    }))
 }
 
 /// Convert arguments provided by graphql-ast into a tree

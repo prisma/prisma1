@@ -16,7 +16,7 @@
 
 #![allow(warnings)]
 
-use crate::{Query, ReadQuery, ReadQueryResult, WriteQuery, WriteQueryResult};
+use crate::{Query, ReadQuery, ReadQueryResult, WriteQuery, WriteQuerySet, WriteQueryResult};
 use indexmap::IndexMap;
 use std::mem::replace;
 
@@ -37,10 +37,10 @@ enum Stage {
     /// Acts as a placeholder for when read queries are executed
     ReadMark(usize),
     /// Store a write query and an index
-    Write(usize, WriteQuery),
+    Write(usize, WriteQuerySet),
     /// Stores the intermediate result of pre-feteching records
     /// before executing destructive writes (i.e. deletes)
-    PreFetched(WriteQuery, ReadQueryResult),
+    PreFetched(WriteQuerySet, ReadQueryResult),
     /// Encodes the end-result of a local pipeline
     Done(ReadQueryResult),
 }
@@ -85,7 +85,7 @@ impl QueryPipeline {
     /// **Remember:** you need to call `store_prefetch` with the results
     pub fn prefetch(&self) -> IndexMap<usize, ReadQuery> {
         self.0.iter().fold(IndexMap::new(), |mut map, query| {
-            if let Stage::Write(idx, query) = query {
+            if let Stage::Write(idx, WriteQuerySet::Query(query)) = query {
                 if let Some(fetch) = query.generate_prefetch() {
                     map.insert(*idx, fetch);
                 }
@@ -121,7 +121,7 @@ impl QueryPipeline {
     /// This marker should also be used to determine which WriteQuery
     /// must result in another ReadQuery and the pipeline then uses this
     /// information to re-associate data to be in the expected order.
-    pub fn get_writes(&mut self) -> Vec<(Option<usize>, WriteQuery)> {
+    pub fn get_writes(&mut self) -> Vec<(Option<usize>, WriteQuerySet)> {
         let (rest, writes) = replace(&mut self.0, vec![]) // A small hack around ownership
             .into_iter()
             .fold((vec![], vec![]), |(mut rest, mut writes), stage| {
