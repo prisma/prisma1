@@ -50,49 +50,26 @@ impl MysqlInspector {
     }
 
     fn get_foreign_key_constraints(&self, schema: &String, table: &String) -> Vec<IntrospectedForeignKey> {
-        /*
-        sql"""
-         |SELECT
-         |    kcu.constraint_name AS fkConstraintName,
-         |    kcu.table_name AS fkTablename,
-         |    kcu.column_name AS fkColumnName,
-         |    kcu.referenced_table_name AS referencedTableName,
-         |    kcu.referenced_column_name AS referencedColumnName
-         |FROM
-         |    information_schema.key_column_usage kcu
-         |WHERE
-         |    kcu.table_schema  = $schema
-         |    AND kcu.referenced_table_name IS NOT NULL;
-            """.stripMargin.as[IntrospectedForeignKey]
-        */
         let sql = format!(
             r#"
             SELECT
-	            kcu.constraint_name as "fkConstraintName",
-                kcu.table_name as "fkTableName",
-                kcu.column_name as "fkColumnName",
-                ccu.table_name as "referencedTableName",
-                ccu.column_name as "referencedColumnName"
+                kcu.constraint_name AS fkConstraintName,
+                kcu.table_name AS fkTableName,
+                kcu.column_name AS fkColumnName,
+                kcu.referenced_table_name AS referencedTableName,
+                kcu.referenced_column_name AS referencedColumnName
             FROM
                 information_schema.key_column_usage kcu
-            INNER JOIN
-                information_schema.constraint_column_usage AS ccu
-                ON ccu.constraint_catalog = kcu.constraint_catalog
-                AND ccu.constraint_schema = kcu.constraint_schema
-                AND ccu.constraint_name = kcu.constraint_name
-            INNER JOIN
-                information_schema.referential_constraints as rc
-                ON rc.constraint_catalog = kcu.constraint_catalog
-                AND rc.constraint_schema = kcu.constraint_schema
-                AND rc.constraint_name = kcu.constraint_name
             WHERE
-                kcu.table_schema = '{}' AND
-                kcu.table_name = '{}'
-        "#,
-            schema, table
+                kcu.table_schema  = '{}'
+                AND kcu.table_name = '{}'
+                AND kcu.referenced_table_name IS NOT NULL;
+            "#,
+            schema,
+            table
         );
 
-        let result_set = self.connectional.query_on_raw_connection(&schema, &sql, &[]).unwrap();
+        let result_set = dbg!(self.connectional.query_on_raw_connection(&schema, &sql, &[]).unwrap());
         result_set
             .into_iter()
             .map(|row| IntrospectedForeignKey {
@@ -114,7 +91,7 @@ fn column_type(column: &IntrospectedColumn) -> ColumnType {
         s if s.contains("text") => ColumnType::String,
         s if s.contains("int") => ColumnType::Int,
         "decimal" | "numeric" | "float" | "double" => ColumnType::Float,
-        "datetime" | "timestamp" => ColumnType::DateTime,
+        "datetime" | "timestamp" | "date" => ColumnType::DateTime,
         x => panic!(format!(
             "type {} is not supported here yet. Column was: {}",
             x, column.name

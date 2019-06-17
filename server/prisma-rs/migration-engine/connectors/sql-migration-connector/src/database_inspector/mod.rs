@@ -14,7 +14,7 @@ pub use database_schema::*;
 use postgres::Config as PostgresConfig;
 use postgres_inspector::Postgres;
 use mysql_inspector::MysqlInspector;
-use prisma_query::connector::{PostgreSql as PostgresDriver, Sqlite as SqliteDriver};
+use prisma_query::connector::{PostgreSql as PostgresDriver, Sqlite as SqliteDriver, Mysql as MysqlDriver };
 use prisma_query::Connectional;
 use sqlite::Sqlite;
 use std::borrow::Cow;
@@ -85,10 +85,11 @@ impl DatabaseInspector {
     }
 
     pub fn mysql(url: String) -> MysqlInspector {
-        unimplemented!()
+        let connectional = MysqlDriver::new_from_url(&url).unwrap();
+        Self::mysql_with_connectional(Arc::new(connectional))
     }
 
     pub fn mysql_with_connectional(connectional: Arc<Connectional>) -> MysqlInspector {
-        unimplemented!()
+        MysqlInspector::new(connectional)
     }
 }

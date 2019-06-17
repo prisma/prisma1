@@ -13,14 +13,14 @@ const SCHEMA: &str = "DatabaseInspectorTest";
 #[test]
 fn all_columns_types_must_work() {
     test_each_backend(
-        |mut migration| {
+        |_, mut migration| {
             migration.create_table("User", |t| {
-                t.add_column("int", types::integer());
-                t.add_column("float", types::float());
-                t.add_column("boolean", types::boolean());
-                t.add_column("string1", types::text());
-                t.add_column("string2", types::varchar(1));
-                t.add_column("date_time", types::date());
+                t.add_column("int_col", types::integer());
+                t.add_column("float_col", types::float());
+                t.add_column("boolean_col", types::boolean());
+                t.add_column("string1_col", types::text());
+                t.add_column("string2_col", types::varchar(1));
+                t.add_column("date_time_col", types::date());
             });
         },
         |inspector| {
@@ -29,7 +29,7 @@ fn all_columns_types_must_work() {
             let table = result.table("User").unwrap();
             let expected_columns = vec![
                 Column {
-                    name: "int".to_string(),
+                    name: "int_col".to_string(),
                     tpe: ColumnType::Int,
                     is_required: true,
                     foreign_key: None,
@@ -37,7 +37,7 @@ fn all_columns_types_must_work() {
                     default: None,
                 },
                 Column {
-                    name: "float".to_string(),
+                    name: "float_col".to_string(),
                     tpe: ColumnType::Float,
                     is_required: true,
                     foreign_key: None,
@@ -45,7 +45,7 @@ fn all_columns_types_must_work() {
                     default: None,
                 },
                 Column {
-                    name: "boolean".to_string(),
+                    name: "boolean_col".to_string(),
                     tpe: ColumnType::Boolean,
                     is_required: true,
                     foreign_key: None,
@@ -53,7 +53,7 @@ fn all_columns_types_must_work() {
                     default: None,
                 },
                 Column {
-                    name: "string1".to_string(),
+                    name: "string1_col".to_string(),
                     tpe: ColumnType::String,
                     is_required: true,
                     foreign_key: None,
@@ -61,7 +61,7 @@ fn all_columns_types_must_work() {
                     default: None,
                 },
                 Column {
-                    name: "string2".to_string(),
+                    name: "string2_col".to_string(),
                     tpe: ColumnType::String,
                     is_required: true,
                     foreign_key: None,
@@ -69,7 +69,7 @@ fn all_columns_types_must_work() {
                     default: None,
                 },
                 Column {
-                    name: "date_time".to_string(),
+                    name: "date_time_col".to_string(),
                     tpe: ColumnType::DateTime,
                     is_required: true,
                     foreign_key: None,
@@ -86,7 +86,7 @@ fn all_columns_types_must_work() {
 #[test]
 fn is_required_must_work() {
     test_each_backend(
-        |mut migration| {
+        |_, mut migration| {
             migration.create_table("User", |t| {
                 t.add_column("column1", types::integer().nullable(false));
                 t.add_column("column2", types::integer().nullable(true));
@@ -122,12 +122,19 @@ fn is_required_must_work() {
 #[test]
 fn foreign_keys_must_work() {
     test_each_backend(
-        |mut migration| {
+        |db_type, mut migration| {
+            let db_type = db_type.clone();
             migration.create_table("City", |t| {
                 t.add_column("id", types::primary());
             });
-            migration.create_table("User", |t| {
-                t.add_column("city", types::foreign("City", "id")); // TODO: does not work with Postgres
+            migration.create_table("User", move |t| {
+                // barrel does not render foreign keys correctly for mysql
+                if db_type == "mysql"{
+                    t.add_column("city", types::integer());
+                    t.inject_custom("FOREIGN KEY(city) REFERENCES City(id)");
+                } else {
+                    t.add_column("city", types::foreign("City", "id")); 
+                }
             });
         },
         |inspector| {
@@ -152,30 +159,43 @@ fn foreign_keys_must_work() {
 
 fn test_each_backend<MigrationFn, TestFn>(mut migrationFn: MigrationFn, testFn: TestFn)
 where
-    MigrationFn: FnMut(&mut Migration) -> (),
+    MigrationFn: FnMut(&'static str, &mut Migration) -> (),
     TestFn: Fn(Arc<DatabaseInspector>) -> (),
 {
-    let mut migration = Migration::new().schema(SCHEMA);
-    migrationFn(&mut migration);
 
     println!("Testing with SQLite now");
     // SQLITE
     {
+        let mut migration = Migration::new().schema(SCHEMA);
+        migrationFn("sqlite", &mut migration);
         let (inspector, connectional) = sqlite();
         let full_sql = migration.make::<barrel::backend::Sqlite>();
         run_full_sql(&connectional, &full_sql);
         println!("Running the test function now");
         testFn(inspector);
     }
-    // println!("Testing with Postgres now");
-    // // POSTGRES
-    // {
-    //     let (inspector, connectional) = postgres();
-    //     let full_sql = migration.make::<barrel::backend::Pg>();
-    //     run_full_sql(&connectional, &full_sql);
-    //     println!("Running the test function now");
-    //     testFn(inspector);
-    // }
+    println!("Testing with Postgres now");
+    // POSTGRES
+    {
+        let mut migration = Migration::new().schema(SCHEMA);
+        migrationFn("postgres", &mut migration);
+        let (inspector, connectional) = postgres();
+        let full_sql = migration.make::<barrel::backend::Pg>();
+        run_full_sql(&connectional, &full_sql);
+        println!("Running the test function now");
+        testFn(inspector);
+    }
+    println!("Testing with MySQL now");
+    // MySQL
+    {
+        let mut migration = Migration::new().schema(SCHEMA);
+        migrationFn("mysql", &mut migration);
+        let (inspector, connectional) = mysql();
+        let full_sql = dbg!(migration.make::<barrel::backend::MySql>());
+        run_full_sql(&connectional, &full_sql);
+        println!("Running the test function now");
+        testFn(inspector);
+    }
 }
 
 fn run_full_sql(connectional: &Arc<Connectional>, full_sql: &str) {
@@ -206,6 +226,21 @@ fn postgres() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
     let _ = setup_connectional.query_on_raw_connection(&SCHEMA, &drop_schema, &[]);
 
     let inspector = DatabaseInspector::postgres(url.to_string());
+    let connectional = Arc::clone(&inspector.connectional);
+
+    (Arc::new(inspector), connectional)
+}
+
+fn mysql() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
+    let url_without_db = "mysql://root:prisma@127.0.0.1:3306";
+    let drop_database = dbg!(format!("DROP DATABASE IF EXISTS `{}`;", SCHEMA));
+    let create_database = dbg!(format!("CREATE DATABASE `{}`;", SCHEMA));
+    let setup_connectional = DatabaseInspector::mysql(url_without_db.to_string()).connectional;
+    let _ = setup_connectional.query_on_raw_connection(&SCHEMA, &drop_database, &[]);
+    let _ = setup_connectional.query_on_raw_connection(&SCHEMA, &create_database, &[]);
+
+    let url = format!("mysql://root:prisma@127.0.0.1:3306/{}", SCHEMA);
+    let inspector = DatabaseInspector::mysql(url.to_string());
     let connectional = Arc::clone(&inspector.connectional);
 
     (Arc::new(inspector), connectional)
