@@ -471,6 +471,8 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::ENUM_KEYWORD => "\"enum\" keyword",
         Rule::GENERATOR_KEYWORD => "\"generator\" keyword",
         Rule::DATASOURCE_KEYWORD => "\"datasource\" keyword",
+        Rule::INTERPOLATION_START => "string interpolation start",
+        Rule::INTERPOLATION_END => "string interpolation end",
 
         // Those are top level things and will never surface.
         Rule::datamodel => "datamodel declaration",
