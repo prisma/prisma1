@@ -38,41 +38,48 @@ impl StringInterpolator {
     /// The string is re-parsed and all expressions found within `${...}` are
     /// evaluated recursively.
     pub fn interpolate(text: &str, span: &Span) -> Result<Value, ValidationError> {
-        dbg!(&text);
         let string_result = PrismaDatamodelParser::parse(Rule::string_interpolated, text);
         let mut parts: Vec<String> = Vec::new();
 
         match string_result {
             Ok(mut string_wrapped) => {
                 let string_components = string_wrapped.next().unwrap();
-                let mut skip_whitespace = false;
 
-                for current in string_components.clone().into_inner() {
+                for current in string_components.into_inner() {
                     match current.as_rule() {
+                        Rule::string_interpolate_escape => {
+                            for child in current.into_inner() {
+                                match child.as_rule() {
+                                    Rule::WHITESPACE => { },
+                                    Rule::COMMENT => { },
+                                    Rule::INTERPOLATION_START => { },
+                                    Rule::INTERPOLATION_END =>  { },
+                                    Rule::expression => {
+                                        let value = parse_expr_and_lift_span(&child, span.start)?;
+                                        parts.push(String::from(ValueValidator::new(&value)?.raw()))
+                                    }
+                                    Rule::EOI => {}
+                                    _ => panic!(
+                                        "Encounterd impossible interpolation sequence: {:?}",
+                                        child.tokens()
+                                    )
+                                };
+                            }
+                        }
                         // Explicit handling of escaped `${`, like `\${...}`.
-                        Rule::INTERPOLATION_START => {
-                            skip_whitespace = true;
-                        }
-                        Rule::INTERPOLATION_END => {
-                            skip_whitespace = false;
-                        }
                         Rule::string_escaped_interpolation => parts.push(String::from("${")),
                         Rule::string_any => parts.push(String::from(current.as_str())),
                         Rule::expression => {
                             let value = parse_expr_and_lift_span(&current, span.start)?;
                             parts.push(String::from(ValueValidator::new(&value)?.raw()))
                         }
-                        Rule::WHITESPACE => {
-                            if !skip_whitespace {
-                                parts.push(String::from(current.as_str()));
-                            }
-                        }
+                        // No whitespace, no comments.
                         Rule::EOI => {}
                         _ => panic!(
                             "Encounterd impossible interpolated string during parsing: {:?}",
                             current.tokens()
                         ),
-                    }
+                    };
                 }
 
                 Ok(Value::StringValue(parts.join(""), span.clone()))
