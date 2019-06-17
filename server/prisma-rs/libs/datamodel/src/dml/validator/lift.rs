@@ -89,7 +89,7 @@ impl LiftAstToDml {
 
     /// Internal: Validates an enum AST node.
     fn lift_enum(&self, ast_enum: &ast::Enum) -> Result<dml::Enum, ErrorCollection> {
-        let mut en = dml::Enum::new(&ast_enum.name, ast_enum.values.clone());
+        let mut en = dml::Enum::new(&ast_enum.name, ast_enum.values.iter().map(|x| x.name.clone()).collect());
         en.documentation = ast_enum.documentation.clone().map(|comment| comment.text);
 
         let mut errors = ErrorCollection::new();

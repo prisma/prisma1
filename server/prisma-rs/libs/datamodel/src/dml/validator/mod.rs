@@ -4,6 +4,7 @@ mod lower;
 mod standardise;
 mod validate;
 mod validation_pipeline;
+mod precheck;
 
 pub mod common;
 pub mod directive;
@@ -15,3 +16,4 @@ pub use lower::*;
 pub use standardise::*;
 pub use validate::*;
 pub use validation_pipeline::*;
+pub use precheck::*;
