@@ -1,7 +1,9 @@
 use crate::common::*;
 use datamodel::{
+    ast::Span,
     common::{PrismaType, PrismaValue},
     dml,
+    errors::ValidationError,
 };
 
 #[test]
@@ -118,4 +120,43 @@ fn should_not_try_to_interpret_comments_in_strings() {
         .assert_has_field("firstName")
         .assert_base_type(&PrismaType::String)
         .assert_default_value(PrismaValue::String(String::from("This is a string with a // Comment")));
+}
+
+#[test]
+fn resolve_argument_errors_correctly() {
+    let dml = r#"
+    model User {
+        id Int @id
+        firstName String @default("user_${env("UNKNOWN_FOR_SURE")}")
+        lastName String
+    }
+    "#;
+
+    let errors = parse_error(dml);
+
+    errors.assert_is_at(
+        0,
+        ValidationError::new_functional_evaluation_error(
+            "Environment variable not found: \"UNKNOWN_FOR_SURE\".",
+            &Span::new(83, 101),
+        ),
+    );
+}
+
+#[test]
+fn resolve_array_interpolation_errors_correctly() {
+    let dml = r#"
+    model User {
+        id Int @id
+        firstName String @default("user_${["Hello"]}")
+        lastName String
+    }
+    "#;
+
+    let errors = parse_error(dml);
+
+    errors.assert_is_at(
+        0,
+        ValidationError::new_validation_error("Arrays cannot be interpolated into strings.", &Span::new(79, 88)),
+    );
 }

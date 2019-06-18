@@ -1,33 +1,20 @@
 use crate::ast::parser::{parse_expression, PrismaDatamodelParser, Rule};
-use crate::ast::{Span, Value};
+use crate::ast::{lift_span, Span, Value};
 use crate::common::value::ValueValidator;
 use crate::errors::ValidationError;
 use pest::Parser;
 
 pub struct StringInterpolator {}
 
-/// Adds an offset to a span.
-fn lift_span(span: &Span, offset: usize) -> Span {
-    Span {
-        start: offset + span.start,
-        end: offset + span.end,
-    }
-}
-
 /// Parses an expression and adds an offset to the span start, so we have consistent error
 /// messages.
 fn parse_expr_and_lift_span(token: &pest::iterators::Pair<'_, Rule>, start: usize) -> Result<Value, ValidationError> {
     match parse_expression(token) {
-        Value::NumericValue(v, s) => Ok(Value::NumericValue(v, lift_span(&s, start))),
-        Value::BooleanValue(v, s) => Ok(Value::BooleanValue(v, lift_span(&s, start))),
-        Value::StringValue(v, s) => Ok(Value::StringValue(v, lift_span(&s, start))),
-        Value::ConstantValue(v, s) => Ok(Value::ConstantValue(v, lift_span(&s, start))),
-        Value::Any(v, s) => Ok(Value::Any(v, lift_span(&s, start))),
-        Value::Function(n, a, s) => Ok(Value::Function(n, a, lift_span(&s, start))),
         Value::Array(_, s) => Err(ValidationError::new_validation_error(
             "Arrays cannot be interpolated into strings.",
-            &s,
+            &lift_span(&s, start),
         )),
+        expr => Ok(expr.with_lifted_span(start)),
     }
 }
 
@@ -55,7 +42,7 @@ impl StringInterpolator {
                                     Rule::INTERPOLATION_START => {}
                                     Rule::INTERPOLATION_END => {}
                                     Rule::expression => {
-                                        let value = parse_expr_and_lift_span(&child, span.start)?;
+                                        let value = parse_expr_and_lift_span(&child, span.start + 1)?;
                                         parts.push(String::from(ValueValidator::new(&value)?.raw()))
                                     }
                                     Rule::EOI => {}
@@ -67,7 +54,7 @@ impl StringInterpolator {
                         Rule::string_escaped_interpolation => parts.push(String::from("${")),
                         Rule::string_any => parts.push(String::from(current.as_str())),
                         Rule::expression => {
-                            let value = parse_expr_and_lift_span(&current, span.start)?;
+                            let value = parse_expr_and_lift_span(&current, span.start + 1)?;
                             parts.push(String::from(ValueValidator::new(&value)?.raw()))
                         }
                         // No whitespace, no comments.

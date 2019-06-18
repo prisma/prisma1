@@ -165,6 +165,35 @@ pub enum Value {
     Array(Vec<Value>, Span),
 }
 
+impl Value {
+    pub fn with_lifted_span(&self, offset: usize) -> Value {
+        match self {
+            Value::NumericValue(v, s) => Value::NumericValue(v.clone(), lift_span(&s, offset)),
+            Value::BooleanValue(v, s) => Value::BooleanValue(v.clone(), lift_span(&s, offset)),
+            Value::StringValue(v, s) => Value::StringValue(v.clone(), lift_span(&s, offset)),
+            Value::ConstantValue(v, s) => Value::ConstantValue(v.clone(), lift_span(&s, offset)),
+            Value::Function(v, a, s) => Value::Function(
+                v.clone(),
+                a.iter().map(|elem| elem.with_lifted_span(offset)).collect(),
+                lift_span(&s, offset),
+            ),
+            Value::Array(v, s) => Value::Array(
+                v.iter().map(|elem| elem.with_lifted_span(offset)).collect(),
+                lift_span(&s, offset),
+            ),
+            Value::Any(v, s) => Value::Any(v.clone(), lift_span(&s, offset)),
+        }
+    }
+}
+
+/// Adds an offset to a span.
+pub fn lift_span(span: &Span, offset: usize) -> Span {
+    Span {
+        start: offset + span.start,
+        end: offset + span.end,
+    }
+}
+
 /// Creates a friendly readable representation for a value's type.
 pub fn describe_value_type(val: &Value) -> &'static str {
     match val {

@@ -29,7 +29,7 @@ impl Functional for EnvFunctional {
             Ok(MaybeExpression::Value(ast::Value::Any(var, span.clone())))
         } else {
             Err(ValidationError::new_functional_evaluation_error(
-                &format!("Environment variable not found: {}", var_name),
+                &format!("Environment variable not found: \"{}\".", var_name),
                 var_wrapped.span(),
             ))
         }
