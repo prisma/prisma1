@@ -7,6 +7,9 @@ import chalk from 'chalk'
 import figures = require('figures')
 import { writeFileSync, mkdirSync, existsSync } from 'fs'
 import { join } from 'path'
+import { findTemplate } from '../templates'
+import { loadStarter } from '../loader'
+import { defaultPrismaConfig } from '../defaults'
 
 export class Init implements Command {
   lift: LiftEngine
@@ -61,9 +64,27 @@ Please run ${chalk.bold('prisma init')} in an empty directory.`)
     try {
       const result = await promptInteractively(introspect, 'init')
 
-      writeFileSync(join(outputDir, 'project.prisma'), result.introspectionResult.sdl)
-      writeFileSync(join(outputDir, 'main.ts'), '')
-      writeFileSync(join(outputDir, 'tsconfig.json'), '')
+      const template = findTemplate(result.initConfiguration.template, result.initConfiguration.language)
+      if (!template) {
+        writeFileSync(join(outputDir, 'prisma/project.prisma'), defaultPrismaConfig)
+        console.log(`
+        Your template has been successfully set up!
+          
+        Here are the next steps to get you started:
+          1. Run ${chalk.yellow(`yarn global add prisma2`)} to install the Prisma 2 CLI. 
+          2. Run ${chalk.yellow(`prisma2 lift save --name 'init'`)} to create a migration locally. 
+          3. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migrations to your local db. 
+          4. That's it !
+          `)
+      }
+
+      await loadStarter(template!, process.cwd(), {
+        installDependencies: true,
+      })
+
+      if (result.introspectionResult.sdl) {
+        writeFileSync(join(outputDir, 'prisma/project.prisma'), result.introspectionResult.sdl)
+      }
 
       this.printFinishMessage()
     } catch {}
