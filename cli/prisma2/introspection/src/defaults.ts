@@ -1,10 +1,12 @@
 import { InitPromptResult } from './types'
+import { DatabaseType } from 'prisma-datamodel'
 
 // TODO: Resolve SQLite URI properly
 const printDatabase = (result: InitPromptResult) => {
+  const credentials = result.introspectionResult && result.introspectionResult.credentials
   return `datasource db {
-        provider = "${result.introspectionResult.credentials.type}"
-        url      = "${result.introspectionResult.credentials.uri || `file:dev.db`}"
+        provider = "${(credentials && credentials.type) || DatabaseType.sqlite}"
+        url      = "${(credentials && credentials.uri) || `file:dev.db`}"
     }`
 }
 
