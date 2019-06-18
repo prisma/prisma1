@@ -11,6 +11,7 @@ import { findTemplate } from '../templates'
 import { loadStarter } from '../loader'
 import { defaultPrismaConfig } from '../defaults'
 import { mkdirpSync } from 'fs-extra'
+import { InitPromptResult } from '../types'
 
 export class Init implements Command {
   lift: LiftEngine
@@ -68,7 +69,7 @@ Please run ${chalk.bold('prisma init')} in an empty directory.`)
       const template = findTemplate(result.initConfiguration.template, result.initConfiguration.language)
       if (!template) {
         mkdirpSync(join(outputDir, 'prisma'))
-        writeFileSync(join(outputDir, 'prisma/project.prisma'), defaultPrismaConfig)
+        writeFileSync(join(outputDir, 'prisma/project.prisma'), defaultPrismaConfig(result))
         console.log(`Your template has been successfully set up!
   
 Here are the next steps to get you started:
@@ -86,10 +87,17 @@ Here are the next steps to get you started:
         writeFileSync(join(outputDir, 'prisma/project.prisma'), result.introspectionResult.sdl)
       }
 
+      this.patchPrismaConfig(result, outputDir)
+
       this.printFinishMessage()
     } catch {}
 
     process.exit(0)
+  }
+
+  patchPrismaConfig(result: InitPromptResult, outputDir: string) {
+    mkdirpSync(join(outputDir, 'prisma'))
+    writeFileSync(join(outputDir, 'prisma/project.prisma'), result.introspectionResult.sdl)
   }
 
   printFinishMessage() {

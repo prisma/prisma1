@@ -1,9 +1,16 @@
-export const defaultPrismaConfig = `
-datasource db {
-    provider = "sqlite"
-    url      = "file:dev.db"
-    default  = true
+import { InitPromptResult } from './types'
+
+// TODO: Prisma correct DB configuration
+const printDatabase = (result: InitPromptResult) => {
+  return `datasource db {
+        provider = "sqlite"
+        url      = "file:dev.db"
+        default  = true
+    }`
 }
+
+export const defaultPrismaConfig = (result: InitPromptResult) => `
+${printDatabase(result)}
 
 generator photon {
     provider = "photonjs"
