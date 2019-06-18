@@ -169,7 +169,7 @@ pub fn parse_with_formatted_error(datamodel_string: &str, file_name: &str) -> Re
 }
 
 /// Parses a datamodel string to an AST. For internal use only.
-pub fn parse_to_ast(datamodel_string: &str) -> Result<ast::Datamodel, errors::ValidationError> {
+pub fn parse_to_ast(datamodel_string: &str) -> Result<ast::Datamodel, errors::ErrorCollection> {
     parser::parse(datamodel_string)
 }
 

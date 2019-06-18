@@ -79,6 +79,9 @@ pub enum ValidationError {
     ParserError { expected: Vec<&'static str>, expected_str: String, span: Span },
 
     #[fail(display = "{}", message)]
+    LegacyParserError { message: String, span: Span },
+
+    #[fail(display = "{}", message)]
     FunctionalEvaluationError { message: String, span: Span },
 
     #[fail(display = "Expected a {} value, but received {} value \"{}\".", expected_type, received_type, raw)]
@@ -233,6 +236,13 @@ impl ValidationError {
         };
     }
 
+    pub fn new_legacy_parser_error(message: &str, span: &Span) -> ValidationError {
+        return ValidationError::LegacyParserError {
+            message: String::from(message),
+            span: span.clone(),
+        };
+    }
+
     pub fn new_parser_error(expected: &Vec<&'static str>, span: &Span) -> ValidationError {
         return ValidationError::ParserError { expected: expected.clone(), expected_str: expected.join(", "), span: span.clone() };
     }
@@ -294,6 +304,7 @@ impl ValidationError {
             ValidationError::TypeMismatchError { expected_type: _, received_type: _, raw: _, span } => span,
             ValidationError::ValueParserError { expected_type: _, parser_error: _, raw: _, span } => span,
             ValidationError::ValidationError { message: _, span } => span,
+            ValidationError::LegacyParserError { message: _, span } => span,
             ValidationError::ModelValidationError { model_name: _, message: _, span } => span,
             ValidationError::DuplicateDirectiveError { directive_name: _, span } => span,
             ValidationError::DuplicateConfigKeyError { conf_block_name: _, key_name: _, span } => span,

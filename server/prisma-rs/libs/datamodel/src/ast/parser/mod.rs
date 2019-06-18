@@ -11,7 +11,7 @@ use pest::Parser;
 pub struct PrismaDatamodelParser;
 
 use crate::ast::*;
-use crate::errors::ValidationError;
+use crate::errors::{ErrorCollection, ValidationError};
 
 trait ToIdentifier {
     fn to_id(&self) -> Identifier;
@@ -173,16 +173,24 @@ fn parse_base_type(token: &pest::iterators::Pair<'_, Rule>) -> String {
     };
 }
 
-fn parse_field_type(token: &pest::iterators::Pair<'_, Rule>) -> (FieldArity, String) {
+fn parse_field_type(token: &pest::iterators::Pair<'_, Rule>) -> Result<(FieldArity, String), ValidationError> {
     return match_first! { token, current,
-        Rule::optional_type => (FieldArity::Optional, parse_base_type(&current)),
-        Rule::base_type => (FieldArity::Required, parse_base_type(&current)),
-        Rule::list_type => (FieldArity::List, parse_base_type(&current)),
+        Rule::optional_type => Ok((FieldArity::Optional, parse_base_type(&current))),
+        Rule::base_type =>  Ok((FieldArity::Required, parse_base_type(&current))),
+        Rule::list_type =>  Ok((FieldArity::List, parse_base_type(&current))),
+        Rule::legacy_required_type => Err(ValidationError::new_legacy_parser_error(
+            "Fields are required by default, `!` is no longer required.",
+            &Span::from_pest(&current.as_span())
+        )),
+        Rule::legacy_list_type => Err(ValidationError::new_legacy_parser_error(
+            "To specify a list, please use `Type[]` instead of `[Type]`.",
+            &Span::from_pest(&current.as_span())
+        )),
         _ => unreachable!("Encounterd impossible field during parsing: {:?}", current.tokens())
     };
 }
 
-fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
+fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Result<Field, ValidationError> {
     let mut name: Option<Identifier> = None;
     let mut directives: Vec<Directive> = Vec::new();
     let mut field_type: Option<((FieldArity, String), Span)> = None;
@@ -190,16 +198,22 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
 
     match_children! { token, current,
         Rule::identifier => name = Some(current.to_id()),
-        Rule::field_type => {
-            field_type = Some((parse_field_type(&current), Span::from_pest(&current.as_span())))
-        },
+        Rule::field_type => field_type = Some(
+            (
+                parse_field_type(&current)?,
+                Span::from_pest(&current.as_span())
+            )
+        ),
+        Rule::LEGACY_COLON => return Err(ValidationError::new_legacy_parser_error(
+            "Field declarations don't require a `:`.",
+            &Span::from_pest(&current.as_span()))),
         Rule::directive => directives.push(parse_directive(&current)),
         Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible field declaration during parsing: {:?}", current.tokens())
     }
 
     return match (name, field_type) {
-        (Some(name), Some(((arity, field_type), field_type_span))) => Field {
+        (Some(name), Some(((arity, field_type), field_type_span))) => Ok(Field {
             field_type: Identifier {
                 name: field_type,
                 span: field_type_span,
@@ -210,7 +224,7 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
             directives,
             documentation: doc_comments_to_string(&comments),
             span: Span::from_pest(&token.as_span()),
-        },
+        }),
         _ => panic!(
             "Encounterd impossible field declaration during parsing: {:?}",
             token.as_str()
@@ -218,7 +232,8 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     };
 }
 // Model parsing
-fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
+fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Result<Model, ErrorCollection> {
+    let mut errors = ErrorCollection::new();
     let mut name: Option<Identifier> = None;
     let mut directives: Vec<Directive> = vec![];
     let mut fields: Vec<Field> = vec![];
@@ -226,21 +241,33 @@ fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
 
     match_children! { token, current,
         Rule::MODEL_KEYWORD => { },
+        Rule::TYPE_KEYWORD => { errors.push(
+            ValidationError::new_legacy_parser_error(
+                "Model declarations have to be indicated with the `model` keyword.",
+                &Span::from_pest(&current.as_span()))
+        ) },
         Rule::identifier => name = Some(current.to_id()),
         Rule::directive => directives.push(parse_directive(&current)),
-        Rule::field_declaration => fields.push(parse_field(&current)),
+        Rule::field_declaration => {
+            match parse_field(&current) {
+                Ok(field) => fields.push(field),
+                Err(err) => errors.push(err)
+            }
+        },
         Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible model declaration during parsing: {:?}", current.tokens())
     }
 
+    errors.ok()?;
+
     return match name {
-        Some(name) => Model {
+        Some(name) => Ok(Model {
             name,
             fields,
             directives,
             documentation: doc_comments_to_string(&comments),
             span: Span::from_pest(&token.as_span()),
-        },
+        }),
         _ => panic!(
             "Encounterd impossible model declaration during parsing: {:?}",
             token.as_str()
@@ -399,7 +426,8 @@ fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Field {
 // Whole datamodel parsing
 
 /// Parses a Prisma V2 datamodel document into an internal AST representation.
-pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
+pub fn parse(datamodel_string: &str) -> Result<Datamodel, ErrorCollection> {
+    let mut errors = ErrorCollection::new();
     let datamodel_result = PrismaDatamodelParser::parse(Rule::datamodel, datamodel_string);
 
     match datamodel_result {
@@ -408,7 +436,10 @@ pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
             let mut models: Vec<Top> = vec![];
 
             match_children! { datamodel, current,
-                Rule::model_declaration => models.push(Top::Model(parse_model(&current))),
+                Rule::model_declaration => match parse_model(&current) {
+                    Ok(model) => models.push(Top::Model(model)),
+                    Err(mut err) => errors.append(&mut err)
+                },
                 Rule::enum_declaration => models.push(Top::Enum(parse_enum(&current))),
                 Rule::source_block => models.push(Top::Source(parse_source(&current))),
                 Rule::generator_block => models.push(Top::Generator(parse_generator(&current))),
@@ -416,6 +447,8 @@ pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
                 Rule::EOI => {},
                 _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.tokens())
             }
+
+            errors.ok()?;
 
             Ok(Datamodel { models })
         }
@@ -433,7 +466,8 @@ pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
                 _ => panic!("Could not construct parsing error. This should never happend."),
             };
 
-            Err(ValidationError::new_parser_error(&expected, &location))
+            errors.push(ValidationError::new_parser_error(&expected, &location));
+            Err(errors)
         }
     }
 }
@@ -493,6 +527,11 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         // Those are top level things and will never surface.
         Rule::datamodel => "datamodel declaration",
         Rule::string_interpolated => "string interpolated",
+
+        // Legacy stuff should never be suggested
+        Rule::LEGACY_COLON => "",
+        Rule::legacy_list_type => "",
+        Rule::legacy_required_type => "",
 
         // Atomic and helper rules should not surface, we still add them for debugging.
         Rule::WHITESPACE => "",
