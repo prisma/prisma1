@@ -23,7 +23,7 @@ export function credentialsToUri(credentials: DatabaseCredentials): string {
       url.searchParams.set('schema', credentials.schema)
     }
   } else if (credentials.type === DatabaseType.mysql) {
-    url.pathname = '/' + (credentials.database || credentials.schema)
+    url.pathname = '/' + (credentials.database || credentials.schema || '')
   }
 
   if (credentials.user) {

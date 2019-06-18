@@ -12,5 +12,5 @@
     "declaration": true,
     "skipLibCheck": true
   },
-  "exclude": ["dist", "build", "runtime"]
+  "exclude": ["dist", "build", "runtime", "examples"]
 }

@@ -39,12 +39,14 @@ export const INPUT_DATABASE_CREDENTIALS_ELEMENTS = (dbType: DatabaseType): Promp
     identifier: 'password',
     label: 'Password:',
   },
-  {
-    type: 'text-input',
-    identifier: 'database',
-    label: 'Database:',
-    style: { marginBottom: 1 },
-  },
+  ...(dbType !== 'mysql'
+    ? {
+        type: 'text-input',
+        identifier: 'database',
+        label: 'Database:',
+        style: { marginBottom: 1 },
+      }
+    : ({} as any)),
   {
     type: 'checkbox',
     label: 'Enable SSL ?',

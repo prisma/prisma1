@@ -28,7 +28,9 @@ export function renderSelectTemplate(
         const selectedTemplate = params.selectedValue
 
         // /!\ Disconnect the connector before quiting the prompt. This should probably be done in the `promptInteractively` method
-        state.connectorData.disconnect!()
+        if (state.connectorData && state.connectorData.disconnect) {
+          state.connectorData.disconnect!()
+        }
 
         props.onSubmit({
           introspectionResult: state.introspectionResult,
