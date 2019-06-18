@@ -5,7 +5,7 @@ use crate::{
     BuilderExt, OneBuilder, ReadQuery,
 };
 use connector::mutaction::{
-    DatabaseMutactionResult as MutationResult, Identifier, TopLevelDatabaseMutaction as RootMutation,
+    CreateNode, DatabaseMutactionResult as MutationResult, Identifier, TopLevelDatabaseMutaction as RootMutation,
 };
 use graphql_parser::query::Field;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaValue};
@@ -42,6 +42,32 @@ pub enum WriteQuerySet {
     Dependents {
         self_: WriteQuery,
         next: Box<WriteQuerySet>,
+    },
+}
+
+impl WriteQuerySet {
+    /// Traverse through the `::Dependents` structure to inject
+    /// a mutation at the last node (called base node)
+    pub(crate) fn inject_at_base(&mut self, cb: impl FnOnce(&mut CreateNode)) {
+        match self {
+            WriteQuerySet::Query(ref mut q) => {
+                cb(match &mut q.inner {
+                    RootMutation::CreateNode(ref mut cn) => cn,
+                    _ => unimplemented!(),
+                });
+            }
+            WriteQuerySet::Dependents { self_: _, next } => next.inject_at_base(cb),
+        }
+    }
+
+    pub(crate) fn get_base_model(&self) -> ModelRef {
+        match self {
+            WriteQuerySet::Query(q) => match q.inner {
+                RootMutation::CreateNode(ref cn) => Arc::clone(&cn.model),
+                _ => unimplemented!(),
+            },
+            WriteQuerySet::Dependents { self_: _, next } => next.get_base_model(),
+        }
     }
 }
 

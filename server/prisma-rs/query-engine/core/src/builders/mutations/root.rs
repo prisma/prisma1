@@ -5,7 +5,8 @@ use crate::{
     builders::{utils, LookAhead, NestedValue, ValueList, ValueMap, ValueSplit},
     extend_defaults,
     schema::{ModelOperation, OperationTag},
-    CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery, WriteQuerySet,
+    CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
+    WriteQuerySet,
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
