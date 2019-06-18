@@ -1,6 +1,6 @@
 {
   "name": "prisma2",
-  "version": "0.0.68",
+  "version": "0.0.74",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "git@github.com:prisma/prisma.git",
@@ -14,7 +14,8 @@
     "runtime/*.d.ts",
     "runtime/utils",
     "runtime/dist",
-    "nexus_prisma_ncc_build"
+    "nexus_prisma_ncc_build",
+    "prisma-test-utils_ncc"
   ],
   "bin": {
     "prisma2": "build/index.js"
@@ -23,8 +24,8 @@
     "@prisma/cli": "^0.0.17",
     "@prisma/fetch-engine": "^0.0.21",
     "@prisma/introspection": "0.0.25",
-    "@prisma/lift": "^0.0.96",
-    "@prisma/photon": "^0.0.111",
+    "@prisma/lift": "^0.0.99",
+    "@prisma/photon": "^0.0.115",
     "@types/mocha": "^5.2.7",
     "@zeit/ncc": "^0.18.5",
     "jest": "24.8.0",
@@ -32,7 +33,7 @@
     "mz": "2.7.0",
     "nexus-prisma": "^0.0.1-beta.2",
     "pkg-up": "3.1.0",
-    "prisma-test-utils": "^0.2.4",
+    "prisma-test-utils": "^0.2.5",
     "ts-jest": "24.0.2",
     "ts-mocha": "6.0.0",
     "typescript": "^3.5.1"

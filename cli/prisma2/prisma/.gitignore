@@ -8,5 +8,6 @@ download-build
 runtime
 nexus_prisma_ncc_build
 photogen_prisma_ncc_build
-tmp
 examples
+prisma-test-utils_ncc
+tmp
