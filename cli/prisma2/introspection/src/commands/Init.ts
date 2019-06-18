@@ -67,39 +67,31 @@ Please run ${chalk.bold('prisma2 init')} in an empty directory.`)
       const result = await promptInteractively(introspect, 'init')
 
       if (!result.initConfiguration) {
-        mkdirpSync(join(outputDir, 'prisma'))
-        writeFileSync(join(outputDir, 'prisma/project.prisma'), defaultPrismaConfig(result))
-        console.log(`Your template has been successfully set up!
-  
-Here are the next steps to get you started:
-  1. Run ${chalk.yellow(`yarn global add prisma2`)} to install the Prisma 2 CLI. 
-  2. Run ${chalk.yellow(`prisma2 lift save --name 'init'`)} to create a migration locally. 
-  3. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migrations to your local db. 
-  4. That's it !`)
+        this.printDefaultApp(result, outputDir)
         process.exit(0)
         return
       }
 
       const template = findTemplate(result.initConfiguration.template, result.initConfiguration.language)
-      if (!template) {
-        mkdirpSync(join(outputDir, 'prisma'))
-        writeFileSync(join(outputDir, 'prisma/project.prisma'), defaultPrismaConfig(result))
-        console.log(`Your template has been successfully set up!
-  
-Here are the next steps to get you started:
-  1. Run ${chalk.yellow(`yarn global add prisma2`)} to install the Prisma 2 CLI. 
-  2. Run ${chalk.yellow(`prisma2 lift save --name 'init'`)} to create a migration locally. 
-  3. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migrations to your local db. 
-  4. That's it !`)
+      if (
+        result.introspectionResult &&
+        result.introspectionResult.credentials &&
+        result.introspectionResult.credentials.type === 'sqlite' &&
+        !template
+      ) {
+        this.printDefaultApp(result, outputDir)
         process.exit(0)
         return
       }
 
-      await loadStarter(template, outputDir, {
-        installDependencies: true,
-      })
+      if (template) {
+        await loadStarter(template, outputDir, {
+          installDependencies: true,
+        })
+      }
 
       if (result.introspectionResult && result.introspectionResult.sdl) {
+        mkdirpSync(join(outputDir, 'prisma'))
         writeFileSync(join(outputDir, 'prisma/project.prisma'), result.introspectionResult.sdl)
       }
 
@@ -111,6 +103,18 @@ Here are the next steps to get you started:
     }
 
     process.exit(0)
+  }
+
+  printDefaultApp(result, outputDir) {
+    mkdirpSync(join(outputDir, 'prisma'))
+    writeFileSync(join(outputDir, 'prisma/project.prisma'), defaultPrismaConfig(result))
+    console.log(`Your template has been successfully set up!
+
+Here are the next steps to get you started:
+1. Run ${chalk.yellow(`yarn global add prisma2`)} to install the Prisma 2 CLI. 
+2. Run ${chalk.yellow(`prisma2 lift save --name 'init'`)} to create a migration locally. 
+3. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migrations to your local db. 
+4. That's it !`)
   }
 
   patchPrismaConfig(result: InitPromptResult, outputDir: string) {
@@ -131,10 +135,9 @@ ${chalk.green(`${figures.tick} Your all set!`)}
 
   ${chalk.bold('We created the following files for you:')}
 
-  ${chalk.bold('project.prisma')}    ${chalk.dim('The datamodel describes your database schema')}
-  ${chalk.bold('main.ts')}             ${chalk.dim('A simple script to get you started')}
-  ${chalk.bold('tsconfig.json')}       ${chalk.dim('TypeScript configuration')}
-  ${chalk.bold('node_modules')}       ${chalk.dim('Required Node dependencies (includes Photon)')}
+  ${chalk.bold(`${basename(outputDir)}/prisma/project.prisma`)}    ${chalk.dim(
+        'The datamodel describes your database schema',
+      )}
 
   ${'─'.repeat(50)}
 
