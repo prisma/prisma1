@@ -5,17 +5,10 @@
 //! This is to get around issues with required references
 //! that are connected in a second step.
 
-#![allow(warnings)]
-
-use crate::{
-    builders::{utils, NestedValue, ValueList, ValueMap, ValueSplit},
-    CoreError, CoreResult, ManyNestedBuilder, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery, WriteQuerySet,
-};
-use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
-use graphql_parser::query::{Field, Value};
-use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue};
-
-use std::{collections::BTreeMap, sync::Arc};
+use crate::{CoreResult, WriteQuery, WriteQuerySet};
+use connector::mutaction::*;
+use graphql_parser::query::Field;
+use prisma_models::{ModelRef, PrismaArgs, PrismaValue};
 
 pub struct LookAhead;
 impl LookAhead {
@@ -35,6 +28,30 @@ impl LookAhead {
         let flipped = flip_create_order(input);
         debug!("{:#?}", flipped);
         flipped
+    }
+
+    /// This function is called in the QueryExecutor, after executing a partial mutation tree
+    ///
+    /// What it needs to do is work with the result of the partial execution,
+    /// then inject any IDs or data into the base mutation of the Dependents tree
+    pub fn eval_partial(next: &mut WriteQuerySet, self_: &WriteQuery, res: &DatabaseMutactionResult) -> CoreResult<()> {
+
+        let connect_name = next
+            .get_base_model()
+            .fields()
+            .find_from_relation_fields(&self_.model().name.to_lowercase())?
+            .name
+            .clone();
+        let connect_value: PrismaValue = match res.identifier {
+            Identifier::Id(ref gqlid) => gqlid.into(),
+            _ => unreachable!(),
+        };
+
+        next.inject_at_base(move |create| {
+            create.non_list_args.insert(connect_name, connect_value);
+        });
+
+        Ok(())
     }
 }
 
@@ -108,7 +125,7 @@ fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
 
             let wqs: WriteQuerySet = required
                 .into_iter()
-                .fold(WriteQuerySet::Query(wq), |mut acc, req| match acc {
+                .fold(WriteQuerySet::Query(wq), |acc, req| match acc {
                     WriteQuerySet::Query(q) => WriteQuerySet::Dependents {
                         self_: WriteQuery {
                             inner: hoist_nested_create(req),
