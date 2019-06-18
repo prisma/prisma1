@@ -6,7 +6,7 @@ use crate::{
     extend_defaults,
     schema::{ModelOperation, OperationTag},
     CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
-    WriteQuerySet,
+    MutationSet,
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
@@ -28,7 +28,7 @@ impl<'field> MutationBuilder<'field> {
         Self { field, query_schema }
     }
 
-    pub fn build(self) -> CoreResult<WriteQuerySet> {
+    pub fn build(self) -> CoreResult<MutationSet> {
         // Handle `resetData` separately
         if &self.field.name == "resetData" {
             return handle_reset(&self.field, Arc::clone(&self.query_schema.internal_data_model));
@@ -193,8 +193,8 @@ impl<'field> MutationBuilder<'field> {
 }
 
 /// A trap-door function that handles `resetData` without doing a whole bunch of other stuff
-fn handle_reset(field: &Field, internal_data_model: InternalDataModelRef) -> CoreResult<WriteQuerySet> {
-    Ok(WriteQuerySet::Query(WriteQuery {
+fn handle_reset(field: &Field, internal_data_model: InternalDataModelRef) -> CoreResult<MutationSet> {
+    Ok(MutationSet::Query(WriteQuery {
         inner: TopLevelDatabaseMutaction::ResetData(ResetData { internal_data_model }),
         name: "resetData".into(),
         field: field.clone(),

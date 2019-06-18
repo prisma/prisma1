@@ -27,7 +27,7 @@ use std::sync::Arc;
 /// 1. We traverse the mutation AST and generate naive queries
 /// 2. We let the [`look_ahead`] module pass over the tree which will
 ///    fold required connects into their update/ create parents,
-///    as well as generating these `WriteQuerySet::Dependents` items.
+///    as well as generating these `MutationSet::Dependents` items.
 /// 3. When the query pipeline yields mutations to the executor,
 ///    it then simply has to traverse this tree and execute dependent
 ///    mutations in reverse-order. This also needs to take id-mapping
@@ -37,33 +37,36 @@ use std::sync::Arc;
 /// To further understand how the mutation execution works, I recommend
 /// reading the [`pipeline`] docs!
 #[derive(Debug, Clone)]
-pub enum WriteQuerySet {
+pub enum MutationSet {
     Query(WriteQuery),
+    Read(ReadQuery),
     Dependents {
         self_: WriteQuery,
-        next: Box<WriteQuerySet>,
+        next: Box<MutationSet>,
     },
 }
 
-impl WriteQuerySet {
+impl MutationSet {
     /// Traverse through the `::Dependents` structure to inject
     /// a mutation at the last node (called base node)
     pub(crate) fn inject_at_base(&mut self, cb: impl FnOnce(&mut WriteQuery)) {
         match self {
-            WriteQuerySet::Query(ref mut q) => {
+            MutationSet::Query(ref mut q) => {
                 cb(q);
             }
-            WriteQuerySet::Dependents { self_: _, next } => next.inject_at_base(cb),
+            MutationSet::Dependents { self_: _, next } => next.inject_at_base(cb),
+            MutationSet::Read(_) => unreachable!(),
         }
     }
 
     pub(crate) fn get_base_model(&self) -> ModelRef {
         match self {
-            WriteQuerySet::Query(q) => match q.inner {
+            MutationSet::Query(q) => match q.inner {
                 RootMutation::CreateNode(ref cn) => Arc::clone(&cn.model),
                 _ => unimplemented!(),
             },
-            WriteQuerySet::Dependents { self_: _, next } => next.get_base_model(),
+            MutationSet::Dependents { self_: _, next } => next.get_base_model(),
+            MutationSet::Read(_) => unimplemented!(),
         }
     }
 }

@@ -63,18 +63,18 @@ impl SimpleNestedBuilder {
                 mutations.deletes.push(NestedDeleteNode { relation_field, where_ });
             }
             "connect" => {
-                let where_ = values.to_node_selector(Arc::clone(&relation_model)).map_or(
+                let where_ = dbg!(values.to_node_selector(Arc::clone(&relation_model)).map_or(
                     Err(CoreError::QueryValidationError("No `where` on connect".into())),
                     |w| Ok(w),
-                )?;
-                mutations.connects.push(NestedConnect {
+                )?);
+                mutations.connects.push(dbg!(NestedConnect {
                     relation_field,
                     where_,
                     top_is_create: match top_level {
                         OperationTag::CreateOne => true,
                         _ => false,
                     },
-                });
+                }));
             }
             "disconnect" => {
                 let where_ = values.to_node_selector(Arc::clone(&relation_model));

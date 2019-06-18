@@ -5,25 +5,105 @@
 //! This is to get around issues with required references
 //! that are connected in a second step.
 
-use crate::{CoreResult, WriteQuery, WriteQuerySet};
+use crate::{CoreResult, MutationSet, WriteQuery};
 use connector::mutaction::*;
 use graphql_parser::query::Field;
-use prisma_models::{ModelRef, PrismaArgs, PrismaValue};
+use prisma_models::{ModelRef, PrismaArgs, PrismaValue, RelationFieldRef};
+
+/// Either a nested operation or the startof a new dependency root
+///
+/// The problem is that when evaluating nested mutations,
+/// we sometimes need to split one out into a new root operation
+/// where reads/ writes are executed before it.
+/// This is independent of the `flip_order` function and only
+/// relevant for connect operations.
+enum NestedReplace<T> {
+    Nested(T),
+    Root(MutationSet)
+}
+
+/// The QueryMonad encodes state of the `look_ahead` module
+///
+/// It performs operations on itself, meaning that they can yield both
+/// errors as well as a change in state of the monad.
+/// Functions are chained, but don't have to be called in any particular order.
+pub struct QueryMonad(MutationSet);
+
+impl QueryMonad {
+    /// Create a new QueryMonad from a single WriteQuery
+    pub fn from(input: WriteQuery) -> Self {
+        Self(MutationSet::Query(input))
+    }
+
+    /// This function handles create -> connect fields
+    pub fn create_connect(self) -> CoreResult<Self> {
+        Ok(Self(match self.0 {
+            MutationSet::Query(q) => {
+                match q.inner {
+                    TopLevelDatabaseMutaction::CreateNode(mut cn) => {
+                        let connects = std::mem::replace(&mut cn.nested_mutactions.connects, vec![]);
+
+                        for conn in connects {
+                            let rf = cn.model
+                                .fields()
+                                .find_from_relation_fields(conn.relation_field.name.as_str())?;
+
+                            // If the RelationField is the ID, then we can simply
+                            // merge the operation into the parent because the
+                            // foreign-key constraint will hold.
+                            //
+                            // However if it is not...then we need to yield a
+                            // MutationSet::Dependents where there is a ReadQuery
+                            // as a dependency to the actual WriteQuery.
+                            // AND we need to preserve state to let the executor
+                            // then figure out what information to add to the parent
+                            if check_rf_is_id(&rf) {
+                                let mut normal = vec![];
+                                if rf.is_required {
+                                    cn.non_list_args.insert(rf.name.clone(), conn.where_.value);
+                                } else {
+                                    normal.push(conn);
+                                }
+                                cn.nested_mutactions.connects = normal;
+
+                                // Now recursively traverse all other creates
+                                // for ncn in cn.nested_mutactions.creates.iter_mut() {
+                                //     nested_create_connect(ncn)?;
+                                // }
+
+                                MutationSet::Query(WriteQuery {
+                                    inner: TopLevelDatabaseMutaction::CreateNode(cn),
+                                    ..q
+                                })
+                            } else {
+
+                            }
+                        }
+                    }
+                    _ => MutationSet::Query(q),
+                }
+            },
+            who_even_cares => who_even_cares,
+        }))
+    }
+}
+
+fn
 
 pub struct LookAhead;
 impl LookAhead {
-    pub fn eval(mut input: WriteQuery) -> CoreResult<WriteQuerySet> {
-        input.inner = match input.inner {
-            TopLevelDatabaseMutaction::CreateNode(mut cn) => {
-                create_connect(&mut cn)?;
-                TopLevelDatabaseMutaction::CreateNode(cn)
-            }
-            TopLevelDatabaseMutaction::UpdateNode(mut un) => {
-                update_nested_connect(&mut un)?;
-                TopLevelDatabaseMutaction::UpdateNode(un)
-            }
-            who_even_cares => who_even_cares,
-        };
+    pub fn eval(mut input: WriteQuery) -> CoreResult<MutationSet> {
+        // input.inner = match input.inner {
+        //     TopLevelDatabaseMutaction::CreateNode(mut cn) => {
+        //         create_connect(&mut cn)?;
+        //         TopLevelDatabaseMutaction::CreateNode(cn)
+        //     }
+        //     TopLevelDatabaseMutaction::UpdateNode(mut un) => {
+        //         update_nested_connect(&mut un)?;
+        //         TopLevelDatabaseMutaction::UpdateNode(un)
+        //     }
+        //     who_even_cares => who_even_cares,
+        // };
 
         let flipped = flip_create_order(input);
         debug!("{:#?}", flipped);
@@ -34,12 +114,13 @@ impl LookAhead {
     ///
     /// What it needs to do is work with the result of the partial execution,
     /// then inject any IDs or data into the base mutation of the Dependents tree
-    pub fn eval_partial(next: &mut WriteQuerySet, self_: &WriteQuery, res: &DatabaseMutactionResult) -> CoreResult<()> {
-        let name = next.get_base_model()
-                    .fields()
-                    .find_from_relation_fields(&self_.model().name.to_lowercase())?
-                    .name
-                    .clone();
+    pub fn eval_partial(next: &mut MutationSet, self_: &WriteQuery, res: &DatabaseMutactionResult) -> CoreResult<()> {
+        let name = next
+            .get_base_model()
+            .fields()
+            .find_from_relation_fields(&self_.model().name.to_lowercase())?
+            .name
+            .clone();
         let id: PrismaValue = match res.identifier {
             Identifier::Id(ref gqlid) => gqlid.into(),
             _ => unimplemented!(),
@@ -54,23 +135,53 @@ impl LookAhead {
     }
 }
 
-/// Merge connect's on required fields into the create
-fn create_connect(cn: &mut CreateNode) -> CoreResult<()> {
-    let connects = std::mem::replace(&mut cn.nested_mutactions.connects, vec![]);
+// /// Merge connect's on required fields into the create
+// fn create_connect(cn: &mut CreateNode) -> CoreResult<()> {
+//     let connects = std::mem::replace(&mut cn.nested_mutactions.connects, vec![]);
 
-    let mut new = vec![];
-    connect_fold_into(&cn.model, &mut cn.non_list_args, &mut new, connects.into_iter())?;
-    cn.nested_mutactions.connects = new;
+//     let mut new = vec![];
+//     connect_fold_into(&cn.model, &mut cn.non_list_args, &mut new, connects.into_iter())?;
+//     cn.nested_mutactions.connects = new;
 
-    // Now recursively traverse all other creates
-    for ncn in cn.nested_mutactions.creates.iter_mut() {
-        nested_create_connect(ncn)?;
+//     // Now recursively traverse all other creates
+//     for ncn in cn.nested_mutactions.creates.iter_mut() {
+//         nested_create_connect(ncn)?;
+//     }
+
+//     Ok(())
+// }
+
+fn nested_create_connect(ncn: NestedCreateNode) -> CoreResult<Vec<NestedReplace<NestedCreateNode>>> {
+    let connects = std::mem::replace(&mut ncn.nested_mutactions.connects, vec![]);
+    for conn in connects {
+        let rf = cn.model
+            .fields()
+            .find_from_relation_fields(conn.relation_field.name.as_str())?;
+
+        if check_rf_is_id(&rf) {
+            let mut normal = vec![];
+            if rf.is_required {
+                cn.non_list_args.insert(rf.name.clone(), conn.where_.value);
+            } else {
+                normal.push(conn);
+            }
+            cn.nested_mutactions.connects = normal;
+
+            // Now recursively traverse all other creates
+            for ncn in cn.nested_mutactions.creates.iter_mut() {
+                nested_create_connect(ncn)?;
+            }
+
+            MutationSet::Query(WriteQuery {
+                inner: TopLevelDatabaseMutaction::CreateNode(cn),
+                ..q
+            })
+        } else {
+
+        }
     }
 
-    Ok(())
-}
 
-fn nested_create_connect(ncn: &mut NestedCreateNode) -> CoreResult<()> {
     let connects = std::mem::replace(&mut ncn.nested_mutactions.connects, vec![]);
     let mut new = vec![];
 
@@ -90,15 +201,15 @@ fn nested_create_connect(ncn: &mut NestedCreateNode) -> CoreResult<()> {
     Ok(())
 }
 
-fn update_nested_connect(un: &mut UpdateNode) -> CoreResult<()> {
-    for ncn in un.nested_mutactions.creates.iter_mut() {
-        nested_create_connect(ncn)?;
-    }
+// fn update_nested_connect(un: &mut UpdateNode) -> CoreResult<()> {
+//     for ncn in un.nested_mutactions.creates.iter_mut() {
+//         nested_create_connect(ncn)?;
+//     }
 
-    Ok(())
-}
+//     Ok(())
+// }
 
-fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
+fn flip_create_order(wq: WriteQuery) -> CoreResult<MutationSet> {
     match wq.inner {
         TopLevelDatabaseMutaction::CreateNode(mut cn) => {
             let creates = std::mem::replace(&mut cn.nested_mutactions.creates, vec![]);
@@ -114,34 +225,33 @@ fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
                 ..wq
             };
 
-            let wqs: WriteQuerySet = required
-                .into_iter()
-                .fold(WriteQuerySet::Query(wq), |acc, req| match acc {
-                    WriteQuerySet::Query(q) => WriteQuerySet::Dependents {
+            let wqs: MutationSet = required.into_iter().fold(MutationSet::Query(wq), |acc, req| match acc {
+                MutationSet::Query(q) => MutationSet::Dependents {
+                    self_: WriteQuery {
+                        inner: hoist_nested_create(req),
+                        name: q.name.clone(),
+                        field: q.field.clone(),
+                    },
+                    next: Box::new(MutationSet::Query(q)),
+                },
+                MutationSet::Dependents { self_: _, ref next } => {
+                    let (name, field) = get_name_field(&next);
+
+                    MutationSet::Dependents {
                         self_: WriteQuery {
                             inner: hoist_nested_create(req),
-                            name: q.name.clone(),
-                            field: q.field.clone(),
+                            name,
+                            field,
                         },
-                        next: Box::new(WriteQuerySet::Query(q)),
-                    },
-                    WriteQuerySet::Dependents { self_: _, ref next } => {
-                        let (name, field) = get_name_field(&next);
-
-                        WriteQuerySet::Dependents {
-                            self_: WriteQuery {
-                                inner: hoist_nested_create(req),
-                                name,
-                                field,
-                            },
-                            next: Box::new(acc),
-                        }
+                        next: Box::new(acc),
                     }
-                });
+                }
+                MutationSet::Read(_) => unimplemented!(),
+            });
 
             Ok(wqs)
         }
-        _ => Ok(WriteQuerySet::Query(wq)),
+        _ => Ok(MutationSet::Query(wq)),
     }
 }
 
@@ -156,10 +266,11 @@ fn hoist_nested_create(nc: NestedCreateNode) -> TopLevelDatabaseMutaction {
 }
 
 /// Small utility function to get a query name and field
-fn get_name_field(next: &WriteQuerySet) -> (String, Field) {
+fn get_name_field(next: &MutationSet) -> (String, Field) {
     match next {
-        WriteQuerySet::Dependents { self_: _, next } => get_name_field(&next),
-        WriteQuerySet::Query(q) => (q.name.clone(), q.field.clone()),
+        MutationSet::Dependents { self_: _, next } => get_name_field(&next),
+        MutationSet::Query(q) => (q.name.clone(), q.field.clone()),
+        MutationSet::Read(_) => unimplemented!(),
     }
 }
 
@@ -167,28 +278,6 @@ fn check_should_flip(self_: &ModelRef, other: &ModelRef) -> bool {
     self_.name > other.name
 }
 
-/// Fold require `connect` operations into their parent
-///
-/// This function requires the model definition of the parent,
-/// an argument set to fold into, a vector for non-required operations
-/// and a set of connects to evaluate.
-fn connect_fold_into(
-    model: &ModelRef,
-    args: &mut PrismaArgs,
-    nested: &mut Vec<NestedConnect>,
-    connects: impl Iterator<Item = NestedConnect>,
-) -> CoreResult<()> {
-    for conn in connects {
-        let rf = model
-            .fields()
-            .find_from_relation_fields(conn.relation_field.name.as_str())?;
-
-        if rf.is_required {
-            args.insert(rf.name.clone(), conn.where_.value);
-        } else {
-            nested.push(conn);
-        }
-    }
-
-    Ok(())
+fn check_rf_is_id(rf: &RelationFieldRef) -> bool {
+    &rf.name == &rf.model().name
 }

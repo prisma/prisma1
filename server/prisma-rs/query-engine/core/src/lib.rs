@@ -31,5 +31,5 @@ pub type CoreResult<T> = Result<T, CoreError>;
 #[derive(Debug, Clone)]
 pub enum Query {
     Read(ReadQuery),
-    Write(WriteQuerySet),
+    Write(MutationSet),
 }
