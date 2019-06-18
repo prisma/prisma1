@@ -160,3 +160,18 @@ fn nice_error_broken_field_type_legacy_required() {
         &Span::new(29, 33),
     ));
 }
+
+#[test]
+fn nice_error_legacy_model_decl() {
+    let dml = r#"
+    type User {
+        id Int @id
+    }"#;
+
+    let error = parse_error(dml);
+
+    error.assert_is(ValidationError::new_legacy_parser_error(
+        "Model declarations have to be indicated with the `model` keyword.",
+        &Span::new(5, 9),
+    ));
+}
