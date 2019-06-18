@@ -10,7 +10,7 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
     fn directive_name(&self) -> &'static str {
         &"relation"
     }
-    fn validate_and_apply(&self, args: &Args, field: &mut dml::Field) -> Result<(), Error> {
+    fn validate_and_apply(&self, args: &mut Args, field: &mut dml::Field) -> Result<(), Error> {
         if let dml::FieldType::Relation(relation_info) = &mut field.field_type {
             if let Ok(name_arg) = args.default_arg("name") {
                 let name = name_arg.as_str()?;

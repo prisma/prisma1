@@ -16,7 +16,7 @@ impl DirectiveValidator<dml::Field> for CustomDirective {
     fn directive_name(&self) -> &'static str {
         &"mapToBase"
     }
-    fn validate_and_apply(&self, _args: &Arguments, obj: &mut dml::Field) -> Result<(), ValidationError> {
+    fn validate_and_apply(&self, _args: &mut Arguments, obj: &mut dml::Field) -> Result<(), ValidationError> {
         obj.field_type = dml::FieldType::Base(self.base_type);
         return Ok(());
     }
@@ -43,7 +43,7 @@ impl CustomDbDefinition {
         CustomDbDefinition {}
     }
 
-    fn get_base_type(&self, arguments: &Arguments) -> Result<PrismaType, ValidationError> {
+    fn get_base_type(&self, arguments: &mut Arguments) -> Result<PrismaType, ValidationError> {
         if let Ok(arg) = arguments.arg("base_type") {
             PrismaType::from_str_and_span(&arg.as_constant_literal()?, arg.span())
         } else {
@@ -61,7 +61,7 @@ impl SourceDefinition for CustomDbDefinition {
         &self,
         name: &str,
         url: &str,
-        arguments: &Arguments,
+        arguments: &mut Arguments,
         documentation: &Option<String>,
     ) -> Result<Box<Source>, ValidationError> {
         Ok(Box::new(CustomDb {

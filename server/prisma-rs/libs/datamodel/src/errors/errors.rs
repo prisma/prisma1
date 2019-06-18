@@ -42,6 +42,15 @@ pub enum ValidationError {
     #[fail(display = "Key \"{}\" is already defined in {}.", key_name, conf_block_name)]
     DuplicateConfigKeyError { conf_block_name: String, key_name: String, span: Span },
 
+    #[fail(display = "Argument \"{}\" is already specified as unnamed argument.", arg_name)]
+    DuplicateDefaultArgumentError { arg_name: String, span: Span },
+
+    #[fail(display = "Argument \"{}\" is already specified.", arg_name)]
+    DuplicateArgumentError { arg_name: String, span: Span },
+
+    #[fail(display = "No such argument.")]
+    UnusedArgumentError { arg_name: String, span: Span },
+
     #[fail(display = "Field \"{}\" is already defined on model \"{}\".", field_name, model_name)]
     DuplicateFieldError { model_name: String, field_name: String, span: Span },
 
@@ -171,6 +180,27 @@ impl ValidationError {
         };
     }
 
+    pub fn new_duplicate_argument_error(arg_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::DuplicateArgumentError {
+            arg_name: String::from(arg_name),
+            span: span.clone()
+        };
+    }
+
+    pub fn new_unused_argument_error(arg_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::UnusedArgumentError {
+            arg_name: String::from(arg_name),
+            span: span.clone()
+        };
+    }
+    
+    pub fn new_duplicate_default_argument_error(arg_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::DuplicateDefaultArgumentError {
+            arg_name: String::from(arg_name),
+            span: span.clone()
+        };
+    }
+
     pub fn new_duplicate_enum_value_error(enum_name: &str, value_name: &str, span: &Span) -> ValidationError {
         return ValidationError::DuplicateEnumValueError {
             enum_name: String::from(enum_name),
@@ -269,7 +299,10 @@ impl ValidationError {
             ValidationError::DuplicateConfigKeyError { conf_block_name: _, key_name: _, span } => span,
             ValidationError::DuplicateTopError { top_type: _, top_name: _, existing_top_type: _, span } => span,
             ValidationError::DuplicateFieldError { model_name: _, field_name: _, span } => span,
-            ValidationError::DuplicateEnumValueError { enum_name: _, value_name: _, span } => span
+            ValidationError::DuplicateEnumValueError { enum_name: _, value_name: _, span } => span,
+            ValidationError::DuplicateArgumentError { arg_name: _, span } => span,
+            ValidationError::DuplicateDefaultArgumentError { arg_name: _, span } => span,
+            ValidationError::UnusedArgumentError { arg_name: _, span } => span
         }
     }
     pub fn description(&self) -> String {

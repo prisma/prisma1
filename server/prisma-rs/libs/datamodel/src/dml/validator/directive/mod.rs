@@ -26,7 +26,7 @@ pub trait DirectiveValidator<T> {
 
     /// Validates a directive and applies the directive
     /// to the given object.
-    fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Result<(), Error>;
+    fn validate_and_apply(&self, args: &mut Args, obj: &mut T) -> Result<(), Error>;
 
     /// Serilizes the given directive's arguments for rendering.
     fn serialize(&self, obj: &T, datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error>;
@@ -77,7 +77,7 @@ impl<T> DirectiveValidator<T> for DirectiveScope<T> {
     fn directive_name(&self) -> &str {
         &self.name
     }
-    fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Result<(), Error> {
+    fn validate_and_apply(&self, args: &mut Args, obj: &mut T) -> Result<(), Error> {
         self.inner.validate_and_apply(args, obj)
     }
     fn serialize(&self, obj: &T, datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {
@@ -153,8 +153,14 @@ impl<T: 'static> DirectiveListValidator<T> {
         for directive in ast.directives() {
             match self.known_directives.get(&directive.name.name) {
                 Some(validator) => {
-                    let directive_validation_result =
-                        validator.validate_and_apply(&Arguments::new(&directive.arguments, directive.span), t);
+                    let mut arguments = Arguments::new(&directive.arguments, directive.span);
+
+                    if let Err(mut errs) = arguments.check_for_duplicate_arguments() {
+                        errors.append(&mut errs);
+                    }
+
+                    let directive_validation_result = validator.validate_and_apply(&mut arguments, t);
+
                     match directive_validation_result {
                         Err(ValidationError::ArgumentNotFound { argument_name, span }) => {
                             errors.push(ValidationError::new_directive_argument_not_found_error(
@@ -166,7 +172,12 @@ impl<T: 'static> DirectiveListValidator<T> {
                         Err(err) => {
                             errors.push(err);
                         }
-                        _ => {}
+                        _ => {
+                            // We only check for unused arguments if attribute parsing succeeded.
+                            if let Err(mut errs) = arguments.check_for_unused_arguments() {
+                                errors.append(&mut errs);
+                            }
+                        }
                     }
                 }
                 None => errors.push(ValidationError::new_directive_not_known_error(
