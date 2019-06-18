@@ -84,19 +84,24 @@ Here are the next steps to get you started:
         installDependencies: true,
       })
 
-      if (result.introspectionResult.sdl) {
+      if (result.introspectionResult && result.introspectionResult.sdl) {
         writeFileSync(join(outputDir, 'prisma/project.prisma'), result.introspectionResult.sdl)
       }
 
       this.patchPrismaConfig(result, outputDir)
 
       this.printFinishMessage()
-    } catch {}
+    } catch (e) {
+      console.error(e)
+    }
 
     process.exit(0)
   }
 
   patchPrismaConfig(result: InitPromptResult, outputDir: string) {
+    if (!result.introspectionResult) {
+      return
+    }
     mkdirpSync(join(outputDir, 'prisma'))
     writeFileSync(join(outputDir, 'prisma/project.prisma'), result.introspectionResult.sdl)
   }

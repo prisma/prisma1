@@ -86,7 +86,7 @@ export const promptReducer: React.Reducer<PromptState, ActionType> = (state, act
     case 'choose_db':
       return {
         ...state,
-        step: Steps.INPUT_DATABASE_CREDENTIALS,
+        step: action.payload === 'sqlite' ? Steps.SELECT_TOOL : Steps.INPUT_DATABASE_CREDENTIALS,
         credentials: {
           ...state.credentials,
           type: action.payload,
