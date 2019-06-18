@@ -35,7 +35,6 @@ impl LookAhead {
     /// What it needs to do is work with the result of the partial execution,
     /// then inject any IDs or data into the base mutation of the Dependents tree
     pub fn eval_partial(next: &mut WriteQuerySet, self_: &WriteQuery, res: &DatabaseMutactionResult) -> CoreResult<()> {
-
         let connect_name = next
             .get_base_model()
             .fields()
@@ -105,17 +104,11 @@ fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
     match wq.inner {
         TopLevelDatabaseMutaction::CreateNode(mut cn) => {
             let creates = std::mem::replace(&mut cn.nested_mutactions.creates, vec![]);
-            let mut normal = vec![];
-            let mut required = vec![];
-            for nc in creates.into_iter() {
-                if nc.relation_field.is_required
+            let (required, normal) = creates.into_iter().partition(|nc| {
+                nc.relation_field.is_required
                     && check_should_flip(&cn.model, &nc.relation_field.related_field().model())
-                {
-                    required.push(nc);
-                } else {
-                    normal.push(nc);
-                }
-            }
+            });
+
             cn.nested_mutactions.creates = normal;
 
             let wq = WriteQuery {
