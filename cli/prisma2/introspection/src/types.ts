@@ -42,5 +42,5 @@ export interface InitConfiguration {
 
 export interface InitPromptResult {
   introspectionResult: IntrospectionResult
-  initConfiguration: InitConfiguration
+  initConfiguration?: InitConfiguration
 }

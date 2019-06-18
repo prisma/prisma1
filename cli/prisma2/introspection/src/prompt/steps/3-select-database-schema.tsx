@@ -9,6 +9,7 @@ import { ActionType } from '../reducer'
 import { Steps, stepsToElements } from '../steps-definition'
 
 import figures = require('figures')
+import { credentialsToUri } from '../../convertCredentials'
 
 export function renderSelectDatabaseSchema(
   dispatch: React.Dispatch<ActionType>,
@@ -82,7 +83,7 @@ function onSelectSchema(
       const introspectionResult = await props.introspect({
         ...state.connectorData,
         databaseName: selectedSchema,
-        credentials: credsWithDefaultCredentials,
+        credentials: { ...credsWithDefaultCredentials, uri: credentialsToUri(credsWithDefaultCredentials) },
       } as ConnectorData)
 
       stopSpinner({
@@ -90,15 +91,11 @@ function onSelectSchema(
         message: `Introspecting ${selectedSchema!} ${chalk.bold(minimalPrettyTime(Date.now() - before))}`,
       })
 
-      if (props.type === 'introspect') {
-        // /!\ Disconnect the connector before quiting the prompt. This should probably be done in the `promptInteractively` method
-        await state.connectorData.disconnect!()
-        return props.onSubmit(introspectionResult)
-      }
-
-      if (props.type === 'init') {
-        dispatch({ type: 'set_introspection_result', payload: { introspectionResult } })
-      }
+      // /!\ Disconnect the connector before quiting the prompt. This should probably be done in the `promptInteractively` method
+      await state.connectorData.disconnect!()
+      return props.onSubmit({
+        introspectionResult,
+      })
     } catch (e) {
       stopSpinner({ state: 'failed', message: e.message })
     }
