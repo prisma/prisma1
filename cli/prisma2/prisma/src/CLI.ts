@@ -53,7 +53,7 @@ export class CLI implements Command {
 
     ${chalk.bold('Usage')}
 
-      ${chalk.dim(`$`)} prisma [command]
+      ${chalk.dim(`$`)} prisma2 [command]
 
     ${chalk.bold('Commands')}
 
@@ -67,12 +67,12 @@ export class CLI implements Command {
     ${chalk.bold('Examples')}
 
       Initialize files for a new Prisma project
-      ${chalk.dim(`$`)} prisma init
+      ${chalk.dim(`$`)} prisma2 init
 
       Start developing and auto migrating your changes locally
-      ${chalk.dim(`$`)} prisma dev
+      ${chalk.dim(`$`)} prisma2 dev
 
       Save your changes into a migration
-      ${chalk.dim(`$`)} prisma lift save
+      ${chalk.dim(`$`)} prisma2 lift save
   `)
 }

@@ -299,7 +299,7 @@ ${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing
   help() {
     return console.log(
       format(`
-Usage: prisma introspect [flags]
+Usage: prisma2 introspect [flags]
 
 Introspect database schema(s) of service
 

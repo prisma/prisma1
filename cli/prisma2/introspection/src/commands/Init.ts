@@ -6,7 +6,7 @@ import { introspect } from '../introspect/util'
 import chalk from 'chalk'
 import figures = require('figures')
 import { writeFileSync, mkdirSync, existsSync } from 'fs'
-import { join } from 'path'
+import { join, basename } from 'path'
 import { findTemplate } from '../templates'
 import { loadStarter } from '../loader'
 import { defaultPrismaConfig } from '../defaults'
@@ -41,17 +41,17 @@ export class Init implements Command {
     const outputDir = outputDirName ? join(this.env.cwd, outputDirName) : this.env.cwd
 
     if (existsSync(join(outputDir, 'datamodel.prisma'))) {
-      throw new Error(`Can't start ${chalk.bold('prisma init')} as ${chalk.redBright(
+      throw new Error(`Can't start ${chalk.bold('prisma2 init')} as ${chalk.redBright(
         join(outputDir, 'datamodel.prisma'),
       )} exists.
-Please run ${chalk.bold('prisma init')} in an empty directory.`)
+Please run ${chalk.bold('prisma2 init')} in an empty directory.`)
     }
 
     if (existsSync(join(outputDir, 'project.prisma'))) {
-      throw new Error(`Can't start ${chalk.bold('prisma init')} as ${chalk.redBright(
+      throw new Error(`Can't start ${chalk.bold('prisma2 init')} as ${chalk.redBright(
         join(outputDir, 'project.prisma'),
       )} exists.
-Please run ${chalk.bold('prisma init')} in an empty directory.`)
+Please run ${chalk.bold('prisma2 init')} in an empty directory.`)
     }
 
     if (outputDirName) {
@@ -95,7 +95,7 @@ Here are the next steps to get you started:
         return
       }
 
-      await loadStarter(template, process.cwd(), {
+      await loadStarter(template, outputDir, {
         installDependencies: true,
       })
 
@@ -105,7 +105,7 @@ Here are the next steps to get you started:
 
       this.patchPrismaConfig(result, outputDir)
 
-      this.printFinishMessage()
+      this.printFinishMessage(outputDir)
     } catch (e) {
       console.error(e)
     }
@@ -121,7 +121,8 @@ Here are the next steps to get you started:
     writeFileSync(join(outputDir, 'prisma/project.prisma'), result.introspectionResult.sdl)
   }
 
-  printFinishMessage() {
+  printFinishMessage(outputDir) {
+    const folderName = basename(outputDir)
     console.log(
       format(`
 ${chalk.green(`${figures.tick} Your all set!`)}
@@ -139,8 +140,8 @@ ${chalk.green(`${figures.tick} Your all set!`)}
 
   ${chalk.bold('Run the following commands to start developing')}
 
-  $ cd hello-world
-  $ prisma dev
+  $ cd ${folderName}
+  $ prisma2 dev
 
   Learn more about using Photon and Lift at
   https://www.prisma.io/docs/...
@@ -151,7 +152,7 @@ ${chalk.green(`${figures.tick} Your all set!`)}
   help() {
     return console.log(
       format(`
-Usage: prisma init
+Usage: prisma2 init
 
 Initialize files for a new Prisma project
     `),
