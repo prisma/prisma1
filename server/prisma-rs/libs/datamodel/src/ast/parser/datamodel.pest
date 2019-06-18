@@ -25,6 +25,8 @@ DATASOURCE_KEYWORD = @{ "datasource" }
 INTERPOLATION_START = { "${" }
 INTERPOLATION_END = { "}" }
 
+LEGACY_COLON = { ":" }
+
 doc_content = @{ (!NEWLINE ~ ANY)* ~ NEWLINE }
 doc_comment = { "///" ~ doc_content }
 
@@ -78,18 +80,20 @@ directive = { (directive_name ~ directive_arguments | directive_name) }
 // ######################################
 // Field declarations
 // ######################################
-optional_type = { identifier ~ ("?") }
+optional_type = { identifier ~ "?" }
 base_type = { identifier } // Called base type to not conflict with type rust keyword
 list_type = { identifier ~ "[]" }
+legacy_list_type = { "[" ~ identifier ~ "]" }
+legacy_required_type = { identifier ~ "!" }
 
 // Pest is greedy, order is very important here.
-field_type = { list_type | optional_type | base_type }
+field_type = { list_type | optional_type | legacy_required_type | legacy_list_type | base_type }
 
 // Field
 // TODO: We want to force a line break after a field declaration.
 // For this, we have to rely on pests new '-' operator.
 // Progress tracked here: https://github.com/pest-parser/pest/issues/271
-field_declaration = { doc_comment* ~ identifier ~ (field_type ~ ( "@" ~ directive )+ | field_type) }
+field_declaration = { doc_comment* ~ identifier ~ LEGACY_COLON? ~ (field_type ~ ( "@" ~ directive )+ | field_type) }
 
 // ######################################
 // Custom type declarations
@@ -99,7 +103,7 @@ type_declaration = { doc_comment* ~ TYPE_KEYWORD ~ identifier ~ "=" ~ (base_type
 // ######################################
 // Model declarations
 // ######################################
-model_declaration = { doc_comment* ~ MODEL_KEYWORD ~ identifier ~ BLOCK_OPEN ~ ( field_declaration | ( "@@" ~ directive )  )* ~ BLOCK_CLOSE }
+model_declaration = { doc_comment* ~ (MODEL_KEYWORD | TYPE_KEYWORD) ~ identifier ~ BLOCK_OPEN ~ ( field_declaration | ( "@@" ~ directive )  )* ~ BLOCK_CLOSE }
 
 // ######################################
 // Enum declarations

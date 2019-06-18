@@ -125,9 +125,9 @@ fn nice_error_broken_field_type_legacy_list() {
 
     let error = parse_error(dml);
 
-    error.assert_is(ValidationError::new_parser_error(
-        &vec!["field type"],
-        &Span::new(29, 29),
+    error.assert_is(ValidationError::new_legacy_parser_error(
+        "To specify a list, please use `Type[]` instead of `[Type]`.",
+        &Span::new(29, 34),
     ));
 }
 
@@ -140,13 +140,12 @@ fn nice_error_broken_field_type_legacy_colon() {
 
     let error = parse_error(dml);
 
-    error.assert_is(ValidationError::new_parser_error(
-        &vec!["field type"],
-        &Span::new(28, 28),
+    error.assert_is(ValidationError::new_legacy_parser_error(
+        "Field declarations don't require a `:`.",
+        &Span::new(28, 29),
     ));
 }
 
-// TODO: This error is not good.
 #[test]
 fn nice_error_broken_field_type_legacy_required() {
     let dml = r#"
@@ -156,8 +155,8 @@ fn nice_error_broken_field_type_legacy_required() {
 
     let error = parse_error(dml);
 
-    error.assert_is(ValidationError::new_parser_error(
-        &vec!["End of block (\"}\")", "field declaration"],
-        &Span::new(32, 32),
+    error.assert_is(ValidationError::new_legacy_parser_error(
+        "Fields are required by default, `!` is no longer required.",
+        &Span::new(29, 33),
     ));
 }
