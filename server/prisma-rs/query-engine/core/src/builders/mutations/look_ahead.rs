@@ -5,22 +5,15 @@
 //! This is to get around issues with required references
 //! that are connected in a second step.
 
-#![allow(warnings)]
-
-use crate::{
-    builders::{utils, NestedValue, ValueList, ValueMap, ValueSplit},
-    CoreError, CoreResult, ManyNestedBuilder, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
-};
-use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
-use graphql_parser::query::{Field, Value};
-use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue};
-
-use std::{collections::BTreeMap, sync::Arc};
+use crate::{CoreResult, WriteQuery, WriteQuerySet};
+use connector::mutaction::*;
+use graphql_parser::query::Field;
+use prisma_models::{ModelRef, PrismaArgs, PrismaValue};
 
 pub struct LookAhead;
 impl LookAhead {
-    pub fn eval(input: TopLevelDatabaseMutaction) -> CoreResult<TopLevelDatabaseMutaction> {
-        Ok(match input {
+    pub fn eval(mut input: WriteQuery) -> CoreResult<WriteQuerySet> {
+        input.inner = match input.inner {
             TopLevelDatabaseMutaction::CreateNode(mut cn) => {
                 create_connect(&mut cn)?;
                 TopLevelDatabaseMutaction::CreateNode(cn)
@@ -30,7 +23,34 @@ impl LookAhead {
                 TopLevelDatabaseMutaction::UpdateNode(un)
             }
             who_even_cares => who_even_cares,
-        })
+        };
+
+        let flipped = flip_create_order(input);
+        debug!("{:#?}", flipped);
+        flipped
+    }
+
+    /// This function is called in the QueryExecutor, after executing a partial mutation tree
+    ///
+    /// What it needs to do is work with the result of the partial execution,
+    /// then inject any IDs or data into the base mutation of the Dependents tree
+    pub fn eval_partial(next: &mut WriteQuerySet, self_: &WriteQuery, res: &DatabaseMutactionResult) -> CoreResult<()> {
+        next.inject_at_base(move |query| match query {
+            TopLevelDatabaseMutaction::CreateNode(cn) => cn.non_list_args.insert(
+                next.get_base_model()
+                    .fields()
+                    .find_from_relation_fields(&self_.model().name.to_lowercase())?
+                    .name
+                    .clone(),
+                match res.identifier {
+                    Identifier::Id(ref gqlid) => gqlid.into(),
+                    _ => unimplemented!(),
+                },
+            ),
+            _ => unimplemented!(),
+        });
+
+        Ok(())
     }
 }
 
@@ -80,6 +100,75 @@ fn update_nested_connect(un: &mut UpdateNode) -> CoreResult<()> {
 
 fn flip_create_order(ncn: NestedCreateNode) -> CoreResult<()> {
     Ok(())
+}
+
+fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
+    match wq.inner {
+        TopLevelDatabaseMutaction::CreateNode(mut cn) => {
+            let creates = std::mem::replace(&mut cn.nested_mutactions.creates, vec![]);
+            let (required, normal) = creates.into_iter().partition(|nc| {
+                nc.relation_field.is_required
+                    && check_should_flip(&cn.model, &nc.relation_field.related_field().model())
+            });
+
+            cn.nested_mutactions.creates = normal;
+
+            let wq = WriteQuery {
+                inner: TopLevelDatabaseMutaction::CreateNode(cn),
+                ..wq
+            };
+
+            let wqs: WriteQuerySet = required
+                .into_iter()
+                .fold(WriteQuerySet::Query(wq), |acc, req| match acc {
+                    WriteQuerySet::Query(q) => WriteQuerySet::Dependents {
+                        self_: WriteQuery {
+                            inner: hoist_nested_create(req),
+                            name: q.name.clone(),
+                            field: q.field.clone(),
+                        },
+                        next: Box::new(WriteQuerySet::Query(q)),
+                    },
+                    WriteQuerySet::Dependents { self_: _, ref next } => {
+                        let (name, field) = get_name_field(&next);
+
+                        WriteQuerySet::Dependents {
+                            self_: WriteQuery {
+                                inner: hoist_nested_create(req),
+                                name,
+                                field,
+                            },
+                            next: Box::new(acc),
+                        }
+                    }
+                });
+
+            Ok(wqs)
+        }
+        _ => Ok(WriteQuerySet::Query(wq)),
+    }
+}
+
+/// Takes a NestedCreateNode and turns it into a TopLevelDatabaseMutaction::CreateNode
+fn hoist_nested_create(nc: NestedCreateNode) -> TopLevelDatabaseMutaction {
+    TopLevelDatabaseMutaction::CreateNode(CreateNode {
+        model: nc.relation_field.related_field().model(),
+        non_list_args: nc.non_list_args,
+        list_args: nc.list_args,
+        nested_mutactions: nc.nested_mutactions,
+    })
+}
+
+/// Small utility function to get a query name and field
+fn get_name_field(next: &WriteQuerySet) -> (String, Field) {
+    match next {
+        WriteQuerySet::Dependents { self_: _, next } => get_name_field(&next),
+        WriteQuerySet::Query(q) => (q.name.clone(), q.field.clone()),
+    }
+}
+
+fn check_should_flip(self_: &ModelRef, other: &ModelRef) -> bool {
+    self_.name > other.name
 }
 
 /// Fold require `connect` operations into their parent
