@@ -35,19 +35,19 @@ impl LookAhead {
     /// What it needs to do is work with the result of the partial execution,
     /// then inject any IDs or data into the base mutation of the Dependents tree
     pub fn eval_partial(next: &mut WriteQuerySet, self_: &WriteQuery, res: &DatabaseMutactionResult) -> CoreResult<()> {
-        let connect_name = next
-            .get_base_model()
-            .fields()
-            .find_from_relation_fields(&self_.model().name.to_lowercase())?
-            .name
-            .clone();
-        let connect_value: PrismaValue = match res.identifier {
-            Identifier::Id(ref gqlid) => gqlid.into(),
-            _ => unreachable!(),
-        };
-
-        next.inject_at_base(move |create| {
-            create.non_list_args.insert(connect_name, connect_value);
+        next.inject_at_base(move |query| match query {
+            TopLevelDatabaseMutaction::CreateNode(cn) => cn.non_list_args.insert(
+                next.get_base_model()
+                    .fields()
+                    .find_from_relation_fields(&self_.model().name.to_lowercase())?
+                    .name
+                    .clone(),
+                match res.identifier {
+                    Identifier::Id(ref gqlid) => gqlid.into(),
+                    _ => unimplemented!(),
+                },
+            ),
+            _ => unimplemented!(),
         });
 
         Ok(())

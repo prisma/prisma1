@@ -48,13 +48,10 @@ pub enum WriteQuerySet {
 impl WriteQuerySet {
     /// Traverse through the `::Dependents` structure to inject
     /// a mutation at the last node (called base node)
-    pub(crate) fn inject_at_base(&mut self, cb: impl FnOnce(&mut CreateNode)) {
+    pub(crate) fn inject_at_base(&mut self, cb: impl FnOnce(&mut WriteQuery)) {
         match self {
             WriteQuerySet::Query(ref mut q) => {
-                cb(match &mut q.inner {
-                    RootMutation::CreateNode(ref mut cn) => cn,
-                    _ => unimplemented!(),
-                });
+                cb(q);
             }
             WriteQuerySet::Dependents { self_: _, next } => next.inject_at_base(cb),
         }
