@@ -8,7 +8,7 @@ impl DirectiveValidator<dml::Field> for SequenceDirectiveValidator {
     fn directive_name(&self) -> &'static str {
         &"sequence"
     }
-    fn validate_and_apply(&self, args: &Args, obj: &mut dml::Field) -> Result<(), Error> {
+    fn validate_and_apply(&self, args: &mut Args, obj: &mut dml::Field) -> Result<(), Error> {
         // TODO: Handle fields according to tests:
         // https://github.com/prisma/prisma/blob/master/server/servers/deploy/src/test/scala/com/prisma/deploy/migration/validation/SequenceDirectiveSpec.scala
 

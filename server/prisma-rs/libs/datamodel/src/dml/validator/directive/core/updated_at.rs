@@ -8,7 +8,7 @@ impl DirectiveValidator<dml::Field> for UpdatedAtDirectiveValidator {
     fn directive_name(&self) -> &'static str {
         &"updatedAt"
     }
-    fn validate_and_apply(&self, args: &Args, obj: &mut dml::Field) -> Result<(), Error> {
+    fn validate_and_apply(&self, args: &mut Args, obj: &mut dml::Field) -> Result<(), Error> {
         if obj.field_type != dml::FieldType::Base(dml::ScalarType::DateTime) {
             return self.error(
                 "Fields that are marked with @updatedAt must be of type DateTime.",

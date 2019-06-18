@@ -26,6 +26,7 @@ pub enum MaybeExpression {
 
 /// Wraps a value and provides convenience methods for
 /// parsing it.
+#[derive(Debug)]
 pub struct ValueValidator {
     pub value: MaybeExpression,
 }

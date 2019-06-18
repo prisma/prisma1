@@ -47,7 +47,7 @@ pub trait SourceDefinition {
         &self,
         name: &str,
         url: &str,
-        arguments: &Arguments,
+        arguments: &mut Arguments,
         documentation: &Option<String>,
     ) -> Result<Box<Source>, ValidationError>;
 }

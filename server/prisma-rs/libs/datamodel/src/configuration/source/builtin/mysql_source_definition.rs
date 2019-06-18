@@ -18,7 +18,7 @@ impl SourceDefinition for MySqlSourceDefinition {
         &self,
         name: &str,
         url: &str,
-        _arguments: &Arguments,
+        _arguments: &mut Arguments,
         documentation: &Option<String>,
     ) -> Result<Box<Source>, ValidationError> {
         Ok(Box::new(MySqlSource {

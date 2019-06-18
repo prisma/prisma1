@@ -4,7 +4,7 @@ use std::collections::HashMap;
 pub struct GeneratorLoader {}
 impl GeneratorLoader {
     pub fn lift_generator(ast_generator: &ast::GeneratorConfig) -> Result<Generator, ValidationError> {
-        let args = Arguments::new(&ast_generator.properties, ast_generator.span);
+        let mut args = Arguments::new(&ast_generator.properties, ast_generator.span);
 
         let provider = args.arg("provider")?.as_str()?;
         let output = if let Ok(arg) = args.arg("output") {
