@@ -1,7 +1,5 @@
 //! A slightly more generic interface over executing read and write queries
 
-#![allow(warnings)]
-
 mod pipeline;
 mod read;
 mod write;
@@ -11,31 +9,13 @@ use self::pipeline::*;
 pub use read::ReadQueryExecutor;
 pub use write::WriteQueryExecutor;
 
-use crate::{
-    BuilderExt, CoreError, CoreResult, OneBuilder, Query, ReadQuery, ReadQueryResult, RecordQuery, WriteQuery,
-    WriteQueryResult,
-};
-use connector::{filter::NodeSelector, QueryArguments};
-use connector::{
-    mutaction::{DatabaseMutactionResult, TopLevelDatabaseMutaction},
-    ConnectorResult,
-};
-
-use std::sync::Arc;
-
-use graphql_parser::query::{Field, Selection, Value};
-use prisma_models::{
-    Field as ModelField, GraphqlId, InternalDataModelRef, ModelRef, OrderBy, PrismaValue, RelationFieldRef,
-    SelectedField, SelectedFields, SelectedRelationField, SelectedScalarField, SortOrder,
-};
+use crate::{CoreResult, Query, ReadQueryResult};
 
 /// A wrapper around QueryExecutor
 pub struct Executor {
     pub read_exec: ReadQueryExecutor,
     pub write_exec: WriteQueryExecutor,
 }
-
-type FoldResult = ConnectorResult<Vec<DatabaseMutactionResult>>;
 
 impl Executor {
     /// Can be given a list of both ReadQueries and WriteQueries

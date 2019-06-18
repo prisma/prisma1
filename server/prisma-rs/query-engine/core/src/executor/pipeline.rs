@@ -16,7 +16,7 @@
 
 #![allow(warnings)]
 
-use crate::{Query, ReadQuery, ReadQueryResult, WriteQuery, WriteQuerySet, WriteQueryResult};
+use crate::{Query, ReadQuery, ReadQueryResult, WriteQuery, WriteQueryResult, WriteQuerySet};
 use indexmap::IndexMap;
 use std::mem::replace;
 
