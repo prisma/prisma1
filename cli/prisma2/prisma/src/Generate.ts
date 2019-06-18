@@ -30,7 +30,7 @@ export class Generate implements Command {
 
     ${chalk.bold('Usage')}
 
-      prisma generate 
+      prisma2 generate 
 
   `)
   private constructor(

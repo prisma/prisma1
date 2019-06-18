@@ -41,17 +41,17 @@ export class Init implements Command {
     const outputDir = outputDirName ? join(this.env.cwd, outputDirName) : this.env.cwd
 
     if (existsSync(join(outputDir, 'datamodel.prisma'))) {
-      throw new Error(`Can't start ${chalk.bold('prisma init')} as ${chalk.redBright(
+      throw new Error(`Can't start ${chalk.bold('prisma2 init')} as ${chalk.redBright(
         join(outputDir, 'datamodel.prisma'),
       )} exists.
-Please run ${chalk.bold('prisma init')} in an empty directory.`)
+Please run ${chalk.bold('prisma2 init')} in an empty directory.`)
     }
 
     if (existsSync(join(outputDir, 'project.prisma'))) {
-      throw new Error(`Can't start ${chalk.bold('prisma init')} as ${chalk.redBright(
+      throw new Error(`Can't start ${chalk.bold('prisma2 init')} as ${chalk.redBright(
         join(outputDir, 'project.prisma'),
       )} exists.
-Please run ${chalk.bold('prisma init')} in an empty directory.`)
+Please run ${chalk.bold('prisma2 init')} in an empty directory.`)
     }
 
     if (outputDirName) {
