@@ -5,7 +5,7 @@ use crate::{
     BuilderExt, OneBuilder, ReadQuery,
 };
 use connector::mutaction::{
-    CreateNode, DatabaseMutactionResult as MutationResult, Identifier, TopLevelDatabaseMutaction as RootMutation,
+    DatabaseMutactionResult as MutationResult, Identifier, TopLevelDatabaseMutaction as RootMutation,
 };
 use graphql_parser::query::Field;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaValue};

@@ -35,18 +35,18 @@ impl LookAhead {
     /// What it needs to do is work with the result of the partial execution,
     /// then inject any IDs or data into the base mutation of the Dependents tree
     pub fn eval_partial(next: &mut WriteQuerySet, self_: &WriteQuery, res: &DatabaseMutactionResult) -> CoreResult<()> {
-        next.inject_at_base(move |query| match query {
-            TopLevelDatabaseMutaction::CreateNode(cn) => cn.non_list_args.insert(
-                next.get_base_model()
+        let name = next.get_base_model()
                     .fields()
                     .find_from_relation_fields(&self_.model().name.to_lowercase())?
                     .name
-                    .clone(),
-                match res.identifier {
-                    Identifier::Id(ref gqlid) => gqlid.into(),
-                    _ => unimplemented!(),
-                },
-            ),
+                    .clone();
+        let id: PrismaValue = match res.identifier {
+            Identifier::Id(ref gqlid) => gqlid.into(),
+            _ => unimplemented!(),
+        };
+
+        next.inject_at_base(move |query| match query.inner {
+            TopLevelDatabaseMutaction::CreateNode(ref mut cn) => cn.non_list_args.insert(name, id),
             _ => unimplemented!(),
         });
 
@@ -95,10 +95,6 @@ fn update_nested_connect(un: &mut UpdateNode) -> CoreResult<()> {
         nested_create_connect(ncn)?;
     }
 
-    Ok(())
-}
-
-fn flip_create_order(ncn: NestedCreateNode) -> CoreResult<()> {
     Ok(())
 }
 
