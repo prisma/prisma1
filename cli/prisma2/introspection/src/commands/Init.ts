@@ -10,6 +10,7 @@ import { join } from 'path'
 import { findTemplate } from '../templates'
 import { loadStarter } from '../loader'
 import { defaultPrismaConfig } from '../defaults'
+import { mkdirpSync } from 'fs-extra'
 
 export class Init implements Command {
   lift: LiftEngine
@@ -66,16 +67,15 @@ Please run ${chalk.bold('prisma init')} in an empty directory.`)
 
       const template = findTemplate(result.initConfiguration.template, result.initConfiguration.language)
       if (!template) {
+        mkdirpSync(join(outputDir, 'prisma'))
         writeFileSync(join(outputDir, 'prisma/project.prisma'), defaultPrismaConfig)
-        console.log(`
-        Your template has been successfully set up!
-          
-        Here are the next steps to get you started:
-          1. Run ${chalk.yellow(`yarn global add prisma2`)} to install the Prisma 2 CLI. 
-          2. Run ${chalk.yellow(`prisma2 lift save --name 'init'`)} to create a migration locally. 
-          3. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migrations to your local db. 
-          4. That's it !
-          `)
+        console.log(`Your template has been successfully set up!
+  
+Here are the next steps to get you started:
+  1. Run ${chalk.yellow(`yarn global add prisma2`)} to install the Prisma 2 CLI. 
+  2. Run ${chalk.yellow(`prisma2 lift save --name 'init'`)} to create a migration locally. 
+  3. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migrations to your local db. 
+  4. That's it !`)
       }
 
       await loadStarter(template!, process.cwd(), {
