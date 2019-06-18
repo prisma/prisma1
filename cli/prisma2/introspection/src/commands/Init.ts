@@ -77,9 +77,10 @@ Here are the next steps to get you started:
   2. Run ${chalk.yellow(`prisma2 lift save --name 'init'`)} to create a migration locally. 
   3. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migrations to your local db. 
   4. That's it !`)
+        return
       }
 
-      await loadStarter(template!, process.cwd(), {
+      await loadStarter(template, process.cwd(), {
         installDependencies: true,
       })
 

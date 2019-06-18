@@ -1,11 +1,10 @@
 import { InitPromptResult } from './types'
 
-// TODO: Prisma correct DB configuration
+// TODO: Resolve SQLite URI properly
 const printDatabase = (result: InitPromptResult) => {
   return `datasource db {
-        provider = "sqlite"
-        url      = "file:dev.db"
-        default  = true
+        provider = "${result.introspectionResult.credentials.type}"
+        url      = "${result.introspectionResult.credentials.uri || `file:dev.db`}"
     }`
 }
 
