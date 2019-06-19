@@ -93,9 +93,7 @@ function onSelectSchema(
 
       // /!\ Disconnect the connector before quiting the prompt. This should probably be done in the `promptInteractively` method
       await state.connectorData.disconnect!()
-      return props.onSubmit({
-        introspectionResult,
-      })
+      return props.onSubmit({ introspectionResult, initConfiguration: {} as any })
     } catch (e) {
       stopSpinner({ state: 'failed', message: e.message })
     }
