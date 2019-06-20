@@ -413,10 +413,10 @@
   dependencies:
     tslib "^1.9.3"
 
-"@prisma/photon@^0.0.118":
-  version "0.0.118"
-  resolved "https://registry.yarnpkg.com/@prisma/photon/-/photon-0.0.118.tgz#95564e4a5bca76811dececb4772f713d3a112aed"
-  integrity sha512-aCEVUA8S5OD5lomHpg0tWLgV9bpCCIyHvmK5ncTRw6vZMwoDjXeOwNk3vIr8aMhlZyG8Wi7qdWGtCx3cJey+XA==
+"@prisma/photon@^0.0.119":
+  version "0.0.119"
+  resolved "https://registry.yarnpkg.com/@prisma/photon/-/photon-0.0.119.tgz#0df7c8a3a485e081bb3a2e3e7187ac74baf3df35"
+  integrity sha512-0Htc6ClT7R2tMUwlBOw/9aeeXiIbYfSuHOqGnM6xxwkVYZao//p8gnzTmk44wmFQqQ4UrDj6i585eo9Ukzqygw==
   dependencies:
     "@prisma/cli" "0.0.17"
     "@prisma/engine-core" "0.0.55"

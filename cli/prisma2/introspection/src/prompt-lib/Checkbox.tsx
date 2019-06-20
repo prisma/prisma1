@@ -19,7 +19,7 @@ export const Checkbox: React.FC<Props> = props => {
   const { label, checked, focus, onChange, keyPressed, ...rest } = props
 
   React.useEffect(() => {
-    if (focus && keyPressed.key === 'submit') {
+    if (focus && (keyPressed.key === 'submit' || keyPressed.str === ' ')) {
       onChange(!checked)
     }
   }, [focus, checked, keyPressed.key, keyPressed.str])
