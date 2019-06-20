@@ -38,6 +38,7 @@ export const INPUT_DATABASE_CREDENTIALS_ELEMENTS = (dbType: DatabaseType): Promp
     type: 'text-input',
     identifier: 'password',
     label: 'Password:',
+    style: { marginBottom: dbType === 'mysql' ? 1 : 0 },
   },
   ...(dbType !== 'mysql'
     ? {

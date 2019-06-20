@@ -37,10 +37,14 @@ function onDatabaseCredentialsChanged(
         credentials = uriToCredentials(values['uri'])
       } catch {}
     } else {
-      credentials['uri'] = credentialsToUri({
-        ...defaultCredentials(credentials['type']),
-        ...credentials,
-      } as DatabaseCredentials)
+      // start with defaults and override if we've passed
+      // in a credential value
+      const creds: DatabaseCredentials = defaultCredentials(credentials['type'])
+      for (let key in credentials) {
+        if (!credentials[key]) continue
+        creds[key] = credentials[key]
+      }
+      credentials['uri'] = credentialsToUri(creds)
     }
     dispatch({ type: 'set_credentials', payload: { credentials } })
   }
