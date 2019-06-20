@@ -319,13 +319,13 @@
     p-retry "^4.1.0"
     progress "^2.0.3"
 
-"@prisma/lift@^0.0.101":
-  version "0.0.101"
-  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.101.tgz#4b666cc993955b74de1fe16163628971cd89e0b1"
-  integrity sha512-XcQdBXtfmOiV2UywcybZi5SvoYuAl6QIACxbsnapZGtyVeURPUZ4MpVE9aLWnYtNZwDP03Eh56vZJdOcJ6/dpw==
+"@prisma/lift@^0.0.107":
+  version "0.0.107"
+  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.107.tgz#8b15056cb30c163c1e99193fe2a37a7acc090a98"
+  integrity sha512-ey12lEIgGsluH0ZMFSxqSsRdzFVNUNLyu2aO0sH7+cphkT9JCx5UrCc+Z+oq6lT3cbItoymCT8285UfSmev4zQ==
   dependencies:
     "@prisma/fetch-engine" "^0.0.21"
-    "@prisma/studio-server" "^0.0.33"
+    "@prisma/studio-server" "^0.0.34"
     arg "^4.1.0"
     array-flat-polyfill "^1.0.1"
     cli-cursor "^3.0.0"
@@ -334,8 +334,11 @@
     debug "^4.1.1"
     del "^4.1.1"
     diff "^4.0.1"
+    execa "^1.0.0"
     fast-equals "^2.0.0"
+    fast-memoize "^2.5.1"
     get-port "^5.0.0"
+    get-stream "^5.1.0"
     git-user-email "^0.2.2"
     git-user-name "^2.0.0"
     globby "^9.2.0"
@@ -355,10 +358,10 @@
     strip-indent "^3.0.0"
     supports-hyperlinks "^1.0.1"
 
-"@prisma/studio-server@^0.0.33":
-  version "0.0.33"
-  resolved "https://registry.yarnpkg.com/@prisma/studio-server/-/studio-server-0.0.33.tgz#6bf65fe7cdd5baea032be92f30c01cbfe07f9946"
-  integrity sha512-Qql2IfavUntq7j190I4iwfcc/+jSZQ5s00QlR9wYxP+NItmHWx6mJR47OHy7QRmFx894OBGpQhamq6lmT1X5eQ==
+"@prisma/studio-server@^0.0.34":
+  version "0.0.34"
+  resolved "https://registry.yarnpkg.com/@prisma/studio-server/-/studio-server-0.0.34.tgz#54bd68bb731c1100dd842fd2efebf5ef49112e73"
+  integrity sha512-6EmmD80gc0mgAaqW71xmp2c+cGyVloGuPQakZ4PEXw3BVxCdYsIJR6sP/5kI14fLbXUagT6C7HE3V79PYVtaOA==
   dependencies:
     express "^4.17.1"
     express-ws "^4.0.0"
@@ -1769,6 +1772,11 @@ fast-levenshtein@~2.0.4:
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
 
+fast-memoize@^2.5.1:
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/fast-memoize/-/fast-memoize-2.5.1.tgz#c3519241e80552ce395e1a32dcdde8d1fd680f5d"
+  integrity sha512-xdmw296PCL01tMOXx9mdJSmWY29jQgxyuZdq0rEHMu+Tpe1eOEtCycoG6chzlcrWsNgpZP7oL8RiQr7+G6Bl6g==
+
 fb-watchman@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/fb-watchman/-/fb-watchman-2.0.0.tgz#54e9abf7dfa2f26cd9b1636c588c1afc05de5d58"
@@ -1934,6 +1942,13 @@ get-stream@^4.0.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/get-stream/-/get-stream-4.1.0.tgz#c1b255575f3dc21d59bfc79cd3d2b46b1c3a54b5"
   integrity sha512-GMat4EJ5161kIy2HevLlr4luNjBgvmj413KaQA7jt4V8B4RDsfpHk7WQ9GVqfYyyx8OS/L66Kox+rJRNklLK7w==
+  dependencies:
+    pump "^3.0.0"
+
+get-stream@^5.1.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/get-stream/-/get-stream-5.1.0.tgz#01203cdc92597f9b909067c3e656cc1f4d3c4dc9"
+  integrity sha512-EXr1FOzrzTfGeL0gQdeFEvOMm2mzMOglyiOXSTpPC+iAjAKftbr3jpCMWynogwYnM+eSj9sHGc6wjIcDvYiygw==
   dependencies:
     pump "^3.0.0"
 

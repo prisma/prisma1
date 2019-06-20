@@ -305,10 +305,10 @@
   dependencies:
     arg "^4.1.0"
 
-"@prisma/engine-core@0.0.54":
-  version "0.0.54"
-  resolved "https://registry.yarnpkg.com/@prisma/engine-core/-/engine-core-0.0.54.tgz#f50357565d63c025972e47797b5930d580f181a5"
-  integrity sha512-aXXvu3tX/UbkTr2rRNsgP+vzUOJO3UY9+wt6lKThgEdtMwOBrdrQa2nMS488TugfFqNXp69tq5+LqG9BCOFPHA==
+"@prisma/engine-core@0.0.55":
+  version "0.0.55"
+  resolved "https://registry.yarnpkg.com/@prisma/engine-core/-/engine-core-0.0.55.tgz#e032f1895dd4abc23210d93e3c7de903d55ca80b"
+  integrity sha512-uv0Q/2J0vqRqpm401xFxy+3ZafsilVLZmqTOT86xDZL++5A/UVkm+M6TD1+Ha45LcLUnkXSBCl3YPVzxPEEeDA==
   dependencies:
     cross-fetch "^3.0.2"
     debug "^4.1.1"
@@ -329,10 +329,24 @@
     p-retry "^4.1.0"
     progress "^2.0.3"
 
-"@prisma/introspection@0.0.27":
-  version "0.0.27"
-  resolved "https://registry.yarnpkg.com/@prisma/introspection/-/introspection-0.0.27.tgz#fbbff2809f75dfeb1ba5a4401bda53f60132cdc3"
-  integrity sha512-PFZQ5RBMfR5RwxwtuUW5eWkvkBptoT2BSshCsUt5FMeGnCYsZdA4eKZIpfqyGJU0Iyqw/XBu2jE129c1/uCFpA==
+"@prisma/fetch-engine@^0.0.24":
+  version "0.0.24"
+  resolved "https://registry.yarnpkg.com/@prisma/fetch-engine/-/fetch-engine-0.0.24.tgz#b227d36ae8ae16cbbd978e02fe5e82a6f715e7ff"
+  integrity sha512-4/7sq17MQ2cwkBLrame69eqcPkrR4QaaRwBHN25TW2vo4QojzvYoH+I7RrfKn3PtVu0nMCpVddcoB6Gw5IruMg==
+  dependencies:
+    chalk "^2.4.2"
+    death "^1.1.0"
+    find-cache-dir "^3.0.0"
+    hasha "^5.0.0"
+    make-dir "^3.0.0"
+    node-fetch "^2.5.0"
+    p-retry "^4.1.0"
+    progress "^2.0.3"
+
+"@prisma/introspection@0.0.31":
+  version "0.0.31"
+  resolved "https://registry.yarnpkg.com/@prisma/introspection/-/introspection-0.0.31.tgz#0f7c41d67c3c90491c8678f6b36f6245bf21c4b4"
+  integrity sha512-k5KXoY6FxeOTSj/Z5OA8ja7uQcrhmS3cPDMGvQ5LgnqeWHM2Hv5OP7ufTUS+MOPM0tWRZ/ZjJpA8R0tfhtL1Bg==
   dependencies:
     ajv "^6.10.0"
     chalk "^2.4.2"
@@ -353,10 +367,10 @@
     string-width "^4.1.0"
     strip-ansi "^5.2.0"
 
-"@prisma/lift@^0.0.106":
-  version "0.0.106"
-  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.106.tgz#0bdfd699c41a3a4c6be8f3b9d489e0f155cc4783"
-  integrity sha512-F6EJcbQsXm8tf/wSN0AMOrxsp2Z+zmSzDcjHtnK6YFOmnd6mwiWXAoVM7k+OQWbTcJpKbRRsG+9XzBbjnxHUyA==
+"@prisma/lift@^0.0.107":
+  version "0.0.107"
+  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.107.tgz#8b15056cb30c163c1e99193fe2a37a7acc090a98"
+  integrity sha512-ey12lEIgGsluH0ZMFSxqSsRdzFVNUNLyu2aO0sH7+cphkT9JCx5UrCc+Z+oq6lT3cbItoymCT8285UfSmev4zQ==
   dependencies:
     "@prisma/fetch-engine" "^0.0.21"
     "@prisma/studio-server" "^0.0.34"
@@ -370,6 +384,7 @@
     diff "^4.0.1"
     execa "^1.0.0"
     fast-equals "^2.0.0"
+    fast-memoize "^2.5.1"
     get-port "^5.0.0"
     get-stream "^5.1.0"
     git-user-email "^0.2.2"
@@ -398,14 +413,14 @@
   dependencies:
     tslib "^1.9.3"
 
-"@prisma/photon@^0.0.116":
-  version "0.0.116"
-  resolved "https://registry.yarnpkg.com/@prisma/photon/-/photon-0.0.116.tgz#bc56b5695961a8d484b46922c12e8982019c1aba"
-  integrity sha512-ktoZZ9fMyly0driWJs22fjejaIdHn77dIQiazmSfRPpE4uU4o2wisisJevkKz4jRtvWFd1TyGRPM7CqKZkY/Sw==
+"@prisma/photon@^0.0.118":
+  version "0.0.118"
+  resolved "https://registry.yarnpkg.com/@prisma/photon/-/photon-0.0.118.tgz#95564e4a5bca76811dececb4772f713d3a112aed"
+  integrity sha512-aCEVUA8S5OD5lomHpg0tWLgV9bpCCIyHvmK5ncTRw6vZMwoDjXeOwNk3vIr8aMhlZyG8Wi7qdWGtCx3cJey+XA==
   dependencies:
     "@prisma/cli" "0.0.17"
-    "@prisma/engine-core" "0.0.54"
-    "@prisma/fetch-engine" "^0.0.21"
+    "@prisma/engine-core" "0.0.55"
+    "@prisma/fetch-engine" "^0.0.24"
     chalk "^2.4.2"
     cpy "7.3.0"
     dotenv "^8.0.0"
@@ -1829,6 +1844,11 @@ fast-levenshtein@~2.0.4:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
+
+fast-memoize@^2.5.1:
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/fast-memoize/-/fast-memoize-2.5.1.tgz#c3519241e80552ce395e1a32dcdde8d1fd680f5d"
+  integrity sha512-xdmw296PCL01tMOXx9mdJSmWY29jQgxyuZdq0rEHMu+Tpe1eOEtCycoG6chzlcrWsNgpZP7oL8RiQr7+G6Bl6g==
 
 fb-watchman@^2.0.0:
   version "2.0.0"
