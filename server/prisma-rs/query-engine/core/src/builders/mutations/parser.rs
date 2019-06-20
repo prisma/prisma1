@@ -1,6 +1,6 @@
 //! A mutation parser module
 //!
-//! **Note** for whomever it may concearn: this parser module would potentially
+//! **Note** for whomever it may concern: this parser module would potentially
 //! be interesting to expand for regular read-queries as well.
 //! It parses the graphql specific AST into our own data representation.
 //! While this is a slim conversion, it does make working with it easier
@@ -24,6 +24,7 @@
 //! - `lists`: Scalarlist values that are passed seperately
 //! - `nested`: All nested child nodes
 
+use crate::{InputFieldRef, InputObjectTypeStrongRef, InputType, ScalarType};
 use connector::filter::NodeSelector;
 use graphql_parser::query::Value;
 use prisma_models::{ModelRef, PrismaValue};
@@ -69,7 +70,7 @@ impl From<&Value> for ValueMap {
     fn from(val: &Value) -> Self {
         Self(match val {
             Value::Object(obj) => obj.into_iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
-            _ => panic!("Unsupported `ValueMap` initiaisation!"),
+            _ => panic!("Unsupported `ValueMap` initialization!"),
         })
     }
 }
@@ -124,22 +125,65 @@ impl ValueMap {
         }
     }
 
-    pub fn to_prisma_values(self) -> BTreeMap<String, PrismaValue> {
-        self.0
-            .into_iter()
-            .map(|(k, v)| (k, PrismaValue::from_value(&v)))
+    pub fn to_prisma_values(self, input_object: InputObjectTypeStrongRef) -> BTreeMap<String, PrismaValue> {
+        input_object
+            .get_fields()
+            .iter()
+            .filter_map(|in_field| {
+                let value = self.0.get(&in_field.name);
+                Self::coerce_input(&in_field.field_type, value).map(|pv| (in_field.name.clone(), pv))
+            })
             .collect()
     }
 
-    pub fn to_node_selector(&self, model: ModelRef) -> Option<NodeSelector> {
+    /// This panics on purpose at the moment before we rearchitect the query engine execution.
+    fn coerce_input(f: &InputFieldRef, value: Option<&Value>) -> Option<PrismaValue> {
+        let failure_msg = format!("WIP {}", f.name.clone());
+
+        fn coerce(typ: &InputType, val: Option<&Value>) -> Option<PrismaValue> {
+            match typ {
+                InputType::List(boxed) => Some(coerce(boxed, value).expect(failure_msg.into())),
+                InputType::Opt(boxed) => value.and_then(|_| coerce(boxed, value)),
+                InputType::Scalar(st) => Self::coerce_scalar(st, value.expect(failure_msg.into())),
+                InputType::Enum(et) => unimplemented!(),
+                InputType::Object(_) => unreachable!(), // Not sure
+            }
+        }
+
+        coerce(&f.field_type, value)
+    }
+
+    fn coerce_scalar(scalar_type: &ScalarType, value: &Value) -> PrismaValue {
+        match scalar_type {
+            ScalarType::String => unimplemented!(),
+            ScalarType::Int => unimplemented!(),
+            ScalarType::Float => unimplemented!(),
+            ScalarType::Boolean => unimplemented!(),
+            ScalarType::Enum(EnumType) => unimplemented!(),
+            ScalarType::DateTime => unimplemented!(),
+            ScalarType::Json => unimplemented!(),
+            ScalarType::UUID => unimplemented!(),
+            ScalarType::ID => unimplemented!(),
+        }
+        unimplemented!()
+    }
+
+    pub fn to_node_selector(&self, model: ModelRef, input_object: InputObjectTypeStrongRef) -> Option<NodeSelector> {
         self.0
             .iter()
             .filter_map(|(field, value)| {
-                model
-                    .fields()
-                    .find_from_scalar(&field)
-                    .ok()
-                    .map(|f| (f, PrismaValue::from_value(&value)))
+                model.fields().find_from_scalar(&field).ok().map(|f| {
+                    let input_field = input_object
+                        .get_fields()
+                        .iter()
+                        .find(|in_field| in_field.name == f.name)
+                        .expect("Expected input field to be present.");
+
+                    (
+                        f,
+                        Self::coerce_input(&input_field, Some(&value)).expect("Node selector coercion failed."),
+                    )
+                })
             })
             .nth(0)
             .map(|(field, value)| NodeSelector { field, value })

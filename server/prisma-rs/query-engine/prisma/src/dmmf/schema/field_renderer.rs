@@ -1,22 +1,22 @@
 use super::*;
 
 #[derive(Debug)]
-pub enum DMMFFieldRenderer<'a> {
-    Input(&'a InputField),
+pub enum DMMFFieldRenderer {
+    Input(InputFieldRef),
     Output(FieldRef),
 }
 
-impl<'a> Renderer<'a, DMMFFieldWrapper> for DMMFFieldRenderer<'a> {
+impl<'a> Renderer<'a, DMMFFieldWrapper> for DMMFFieldRenderer {
     fn render(&self, ctx: RenderContext) -> (DMMFFieldWrapper, RenderContext) {
         match &self {
-            DMMFFieldRenderer::Input(input) => self.render_input_field(input, ctx),
+            DMMFFieldRenderer::Input(input) => self.render_input_field(Arc::clone(input), ctx),
             DMMFFieldRenderer::Output(output) => self.render_output_field(Arc::clone(output), ctx),
         }
     }
 }
 
-impl<'a> DMMFFieldRenderer<'a> {
-    fn render_input_field(&self, input_field: &InputField, ctx: RenderContext) -> (DMMFFieldWrapper, RenderContext) {
+impl DMMFFieldRenderer {
+    fn render_input_field(&self, input_field: InputFieldRef, ctx: RenderContext) -> (DMMFFieldWrapper, RenderContext) {
         let (type_info, ctx) = input_field.field_type.into_renderer().render(ctx);
         let field = DMMFInputField {
             name: input_field.name.clone(),

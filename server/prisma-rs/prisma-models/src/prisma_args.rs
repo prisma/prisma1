@@ -31,6 +31,7 @@ impl PrismaArgs {
     }
 
     pub fn get_field_value(&self, field: &str) -> Option<&PrismaValue> {
+        dbg!(&self);
         self.args.get(field)
     }
 

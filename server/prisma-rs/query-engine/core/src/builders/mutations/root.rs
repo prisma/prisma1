@@ -5,25 +5,25 @@ use crate::{
     builders::{utils, LookAhead, NestedValue, ValueList, ValueMap, ValueSplit},
     extend_defaults,
     schema::{ModelOperation, OperationTag},
-    CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
-    WriteQuerySet,
+    CoreError, CoreResult, FieldRef, InputObjectTypeStrongRef, InputType, IntoArc, ManyNestedBuilder, QuerySchemaRef,
+    SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery, WriteQuerySet,
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue, Project};
 use std::{collections::BTreeMap, sync::Arc};
 
-/// A TopLevelMutation builder
+/// A root mutation builder
 ///
 /// It takes a GraphQL field and model
-/// and builds a mutation tree from it
+/// and builds a mutation tree from it.
 #[derive(Debug)]
-pub struct MutationBuilder<'field> {
+pub struct RootMutationBuilder<'field> {
     field: &'field Field,
     query_schema: QuerySchemaRef,
 }
 
-impl<'field> MutationBuilder<'field> {
+impl<'field> RootMutationBuilder<'field> {
     pub fn new(query_schema: QuerySchemaRef, field: &'field Field) -> Self {
         Self { field, query_schema }
     }
@@ -36,14 +36,35 @@ impl<'field> MutationBuilder<'field> {
 
         let args = into_tree(&self.field.arguments);
         let raw_name = self.field.alias.as_ref().unwrap_or_else(|| &self.field.name).clone();
-        let model_operation = parse_model_action(raw_name.as_str(), Arc::clone(&self.query_schema))?;
+        let schema_field = find_field(raw_name.as_str(), Arc::clone(&self.query_schema))?;
+        let model_operation = schema_field
+            .operation
+            .expect("Expected top level field to have an associated model operation.")
+            .clone();
+
         let model = Arc::clone(&model_operation.model);
+
+        fn arg_object(name: &str, sf: FieldRef) -> CoreResult<InputObjectTypeStrongRef> {
+            let arg = sf
+                .arguments
+                .iter()
+                .find(|arg| arg.name == name)
+                .expect(&format!("Missing {} argument.", name));
+
+            match &arg.argument_type {
+                InputType::Object(obj) => Ok(obj.clone().into_arc()),
+                _ => Err(CoreError::QueryValidationError(format!(
+                    "Argument '{}' has to be an object type.",
+                    name
+                ))),
+            }
+        }
 
         let inner =
             match model_operation.operation {
                 OperationTag::CreateOne => {
                     let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
-                    let mut non_list_args = values.to_prisma_values();
+                    let mut non_list_args = values.to_prisma_values(arg_object("data", schema_field)?);
                     extend_defaults(&model, &mut non_list_args);
 
                     let mut non_list_args: PrismaArgs = non_list_args.into();
@@ -64,9 +85,10 @@ impl<'field> MutationBuilder<'field> {
                         nested_mutactions,
                     })
                 }
+
                 OperationTag::UpdateOne => {
                     let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
-                    let non_list_args = values.to_prisma_values().into();
+                    let non_list_args = values.to_prisma_values(arg_object("data", schema_field)?).into();
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
                     let nested_mutactions = build_nested_root(
                         model.name.as_str(),
@@ -76,7 +98,7 @@ impl<'field> MutationBuilder<'field> {
                     )?;
 
                     let where_ = ValueMap(shift_data(&args, "where")?)
-                        .to_node_selector(Arc::clone(&model))
+                        .to_node_selector(Arc::clone(&model), arg_object("where", schema_field)?)
                         .map_or(
                             Err(CoreError::QueryValidationError("No `where` on connect".into())),
                             |w| Ok(w),
@@ -89,9 +111,10 @@ impl<'field> MutationBuilder<'field> {
                         nested_mutactions,
                     })
                 }
+
                 OperationTag::UpdateMany => {
                     let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
-                    let non_list_args = values.to_prisma_values().into();
+                    let non_list_args = values.to_prisma_values(arg_object("data", schema_field)?).into();
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
                     let nested_mutactions = build_nested_root(
                         model.name.as_str(),
@@ -112,9 +135,10 @@ impl<'field> MutationBuilder<'field> {
                         list_args,
                     })
                 }
+
                 OperationTag::DeleteOne => {
                     let where_ = ValueMap(shift_data(&args, "where")?)
-                        .to_node_selector(Arc::clone(&model))
+                        .to_node_selector(Arc::clone(&model), arg_object("where", schema_field)?)
                         .map_or(
                             Err(CoreError::QueryValidationError("No `where` on connect".into())),
                             |w| Ok(w),
@@ -122,6 +146,7 @@ impl<'field> MutationBuilder<'field> {
 
                     TopLevelDatabaseMutaction::DeleteNode(DeleteNode { where_ })
                 }
+
                 OperationTag::DeleteMany => {
                     let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
                     let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
@@ -130,12 +155,13 @@ impl<'field> MutationBuilder<'field> {
 
                     TopLevelDatabaseMutaction::DeleteNodes(DeleteNodes { model, filter })
                 }
+
                 OperationTag::UpsertOne => {
                     let where_ = utils::extract_node_selector(self.field, Arc::clone(&model))?;
 
                     let create = {
                         let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "create")?).split();
-                        let mut non_list_args = values.to_prisma_values();
+                        let mut non_list_args = values.to_prisma_values(arg_object("create", schema_field)?);
                         extend_defaults(&model, &mut non_list_args);
 
                         let mut non_list_args: PrismaArgs = non_list_args.into();
@@ -160,7 +186,7 @@ impl<'field> MutationBuilder<'field> {
 
                     let update = {
                         let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "update")?).split();
-                        let non_list_args = values.to_prisma_values().into();
+                        let non_list_args = values.to_prisma_values(arg_object("update", schema_field)?).into();
                         let list_args = lists.into_iter().map(|la| la.convert()).collect();
                         let nested_mutactions = build_nested_root(
                             model.name.as_str(),
@@ -224,12 +250,9 @@ fn shift_data(from: &BTreeMap<String, Value>, idx: &str) -> CoreResult<BTreeMap<
 }
 
 /// Parse the mutation name into an operation to perform.
-fn parse_model_action(name: &str, query_schema: QuerySchemaRef) -> CoreResult<ModelOperation> {
+fn find_field(name: &str, query_schema: QuerySchemaRef) -> CoreResult<FieldRef> {
     match query_schema.find_mutation_field(name) {
-        Some(field) => Ok(field
-            .operation
-            .clone()
-            .expect("Expected top level field to have an associated model operation.")),
+        Some(ref field) => Ok(Arc::clone(field)),
 
         None => Err(CoreError::QueryValidationError(format!(
             "Field not found on type Mutation: {}",

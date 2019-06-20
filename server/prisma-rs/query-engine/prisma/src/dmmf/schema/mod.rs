@@ -1,6 +1,5 @@
 mod ast;
 mod enum_renderer;
-
 mod field_renderer;
 mod object_renderer;
 mod schema_renderer;
@@ -138,9 +137,9 @@ impl<'a> IntoRenderer<'a, ()> for EnumType {
     }
 }
 
-impl<'a> IntoRenderer<'a, DMMFFieldWrapper> for InputField {
+impl<'a> IntoRenderer<'a, DMMFFieldWrapper> for InputFieldRef {
     fn into_renderer(&'a self) -> Box<Renderer<'a, DMMFFieldWrapper> + 'a> {
-        Box::new(DMMFFieldRenderer::Input(self))
+        Box::new(DMMFFieldRenderer::Input(Arc::clone(self)))
     }
 }
 

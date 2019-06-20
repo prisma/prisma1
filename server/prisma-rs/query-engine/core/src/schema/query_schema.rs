@@ -14,6 +14,7 @@ pub type InputObjectTypeRef = Weak<InputObjectType>;
 
 pub type QuerySchemaRef = Arc<QuerySchema>;
 pub type FieldRef = Arc<Field>;
+pub type InputFieldRef = Arc<InputField>;
 
 /// The query schema.
 /// Defines which operations (query/mutations) are possible on a database, based on the (internal) data model.
@@ -193,7 +194,6 @@ pub struct Argument {
     pub name: String,
     pub argument_type: InputType,
     // pub default_value: Option<>... todo: Do we need that?
-    // FromInput conversion -> Take a look at that.
 }
 
 #[derive(DebugStub)]
@@ -201,16 +201,18 @@ pub struct InputObjectType {
     pub name: String,
 
     #[debug_stub = "#Input Fields Cell#"]
-    pub fields: OnceCell<Vec<InputField>>,
+    pub fields: OnceCell<Vec<InputFieldRef>>,
 }
 
 impl InputObjectType {
-    pub fn get_fields(&self) -> &Vec<InputField> {
+    pub fn get_fields(&self) -> &Vec<InputFieldRef> {
         self.fields.get().unwrap()
     }
 
     pub fn set_fields(&self, fields: Vec<InputField>) {
-        self.fields.set(fields).unwrap();
+        self.fields
+            .set(fields.into_iter().map(|f| Arc::new(f)).collect())
+            .unwrap();
     }
 
     /// True if fields are empty, false otherwise.
@@ -224,7 +226,6 @@ pub struct InputField {
     pub name: String,
     pub field_type: InputType,
     // pub default_value: Option<>... todo: Do we need that?
-    // FromInput conversion -> Take a look at that.
 }
 
 #[derive(Debug)]
