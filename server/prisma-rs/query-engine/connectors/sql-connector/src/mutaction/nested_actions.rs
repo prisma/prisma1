@@ -12,7 +12,7 @@ pub use nested_set::*;
 
 use crate::query_builder::QueryBuilder;
 use crate::{error::*, SqlResult};
-use connector::{error::NodeSelectorInfo, filter::NodeSelector};
+use connector::{error::RecordFinderInfo, filter::RecordFinder};
 use prisma_models::*;
 use prisma_query::ast::*;
 
@@ -57,8 +57,8 @@ pub trait NestedActions {
     fn nodes_not_connected(&self, parent_id: Option<GraphqlId>, child_id: Option<GraphqlId>) -> SqlError {
         let rf = self.relation_field();
 
-        let parent_where = parent_id.map(|parent_id| NodeSelectorInfo::for_id(rf.model(), &parent_id));
-        let child_where = child_id.map(|child_id| NodeSelectorInfo::for_id(rf.model(), &child_id));
+        let parent_where = parent_id.map(|parent_id| RecordFinderInfo::for_id(rf.model(), &parent_id));
+        let child_where = child_id.map(|child_id| RecordFinderInfo::for_id(rf.model(), &child_id));
 
         SqlError::NodesNotConnected {
             relation_name: rf.relation().name.clone(),
@@ -146,7 +146,7 @@ pub trait NestedActions {
         (query, Box::new(check))
     }
 
-    fn check_for_old_parent_by_child(&self, node_selector: &NodeSelector) -> (Select, ResultCheck) {
+    fn check_for_old_parent_by_child(&self, record_finder: &RecordFinder) -> (Select, ResultCheck) {
         let relation = self.relation();
         let rf = self.relation_field().related_field();
 
@@ -156,7 +156,7 @@ pub trait NestedActions {
         let sub_select = QueryBuilder::get_nodes(
             rf.model(),
             &SelectedFields::from(rf.model().fields().id()),
-            node_selector.clone(),
+            record_finder.clone(),
         );
 
         let condition = relation_column

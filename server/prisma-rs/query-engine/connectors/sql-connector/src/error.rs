@@ -42,7 +42,7 @@ pub enum SqlError {
     DomainError(DomainError),
 
     #[fail(display = "Node not found: {}", _0)]
-    NodeNotFoundForWhere(NodeSelectorInfo),
+    NodeNotFoundForWhere(RecordFinderInfo),
 
     #[fail(
         display = "Violating a relation {} between {} and {}",
@@ -61,9 +61,9 @@ pub enum SqlError {
     NodesNotConnected {
         relation_name: String,
         parent_name: String,
-        parent_where: Option<NodeSelectorInfo>,
+        parent_where: Option<RecordFinderInfo>,
         child_name: String,
-        child_where: Option<NodeSelectorInfo>,
+        child_where: Option<RecordFinderInfo>,
     },
 
     #[fail(display = "Conversion error: {}", _0)]

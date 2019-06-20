@@ -8,7 +8,7 @@ use crate::{
     CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
     WriteQuerySet,
 };
-use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
+use connector::{filter::RecordFinder, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue, Project};
 use std::{collections::BTreeMap, sync::Arc};
@@ -76,7 +76,7 @@ impl<'field> MutationBuilder<'field> {
                     )?;
 
                     let where_ = ValueMap(shift_data(&args, "where")?)
-                        .to_node_selector(Arc::clone(&model))
+                        .to_record_finder(Arc::clone(&model))
                         .map_or(
                             Err(CoreError::QueryValidationError("No `where` on connect".into())),
                             |w| Ok(w),
@@ -114,7 +114,7 @@ impl<'field> MutationBuilder<'field> {
                 }
                 OperationTag::DeleteOne => {
                     let where_ = ValueMap(shift_data(&args, "where")?)
-                        .to_node_selector(Arc::clone(&model))
+                        .to_record_finder(Arc::clone(&model))
                         .map_or(
                             Err(CoreError::QueryValidationError("No `where` on connect".into())),
                             |w| Ok(w),
@@ -131,7 +131,7 @@ impl<'field> MutationBuilder<'field> {
                     TopLevelDatabaseMutaction::DeleteNodes(DeleteNodes { model, filter })
                 }
                 OperationTag::UpsertOne => {
-                    let where_ = utils::extract_node_selector(self.field, Arc::clone(&model))?;
+                    let where_ = utils::extract_record_finder(self.field, Arc::clone(&model))?;
 
                     let create = {
                         let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "create")?).split();

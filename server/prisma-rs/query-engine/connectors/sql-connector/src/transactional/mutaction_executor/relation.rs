@@ -2,7 +2,7 @@ use crate::{
     mutaction::{MutationBuilder, NestedActions},
     SqlResult, Transaction,
 };
-use connector::filter::NodeSelector;
+use connector::filter::RecordFinder;
 use prisma_models::{GraphqlId, RelationFieldRef};
 use std::sync::Arc;
 
@@ -29,7 +29,7 @@ pub fn connect(
     conn: &mut Transaction,
     parent_id: &GraphqlId,
     actions: &NestedActions,
-    node_selector: &NodeSelector,
+    record_finder: &RecordFinder,
     relation_field: RelationFieldRef,
 ) -> SqlResult<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
@@ -37,7 +37,7 @@ pub fn connect(
         check.call_box(ids.into_iter().next().is_some())?
     }
 
-    let child_id = conn.find_id(node_selector)?;
+    let child_id = conn.find_id(record_finder)?;
 
     if let Some(query) = actions.parent_removal(parent_id) {
         conn.write(query)?;
@@ -68,14 +68,14 @@ pub fn disconnect(
     conn: &mut Transaction,
     parent_id: &GraphqlId,
     actions: &NestedActions,
-    node_selector: &Option<NodeSelector>,
+    record_finder: &Option<RecordFinder>,
 ) -> SqlResult<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
         let ids = conn.select_ids(select)?;
         check.call_box(ids.into_iter().next().is_some())?
     }
 
-    match node_selector {
+    match record_finder {
         None => {
             let (select, check) = actions.ensure_parent_is_connected(parent_id);
 
@@ -104,7 +104,7 @@ pub fn set(
     conn: &mut Transaction,
     parent_id: &GraphqlId,
     actions: &NestedActions,
-    node_selectors: &Vec<NodeSelector>,
+    record_finders: &Vec<RecordFinder>,
     relation_field: RelationFieldRef,
 ) -> SqlResult<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
@@ -114,7 +114,7 @@ pub fn set(
 
     conn.write(actions.removal_by_parent(parent_id))?;
 
-    for selector in node_selectors {
+    for selector in record_finders {
         let child_id = conn.find_id(selector)?;
 
         if !relation_field.is_list {

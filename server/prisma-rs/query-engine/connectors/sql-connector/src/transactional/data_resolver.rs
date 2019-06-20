@@ -4,7 +4,7 @@ use crate::{
     query_builder::{QueryBuilder, RelatedNodesBaseQuery, RelatedNodesQueryBuilder},
     Transactional,
 };
-use connector::{error::ConnectorError, filter::NodeSelector, *};
+use connector::{error::ConnectorError, filter::RecordFinder, *};
 use itertools::Itertools;
 use prisma_models::*;
 use std::convert::TryFrom;
@@ -20,11 +20,11 @@ where
 {
     fn get_node_by_where(
         &self,
-        node_selector: &NodeSelector,
+        record_finder: &RecordFinder,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<Option<SingleNode>> {
-        let db_name = &node_selector.field.model().internal_data_model().db_name;
-        let query = QueryBuilder::get_nodes(node_selector.field.model(), selected_fields, node_selector);
+        let db_name = &record_finder.field.model().internal_data_model().db_name;
+        let query = QueryBuilder::get_nodes(record_finder.field.model(), selected_fields, record_finder);
         let field_names = selected_fields.names();
         let idents = selected_fields.type_identifiers();
 

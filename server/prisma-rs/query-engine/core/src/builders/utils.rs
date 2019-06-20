@@ -2,7 +2,7 @@
 
 use super::filters;
 use crate::{Builder, BuilderExt, CoreError, CoreResult, ReadQuery};
-use connector::{filter::NodeSelector, QueryArguments};
+use connector::{filter::RecordFinder, QueryArguments};
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
     Field as ModelField, GraphqlId, InternalDataModelRef, ModelRef, OrderBy, PrismaValue, RelationFieldRef,
@@ -12,8 +12,8 @@ use prisma_models::{
 use std::{collections::BTreeMap, sync::Arc};
 use uuid::Uuid;
 
-/// Get node selector from field and model
-pub(crate) fn extract_node_selector(field: &Field, model: ModelRef) -> CoreResult<NodeSelector> {
+/// Get record finder from field and model
+pub(crate) fn extract_record_finder(field: &Field, model: ModelRef) -> CoreResult<RecordFinder> {
     // FIXME: this expects at least one query arg...
     let (_, value) = field.arguments.first().expect("no arguments found");
     match value {
@@ -22,7 +22,7 @@ pub(crate) fn extract_node_selector(field: &Field, model: ModelRef) -> CoreResul
             let field = model.fields().find_from_scalar(field_name).unwrap();
             let value = PrismaValue::from_value(value);
 
-            Ok(NodeSelector {
+            Ok(RecordFinder {
                 field: Arc::clone(&field),
                 value: value,
             })

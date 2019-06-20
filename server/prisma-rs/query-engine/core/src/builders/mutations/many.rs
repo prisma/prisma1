@@ -89,7 +89,7 @@ fn attach_connect(
 ) -> CoreResult<()> {
     mutations.connects.push(NestedConnect {
         relation_field: Arc::clone(&rel_field),
-        where_: map.to_node_selector(Arc::clone(&rel_model)).unwrap(),
+        where_: map.to_record_finder(Arc::clone(&rel_model)).unwrap(),
         top_is_create: match top_level {
             OperationTag::CreateOne => true,
             _ => false,
@@ -107,7 +107,7 @@ fn attach_disconnect(
 ) -> CoreResult<()> {
     mutations.disconnects.push(NestedDisconnect {
         relation_field: Arc::clone(&rel_field),
-        where_: map.to_node_selector(Arc::clone(&model)),
+        where_: map.to_record_finder(Arc::clone(&model)),
     });
 
     Ok(())
@@ -122,7 +122,7 @@ fn attach_update(
     rel_model: &ModelRef,
     top_level: OperationTag,
 ) -> CoreResult<()> {
-    let where_ = map.to_node_selector(Arc::clone(&model));
+    let where_ = map.to_record_finder(Arc::clone(&model));
     let ValueSplit { values, lists, nested } = map.split();
 
     let non_list_args = values.to_prisma_values().into();
@@ -186,7 +186,7 @@ fn attach_delete(
 ) -> CoreResult<()> {
     mutations.deletes.push(NestedDeleteNode {
         relation_field: Arc::clone(&rel_field),
-        where_: map.to_node_selector(Arc::clone(&model)),
+        where_: map.to_record_finder(Arc::clone(&model)),
     });
 
     Ok(())

@@ -1,21 +1,21 @@
 //! Combined mutation executions
 mod create_node;
 mod delete_node;
-mod node_address;
 mod path;
+mod record_address;
 mod result;
 mod update_node;
 mod upsert_node;
 
 pub use create_node::*;
 pub use delete_node::*;
-pub use node_address::*;
 pub use path::*;
+pub use record_address::*;
 pub use result::*;
 pub use update_node::*;
 pub use upsert_node::*;
 
-use super::filter::{Filter, NodeSelector};
+use super::filter::{Filter, RecordFinder};
 use prisma_models::prelude::*;
 use std::sync::Arc;
 
@@ -76,7 +76,7 @@ pub struct NestedMutactions {
 #[derive(Debug, Clone)]
 pub struct NestedSet {
     pub relation_field: Arc<RelationField>,
-    pub wheres: Vec<NodeSelector>,
+    pub wheres: Vec<RecordFinder>,
 }
 
 // CONNECT
@@ -84,7 +84,7 @@ pub struct NestedSet {
 #[derive(Debug, Clone)]
 pub struct NestedConnect {
     pub relation_field: RelationFieldRef,
-    pub where_: NodeSelector,
+    pub where_: RecordFinder,
     pub top_is_create: bool,
 }
 
@@ -93,7 +93,7 @@ pub struct NestedConnect {
 #[derive(Debug, Clone)]
 pub struct NestedDisconnect {
     pub relation_field: Arc<RelationField>,
-    pub where_: Option<NodeSelector>,
+    pub where_: Option<RecordFinder>,
 }
 
 #[derive(Debug, Clone)]

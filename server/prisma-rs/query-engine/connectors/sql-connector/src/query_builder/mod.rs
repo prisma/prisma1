@@ -2,7 +2,7 @@ mod related_nodes;
 
 use crate::{cursor_condition::CursorCondition, filter_conversion::AliasedCondition, ordering::Ordering};
 use connector::{
-    filter::{Filter, NodeSelector},
+    filter::{Filter, RecordFinder},
     QueryArguments,
 };
 use prisma_models::prelude::*;
@@ -22,14 +22,14 @@ impl SelectDefinition for Filter {
     }
 }
 
-impl SelectDefinition for NodeSelector {
+impl SelectDefinition for RecordFinder {
     fn into_select(self, model: ModelRef) -> Select {
         let args = QueryArguments::from(self);
         args.into_select(model)
     }
 }
 
-impl SelectDefinition for &NodeSelector {
+impl SelectDefinition for &RecordFinder {
     fn into_select(self, model: ModelRef) -> Select {
         self.clone().into_select(model)
     }

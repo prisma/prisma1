@@ -1,4 +1,4 @@
-use crate::filter::{Filter, NodeSelector};
+use crate::filter::{Filter, RecordFinder};
 use prisma_models::*;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -46,9 +46,9 @@ impl QueryArguments {
     }
 }
 
-impl From<NodeSelector> for QueryArguments {
-    fn from(node_selector: NodeSelector) -> Self {
-        QueryArguments::from(Filter::from(node_selector))
+impl From<RecordFinder> for QueryArguments {
+    fn from(record_finder: RecordFinder) -> Self {
+        QueryArguments::from(Filter::from(record_finder))
     }
 }
 

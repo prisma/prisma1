@@ -1,4 +1,4 @@
-use crate::filter::{Filter, NodeSelector};
+use crate::filter::{Filter, RecordFinder};
 use prisma_models::prelude::*;
 
 pub struct Path {
@@ -7,7 +7,7 @@ pub struct Path {
 
 pub enum PathSegment {
     ToOne(RelationFieldRef),
-    ToMany(RelationFieldRef, NodeSelector),
+    ToMany(RelationFieldRef, RecordFinder),
     ToManyFilter(RelationFieldRef, Option<Filter>),
 }
 
@@ -17,8 +17,8 @@ impl From<RelationFieldRef> for PathSegment {
     }
 }
 
-impl From<(RelationFieldRef, NodeSelector)> for PathSegment {
-    fn from(t: (RelationFieldRef, NodeSelector)) -> PathSegment {
+impl From<(RelationFieldRef, RecordFinder)> for PathSegment {
+    fn from(t: (RelationFieldRef, RecordFinder)) -> PathSegment {
         PathSegment::ToMany(t.0, t.1)
     }
 }

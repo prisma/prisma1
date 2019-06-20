@@ -5,12 +5,12 @@
 //! [RelationCompare](/connector/trait.RelationCompare.html).
 
 mod list;
-mod node_selector;
+mod record_finder;
 mod relation;
 mod scalar;
 
 pub use list::*;
-pub use node_selector::*;
+pub use record_finder::*;
 pub use relation::*;
 pub use scalar::*;
 
@@ -71,11 +71,11 @@ impl From<bool> for Filter {
     }
 }
 
-impl From<NodeSelector> for Filter {
-    fn from(node_selector: NodeSelector) -> Self {
+impl From<RecordFinder> for Filter {
+    fn from(record_finder: RecordFinder) -> Self {
         Filter::Scalar(ScalarFilter {
-            field: node_selector.field,
-            condition: ScalarCondition::Equals(node_selector.value),
+            field: record_finder.field,
+            condition: ScalarCondition::Equals(record_finder.value),
         })
     }
 }

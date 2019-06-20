@@ -28,7 +28,7 @@ impl SimpleNestedBuilder {
         let where_ = where_map
             .as_ref()
             .or(Some(&map))
-            .and_then(|m| m.to_node_selector(Arc::clone(&model)));
+            .and_then(|m| m.to_record_finder(Arc::clone(&model)));
 
         let ValueSplit { values, lists, nested } = map.split();
         let f = model.fields().find_from_all(&name);
@@ -63,7 +63,7 @@ impl SimpleNestedBuilder {
                 mutations.deletes.push(NestedDeleteNode { relation_field, where_ });
             }
             "connect" => {
-                let where_ = values.to_node_selector(Arc::clone(&relation_model)).map_or(
+                let where_ = values.to_record_finder(Arc::clone(&relation_model)).map_or(
                     Err(CoreError::QueryValidationError("No `where` on connect".into())),
                     |w| Ok(w),
                 )?;
@@ -77,7 +77,7 @@ impl SimpleNestedBuilder {
                 });
             }
             "disconnect" => {
-                let where_ = values.to_node_selector(Arc::clone(&relation_model));
+                let where_ = values.to_record_finder(Arc::clone(&relation_model));
                 mutations.disconnects.push(NestedDisconnect { relation_field, where_ });
             }
             "update" => {
@@ -142,7 +142,7 @@ impl UpsertNestedBuilder {
             wat => panic!("Invalid state: `{:#?}`", wat),
         };
 
-        let where_ = where_map.to_node_selector(Arc::clone(&related_model));
+        let where_ = where_map.to_record_finder(Arc::clone(&related_model));
         let create = {
             let ValueSplit { values, lists, nested } = create.split();
             let mut non_list_args = values.to_prisma_values();

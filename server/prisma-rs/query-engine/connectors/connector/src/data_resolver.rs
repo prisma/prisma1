@@ -1,4 +1,4 @@
-use crate::{filter::NodeSelector, query_arguments::QueryArguments, ConnectorResult};
+use crate::{filter::RecordFinder, query_arguments::QueryArguments, ConnectorResult};
 use prisma_models::prelude::*;
 use prisma_models::ScalarFieldRef;
 
@@ -7,7 +7,7 @@ pub trait DataResolver {
     /// Find one record.
     fn get_node_by_where(
         &self,
-        node_selector: &NodeSelector,
+        record_finder: &RecordFinder,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<Option<SingleNode>>;
 

@@ -38,7 +38,7 @@ impl<'f> BuilderExt for OneBuilder<'f> {
         let nested = utils::build_nested_queries(nested_builders)?;
 
         let selected_fields = utils::collect_selected_fields(Arc::clone(&model), field, None)?;
-        let selector = utils::extract_node_selector(&field, Arc::clone(&model))?;
+        let selector = utils::extract_record_finder(&field, Arc::clone(&model))?;
         let name = field.alias.as_ref().unwrap_or(&field.name).clone();
         let fields = utils::collect_selection_order(&field);
 

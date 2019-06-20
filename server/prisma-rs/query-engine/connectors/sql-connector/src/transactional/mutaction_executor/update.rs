@@ -1,20 +1,20 @@
 use crate::{mutaction::MutationBuilder, SqlResult, Transaction};
-use connector::filter::NodeSelector;
+use connector::filter::RecordFinder;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
 use std::sync::Arc;
 
 /// Updates one record and any associated list record in the database.
 pub fn execute<S>(
     conn: &mut Transaction,
-    node_selector: &NodeSelector,
+    record_finder: &RecordFinder,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
 ) -> SqlResult<GraphqlId>
 where
     S: AsRef<str>,
 {
-    let model = node_selector.field.model();
-    let id = conn.find_id(node_selector)?;
+    let model = record_finder.field.model();
+    let id = conn.find_id(record_finder)?;
 
     if let Some(update) = MutationBuilder::update_one(Arc::clone(&model), &id, non_list_args)? {
         conn.update(update)?;
@@ -30,7 +30,7 @@ where
 pub fn execute_nested<S>(
     conn: &mut Transaction,
     parent_id: &GraphqlId,
-    node_selector: &Option<NodeSelector>,
+    record_finder: &Option<RecordFinder>,
     relation_field: RelationFieldRef,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
@@ -38,14 +38,14 @@ pub fn execute_nested<S>(
 where
     S: AsRef<str>,
 {
-    if let Some(ref node_selector) = node_selector {
-        conn.find_id(node_selector)?;
+    if let Some(ref record_finder) = record_finder {
+        conn.find_id(record_finder)?;
     };
 
-    let id = conn.find_id_by_parent(Arc::clone(&relation_field), parent_id, node_selector)?;
-    let node_selector = NodeSelector::from((relation_field.related_model().fields().id(), id));
+    let id = conn.find_id_by_parent(Arc::clone(&relation_field), parent_id, record_finder)?;
+    let record_finder = RecordFinder::from((relation_field.related_model().fields().id(), id));
 
-    execute(conn, &node_selector, non_list_args, list_args)
+    execute(conn, &record_finder, non_list_args, list_args)
 }
 
 /// Updates list args related to the given records.

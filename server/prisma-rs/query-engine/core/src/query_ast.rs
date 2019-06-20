@@ -1,6 +1,6 @@
 //! Prisma read query AST module
 
-use connector::{filter::NodeSelector, QueryArguments};
+use connector::{filter::RecordFinder, QueryArguments};
 use prisma_models::prelude::*;
 
 #[derive(Debug, Clone)]
@@ -14,7 +14,7 @@ pub enum ReadQuery {
 #[derive(Debug, Clone)]
 pub struct RecordQuery {
     pub name: String,
-    pub selector: NodeSelector,
+    pub selector: RecordFinder,
     pub selected_fields: SelectedFields,
     pub nested: Vec<ReadQuery>,
     pub fields: Vec<String>,

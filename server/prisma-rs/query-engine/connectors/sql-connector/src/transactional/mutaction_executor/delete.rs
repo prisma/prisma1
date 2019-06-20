@@ -3,7 +3,7 @@ use crate::{
     mutaction::{DeleteActions, MutationBuilder, NestedActions},
     SqlResult, Transaction,
 };
-use connector::{error::NodeSelectorInfo, filter::NodeSelector};
+use connector::{error::RecordFinderInfo, filter::RecordFinder};
 use prisma_models::{GraphqlId, RelationFieldRef, SingleNode};
 use std::sync::Arc;
 
@@ -11,9 +11,9 @@ use std::sync::Arc;
 /// non-existing record will cause an error.
 ///
 /// Will return the deleted record if the delete was successful.
-pub fn execute(conn: &mut Transaction, node_selector: &NodeSelector) -> SqlResult<SingleNode> {
-    let model = node_selector.field.model();
-    let record = conn.find_record(node_selector)?;
+pub fn execute(conn: &mut Transaction, record_finder: &RecordFinder) -> SqlResult<SingleNode> {
+    let model = record_finder.field.model();
+    let record = conn.find_record(record_finder)?;
     let id = record.get_id_value(Arc::clone(&model)).unwrap();
 
     DeleteActions::check_relation_violations(Arc::clone(&model), &[&id], |select| {
@@ -41,15 +41,15 @@ pub fn execute_nested(
     conn: &mut Transaction,
     parent_id: &GraphqlId,
     actions: &NestedActions,
-    node_selector: &Option<NodeSelector>,
+    record_finder: &Option<RecordFinder>,
     relation_field: RelationFieldRef,
 ) -> SqlResult<()> {
-    if let Some(ref node_selector) = node_selector {
-        conn.find_id(node_selector)?;
+    if let Some(ref record_finder) = record_finder {
+        conn.find_id(record_finder)?;
     };
 
     let child_id = conn
-        .find_id_by_parent(Arc::clone(&relation_field), parent_id, node_selector)
+        .find_id_by_parent(Arc::clone(&relation_field), parent_id, record_finder)
         .map_err(|e| match e {
             SqlError::NodesNotConnected {
                 relation_name,
@@ -63,7 +63,7 @@ pub fn execute_nested(
                 SqlError::NodesNotConnected {
                     relation_name: relation_name,
                     parent_name: parent_name,
-                    parent_where: Some(NodeSelectorInfo::for_id(model, parent_id)),
+                    parent_where: Some(RecordFinderInfo::for_id(model, parent_id)),
                     child_name: child_name,
                     child_where: child_where,
                 }

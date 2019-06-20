@@ -1,16 +1,16 @@
-use crate::filter::NodeSelector;
+use crate::filter::RecordFinder;
 use failure::{Error, Fail};
 use prisma_models::prelude::{DomainError, GraphqlId, ModelRef, PrismaValue};
 use std::fmt;
 
 #[derive(Debug)]
-pub struct NodeSelectorInfo {
+pub struct RecordFinderInfo {
     pub model: String,
     pub field: String,
     pub value: PrismaValue,
 }
 
-impl NodeSelectorInfo {
+impl RecordFinderInfo {
     pub fn for_id(model: ModelRef, value: &GraphqlId) -> Self {
         Self {
             model: model.name.clone(),
@@ -20,7 +20,7 @@ impl NodeSelectorInfo {
     }
 }
 
-impl fmt::Display for NodeSelectorInfo {
+impl fmt::Display for RecordFinderInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -30,8 +30,8 @@ impl fmt::Display for NodeSelectorInfo {
     }
 }
 
-impl From<&NodeSelector> for NodeSelectorInfo {
-    fn from(ns: &NodeSelector) -> Self {
+impl From<&RecordFinder> for RecordFinderInfo {
+    fn from(ns: &RecordFinder) -> Self {
         Self {
             model: ns.field.model().name.clone(),
             field: ns.field.name.clone(),
@@ -73,7 +73,7 @@ pub enum ConnectorError {
     DomainError(DomainError),
 
     #[fail(display = "Node not found: {}", _0)]
-    NodeNotFoundForWhere(NodeSelectorInfo),
+    NodeNotFoundForWhere(RecordFinderInfo),
 
     #[fail(
         display = "Violating a relation {} between {} and {}",
@@ -92,9 +92,9 @@ pub enum ConnectorError {
     NodesNotConnected {
         relation_name: String,
         parent_name: String,
-        parent_where: Option<NodeSelectorInfo>,
+        parent_where: Option<RecordFinderInfo>,
         child_name: String,
-        child_where: Option<NodeSelectorInfo>,
+        child_where: Option<RecordFinderInfo>,
     },
 
     #[fail(display = "Conversion error: {}", _0)]

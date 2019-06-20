@@ -10,8 +10,8 @@ use crate::{
     AliasedCondition, RawQuery, SqlResult, SqlRow,
 };
 use connector::{
-    error::NodeSelectorInfo,
-    filter::{Filter, NodeSelector},
+    error::RecordFinderInfo,
+    filter::{Filter, RecordFinder},
 };
 use prisma_models::*;
 use prisma_query::ast::*;
@@ -70,16 +70,16 @@ pub trait Transaction {
     }
 
     /// Find one full record selecting all scalar fields.
-    fn find_record(&mut self, node_selector: &NodeSelector) -> SqlResult<SingleNode> {
+    fn find_record(&mut self, record_finder: &RecordFinder) -> SqlResult<SingleNode> {
         use SqlError::*;
 
-        let model = node_selector.field.model();
+        let model = record_finder.field.model();
         let selected_fields = SelectedFields::from(Arc::clone(&model));
-        let select = QueryBuilder::get_nodes(model, &selected_fields, node_selector);
+        let select = QueryBuilder::get_nodes(model, &selected_fields, record_finder);
         let idents = selected_fields.type_identifiers();
 
         let row = self.find(select, idents.as_slice()).map_err(|e| match e {
-            NodeDoesNotExist => NodeNotFoundForWhere(NodeSelectorInfo::from(node_selector)),
+            NodeDoesNotExist => NodeNotFoundForWhere(RecordFinderInfo::from(record_finder)),
             e => e,
         })?;
 
@@ -105,15 +105,15 @@ pub trait Transaction {
     }
 
     /// Read the first column from the first row as an `GraphqlId`.
-    fn find_id(&mut self, node_selector: &NodeSelector) -> SqlResult<GraphqlId> {
-        let model = node_selector.field.model();
-        let filter = Filter::from(node_selector.clone());
+    fn find_id(&mut self, record_finder: &RecordFinder) -> SqlResult<GraphqlId> {
+        let model = record_finder.field.model();
+        let filter = Filter::from(record_finder.clone());
 
         let id = self
             .filter_ids(model, filter)?
             .into_iter()
             .next()
-            .ok_or_else(|| SqlError::NodeNotFoundForWhere(NodeSelectorInfo::from(node_selector)))?;
+            .ok_or_else(|| SqlError::NodeNotFoundForWhere(RecordFinderInfo::from(record_finder)))?;
 
         Ok(id)
     }
@@ -146,7 +146,7 @@ pub trait Transaction {
         &mut self,
         parent_field: RelationFieldRef,
         parent_id: &GraphqlId,
-        selector: &Option<NodeSelector>,
+        selector: &Option<RecordFinder>,
     ) -> SqlResult<GraphqlId> {
         let ids = self.filter_ids_by_parents(
             Arc::clone(&parent_field),
@@ -159,7 +159,7 @@ pub trait Transaction {
             parent_name: parent_field.model().name.clone(),
             parent_where: None,
             child_name: parent_field.related_model().name.clone(),
-            child_where: selector.as_ref().map(NodeSelectorInfo::from),
+            child_where: selector.as_ref().map(RecordFinderInfo::from),
         })?;
 
         Ok(id)

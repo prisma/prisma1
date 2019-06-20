@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct UpsertNode {
-    pub where_: NodeSelector,
+    pub where_: RecordFinder,
     pub create: CreateNode,
     pub update: UpdateNode,
 }
@@ -12,7 +12,7 @@ pub struct UpsertNode {
 #[derive(Debug, Clone)]
 pub struct NestedUpsertNode {
     pub relation_field: Arc<RelationField>,
-    pub where_: Option<NodeSelector>,
+    pub where_: Option<RecordFinder>,
     pub create: NestedCreateNode,
     pub update: NestedUpdateNode,
 }

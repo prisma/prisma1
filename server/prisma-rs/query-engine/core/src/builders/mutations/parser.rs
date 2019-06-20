@@ -24,7 +24,7 @@
 //! - `lists`: Scalarlist values that are passed seperately
 //! - `nested`: All nested child nodes
 
-use connector::filter::NodeSelector;
+use connector::filter::RecordFinder;
 use graphql_parser::query::Value;
 use prisma_models::{ModelRef, PrismaValue};
 use std::collections::BTreeMap;
@@ -131,7 +131,7 @@ impl ValueMap {
             .collect()
     }
 
-    pub fn to_node_selector(&self, model: ModelRef) -> Option<NodeSelector> {
+    pub fn to_record_finder(&self, model: ModelRef) -> Option<RecordFinder> {
         self.0
             .iter()
             .filter_map(|(field, value)| {
@@ -142,7 +142,7 @@ impl ValueMap {
                     .map(|f| (f, PrismaValue::from_value(&value)))
             })
             .nth(0)
-            .map(|(field, value)| NodeSelector { field, value })
+            .map(|(field, value)| RecordFinder { field, value })
     }
 }
 

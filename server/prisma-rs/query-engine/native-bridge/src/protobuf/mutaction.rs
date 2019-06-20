@@ -1,5 +1,5 @@
 use super::filter::IntoFilter;
-use connector::{filter::NodeSelector, mutaction::*};
+use connector::{filter::RecordFinder, mutaction::*};
 use prisma_models::prelude::*;
 use std::sync::Arc;
 
@@ -110,7 +110,7 @@ pub fn convert_update_envelope(
 
 pub fn convert_update(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -> UpdateNode {
     UpdateNode {
-        where_: convert_node_select(m.where_, Arc::clone(&project)),
+        where_: convert_record_finder(m.where_, Arc::clone(&project)),
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
         nested_mutactions: convert_nested_mutactions(m.nested, Arc::clone(&project)),
@@ -121,7 +121,7 @@ pub fn convert_nested_update(m: crate::protobuf::prisma::NestedUpdateNode, proje
     let relation_field = find_relation_field(Arc::clone(&project), m.model_name, m.field_name);
     NestedUpdateNode {
         relation_field: relation_field,
-        where_: m.where_.map(|w| convert_node_select(w, Arc::clone(&project))),
+        where_: m.where_.map(|w| convert_record_finder(w, Arc::clone(&project))),
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
         nested_mutactions: convert_nested_mutactions(m.nested, Arc::clone(&project)),
@@ -155,7 +155,7 @@ pub fn convert_nested_update_nodes(
 
 pub fn convert_upsert(m: crate::protobuf::prisma::UpsertNode, project: ProjectRef) -> TopLevelDatabaseMutaction {
     let upsert_node = UpsertNode {
-        where_: convert_node_select(m.where_, Arc::clone(&project)),
+        where_: convert_record_finder(m.where_, Arc::clone(&project)),
         create: convert_create(m.create, Arc::clone(&project)),
         update: convert_update(m.update, project),
     };
@@ -167,7 +167,7 @@ pub fn convert_nested_upsert(m: crate::protobuf::prisma::NestedUpsertNode, proje
     let relation_field = find_relation_field(Arc::clone(&project), m.model_name, m.field_name);
     NestedUpsertNode {
         relation_field: relation_field,
-        where_: m.where_.map(|w| convert_node_select(w, Arc::clone(&project))),
+        where_: m.where_.map(|w| convert_record_finder(w, Arc::clone(&project))),
         create: convert_nested_create(m.create, Arc::clone(&project)),
         update: convert_nested_update(m.update, Arc::clone(&project)),
     }
@@ -175,7 +175,7 @@ pub fn convert_nested_upsert(m: crate::protobuf::prisma::NestedUpsertNode, proje
 
 pub fn convert_delete(m: crate::protobuf::prisma::DeleteNode, project: ProjectRef) -> TopLevelDatabaseMutaction {
     let delete_node = DeleteNode {
-        where_: convert_node_select(m.where_, project),
+        where_: convert_record_finder(m.where_, project),
     };
 
     TopLevelDatabaseMutaction::DeleteNode(delete_node)
@@ -184,7 +184,7 @@ pub fn convert_delete(m: crate::protobuf::prisma::DeleteNode, project: ProjectRe
 pub fn convert_nested_delete(m: crate::protobuf::prisma::NestedDeleteNode, project: ProjectRef) -> NestedDeleteNode {
     NestedDeleteNode {
         relation_field: find_relation_field(Arc::clone(&project), m.model_name, m.field_name),
-        where_: m.where_.map(|w| convert_node_select(w, project)),
+        where_: m.where_.map(|w| convert_record_finder(w, project)),
     }
 }
 
@@ -228,7 +228,7 @@ pub fn convert_nested_connect(m: crate::protobuf::prisma::NestedConnect, project
 
     NestedConnect {
         relation_field: relation_field,
-        where_: convert_node_select(m.where_, project),
+        where_: convert_record_finder(m.where_, project),
         top_is_create: m.top_is_create,
     }
 }
@@ -247,7 +247,7 @@ pub fn convert_nested_disconnect(
 
     NestedDisconnect {
         relation_field: relation_field,
-        where_: m.where_.map(|w| convert_node_select(w, project)),
+        where_: m.where_.map(|w| convert_record_finder(w, project)),
     }
 }
 
@@ -265,16 +265,16 @@ pub fn convert_nested_set(m: crate::protobuf::prisma::NestedSet, project: Projec
         wheres: m
             .wheres
             .into_iter()
-            .map(|w| convert_node_select(w, Arc::clone(&project)))
+            .map(|w| convert_record_finder(w, Arc::clone(&project)))
             .collect(),
     }
 }
 
-pub fn convert_node_select(selector: crate::protobuf::prisma::NodeSelector, project: ProjectRef) -> NodeSelector {
+pub fn convert_record_finder(selector: crate::protobuf::prisma::NodeSelector, project: ProjectRef) -> RecordFinder {
     let model = project.internal_data_model().find_model(&selector.model_name).unwrap();
     let field = model.fields().find_from_scalar(&selector.field_name).unwrap();
     let value: PrismaValue = selector.value.into();
-    NodeSelector { field, value }
+    RecordFinder { field, value }
 }
 
 pub fn convert_prisma_args(proto: crate::protobuf::prisma::PrismaArgs) -> PrismaArgs {

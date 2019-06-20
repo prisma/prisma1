@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct UpdateNode {
-    pub where_: NodeSelector,
+    pub where_: RecordFinder,
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
     pub nested_mutactions: NestedMutactions,
@@ -13,7 +13,7 @@ pub struct UpdateNode {
 #[derive(Debug, Clone)]
 pub struct NestedUpdateNode {
     pub relation_field: Arc<RelationField>,
-    pub where_: Option<NodeSelector>,
+    pub where_: Option<RecordFinder>,
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
     pub nested_mutactions: NestedMutactions,
