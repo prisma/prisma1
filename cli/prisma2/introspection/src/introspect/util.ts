@@ -87,15 +87,9 @@ export async function introspect({
   const renderedSdl = await isdlToDatamodel2(sdl, dataSources)
   const after = Date.now()
 
-  const numTables = sdl.types.length
-
-  if (numTables === 0) {
-    throw new Error("The provided database doesn't contain any tables. Please provide another database.")
-  }
-
   return {
     sdl: renderedSdl,
-    numTables,
+    numTables: sdl.types.length,
     referenceDatamodelExists: false,
     time: after - before,
     credentials,
