@@ -1,19 +1,19 @@
 //! Combined mutation executions
-mod create_node;
-mod delete_node;
+mod create_record;
+mod delete_record;
 mod path;
 mod record_address;
 mod result;
-mod update_node;
-mod upsert_node;
+mod update_record;
+mod upsert_record;
 
-pub use create_node::*;
-pub use delete_node::*;
+pub use create_record::*;
+pub use delete_record::*;
 pub use path::*;
 pub use record_address::*;
 pub use result::*;
-pub use update_node::*;
-pub use upsert_node::*;
+pub use update_record::*;
+pub use upsert_record::*;
 
 use super::filter::{Filter, RecordFinder};
 use prisma_models::prelude::*;
@@ -36,39 +36,39 @@ pub enum DatabaseMutaction {
 
 #[derive(Debug, Clone)]
 pub enum TopLevelDatabaseMutaction {
-    CreateNode(CreateNode),
-    UpdateNode(UpdateNode),
-    DeleteNode(DeleteNode),
-    UpsertNode(UpsertNode),
-    UpdateNodes(UpdateNodes),
-    DeleteNodes(DeleteNodes),
+    CreateRecord(CreateRecord),
+    UpdateRecord(UpdateRecord),
+    DeleteRecord(DeleteRecord),
+    UpsertRecord(UpsertRecord),
+    UpdateManyRecords(UpdateManyRecords),
+    DeleteManyRecords(DeleteManyRecords),
     ResetData(ResetData),
 }
 
 #[derive(Debug, Clone)]
 pub enum NestedDatabaseMutaction {
-    CreateNode(NestedCreateNode),
-    UpdateNode(NestedUpdateNode),
-    UpsertNode(NestedUpsertNode),
-    DeleteNode(NestedDeleteNode),
+    CreateRecord(NestedCreateRecord),
+    UpdateRecord(NestedUpdateRecord),
+    UpsertRecord(NestedUpsertRecord),
+    DeleteRecord(NestedDeleteRecord),
     Connect(NestedConnect),
     Disconnect(NestedDisconnect),
     Set(NestedSet),
-    UpdateNodes(NestedUpdateNodes),
-    DeleteNodes(NestedDeleteNodes),
+    UpdateManyRecords(NestedUpdateManyRecords),
+    DeleteManyRecords(NestedDeleteManyRecords),
 }
 
 #[derive(Default, Debug, Clone)]
 pub struct NestedMutactions {
-    pub creates: Vec<NestedCreateNode>,
-    pub updates: Vec<NestedUpdateNode>,
-    pub upserts: Vec<NestedUpsertNode>,
-    pub deletes: Vec<NestedDeleteNode>,
+    pub creates: Vec<NestedCreateRecord>,
+    pub updates: Vec<NestedUpdateRecord>,
+    pub upserts: Vec<NestedUpsertRecord>,
+    pub deletes: Vec<NestedDeleteRecord>,
     pub connects: Vec<NestedConnect>,
     pub disconnects: Vec<NestedDisconnect>,
     pub sets: Vec<NestedSet>,
-    pub update_manys: Vec<NestedUpdateNodes>,
-    pub delete_manys: Vec<NestedDeleteNodes>,
+    pub update_manys: Vec<NestedUpdateManyRecords>,
+    pub delete_manys: Vec<NestedDeleteManyRecords>,
 }
 
 // SET

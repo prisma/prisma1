@@ -57,7 +57,7 @@ impl<'field> MutationBuilder<'field> {
                         model_operation.operation,
                     )?;
 
-                    TopLevelDatabaseMutaction::CreateNode(CreateNode {
+                    TopLevelDatabaseMutaction::CreateRecord(CreateRecord {
                         model: Arc::clone(&model),
                         non_list_args,
                         list_args,
@@ -82,7 +82,7 @@ impl<'field> MutationBuilder<'field> {
                             |w| Ok(w),
                         )?;
 
-                    TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
+                    TopLevelDatabaseMutaction::UpdateRecord(UpdateRecord {
                         where_,
                         non_list_args,
                         list_args,
@@ -105,7 +105,7 @@ impl<'field> MutationBuilder<'field> {
                         Err(CoreError::QueryValidationError("Required filters not found!".into()))
                     })?;
 
-                    TopLevelDatabaseMutaction::UpdateNodes(UpdateNodes {
+                    TopLevelDatabaseMutaction::UpdateManyRecords(UpdateManyRecords {
                         model: Arc::clone(&model),
                         filter,
                         non_list_args,
@@ -120,7 +120,7 @@ impl<'field> MutationBuilder<'field> {
                             |w| Ok(w),
                         )?;
 
-                    TopLevelDatabaseMutaction::DeleteNode(DeleteNode { where_ })
+                    TopLevelDatabaseMutaction::DeleteRecord(DeleteRecord { where_ })
                 }
                 OperationTag::DeleteMany => {
                     let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
@@ -128,7 +128,7 @@ impl<'field> MutationBuilder<'field> {
                         Err(CoreError::QueryValidationError("Required filters not found!".into()))
                     })?;
 
-                    TopLevelDatabaseMutaction::DeleteNodes(DeleteNodes { model, filter })
+                    TopLevelDatabaseMutaction::DeleteManyRecords(DeleteManyRecords { model, filter })
                 }
                 OperationTag::UpsertOne => {
                     let where_ = utils::extract_record_finder(self.field, Arc::clone(&model))?;
@@ -150,7 +150,7 @@ impl<'field> MutationBuilder<'field> {
                         )?;
                         let model = Arc::clone(&model);
 
-                        CreateNode {
+                        CreateRecord {
                             model,
                             non_list_args,
                             list_args,
@@ -170,7 +170,7 @@ impl<'field> MutationBuilder<'field> {
                         )?;
                         let where_ = where_.clone();
 
-                        UpdateNode {
+                        UpdateRecord {
                             where_,
                             non_list_args,
                             list_args,
@@ -178,7 +178,7 @@ impl<'field> MutationBuilder<'field> {
                         }
                     };
 
-                    TopLevelDatabaseMutaction::UpsertNode(UpsertNode { where_, create, update })
+                    TopLevelDatabaseMutaction::UpsertRecord(UpsertRecord { where_, create, update })
                 }
                 _ => unimplemented!(),
             };

@@ -1,11 +1,11 @@
 use super::*;
 use crate::SqlResult;
-use connector::mutaction::NestedCreateNode;
+use connector::mutaction::NestedCreateRecord;
 use prisma_models::*;
 use prisma_query::ast::*;
 use std::sync::Arc;
 
-impl NestedActions for NestedCreateNode {
+impl NestedActions for NestedCreateRecord {
     fn relation_field(&self) -> RelationFieldRef {
         self.relation_field.clone()
     }

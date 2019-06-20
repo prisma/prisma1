@@ -10,19 +10,19 @@ use crate::ordering::Ordering;
 use prisma_models::prelude::*;
 use prisma_query::ast::{Comparable, Conjuctive, Query};
 
-pub trait RelatedNodesQueryBuilder {
+pub trait ManyRelatedRecordsQueryBuilder {
     const BASE_TABLE_ALIAS: &'static str = "prismaBaseTableAlias";
     const ROW_NUMBER_ALIAS: &'static str = "prismaRowNumberAlias";
     const ROW_NUMBER_TABLE_ALIAS: &'static str = "prismaRowNumberTableAlias";
 
-    fn with_pagination<'a>(base: RelatedNodesBaseQuery<'a>) -> Query;
+    fn with_pagination<'a>(base: ManyRelatedRecordsBaseQuery<'a>) -> Query;
 
-    fn without_pagination<'a>(base: RelatedNodesBaseQuery<'a>) -> Query {
+    fn without_pagination<'a>(base: ManyRelatedRecordsBaseQuery<'a>) -> Query {
         let conditions = base
             .from_field
             .relation_column()
             .table(Relation::TABLE_ALIAS)
-            .in_selection(base.from_node_ids.to_owned())
+            .in_selection(base.from_record_ids.to_owned())
             .and(base.condition)
             .and(base.cursor);
 

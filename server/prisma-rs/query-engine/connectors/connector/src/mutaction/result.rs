@@ -1,11 +1,11 @@
 use super::DatabaseMutactionResultType;
-use prisma_models::prelude::{GraphqlId, SingleNode};
+use prisma_models::prelude::{GraphqlId, SingleRecord};
 
 #[derive(Debug, Clone)]
 pub enum Identifier {
     Id(GraphqlId),
     Count(usize),
-    Node(SingleNode),
+    Record(SingleRecord),
     None,
 }
 
@@ -30,10 +30,10 @@ impl DatabaseMutactionResult {
         }
     }
 
-    pub fn node(&self) -> &SingleNode {
+    pub fn record(&self) -> &SingleRecord {
         match self.identifier {
-            Identifier::Node(ref node) => node,
-            _ => panic!("No node defined in DatabaseMutactionResult"),
+            Identifier::Record(ref record) => record,
+            _ => panic!("No record defined in DatabaseMutactionResult"),
         }
     }
 }

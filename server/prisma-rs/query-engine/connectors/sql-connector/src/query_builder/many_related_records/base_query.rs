@@ -4,10 +4,10 @@ use prisma_models::prelude::*;
 use prisma_query::ast::{Aliasable, Comparable, ConditionTree, Joinable, Select};
 use std::sync::Arc;
 
-pub struct RelatedNodesBaseQuery<'a> {
+pub struct ManyRelatedRecordsBaseQuery<'a> {
     pub from_field: Arc<RelationField>,
     pub selected_fields: &'a SelectedFields,
-    pub from_node_ids: &'a [GraphqlId],
+    pub from_record_ids: &'a [GraphqlId],
     pub query: Select,
     pub order_by: Option<OrderBy>,
     pub is_reverse_order: bool,
@@ -17,13 +17,13 @@ pub struct RelatedNodesBaseQuery<'a> {
     pub skip_and_limit: SkipAndLimit,
 }
 
-impl<'a> RelatedNodesBaseQuery<'a> {
+impl<'a> ManyRelatedRecordsBaseQuery<'a> {
     pub fn new(
         from_field: Arc<RelationField>,
-        from_node_ids: &'a [GraphqlId],
+        from_record_ids: &'a [GraphqlId],
         query_arguments: QueryArguments,
         selected_fields: &'a SelectedFields,
-    ) -> RelatedNodesBaseQuery<'a> {
+    ) -> ManyRelatedRecordsBaseQuery<'a> {
         let cursor = CursorCondition::build(&query_arguments, from_field.related_model());
         let window_limits = query_arguments.window_limits();
         let skip_and_limit = query_arguments.skip_and_limit();
@@ -54,7 +54,7 @@ impl<'a> RelatedNodesBaseQuery<'a> {
         Self {
             from_field,
             selected_fields,
-            from_node_ids,
+            from_record_ids,
             query,
             order_by,
             is_reverse_order,

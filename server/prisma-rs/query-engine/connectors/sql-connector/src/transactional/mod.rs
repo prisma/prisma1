@@ -6,7 +6,7 @@ pub use mutaction_executor::*;
 
 use crate::{
     error::*,
-    query_builder::{QueryBuilder, RelatedNodesQueryBuilder},
+    query_builder::{ManyRelatedRecordsQueryBuilder, QueryBuilder},
     AliasedCondition, RawQuery, SqlResult, SqlRow,
 };
 use connector::{
@@ -23,8 +23,8 @@ use std::{convert::TryFrom, sync::Arc};
 /// rollback in case of an error.
 pub trait Transactional {
     /// This we use to differentiate between databases with or without
-    /// `ROW_NUMBER` function for related nodes pagination.
-    type RelatedNodesBuilder: RelatedNodesQueryBuilder;
+    /// `ROW_NUMBER` function for related records pagination.
+    type ManyRelatedRecordsBuilder: ManyRelatedRecordsQueryBuilder;
 
     /// Wrap a closure into a transaction. All actions done through the
     /// `Transaction` are commited automatically, or rolled back in case of any
@@ -70,22 +70,22 @@ pub trait Transaction {
     }
 
     /// Find one full record selecting all scalar fields.
-    fn find_record(&mut self, record_finder: &RecordFinder) -> SqlResult<SingleNode> {
+    fn find_record(&mut self, record_finder: &RecordFinder) -> SqlResult<SingleRecord> {
         use SqlError::*;
 
         let model = record_finder.field.model();
         let selected_fields = SelectedFields::from(Arc::clone(&model));
-        let select = QueryBuilder::get_nodes(model, &selected_fields, record_finder);
+        let select = QueryBuilder::get_records(model, &selected_fields, record_finder);
         let idents = selected_fields.type_identifiers();
 
         let row = self.find(select, idents.as_slice()).map_err(|e| match e {
-            NodeDoesNotExist => NodeNotFoundForWhere(RecordFinderInfo::from(record_finder)),
+            RecordDoesNotExist => RecordNotFoundForWhere(RecordFinderInfo::from(record_finder)),
             e => e,
         })?;
 
-        let node = Node::from(row);
+        let record = Record::from(row);
 
-        Ok(SingleNode::new(node, selected_fields.names()))
+        Ok(SingleRecord::new(record, selected_fields.names()))
     }
 
     /// Select one row from the database.
@@ -93,7 +93,7 @@ pub trait Transaction {
         self.filter(q.limit(1).into(), idents)?
             .into_iter()
             .next()
-            .ok_or(SqlError::NodeDoesNotExist)
+            .ok_or(SqlError::RecordDoesNotExist)
     }
 
     /// Read the first column from the first row as an integer.
@@ -113,7 +113,7 @@ pub trait Transaction {
             .filter_ids(model, filter)?
             .into_iter()
             .next()
-            .ok_or_else(|| SqlError::NodeNotFoundForWhere(RecordFinderInfo::from(record_finder)))?;
+            .ok_or_else(|| SqlError::RecordNotFoundForWhere(RecordFinderInfo::from(record_finder)))?;
 
         Ok(id)
     }
@@ -154,7 +154,7 @@ pub trait Transaction {
             selector.clone().map(Filter::from),
         )?;
 
-        let id = ids.into_iter().next().ok_or_else(|| SqlError::NodesNotConnected {
+        let id = ids.into_iter().next().ok_or_else(|| SqlError::RecordsNotConnected {
             relation_name: parent_field.relation().name.clone(),
             parent_name: parent_field.model().name.clone(),
             parent_where: None,
@@ -165,7 +165,7 @@ pub trait Transaction {
         Ok(id)
     }
 
-    /// Find all children node id's with the given parent id's, optionally given
+    /// Find all children record id's with the given parent id's, optionally given
     /// a `Filter` for extra filtering.
     fn filter_ids_by_parents(
         &mut self,

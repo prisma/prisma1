@@ -1,6 +1,6 @@
 use crate::{query_ast, query_results::*, CoreResult};
 use connector::{ConnectorResult, DataResolver, ScalarListValues};
-use prisma_models::{GraphqlId, ScalarField, SelectedFields, SingleNode};
+use prisma_models::{GraphqlId, ScalarField, SelectedFields, SingleRecord};
 use query_ast::*;
 use std::{convert::TryFrom, sync::Arc};
 
@@ -24,7 +24,7 @@ impl ReadQueryExecutor {
 
                     let scalars = self
                         .data_resolver
-                        .get_node_by_where(&query.selector, &selected_fields)?;
+                        .get_single_record(&query.selector, &selected_fields)?;
 
                     match scalars {
                         Some(ref record) => {
@@ -49,9 +49,11 @@ impl ReadQueryExecutor {
                 }
                 ReadQuery::ManyRecordsQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
-                    let scalars =
-                        self.data_resolver
-                            .get_nodes(Arc::clone(&query.model), query.args.clone(), &selected_fields)?;
+                    let scalars = self.data_resolver.get_many_records(
+                        Arc::clone(&query.model),
+                        query.args.clone(),
+                        &selected_fields,
+                    )?;
 
                     let ids = scalars.get_id_values(Arc::clone(&query.model))?;
                     let list_fields = selected_fields.scalar_lists();
@@ -71,7 +73,7 @@ impl ReadQueryExecutor {
                 ReadQuery::RelatedRecordQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
 
-                    let result = self.data_resolver.get_related_nodes(
+                    let result = self.data_resolver.get_related_records(
                         Arc::clone(&query.parent_field),
                         &parent_ids,
                         query.args.clone(),
@@ -80,10 +82,10 @@ impl ReadQueryExecutor {
 
                     // If our result set contains more than one entry
                     // we need to handle all of them!
-                    if result.nodes.len() > 1 {
-                        for node in result.nodes.into_iter() {
-                            let single = SingleNode {
-                                node,
+                    if result.records.len() > 1 {
+                        for record in result.records.into_iter() {
+                            let single = SingleRecord {
+                                record,
                                 field_names: result.field_names.clone(),
                             };
 
@@ -105,7 +107,7 @@ impl ReadQueryExecutor {
                         }
                     }
                     // FIXME: Required fields need to return Errors, non-required can be ignored!
-                    else if let Ok(record) = SingleNode::try_from(result) {
+                    else if let Ok(record) = SingleRecord::try_from(result) {
                         let ids = vec![record.get_id_value(query.parent_field.related_model())?.clone()];
                         let list_fields = selected_fields.scalar_lists();
                         let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
@@ -133,7 +135,7 @@ impl ReadQueryExecutor {
                 ReadQuery::ManyRelatedRecordsQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
 
-                    let scalars = self.data_resolver.get_related_nodes(
+                    let scalars = self.data_resolver.get_related_records(
                         Arc::clone(&query.parent_field),
                         &parent_ids,
                         query.args.clone(),
@@ -173,7 +175,7 @@ impl ReadQueryExecutor {
                 .map(|list_field| {
                     let name = list_field.name.clone();
                     self.data_resolver
-                        .get_scalar_list_values_by_node_ids(list_field, record_ids.clone())
+                        .get_scalar_list_values_by_record_ids(list_field, record_ids.clone())
                         .map(|r| (name, r))
                 })
                 .collect::<ConnectorResult<Vec<(String, Vec<_>)>>>()

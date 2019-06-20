@@ -48,7 +48,7 @@ impl SimpleNestedBuilder {
                 let mut non_list_args: PrismaArgs = non_list_args.into();
                 non_list_args.add_datetimes(Arc::clone(&model));
 
-                mutations.creates.push(NestedCreateNode {
+                mutations.creates.push(NestedCreateRecord {
                     non_list_args,
                     list_args,
                     top_is_create: match top_level {
@@ -60,7 +60,7 @@ impl SimpleNestedBuilder {
                 });
             }
             "delete" => {
-                mutations.deletes.push(NestedDeleteNode { relation_field, where_ });
+                mutations.deletes.push(NestedDeleteRecord { relation_field, where_ });
             }
             "connect" => {
                 let where_ = values.to_record_finder(Arc::clone(&relation_model)).map_or(
@@ -81,7 +81,7 @@ impl SimpleNestedBuilder {
                 mutations.disconnects.push(NestedDisconnect { relation_field, where_ });
             }
             "update" => {
-                mutations.updates.push(NestedUpdateNode {
+                mutations.updates.push(NestedUpdateRecord {
                     relation_field,
                     non_list_args: non_list_args.into(),
                     list_args,
@@ -109,7 +109,7 @@ impl SimpleNestedBuilder {
                     utils::extract_query_args_inner(wheree.iter().map(|(a, b)| (a, b)), Arc::clone(&relation_model))?
                         .filter;
 
-                mutations.update_manys.push(NestedUpdateNodes {
+                mutations.update_manys.push(NestedUpdateManyRecords {
                     relation_field,
                     filter,
                     non_list_args: non_list_args.into(),
@@ -155,7 +155,7 @@ impl UpsertNestedBuilder {
             let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), top_level)?;
             let relation_field = Arc::clone(&relation_field);
 
-            NestedCreateNode {
+            NestedCreateRecord {
                 non_list_args,
                 list_args,
                 top_is_create: match top_level {
@@ -175,7 +175,7 @@ impl UpsertNestedBuilder {
             let relation_field = Arc::clone(&relation_field);
             let where_ = where_.clone();
 
-            NestedUpdateNode {
+            NestedUpdateRecord {
                 relation_field,
                 non_list_args,
                 list_args,
@@ -184,7 +184,7 @@ impl UpsertNestedBuilder {
             }
         };
 
-        mutations.upserts.push(NestedUpsertNode {
+        mutations.upserts.push(NestedUpsertRecord {
             relation_field,
             where_,
             create,

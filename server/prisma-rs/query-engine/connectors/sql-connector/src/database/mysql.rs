@@ -1,6 +1,6 @@
 use crate::{
-    error::SqlError, query_builder::RelatedNodesWithUnionAll, MutationBuilder, RawQuery, SqlResult, SqlRow, ToSqlRow,
-    Transaction, Transactional,
+    error::SqlError, query_builder::ManyRelatedRecordsWithUnionAll, MutationBuilder, RawQuery, SqlResult, SqlRow,
+    ToSqlRow, Transaction, Transactional,
 };
 use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};
@@ -111,7 +111,7 @@ impl TryFrom<&ConnectionStringConfig> for Mysql {
 }
 
 impl Transactional for Mysql {
-    type RelatedNodesBuilder = RelatedNodesWithUnionAll;
+    type ManyRelatedRecordsBuilder = ManyRelatedRecordsWithUnionAll;
 
     fn with_transaction<F, T>(&self, _: &str, f: F) -> SqlResult<T>
     where

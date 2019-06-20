@@ -1,12 +1,12 @@
 mod nested_connect;
-mod nested_create_node;
-mod nested_delete_node;
+mod nested_create_record;
+mod nested_delete_record;
 mod nested_disconnect;
 mod nested_set;
 
 pub use nested_connect::*;
-pub use nested_create_node::*;
-pub use nested_delete_node::*;
+pub use nested_create_record::*;
+pub use nested_delete_record::*;
 pub use nested_disconnect::*;
 pub use nested_set::*;
 
@@ -54,13 +54,13 @@ pub trait NestedActions {
         }
     }
 
-    fn nodes_not_connected(&self, parent_id: Option<GraphqlId>, child_id: Option<GraphqlId>) -> SqlError {
+    fn records_not_connected(&self, parent_id: Option<GraphqlId>, child_id: Option<GraphqlId>) -> SqlError {
         let rf = self.relation_field();
 
         let parent_where = parent_id.map(|parent_id| RecordFinderInfo::for_id(rf.model(), &parent_id));
         let child_where = child_id.map(|child_id| RecordFinderInfo::for_id(rf.model(), &child_id));
 
-        SqlError::NodesNotConnected {
+        SqlError::RecordsNotConnected {
             relation_name: rf.relation().name.clone(),
             parent_name: rf.model().name.clone(),
             parent_where,
@@ -153,7 +153,7 @@ pub trait NestedActions {
         let relation_column = relation.column_for_relation_side(rf.relation_side);
         let opposite_column = relation.column_for_relation_side(rf.relation_side.opposite());
 
-        let sub_select = QueryBuilder::get_nodes(
+        let sub_select = QueryBuilder::get_records(
             rf.model(),
             &SelectedFields::from(rf.model().fields().id()),
             record_finder.clone(),
@@ -192,7 +192,7 @@ pub trait NestedActions {
             .column(rf.relation_column())
             .so_that(is_parent.and(child_exists));
 
-        let error = self.nodes_not_connected(Some(parent_id.clone()), None);
+        let error = self.records_not_connected(Some(parent_id.clone()), None);
 
         let check = |exists: bool| {
             if exists {
@@ -218,7 +218,7 @@ pub trait NestedActions {
             .column(rf.opposite_column())
             .so_that(condition);
 
-        let error = self.nodes_not_connected(Some(parent_id.clone()), Some(child_id.clone()));
+        let error = self.records_not_connected(Some(parent_id.clone()), Some(child_id.clone()));
 
         let check = |exists: bool| {
             if exists {

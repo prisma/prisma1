@@ -48,8 +48,8 @@ pub enum ConnectorError {
     #[fail(display = "Null constraint failed: {}", field_name)]
     NullConstraintViolation { field_name: String },
 
-    #[fail(display = "Node does not exist.")]
-    NodeDoesNotExist,
+    #[fail(display = "Record does not exist.")]
+    RecordDoesNotExist,
 
     #[fail(display = "Column does not exist")]
     ColumnDoesNotExist,
@@ -72,8 +72,8 @@ pub enum ConnectorError {
     #[fail(display = "{}", _0)]
     DomainError(DomainError),
 
-    #[fail(display = "Node not found: {}", _0)]
-    NodeNotFoundForWhere(RecordFinderInfo),
+    #[fail(display = "Record not found: {}", _0)]
+    RecordNotFoundForWhere(RecordFinderInfo),
 
     #[fail(
         display = "Violating a relation {} between {} and {}",
@@ -86,10 +86,10 @@ pub enum ConnectorError {
     },
 
     #[fail(
-        display = "The relation {} has no node for the model {} connected to a Node for the model {} on your mutation path.",
+        display = "The relation {} has no record for the model {} connected to a record for the model {} on your write path.",
         relation_name, parent_name, child_name
     )]
-    NodesNotConnected {
+    RecordsNotConnected {
         relation_name: String,
         parent_name: String,
         parent_where: Option<RecordFinderInfo>,

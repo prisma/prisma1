@@ -4,12 +4,12 @@ use connector::SkipAndLimit;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
-pub struct RelatedNodesWithUnionAll;
+pub struct ManyRelatedRecordsWithUnionAll;
 
-impl RelatedNodesQueryBuilder for RelatedNodesWithUnionAll {
-    fn with_pagination<'a>(base: RelatedNodesBaseQuery<'a>) -> Query {
+impl ManyRelatedRecordsQueryBuilder for ManyRelatedRecordsWithUnionAll {
+    fn with_pagination<'a>(base: ManyRelatedRecordsBaseQuery<'a>) -> Query {
         let distinct_ids = {
-            let mut ids = base.from_node_ids.to_vec();
+            let mut ids = base.from_record_ids.to_vec();
             ids.dedup();
 
             ids

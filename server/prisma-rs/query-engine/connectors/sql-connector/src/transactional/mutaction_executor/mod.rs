@@ -21,7 +21,7 @@ where
         mutaction: TopLevelDatabaseMutaction,
     ) -> ConnectorResult<DatabaseMutactionResult> {
         let result = self.executor.with_transaction(&db_name, |conn: &mut Transaction| {
-            fn create(conn: &mut Transaction, cn: &CreateNode) -> SqlResult<DatabaseMutactionResult> {
+            fn create(conn: &mut Transaction, cn: &CreateRecord) -> SqlResult<DatabaseMutactionResult> {
                 let parent_id = create::execute(conn, Arc::clone(&cn.model), &cn.non_list_args, &cn.list_args)?;
                 nested::execute(conn, &cn.nested_mutactions, &parent_id)?;
 
@@ -31,7 +31,7 @@ where
                 })
             }
 
-            fn update(conn: &mut Transaction, un: &UpdateNode) -> SqlResult<DatabaseMutactionResult> {
+            fn update(conn: &mut Transaction, un: &UpdateRecord) -> SqlResult<DatabaseMutactionResult> {
                 let parent_id = update::execute(conn, &un.where_, &un.non_list_args, &un.list_args)?;
                 nested::execute(conn, &un.nested_mutactions, &parent_id)?;
 
@@ -42,14 +42,14 @@ where
             }
 
             match mutaction {
-                TopLevelDatabaseMutaction::CreateNode(ref cn) => Ok(create(conn, cn)?),
-                TopLevelDatabaseMutaction::UpdateNode(ref un) => Ok(update(conn, un)?),
-                TopLevelDatabaseMutaction::UpsertNode(ref ups) => match conn.find_id(&ups.where_) {
-                    Err(_e @ SqlError::NodeNotFoundForWhere { .. }) => Ok(create(conn, &ups.create)?),
+                TopLevelDatabaseMutaction::CreateRecord(ref cn) => Ok(create(conn, cn)?),
+                TopLevelDatabaseMutaction::UpdateRecord(ref un) => Ok(update(conn, un)?),
+                TopLevelDatabaseMutaction::UpsertRecord(ref ups) => match conn.find_id(&ups.where_) {
+                    Err(_e @ SqlError::RecordNotFoundForWhere { .. }) => Ok(create(conn, &ups.create)?),
                     Err(e) => return Err(e.into()),
                     Ok(_) => Ok(update(conn, &ups.update)?),
                 },
-                TopLevelDatabaseMutaction::UpdateNodes(ref uns) => {
+                TopLevelDatabaseMutaction::UpdateManyRecords(ref uns) => {
                     let count = update_many::execute(
                         conn,
                         Arc::clone(&uns.model),
@@ -63,15 +63,15 @@ where
                         typ: DatabaseMutactionResultType::Many,
                     })
                 }
-                TopLevelDatabaseMutaction::DeleteNode(ref dn) => {
-                    let node = delete::execute(conn, &dn.where_)?;
+                TopLevelDatabaseMutaction::DeleteRecord(ref dn) => {
+                    let record = delete::execute(conn, &dn.where_)?;
 
                     Ok(DatabaseMutactionResult {
-                        identifier: Identifier::Node(node),
+                        identifier: Identifier::Record(record),
                         typ: DatabaseMutactionResultType::Delete,
                     })
                 }
-                TopLevelDatabaseMutaction::DeleteNodes(ref dns) => {
+                TopLevelDatabaseMutaction::DeleteManyRecords(ref dns) => {
                     let count = delete_many::execute(conn, Arc::clone(&dns.model), &dns.filter)?;
 
                     Ok(DatabaseMutactionResult {

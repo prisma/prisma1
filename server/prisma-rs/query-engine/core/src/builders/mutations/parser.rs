@@ -22,7 +22,7 @@
 //!
 //! - `values: Normal scalar values
 //! - `lists`: Scalarlist values that are passed seperately
-//! - `nested`: All nested child nodes
+//! - `nested`: All nested child records
 
 use connector::filter::RecordFinder;
 use graphql_parser::query::Value;

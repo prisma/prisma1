@@ -3,7 +3,7 @@ use prisma_models::prelude::*;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
-pub struct CreateNode {
+pub struct CreateRecord {
     pub model: ModelRef,
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
@@ -11,7 +11,7 @@ pub struct CreateNode {
 }
 
 #[derive(Debug, Clone)]
-pub struct NestedCreateNode {
+pub struct NestedCreateRecord {
     pub relation_field: Arc<RelationField>,
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
@@ -19,8 +19,8 @@ pub struct NestedCreateNode {
     pub nested_mutactions: NestedMutactions,
 }
 
-impl From<CreateNode> for DatabaseMutaction {
-    fn from(cn: CreateNode) -> DatabaseMutaction {
-        DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateNode(cn))
+impl From<CreateRecord> for DatabaseMutaction {
+    fn from(cn: CreateRecord) -> DatabaseMutaction {
+        DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateRecord(cn))
     }
 }

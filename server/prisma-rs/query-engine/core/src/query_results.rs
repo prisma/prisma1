@@ -1,5 +1,5 @@
 use connector::{QueryArguments, ScalarListValues};
-use prisma_models::{GraphqlId, ManyNodes, PrismaValue, SelectedFields, SelectedScalarField, SingleNode};
+use prisma_models::{GraphqlId, ManyRecords, PrismaValue, SelectedFields, SelectedScalarField, SingleRecord};
 
 #[derive(Debug)]
 pub enum ReadQueryResult {
@@ -22,7 +22,7 @@ pub struct SingleReadQueryResult {
     pub fields: Vec<String>,
 
     /// Scalar field results
-    pub scalars: Option<SingleNode>,
+    pub scalars: Option<SingleRecord>,
 
     /// Nested queries results
     pub nested: Vec<ReadQueryResult>,
@@ -40,7 +40,7 @@ pub struct ManyReadQueryResults {
     pub fields: Vec<String>,
 
     /// Scalar field results
-    pub scalars: ManyNodes,
+    pub scalars: ManyRecords,
 
     /// Nested queries results
     pub nested: Vec<ReadQueryResult>,
@@ -68,7 +68,7 @@ impl SingleReadQueryResult {
     }
 
     pub fn parent_id(&self) -> Option<&GraphqlId> {
-        self.scalars.as_ref().map_or(None, |r| r.node.parent_id.as_ref())
+        self.scalars.as_ref().map_or(None, |r| r.record.parent_id.as_ref())
     }
 
     /// Get the ID from a record
@@ -79,7 +79,7 @@ impl SingleReadQueryResult {
             .map_or(None, |r| r.field_names.iter().position(|name| name == "id"))?;
 
         self.scalars.as_ref().map_or(None, |r| {
-            r.node.values.get(id_position).map(|pv| match pv {
+            r.record.values.get(id_position).map(|pv| match pv {
                 PrismaValue::GraphqlId(id) => Some(id),
                 _ => None,
             })?
@@ -91,7 +91,7 @@ impl ManyReadQueryResults {
     pub fn new(
         name: String,
         fields: Vec<String>,
-        scalars: ManyNodes,
+        scalars: ManyRecords,
         nested: Vec<ReadQueryResult>,
         lists: Vec<(String, Vec<ScalarListValues>)>,
         query_arguments: QueryArguments,
@@ -123,9 +123,9 @@ impl ManyReadQueryResults {
     pub fn find_ids(&self) -> Option<Vec<&GraphqlId>> {
         let id_position: usize = self.scalars.field_names.iter().position(|name| name == "id")?;
         self.scalars
-            .nodes
+            .records
             .iter()
-            .map(|node| node.values.get(id_position))
+            .map(|record| record.values.get(id_position))
             .map(|pv| match pv {
                 Some(PrismaValue::GraphqlId(id)) => Some(id),
                 _ => None,

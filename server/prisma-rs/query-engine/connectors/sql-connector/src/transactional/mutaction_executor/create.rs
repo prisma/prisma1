@@ -16,7 +16,7 @@ pub fn execute<S>(
 where
     S: AsRef<str>,
 {
-    let (insert, returned_id) = MutationBuilder::create_node(Arc::clone(&model), non_list_args.clone());
+    let (insert, returned_id) = MutationBuilder::create_record(Arc::clone(&model), non_list_args.clone());
 
     let last_id = match conn.insert(insert) {
         Ok(id) => id,

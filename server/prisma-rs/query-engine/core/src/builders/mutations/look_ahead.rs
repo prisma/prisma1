@@ -14,13 +14,13 @@ pub struct LookAhead;
 impl LookAhead {
     pub fn eval(mut input: WriteQuery) -> CoreResult<WriteQuerySet> {
         input.inner = match input.inner {
-            TopLevelDatabaseMutaction::CreateNode(mut cn) => {
+            TopLevelDatabaseMutaction::CreateRecord(mut cn) => {
                 create_connect(&mut cn)?;
-                TopLevelDatabaseMutaction::CreateNode(cn)
+                TopLevelDatabaseMutaction::CreateRecord(cn)
             }
-            TopLevelDatabaseMutaction::UpdateNode(mut un) => {
+            TopLevelDatabaseMutaction::UpdateRecord(mut un) => {
                 update_nested_connect(&mut un)?;
-                TopLevelDatabaseMutaction::UpdateNode(un)
+                TopLevelDatabaseMutaction::UpdateRecord(un)
             }
             who_even_cares => who_even_cares,
         };
@@ -35,18 +35,19 @@ impl LookAhead {
     /// What it needs to do is work with the result of the partial execution,
     /// then inject any IDs or data into the base mutation of the Dependents tree
     pub fn eval_partial(next: &mut WriteQuerySet, self_: &WriteQuery, res: &DatabaseMutactionResult) -> CoreResult<()> {
-        let name = next.get_base_model()
-                    .fields()
-                    .find_from_relation_fields(&self_.model().name.to_lowercase())?
-                    .name
-                    .clone();
+        let name = next
+            .get_base_model()
+            .fields()
+            .find_from_relation_fields(&self_.model().name.to_lowercase())?
+            .name
+            .clone();
         let id: PrismaValue = match res.identifier {
             Identifier::Id(ref gqlid) => gqlid.into(),
             _ => unimplemented!(),
         };
 
         next.inject_at_base(move |query| match query.inner {
-            TopLevelDatabaseMutaction::CreateNode(ref mut cn) => cn.non_list_args.insert(name, id),
+            TopLevelDatabaseMutaction::CreateRecord(ref mut cn) => cn.non_list_args.insert(name, id),
             _ => unimplemented!(),
         });
 
@@ -55,7 +56,7 @@ impl LookAhead {
 }
 
 /// Merge connect's on required fields into the create
-fn create_connect(cn: &mut CreateNode) -> CoreResult<()> {
+fn create_connect(cn: &mut CreateRecord) -> CoreResult<()> {
     let connects = std::mem::replace(&mut cn.nested_mutactions.connects, vec![]);
 
     let mut new = vec![];
@@ -70,7 +71,7 @@ fn create_connect(cn: &mut CreateNode) -> CoreResult<()> {
     Ok(())
 }
 
-fn nested_create_connect(ncn: &mut NestedCreateNode) -> CoreResult<()> {
+fn nested_create_connect(ncn: &mut NestedCreateRecord) -> CoreResult<()> {
     let connects = std::mem::replace(&mut ncn.nested_mutactions.connects, vec![]);
     let mut new = vec![];
 
@@ -90,7 +91,7 @@ fn nested_create_connect(ncn: &mut NestedCreateNode) -> CoreResult<()> {
     Ok(())
 }
 
-fn update_nested_connect(un: &mut UpdateNode) -> CoreResult<()> {
+fn update_nested_connect(un: &mut UpdateRecord) -> CoreResult<()> {
     for ncn in un.nested_mutactions.creates.iter_mut() {
         nested_create_connect(ncn)?;
     }
@@ -100,7 +101,7 @@ fn update_nested_connect(un: &mut UpdateNode) -> CoreResult<()> {
 
 fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
     match wq.inner {
-        TopLevelDatabaseMutaction::CreateNode(mut cn) => {
+        TopLevelDatabaseMutaction::CreateRecord(mut cn) => {
             let creates = std::mem::replace(&mut cn.nested_mutactions.creates, vec![]);
             let (required, normal) = creates.into_iter().partition(|nc| {
                 nc.relation_field.is_required
@@ -110,7 +111,7 @@ fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
             cn.nested_mutactions.creates = normal;
 
             let wq = WriteQuery {
-                inner: TopLevelDatabaseMutaction::CreateNode(cn),
+                inner: TopLevelDatabaseMutaction::CreateRecord(cn),
                 ..wq
             };
 
@@ -145,9 +146,9 @@ fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
     }
 }
 
-/// Takes a NestedCreateNode and turns it into a TopLevelDatabaseMutaction::CreateNode
-fn hoist_nested_create(nc: NestedCreateNode) -> TopLevelDatabaseMutaction {
-    TopLevelDatabaseMutaction::CreateNode(CreateNode {
+/// Takes a NestedCreateRecord and turns it into a TopLevelDatabaseMutaction::CreateRecord
+fn hoist_nested_create(nc: NestedCreateRecord) -> TopLevelDatabaseMutaction {
+    TopLevelDatabaseMutaction::CreateRecord(CreateRecord {
         model: nc.relation_field.related_field().model(),
         non_list_args: nc.non_list_args,
         list_args: nc.list_args,

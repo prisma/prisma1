@@ -3,7 +3,7 @@ use prisma_models::prelude::*;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
-pub struct UpdateNode {
+pub struct UpdateRecord {
     pub where_: RecordFinder,
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
@@ -11,7 +11,7 @@ pub struct UpdateNode {
 }
 
 #[derive(Debug, Clone)]
-pub struct NestedUpdateNode {
+pub struct NestedUpdateRecord {
     pub relation_field: Arc<RelationField>,
     pub where_: Option<RecordFinder>,
     pub non_list_args: PrismaArgs,
@@ -20,7 +20,7 @@ pub struct NestedUpdateNode {
 }
 
 #[derive(Debug, Clone)]
-pub struct UpdateNodes {
+pub struct UpdateManyRecords {
     pub model: ModelRef,
     pub filter: Filter,
     pub non_list_args: PrismaArgs,
@@ -28,7 +28,7 @@ pub struct UpdateNodes {
 }
 
 #[derive(Debug, Clone)]
-pub struct NestedUpdateNodes {
+pub struct NestedUpdateManyRecords {
     pub relation_field: Arc<RelationField>,
     pub filter: Option<Filter>,
     pub non_list_args: PrismaArgs,

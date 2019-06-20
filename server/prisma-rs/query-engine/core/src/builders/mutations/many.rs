@@ -66,7 +66,7 @@ fn attach_create(
     let list_args = lists.into_iter().map(|la| la.convert()).collect();
     let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&rel_model), top_level)?;
 
-    mutations.creates.push(NestedCreateNode {
+    mutations.creates.push(NestedCreateRecord {
         non_list_args,
         list_args,
         top_is_create: match top_level {
@@ -129,7 +129,7 @@ fn attach_update(
     let list_args = lists.into_iter().map(|la| la.convert()).collect();
     let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&rel_model), top_level)?;
 
-    mutations.updates.push(NestedUpdateNode {
+    mutations.updates.push(NestedUpdateRecord {
         relation_field: Arc::clone(&rel_field),
         non_list_args,
         list_args,
@@ -169,7 +169,7 @@ fn attach_update_many(
     let non_list_args = values.to_prisma_values().into();
     let list_args = lists.into_iter().map(|la| la.convert()).collect();
 
-    mutations.update_manys.push(NestedUpdateNodes {
+    mutations.update_manys.push(NestedUpdateManyRecords {
         relation_field: Arc::clone(&rel_field),
         filter,
         non_list_args,
@@ -184,7 +184,7 @@ fn attach_delete(
     model: &ModelRef,
     rel_field: &RelationFieldRef,
 ) -> CoreResult<()> {
-    mutations.deletes.push(NestedDeleteNode {
+    mutations.deletes.push(NestedDeleteRecord {
         relation_field: Arc::clone(&rel_field),
         where_: map.to_record_finder(Arc::clone(&model)),
     });
@@ -213,7 +213,7 @@ fn attach_delete_many(
     )?
     .filter;
 
-    mutations.delete_manys.push(NestedDeleteNodes {
+    mutations.delete_manys.push(NestedDeleteManyRecords {
         relation_field: Arc::clone(&rel_field),
         filter,
     });

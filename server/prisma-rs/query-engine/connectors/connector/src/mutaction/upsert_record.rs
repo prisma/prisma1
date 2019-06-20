@@ -3,16 +3,16 @@ use prisma_models::prelude::*;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
-pub struct UpsertNode {
+pub struct UpsertRecord {
     pub where_: RecordFinder,
-    pub create: CreateNode,
-    pub update: UpdateNode,
+    pub create: CreateRecord,
+    pub update: UpdateRecord,
 }
 
 #[derive(Debug, Clone)]
-pub struct NestedUpsertNode {
+pub struct NestedUpsertRecord {
     pub relation_field: Arc<RelationField>,
     pub where_: Option<RecordFinder>,
-    pub create: NestedCreateNode,
-    pub update: NestedUpdateNode,
+    pub create: NestedCreateRecord,
+    pub update: NestedUpdateRecord,
 }

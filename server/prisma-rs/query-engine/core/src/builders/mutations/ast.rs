@@ -15,7 +15,7 @@ use std::sync::Arc;
 ///
 /// When we run a mutation, it can have some prerequisites
 /// to being runnable. The simplest examples of this is
-/// when creating a node that has a required relation to
+/// when creating a record that has a required relation to
 /// another model, which should also be created.
 /// In this case, we first need to create the _other_ model,
 /// then we can run the self mutation and turn the create
@@ -47,7 +47,7 @@ pub enum WriteQuerySet {
 
 impl WriteQuerySet {
     /// Traverse through the `::Dependents` structure to inject
-    /// a mutation at the last node (called base node)
+    /// a mutation at the last record (called base record)
     pub(crate) fn inject_at_base(&mut self, cb: impl FnOnce(&mut WriteQuery)) {
         match self {
             WriteQuerySet::Query(ref mut q) => {
@@ -60,7 +60,7 @@ impl WriteQuerySet {
     pub(crate) fn get_base_model(&self) -> ModelRef {
         match self {
             WriteQuerySet::Query(q) => match q.inner {
-                RootMutation::CreateNode(ref cn) => Arc::clone(&cn.model),
+                RootMutation::CreateRecord(ref cn) => Arc::clone(&cn.model),
                 _ => unimplemented!(),
             },
             WriteQuerySet::Dependents { self_: _, next } => next.get_base_model(),
@@ -84,12 +84,12 @@ pub struct WriteQuery {
 impl WriteQuery {
     pub fn model(&self) -> ModelRef {
         match self.inner {
-            RootMutation::CreateNode(ref node) => Arc::clone(&node.model),
-            RootMutation::UpdateNode(ref node) => node.where_.field.model.upgrade().unwrap(),
-            RootMutation::DeleteNode(ref node) => node.where_.field.model.upgrade().unwrap(),
-            RootMutation::UpsertNode(ref node) => node.where_.field.model.upgrade().unwrap(),
-            RootMutation::UpdateNodes(ref nodes) => Arc::clone(&nodes.model),
-            RootMutation::DeleteNodes(ref nodes) => Arc::clone(&nodes.model),
+            RootMutation::CreateRecord(ref record) => Arc::clone(&record.model),
+            RootMutation::UpdateRecord(ref record) => record.where_.field.model.upgrade().unwrap(),
+            RootMutation::DeleteRecord(ref record) => record.where_.field.model.upgrade().unwrap(),
+            RootMutation::UpsertRecord(ref record) => record.where_.field.model.upgrade().unwrap(),
+            RootMutation::UpdateManyRecords(ref records) => Arc::clone(&records.model),
+            RootMutation::DeleteManyRecords(ref records) => Arc::clone(&records.model),
             _ => unimplemented!(),
         }
     }
@@ -97,7 +97,7 @@ impl WriteQuery {
     /// This function generates a pre-fetch `ReadQuery` for appropriate `WriteQuery` types
     pub fn generate_prefetch(&self) -> Option<ReadQuery> {
         match self.inner {
-            RootMutation::DeleteNode(_) => OneBuilder::new()
+            RootMutation::DeleteRecord(_) => OneBuilder::new()
                 .setup(self.model(), &self.field)
                 .build()
                 .ok()
@@ -116,14 +116,14 @@ impl WriteQuery {
                 &self.name,
             ),
             Identifier::Count(_) => return None, // FIXME: We need to communicate count!
-            Identifier::Node(_) => return None,
+            Identifier::Record(_) => return None,
             _ => unimplemented!(),
         };
 
         match self.inner {
             // We ignore Deletes because they were already handled
-            RootMutation::DeleteNode(_) | RootMutation::DeleteNodes(_) => None,
-            RootMutation::CreateNode(_) | RootMutation::UpdateNode(_) | RootMutation::UpsertNode(_) => {
+            RootMutation::DeleteRecord(_) | RootMutation::DeleteManyRecords(_) => None,
+            RootMutation::CreateRecord(_) | RootMutation::UpdateRecord(_) | RootMutation::UpsertRecord(_) => {
                 OneBuilder::new()
                     .setup(self.model(), &field)
                     .build()
@@ -147,7 +147,7 @@ fn search_for_id(root: &RootMutation) -> Option<GraphqlId> {
     }
 
     match root {
-        RootMutation::CreateNode(cn) => extract_id(&cn.model, &cn.non_list_args),
+        RootMutation::CreateRecord(cn) => extract_id(&cn.model, &cn.non_list_args),
         _ => None,
     }
 }

@@ -5,7 +5,7 @@ use prisma_models::GraphqlId;
 use std::sync::Arc;
 
 pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id: &GraphqlId) -> SqlResult<()> {
-    fn create(conn: &mut Transaction, parent_id: &GraphqlId, cn: &NestedCreateNode) -> SqlResult<()> {
+    fn create(conn: &mut Transaction, parent_id: &GraphqlId, cn: &NestedCreateRecord) -> SqlResult<()> {
         let parent_id = create::execute_nested(
             conn,
             parent_id,
@@ -20,7 +20,7 @@ pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id:
         Ok(())
     }
 
-    fn update(conn: &mut Transaction, parent_id: &GraphqlId, un: &NestedUpdateNode) -> SqlResult<()> {
+    fn update(conn: &mut Transaction, parent_id: &GraphqlId, un: &NestedUpdateRecord) -> SqlResult<()> {
         let parent_id = update::execute_nested(
             conn,
             parent_id,
@@ -35,31 +35,35 @@ pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id:
         Ok(())
     }
 
-    for create_node in mutactions.creates.iter() {
-        create(conn, parent_id, create_node)?;
+    for create_record in mutactions.creates.iter() {
+        create(conn, parent_id, create_record)?;
     }
 
-    for update_node in mutactions.updates.iter() {
-        update(conn, parent_id, update_node)?;
+    for update_record in mutactions.updates.iter() {
+        update(conn, parent_id, update_record)?;
     }
 
-    for upsert_node in mutactions.upserts.iter() {
-        let id_opt = conn.find_id_by_parent(Arc::clone(&upsert_node.relation_field), parent_id, &upsert_node.where_);
+    for upsert_record in mutactions.upserts.iter() {
+        let id_opt = conn.find_id_by_parent(
+            Arc::clone(&upsert_record.relation_field),
+            parent_id,
+            &upsert_record.where_,
+        );
 
         match id_opt {
-            Ok(_) => update(conn, parent_id, &upsert_node.update)?,
-            Err(_e @ SqlError::NodesNotConnected { .. }) => create(conn, parent_id, &upsert_node.create)?,
+            Ok(_) => update(conn, parent_id, &upsert_record.update)?,
+            Err(_e @ SqlError::RecordsNotConnected { .. }) => create(conn, parent_id, &upsert_record.create)?,
             Err(e) => return Err(e),
         }
     }
 
-    for delete_node in mutactions.deletes.iter() {
+    for delete_record in mutactions.deletes.iter() {
         delete::execute_nested(
             conn,
             parent_id,
-            delete_node,
-            &delete_node.where_,
-            Arc::clone(&delete_node.relation_field),
+            delete_record,
+            &delete_record.where_,
+            Arc::clone(&delete_record.relation_field),
         )?;
     }
 

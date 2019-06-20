@@ -68,7 +68,7 @@ impl ProtoBufInterface {
         F: FnOnce() -> BridgeResult<Vec<u8>>,
     {
         f().unwrap_or_else(|error| match error {
-            BridgeError::ConnectorError(ConnectorError::NodeDoesNotExist) => {
+            BridgeError::ConnectorError(ConnectorError::RecordDoesNotExist) => {
                 let response = prisma::RpcResponse::empty();
                 let mut response_payload = Vec::new();
 
@@ -108,10 +108,10 @@ impl ExternalInterface for ProtoBufInterface {
             let field = model.fields().find_from_scalar(&input.field_name)?;
             let record_finder = RecordFinder { field, value };
 
-            let query_result = self.data_resolver.get_node_by_where(&record_finder, &selected_fields)?;
+            let query_result = self.data_resolver.get_single_record(&record_finder, &selected_fields)?;
 
             let (nodes, fields) = match query_result {
-                Some(node) => (vec![node.node.into()], node.field_names),
+                Some(node) => (vec![node.record.into()], node.field_names),
                 _ => (Vec::new(), Vec::new()),
             };
 
@@ -136,8 +136,10 @@ impl ExternalInterface for ProtoBufInterface {
             let selected_fields = input.selected_fields.into_selected_fields(model.clone(), None);
             let query_arguments = into_model_query_arguments(model.clone(), input.query_arguments);
 
-            let query_result = self.data_resolver.get_nodes(model, query_arguments, &selected_fields)?;
-            let (nodes, fields) = (query_result.nodes, query_result.field_names);
+            let query_result = self
+                .data_resolver
+                .get_many_records(model, query_arguments, &selected_fields)?;
+            let (nodes, fields) = (query_result.records, query_result.field_names);
             let proto_nodes = nodes.into_iter().map(|n| n.into()).collect();
 
             let response = RpcResponse::ok(prisma::NodesResult {
@@ -170,24 +172,19 @@ impl ExternalInterface for ProtoBufInterface {
                 .selected_fields
                 .into_selected_fields(Arc::clone(&related_model), Some(from_field.clone()));
 
-            let query_result = self.data_resolver.get_related_nodes(
+            let query_result = self.data_resolver.get_related_records(
                 from_field,
                 &from_node_ids,
                 into_model_query_arguments(Arc::clone(&related_model), input.query_arguments),
                 &selected_fields,
             )?;
 
-            let (nodes, fields) = (query_result.nodes, query_result.field_names);
-            let proto_nodes = nodes.into_iter().map(|n| n.into()).collect();
-
-            let response = RpcResponse::ok(prisma::NodesResult {
-                nodes: proto_nodes,
-                fields: fields,
-            });
-
+            let (nodes, fields) = (query_result.records, query_result.field_names);
+            let nodes = nodes.into_iter().map(|n| n.into()).collect();
+            let response = RpcResponse::ok(prisma::NodesResult { nodes, fields });
             let mut response_payload = Vec::new();
-            response.encode(&mut response_payload).unwrap();
 
+            response.encode(&mut response_payload).unwrap();
             Ok(response_payload)
         })
     }
@@ -207,12 +204,12 @@ impl ExternalInterface for ProtoBufInterface {
 
             let query_result = self
                 .data_resolver
-                .get_scalar_list_values_by_node_ids(list_field, node_ids)?;
+                .get_scalar_list_values_by_record_ids(list_field, node_ids)?;
 
             let proto_values = query_result
                 .into_iter()
                 .map(|vals| prisma::ScalarListValues {
-                    node_id: vals.node_id.into(),
+                    node_id: vals.record_id.into(),
                     values: vals.values.into_iter().map(|n| n.into()).collect(),
                 })
                 .collect();

@@ -225,20 +225,20 @@ impl From<&GraphqlId> for prisma::GraphqlId {
     }
 }
 
-impl From<Node> for prisma::Node {
-    fn from(node: Node) -> prisma::Node {
+impl From<Record> for prisma::Node {
+    fn from(record: Record) -> prisma::Node {
         prisma::Node {
-            values: node.values.into_iter().map(ValueContainer::from).collect(),
-            parent_id: node.parent_id.map(prisma::GraphqlId::from),
+            values: record.values.into_iter().map(ValueContainer::from).collect(),
+            parent_id: record.parent_id.map(prisma::GraphqlId::from),
         }
     }
 }
 
-impl From<SingleNode> for prisma::NodeResult {
-    fn from(node: SingleNode) -> prisma::NodeResult {
+impl From<SingleRecord> for prisma::NodeResult {
+    fn from(record: SingleRecord) -> prisma::NodeResult {
         prisma::NodeResult {
-            node: prisma::Node::from(node.node),
-            fields: node.field_names,
+            node: prisma::Node::from(record.record),
+            fields: record.field_names,
         }
     }
 }

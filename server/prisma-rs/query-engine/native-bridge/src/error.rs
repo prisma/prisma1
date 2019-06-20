@@ -90,7 +90,7 @@ impl From<BridgeError> for protobuf::prisma::error::Value {
                 protobuf::prisma::error::Value::RelationViolation(error)
             }
 
-            BridgeError::ConnectorError(ConnectorError::NodeNotFoundForWhere(info)) => {
+            BridgeError::ConnectorError(ConnectorError::RecordNotFoundForWhere(info)) => {
                 let record_finder = protobuf::prisma::NodeSelector {
                     model_name: info.model,
                     field_name: info.field,
@@ -100,7 +100,7 @@ impl From<BridgeError> for protobuf::prisma::error::Value {
                 protobuf::prisma::error::Value::NodeNotFoundForWhere(record_finder)
             }
 
-            BridgeError::ConnectorError(ConnectorError::NodesNotConnected {
+            BridgeError::ConnectorError(ConnectorError::RecordsNotConnected {
                 relation_name,
                 parent_name,
                 parent_where,

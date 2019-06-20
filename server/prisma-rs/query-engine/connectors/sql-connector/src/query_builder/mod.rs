@@ -1,4 +1,4 @@
-mod related_nodes;
+mod many_related_records;
 
 use crate::{cursor_condition::CursorCondition, filter_conversion::AliasedCondition, ordering::Ordering};
 use connector::{
@@ -9,7 +9,7 @@ use prisma_models::prelude::*;
 use prisma_query::ast::*;
 use std::sync::Arc;
 
-pub use related_nodes::*;
+pub use many_related_records::*;
 
 pub trait SelectDefinition {
     fn into_select(self, _: ModelRef) -> Select;
@@ -79,7 +79,7 @@ impl SelectDefinition for QueryArguments {
 pub struct QueryBuilder;
 
 impl QueryBuilder {
-    pub fn get_nodes<T>(model: ModelRef, selected_fields: &SelectedFields, query: T) -> Select
+    pub fn get_records<T>(model: ModelRef, selected_fields: &SelectedFields, query: T) -> Select
     where
         T: SelectDefinition,
     {
@@ -89,11 +89,11 @@ impl QueryBuilder {
             .fold(query.into_select(model), |acc, col| acc.column(col.clone()))
     }
 
-    pub fn get_scalar_list_values_by_node_ids(list_field: ScalarFieldRef, node_ids: Vec<GraphqlId>) -> Select {
+    pub fn get_scalar_list_values_by_record_ids(list_field: ScalarFieldRef, record_ids: Vec<GraphqlId>) -> Select {
         let table = list_field.scalar_list_table().table();
 
         // I vant to saak your blaad... - Vlad the Impaler
-        let vhere = "nodeId".in_selection(node_ids);
+        let vhere = "nodeId".in_selection(record_ids);
 
         let query = Select::from_table(table)
             .column("nodeId")
@@ -109,7 +109,7 @@ impl QueryBuilder {
         let mut selected_fields = SelectedFields::default();
         selected_fields.add_scalar(id_field.clone(), false);
 
-        let base_query = Self::get_nodes(model, &selected_fields, query_arguments);
+        let base_query = Self::get_records(model, &selected_fields, query_arguments);
 
         let table = Table::from(base_query).alias("sub");
         let column = Column::from(("sub", id_field.db_name()));

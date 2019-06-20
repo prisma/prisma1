@@ -1,6 +1,6 @@
 use crate::{
-    error::SqlError, query_builder::RelatedNodesWithRowNumber, MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow,
-    ToSqlRow, Transaction, Transactional,
+    error::SqlError, query_builder::ManyRelatedRecordsWithRowNumber, MutationBuilder, RawQuery, SqlId, SqlResult,
+    SqlRow, ToSqlRow, Transaction, Transactional,
 };
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};
@@ -147,7 +147,7 @@ impl TryFrom<&ConnectionStringConfig> for PostgreSql {
 }
 
 impl Transactional for PostgreSql {
-    type RelatedNodesBuilder = RelatedNodesWithRowNumber;
+    type ManyRelatedRecordsBuilder = ManyRelatedRecordsWithRowNumber;
 
     fn with_transaction<F, T>(&self, _: &str, f: F) -> SqlResult<T>
     where

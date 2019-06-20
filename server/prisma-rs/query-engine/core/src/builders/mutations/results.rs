@@ -2,7 +2,7 @@
 
 use crate::{ReadQueryResult, SingleReadQueryResult, WriteQuery};
 use connector::mutaction::{DatabaseMutactionResult, Identifier};
-use prisma_models::{Node, PrismaValue, SingleNode};
+use prisma_models::{PrismaValue, Record, SingleRecord};
 
 /// A structure that encodes the results from a database mutation
 pub struct WriteQueryResult {
@@ -26,8 +26,8 @@ impl WriteQueryResult {
                     .unwrap_or(&self.origin.field.name)
                     .clone(),
                 fields: vec!["count".into()],
-                scalars: Some(SingleNode::new(
-                    Node::new(vec![PrismaValue::Int(c as i64)]),
+                scalars: Some(SingleRecord::new(
+                    Record::new(vec![PrismaValue::Int(c as i64)]),
                     vec!["count".into()],
                 )),
                 nested: vec![],

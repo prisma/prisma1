@@ -3,15 +3,15 @@ use crate::ordering::Ordering;
 use prisma_models::prelude::*;
 use prisma_query::ast::{row_number, Aliasable, Comparable, Conjuctive, Function, Select, Table};
 
-pub struct RelatedNodesWithRowNumber;
+pub struct ManyRelatedRecordsWithRowNumber;
 
-impl RelatedNodesQueryBuilder for RelatedNodesWithRowNumber {
-    fn with_pagination<'a>(base: RelatedNodesBaseQuery<'a>) -> Query {
+impl ManyRelatedRecordsQueryBuilder for ManyRelatedRecordsWithRowNumber {
+    fn with_pagination<'a>(base: ManyRelatedRecordsBaseQuery<'a>) -> Query {
         let conditions = base
             .from_field
             .relation_column()
             .table(Relation::TABLE_ALIAS)
-            .in_selection(base.from_node_ids.to_owned())
+            .in_selection(base.from_record_ids.to_owned())
             .and(base.condition)
             .and(base.cursor);
 

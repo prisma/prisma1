@@ -2,52 +2,53 @@ use crate::{DomainError as Error, DomainResult, GraphqlId, ModelRef, PrismaValue
 use std::{convert::TryFrom, sync::Arc};
 
 #[derive(Debug, Clone)]
-pub struct SingleNode {
-    pub node: Node,
+pub struct SingleRecord {
+    pub record: Record,
     pub field_names: Vec<String>,
 }
 
-impl TryFrom<ManyNodes> for SingleNode {
+impl TryFrom<ManyRecords> for SingleRecord {
     type Error = Error;
 
-    fn try_from(mn: ManyNodes) -> DomainResult<SingleNode> {
+    fn try_from(mn: ManyRecords) -> DomainResult<SingleRecord> {
         let field_names = mn.field_names;
 
-        mn.nodes
+        mn.records
             .into_iter()
             .rev()
             .next()
-            .map(|node| SingleNode { node, field_names })
-            .ok_or(Error::ConversionFailure("ManyNodes", "SingleNode"))
+            .map(|record| SingleRecord { record, field_names })
+            .ok_or(Error::ConversionFailure("ManyRecords", "SingleRecord"))
     }
 }
 
-impl SingleNode {
-    pub fn new(node: Node, field_names: Vec<String>) -> Self {
-        Self { node, field_names }
+impl SingleRecord {
+    pub fn new(record: Record, field_names: Vec<String>) -> Self {
+        Self { record, field_names }
     }
 
     pub fn get_id_value(&self, model: ModelRef) -> DomainResult<GraphqlId> {
-        self.node.get_id_value(&self.field_names, model)
+        self.record.get_id_value(&self.field_names, model)
     }
 
     pub fn get_field_value(&self, field: &str) -> DomainResult<&PrismaValue> {
-        self.node.get_field_value(&self.field_names, field)
+        self.record.get_field_value(&self.field_names, field)
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct ManyNodes {
-    pub nodes: Vec<Node>,
+pub struct ManyRecords {
+    pub records: Vec<Record>,
     pub field_names: Vec<String>,
 }
 
-impl ManyNodes {
+impl ManyRecords {
     pub fn get_id_values(&self, model: ModelRef) -> DomainResult<Vec<GraphqlId>> {
-        self.nodes
+        self.records
             .iter()
-            .map(|node| {
-                node.get_id_value(&self.field_names, Arc::clone(&model))
+            .map(|record| {
+                record
+                    .get_id_value(&self.field_names, Arc::clone(&model))
                     .map(|i| i.clone())
             })
             .collect()
@@ -55,10 +56,11 @@ impl ManyNodes {
 
     /// Maps into a Vector of (field_name, value) tuples
     pub fn as_pairs(&self) -> Vec<Vec<(String, PrismaValue)>> {
-        self.nodes
+        self.records
             .iter()
-            .map(|node| {
-                node.values
+            .map(|record| {
+                record
+                    .values
                     .iter()
                     .zip(self.field_names.iter())
                     .map(|(value, name)| (name.clone(), value.clone()))
@@ -69,19 +71,19 @@ impl ManyNodes {
 
     /// Reverses the wrapped records in place
     pub fn reverse(&mut self) {
-        self.nodes.reverse();
+        self.records.reverse();
     }
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct Node {
+pub struct Record {
     pub values: Vec<PrismaValue>,
     pub parent_id: Option<GraphqlId>,
 }
 
-impl Node {
-    pub fn new(values: Vec<PrismaValue>) -> Node {
-        Node {
+impl Record {
+    pub fn new(values: Vec<PrismaValue>) -> Record {
+        Record {
             values,
             ..Default::default()
         }
@@ -120,7 +122,7 @@ impl Node {
 
     /// (WIP) Associate a nested selection-set with a set of parents
     ///
-    /// - A parent is a `ManyNodes` which has selected fields and nested queries.
+    /// - A parent is a `ManyRecords` which has selected fields and nested queries.
     /// - Nested queries aren't associated to a parent, but have a `parent_id` and `related_id`
     /// - This function takes the parent query and creates a set of `(String, PrismaValue)` for each query
     /// - Returns a nested vector of tuples
@@ -130,10 +132,10 @@ impl Node {
     ///
     pub fn get_parent_pairs(
         &self,
-        parent: &ManyNodes,
+        parent: &ManyRecords,
         selected_fields: &Vec<String>,
     ) -> Vec<Vec<(String, PrismaValue)>> {
-        parent.nodes.iter().fold(Vec::new(), |mut vec, _parent| {
+        parent.records.iter().fold(Vec::new(), |mut vec, _parent| {
             vec.push(
                 self.values
                     .iter()

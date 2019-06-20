@@ -7,6 +7,7 @@ pub struct ScalarListTable<'a> {
     table_name: String,
 }
 
+// Todo Unsure about node -> record rename here
 impl<'a> ScalarListTable<'a> {
     pub const NODE_ID_FIELD_NAME: &'static str = "nodeId";
     pub const POSITION_FIELD_NAME: &'static str = "position";

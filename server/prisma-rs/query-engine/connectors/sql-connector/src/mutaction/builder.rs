@@ -8,7 +8,7 @@ pub struct MutationBuilder;
 impl MutationBuilder {
     const PARAMETER_LIMIT: usize = 10000;
 
-    pub fn create_node(model: ModelRef, mut args: PrismaArgs) -> (Insert, Option<GraphqlId>) {
+    pub fn create_record(model: ModelRef, mut args: PrismaArgs) -> (Insert, Option<GraphqlId>) {
         let model_id = model.fields().id();
 
         let return_id = match args.get_field_value(&model_id.name) {

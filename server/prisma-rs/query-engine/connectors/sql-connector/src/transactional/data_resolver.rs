@@ -1,7 +1,7 @@
 use crate::{
     database::SqlDatabase,
     error::SqlError,
-    query_builder::{QueryBuilder, RelatedNodesBaseQuery, RelatedNodesQueryBuilder},
+    query_builder::{ManyRelatedRecordsBaseQuery, ManyRelatedRecordsQueryBuilder, QueryBuilder},
     Transactional,
 };
 use connector::{error::ConnectorError, filter::RecordFinder, *};
@@ -10,7 +10,7 @@ use prisma_models::*;
 use std::convert::TryFrom;
 
 struct ScalarListElement {
-    node_id: GraphqlId,
+    record_id: GraphqlId,
     value: PrismaValue,
 }
 
@@ -18,73 +18,76 @@ impl<T> DataResolver for SqlDatabase<T>
 where
     T: Transactional,
 {
-    fn get_node_by_where(
+    fn get_single_record(
         &self,
         record_finder: &RecordFinder,
         selected_fields: &SelectedFields,
-    ) -> ConnectorResult<Option<SingleNode>> {
+    ) -> ConnectorResult<Option<SingleRecord>> {
         let db_name = &record_finder.field.model().internal_data_model().db_name;
-        let query = QueryBuilder::get_nodes(record_finder.field.model(), selected_fields, record_finder);
+        let query = QueryBuilder::get_records(record_finder.field.model(), selected_fields, record_finder);
         let field_names = selected_fields.names();
         let idents = selected_fields.type_identifiers();
 
-        let node = self
+        let record = self
             .executor
             .with_transaction(db_name, |conn| match conn.find(query, idents.as_slice()) {
                 Ok(result) => Ok(Some(result)),
-                Err(_e @ SqlError::NodeNotFoundForWhere(_)) => Ok(None),
+                Err(_e @ SqlError::RecordNotFoundForWhere(_)) => Ok(None),
                 Err(e) => Err(e),
             })?
-            .map(Node::from)
-            .map(|node| SingleNode { node, field_names });
+            .map(Record::from)
+            .map(|record| SingleRecord {
+                record: record,
+                field_names,
+            });
 
-        Ok(node)
+        Ok(record)
     }
 
-    fn get_nodes(
+    fn get_many_records(
         &self,
         model: ModelRef,
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> ConnectorResult<ManyNodes> {
+    ) -> ConnectorResult<ManyRecords> {
         let db_name = &model.internal_data_model().db_name;
         let field_names = selected_fields.names();
         let idents = selected_fields.type_identifiers();
-        let query = QueryBuilder::get_nodes(model, selected_fields, query_arguments);
+        let query = QueryBuilder::get_records(model, selected_fields, query_arguments);
 
-        let nodes = self
+        let records = self
             .executor
             .with_transaction(db_name, |conn| conn.filter(query.into(), idents.as_slice()))?
             .into_iter()
-            .map(Node::from)
+            .map(Record::from)
             .collect();
 
-        Ok(ManyNodes { nodes, field_names })
+        Ok(ManyRecords { records, field_names })
     }
 
-    fn get_related_nodes(
+    fn get_related_records(
         &self,
         from_field: RelationFieldRef,
-        from_node_ids: &[GraphqlId],
+        from_record_ids: &[GraphqlId],
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> ConnectorResult<ManyNodes> {
+    ) -> ConnectorResult<ManyRecords> {
         let db_name = &from_field.model().internal_data_model().db_name;
         let idents = selected_fields.type_identifiers();
         let field_names = selected_fields.names();
 
         let query = {
             let is_with_pagination = query_arguments.is_with_pagination();
-            let base = RelatedNodesBaseQuery::new(from_field, from_node_ids, query_arguments, selected_fields);
+            let base = ManyRelatedRecordsBaseQuery::new(from_field, from_record_ids, query_arguments, selected_fields);
 
             if is_with_pagination {
-                T::RelatedNodesBuilder::with_pagination(base)
+                T::ManyRelatedRecordsBuilder::with_pagination(base)
             } else {
-                T::RelatedNodesBuilder::without_pagination(base)
+                T::ManyRelatedRecordsBuilder::without_pagination(base)
             }
         };
 
-        let nodes: ConnectorResult<Vec<Node>> = self
+        let records: ConnectorResult<Vec<Record>> = self
             .executor
             .with_transaction(db_name, |conn| conn.filter(query, idents.as_slice()))?
             .into_iter()
@@ -92,18 +95,18 @@ where
                 let parent_id = row.values.pop().ok_or(ConnectorError::ColumnDoesNotExist)?;
 
                 // Relation id is always the second last value. We don't need it
-                // here and we don't need it in the node.
+                // here and we don't need it in the record.
                 let _ = row.values.pop();
 
-                let mut node = Node::from(row);
-                node.add_parent_id(GraphqlId::try_from(parent_id)?);
+                let mut record = Record::from(row);
+                record.add_parent_id(GraphqlId::try_from(parent_id)?);
 
-                Ok(node)
+                Ok(record)
             })
             .collect();
 
-        Ok(ManyNodes {
-            nodes: nodes?,
+        Ok(ManyRecords {
+            records: records?,
             field_names,
         })
     }
@@ -131,14 +134,14 @@ where
         Ok(result)
     }
 
-    fn get_scalar_list_values_by_node_ids(
+    fn get_scalar_list_values_by_record_ids(
         &self,
         list_field: ScalarFieldRef,
-        node_ids: Vec<GraphqlId>,
+        record_ids: Vec<GraphqlId>,
     ) -> ConnectorResult<Vec<ScalarListValues>> {
         let db_name = &list_field.model().internal_data_model().db_name;
         let type_identifier = list_field.type_identifier;
-        let query = QueryBuilder::get_scalar_list_values_by_node_ids(list_field, node_ids);
+        let query = QueryBuilder::get_scalar_list_values_by_record_ids(list_field, record_ids);
 
         let results: Vec<ScalarListElement> = self.executor.with_transaction(db_name, |conn| {
             let rows = conn.filter(query.into(), &[TypeIdentifier::GraphQLID, type_identifier])?;
@@ -147,11 +150,11 @@ where
                 .map(|row| {
                     let mut iter = row.values.into_iter();
 
-                    let node_id = iter.next().ok_or(SqlError::ColumnDoesNotExist)?;
+                    let record_id = iter.next().ok_or(SqlError::ColumnDoesNotExist)?;
                     let value = iter.next().ok_or(SqlError::ColumnDoesNotExist)?;
 
                     Ok(ScalarListElement {
-                        node_id: GraphqlId::try_from(node_id)?,
+                        record_id: GraphqlId::try_from(record_id)?,
                         value: value,
                     })
                 })
@@ -160,9 +163,9 @@ where
 
         let mut list_values = Vec::new();
 
-        for (node_id, elements) in &results.into_iter().group_by(|ele| ele.node_id.clone()) {
+        for (record_id, elements) in &results.into_iter().group_by(|ele| ele.record_id.clone()) {
             let values = ScalarListValues {
-                node_id,
+                record_id,
                 values: elements.into_iter().map(|e| e.value).collect(),
             };
             list_values.push(values);

@@ -17,8 +17,8 @@ pub enum SqlError {
     #[fail(display = "Null constraint failed: {}", field_name)]
     NullConstraintViolation { field_name: String },
 
-    #[fail(display = "Node does not exist.")]
-    NodeDoesNotExist,
+    #[fail(display = "Record does not exist.")]
+    RecordDoesNotExist,
 
     #[fail(display = "Column does not exist")]
     ColumnDoesNotExist,
@@ -41,8 +41,8 @@ pub enum SqlError {
     #[fail(display = "{}", _0)]
     DomainError(DomainError),
 
-    #[fail(display = "Node not found: {}", _0)]
-    NodeNotFoundForWhere(RecordFinderInfo),
+    #[fail(display = "Record not found: {}", _0)]
+    RecordNotFoundForWhere(RecordFinderInfo),
 
     #[fail(
         display = "Violating a relation {} between {} and {}",
@@ -55,10 +55,10 @@ pub enum SqlError {
     },
 
     #[fail(
-        display = "The relation {} has no node for the model {} connected to a Node for the model {} on your mutation path.",
+        display = "The relation {} has no record for the model {} connected to a record for the model {} on your write path.",
         relation_name, parent_name, child_name
     )]
-    NodesNotConnected {
+    RecordsNotConnected {
         relation_name: String,
         parent_name: String,
         parent_where: Option<RecordFinderInfo>,
@@ -80,14 +80,14 @@ impl From<SqlError> for ConnectorError {
                 ConnectorError::UniqueConstraintViolation { field_name }
             }
             SqlError::NullConstraintViolation { field_name } => ConnectorError::NullConstraintViolation { field_name },
-            SqlError::NodeDoesNotExist => ConnectorError::NodeDoesNotExist,
+            SqlError::RecordDoesNotExist => ConnectorError::RecordDoesNotExist,
             SqlError::ColumnDoesNotExist => ConnectorError::ColumnDoesNotExist,
             SqlError::ConnectionError(e) => ConnectorError::ConnectionError(e),
             SqlError::InvalidConnectionArguments => ConnectorError::InvalidConnectionArguments,
             SqlError::ColumnReadFailure(e) => ConnectorError::ColumnReadFailure(e),
             SqlError::FieldCannotBeNull { field } => ConnectorError::FieldCannotBeNull { field },
             SqlError::DomainError(e) => ConnectorError::DomainError(e),
-            SqlError::NodeNotFoundForWhere(info) => ConnectorError::NodeNotFoundForWhere(info),
+            SqlError::RecordNotFoundForWhere(info) => ConnectorError::RecordNotFoundForWhere(info),
             SqlError::RelationViolation {
                 relation_name,
                 model_a_name,
@@ -97,13 +97,13 @@ impl From<SqlError> for ConnectorError {
                 model_a_name,
                 model_b_name,
             },
-            SqlError::NodesNotConnected {
+            SqlError::RecordsNotConnected {
                 relation_name,
                 parent_name,
                 parent_where,
                 child_name,
                 child_where,
-            } => ConnectorError::NodesNotConnected {
+            } => ConnectorError::RecordsNotConnected {
                 relation_name,
                 parent_name,
                 parent_where,
@@ -145,7 +145,7 @@ impl From<url::ParseError> for SqlError {
 impl From<rusqlite::Error> for SqlError {
     fn from(e: rusqlite::Error) -> SqlError {
         match e {
-            rusqlite::Error::QueryReturnedNoRows => SqlError::NodeDoesNotExist,
+            rusqlite::Error::QueryReturnedNoRows => SqlError::RecordDoesNotExist,
 
             rusqlite::Error::SqliteFailure(
                 ffi::Error {
