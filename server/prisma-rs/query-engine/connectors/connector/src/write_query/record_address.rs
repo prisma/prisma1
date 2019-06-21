@@ -1,4 +1,4 @@
-use crate::{filter::RecordFinder, mutaction::Path};
+use crate::{filter::RecordFinder, write_query::Path};
 
 pub struct RecordAddress {
     pub path: Path,

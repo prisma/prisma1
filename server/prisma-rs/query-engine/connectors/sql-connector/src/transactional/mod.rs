@@ -1,8 +1,8 @@
-mod data_resolver;
-mod mutaction_executor;
+mod database_reader;
+mod database_writer;
 
-pub use data_resolver::*;
-pub use mutaction_executor::*;
+pub use database_reader::*;
+pub use database_writer::*;
 
 use crate::{
     error::*,
@@ -38,7 +38,7 @@ pub trait Transactional {
 /// handled per-database basis, `Transaction` providing a minimal interface over
 /// different databases.
 pub trait Transaction {
-    /// Burn them. BURN THEM ALL!
+    /// Truncates (clears) the entire database table.
     fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> SqlResult<()>;
 
     /// Write to the database, returning the change count and last id inserted.

@@ -1,10 +1,10 @@
 use super::*;
 use crate::SqlResult;
-use connector::mutaction::NestedSet;
+use connector::write_query::NestedDeleteRecord;
 use prisma_models::*;
 use prisma_query::ast::*;
 
-impl NestedActions for NestedSet {
+impl NestedActions for NestedDeleteRecord {
     fn relation_field(&self) -> RelationFieldRef {
         self.relation_field.clone()
     }

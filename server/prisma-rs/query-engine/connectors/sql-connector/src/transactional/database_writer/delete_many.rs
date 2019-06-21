@@ -1,5 +1,5 @@
 use crate::{
-    mutaction::{DeleteActions, MutationBuilder},
+    write_query::{DeleteActions, WriteQueryBuilder},
     SqlResult, Transaction,
 };
 use connector::filter::Filter;
@@ -24,7 +24,7 @@ pub fn execute(conn: &mut Transaction, model: ModelRef, filter: &Filter) -> SqlR
         Ok(ids.into_iter().next())
     })?;
 
-    for delete in MutationBuilder::delete_many(model, ids.as_slice()) {
+    for delete in WriteQueryBuilder::delete_many(model, ids.as_slice()) {
         conn.delete(delete)?;
     }
 
@@ -55,7 +55,7 @@ pub fn execute_nested(
         Ok(ids.into_iter().next())
     })?;
 
-    for delete in MutationBuilder::delete_many(relation_field.related_model(), ids.as_slice()) {
+    for delete in WriteQueryBuilder::delete_many(relation_field.related_model(), ids.as_slice()) {
         conn.delete(delete)?;
     }
 

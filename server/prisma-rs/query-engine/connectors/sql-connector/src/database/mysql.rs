@@ -1,6 +1,6 @@
 use crate::{
-    error::SqlError, query_builder::ManyRelatedRecordsWithUnionAll, MutationBuilder, RawQuery, SqlResult, SqlRow,
-    ToSqlRow, Transaction, Transactional,
+    error::SqlError, query_builder::ManyRelatedRecordsWithUnionAll, RawQuery, SqlResult, SqlRow, ToSqlRow, Transaction,
+    Transactional, WriteQueryBuilder,
 };
 use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};
@@ -159,7 +159,7 @@ impl<'a> Transaction for my::Transaction<'a> {
     fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> SqlResult<()> {
         self.write(Query::from("SET FOREIGN_KEY_CHECKS=0"))?;
 
-        for delete in MutationBuilder::truncate_tables(internal_data_model) {
+        for delete in WriteQueryBuilder::truncate_tables(internal_data_model) {
             if let Err(e) = self.delete(delete) {
                 self.write(Query::from("SET FOREIGN_KEY_CHECKS=1"))?;
                 return Err(e);

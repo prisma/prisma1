@@ -1,5 +1,5 @@
 use super::update;
-use crate::{mutaction::MutationBuilder, SqlResult, Transaction};
+use crate::{write_query::WriteQueryBuilder, SqlResult, Transaction};
 use connector::filter::Filter;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
 use std::sync::Arc;
@@ -27,7 +27,7 @@ where
 
     let updates = {
         let ids: Vec<&GraphqlId> = ids.iter().map(|id| &*id).collect();
-        MutationBuilder::update_many(Arc::clone(&model), ids.as_slice(), non_list_args)?
+        WriteQueryBuilder::update_many(Arc::clone(&model), ids.as_slice(), non_list_args)?
     };
 
     for update in updates {
@@ -61,7 +61,7 @@ where
 
     let updates = {
         let ids: Vec<&GraphqlId> = ids.iter().map(|id| &*id).collect();
-        MutationBuilder::update_many(relation_field.related_model(), ids.as_slice(), non_list_args)?
+        WriteQueryBuilder::update_many(relation_field.related_model(), ids.as_slice(), non_list_args)?
     };
 
     for update in updates {

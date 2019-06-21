@@ -4,51 +4,49 @@ use crate::{
     builders::utils::{self, UuidString},
     BuilderExt, OneBuilder, ReadQuery,
 };
-use connector::mutaction::{
-    DatabaseMutactionResult as MutationResult, Identifier, TopLevelDatabaseMutaction as RootMutation,
-};
+use connector::write_query::{Identifier, RootWriteQuery, WriteQueryResult};
 use graphql_parser::query::Field;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaValue};
 use std::sync::Arc;
 
-/// A structure to express mutation dependencies
+/// A structure to express write query dependencies
 ///
-/// When we run a mutation, it can have some prerequisites
+/// When we run a write query, it can have some prerequisites
 /// to being runnable. The simplest examples of this is
 /// when creating a record that has a required relation to
 /// another model, which should also be created.
 /// In this case, we first need to create the _other_ model,
-/// then we can run the self mutation and turn the create
+/// then we can run the self write query and turn the create
 /// into a connect action, that is then merged into the
 /// previous create.
 ///
 /// This sounds complicated (and it is!) but we solve this in steps.
 ///
-/// 1. We traverse the mutation AST and generate naive queries
+/// 1. We traverse the query AST and generate naive queries
 /// 2. We let the [`look_ahead`] module pass over the tree which will
 ///    fold required connects into their update/ create parents,
 ///    as well as generating these `WriteQuerySet::Dependents` items.
-/// 3. When the query pipeline yields mutations to the executor,
+/// 3. When the query pipeline yields write queries to the executor,
 ///    it then simply has to traverse this tree and execute dependent
-///    mutations in reverse-order. This also needs to take id-mapping
+///    write queries in reverse-order. This also needs to take id-mapping
 ///    into account (i.e. a create -> create needs to yield the child ID
 ///    to it's parent so it can finish the transaction)
 ///
-/// To further understand how the mutation execution works, I recommend
-/// reading the [`pipeline`] docs!
+/// To further understand how the write query execution works, read
+/// the [`pipeline`] docs.
 #[derive(Debug, Clone)]
 pub enum WriteQuerySet {
-    Query(WriteQuery),
+    Query(WriteQueryTree),
     Dependents {
-        self_: WriteQuery,
+        self_: WriteQueryTree,
         next: Box<WriteQuerySet>,
     },
 }
 
 impl WriteQuerySet {
     /// Traverse through the `::Dependents` structure to inject
-    /// a mutation at the last record (called base record)
-    pub(crate) fn inject_at_base(&mut self, cb: impl FnOnce(&mut WriteQuery)) {
+    /// a write at the last record (called base record)
+    pub(crate) fn inject_at_base(&mut self, cb: impl FnOnce(&mut WriteQueryTree)) {
         match self {
             WriteQuerySet::Query(ref mut q) => {
                 cb(q);
@@ -60,7 +58,7 @@ impl WriteQuerySet {
     pub(crate) fn get_base_model(&self) -> ModelRef {
         match self {
             WriteQuerySet::Query(q) => match q.inner {
-                RootMutation::CreateRecord(ref cn) => Arc::clone(&cn.model),
+                RootWriteQuery::CreateRecord(ref cn) => Arc::clone(&cn.model),
                 _ => unimplemented!(),
             },
             WriteQuerySet::Dependents { self_: _, next } => next.get_base_model(),
@@ -68,11 +66,11 @@ impl WriteQuerySet {
     }
 }
 
-/// A top-level write query (mutation)
+/// A top-level write query
 #[derive(Debug, Clone)]
-pub struct WriteQuery {
-    /// The actual mutation object being built
-    pub inner: RootMutation,
+pub struct WriteQueryTree {
+    /// The actual write query object being built
+    pub inner: RootWriteQuery,
 
     /// The name of the WriteQuery
     pub name: String,
@@ -81,15 +79,15 @@ pub struct WriteQuery {
     pub field: Field,
 }
 
-impl WriteQuery {
+impl WriteQueryTree {
     pub fn model(&self) -> ModelRef {
         match self.inner {
-            RootMutation::CreateRecord(ref record) => Arc::clone(&record.model),
-            RootMutation::UpdateRecord(ref record) => record.where_.field.model.upgrade().unwrap(),
-            RootMutation::DeleteRecord(ref record) => record.where_.field.model.upgrade().unwrap(),
-            RootMutation::UpsertRecord(ref record) => record.where_.field.model.upgrade().unwrap(),
-            RootMutation::UpdateManyRecords(ref records) => Arc::clone(&records.model),
-            RootMutation::DeleteManyRecords(ref records) => Arc::clone(&records.model),
+            RootWriteQuery::CreateRecord(ref record) => Arc::clone(&record.model),
+            RootWriteQuery::UpdateRecord(ref record) => record.where_.field.model.upgrade().unwrap(),
+            RootWriteQuery::DeleteRecord(ref record) => record.where_.field.model.upgrade().unwrap(),
+            RootWriteQuery::UpsertRecord(ref record) => record.where_.field.model.upgrade().unwrap(),
+            RootWriteQuery::UpdateManyRecords(ref records) => Arc::clone(&records.model),
+            RootWriteQuery::DeleteManyRecords(ref records) => Arc::clone(&records.model),
             _ => unimplemented!(),
         }
     }
@@ -97,7 +95,7 @@ impl WriteQuery {
     /// This function generates a pre-fetch `ReadQuery` for appropriate `WriteQuery` types
     pub fn generate_prefetch(&self) -> Option<ReadQuery> {
         match self.inner {
-            RootMutation::DeleteRecord(_) => OneBuilder::new()
+            RootWriteQuery::DeleteRecord(_) => OneBuilder::new()
                 .setup(self.model(), &self.field)
                 .build()
                 .ok()
@@ -107,7 +105,7 @@ impl WriteQuery {
     }
 
     /// Generate a `ReadQuery` from the encapsulated `WriteQuery`
-    pub fn generate_read(&self, res: MutationResult) -> Option<ReadQuery> {
+    pub fn generate_read(&self, res: WriteQueryResult) -> Option<ReadQuery> {
         let field = match res.identifier {
             Identifier::Id(gql_id) => utils::derive_field(
                 &self.field,
@@ -122,8 +120,8 @@ impl WriteQuery {
 
         match self.inner {
             // We ignore Deletes because they were already handled
-            RootMutation::DeleteRecord(_) | RootMutation::DeleteManyRecords(_) => None,
-            RootMutation::CreateRecord(_) | RootMutation::UpdateRecord(_) | RootMutation::UpsertRecord(_) => {
+            RootWriteQuery::DeleteRecord(_) | RootWriteQuery::DeleteManyRecords(_) => None,
+            RootWriteQuery::CreateRecord(_) | RootWriteQuery::UpdateRecord(_) | RootWriteQuery::UpsertRecord(_) => {
                 OneBuilder::new()
                     .setup(self.model(), &field)
                     .build()
@@ -135,7 +133,7 @@ impl WriteQuery {
     }
 }
 
-fn search_for_id(root: &RootMutation) -> Option<GraphqlId> {
+fn search_for_id(root: &RootWriteQuery) -> Option<GraphqlId> {
     fn extract_id(model: &ModelRef, args: &PrismaArgs) -> Option<GraphqlId> {
         args.get_field_value(&model.fields().id().name).map(|pv| match pv {
             PrismaValue::GraphqlId(gqlid) => gqlid.clone(),
@@ -147,7 +145,7 @@ fn search_for_id(root: &RootMutation) -> Option<GraphqlId> {
     }
 
     match root {
-        RootMutation::CreateRecord(cn) => extract_id(&cn.model, &cn.non_list_args),
+        RootWriteQuery::CreateRecord(cn) => extract_id(&cn.model, &cn.non_list_args),
         _ => None,
     }
 }

@@ -3,7 +3,7 @@ use prisma_models::prelude::*;
 use prisma_models::ScalarFieldRef;
 
 /// Methods for fetching data.
-pub trait DataResolver {
+pub trait DatabaseReader {
     /// Find one record.
     fn get_single_record(
         &self,

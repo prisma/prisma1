@@ -1,5 +1,5 @@
 use crate::{
-    mutaction::{MutationBuilder, NestedActions},
+    write_query::{NestedActions, WriteQueryBuilder},
     SqlResult, Transaction,
 };
 use connector::filter::RecordFinder;
@@ -47,7 +47,7 @@ pub fn connect(
         conn.write(query)?;
     }
 
-    let relation_query = MutationBuilder::create_relation(relation_field, parent_id, &child_id);
+    let relation_query = WriteQueryBuilder::create_relation(relation_field, parent_id, &child_id);
     conn.write(relation_query)?;
 
     Ok(())
@@ -121,7 +121,7 @@ pub fn set(
             conn.write(actions.removal_by_child(&child_id))?;
         }
 
-        let relation_query = MutationBuilder::create_relation(Arc::clone(&relation_field), parent_id, &child_id);
+        let relation_query = WriteQueryBuilder::create_relation(Arc::clone(&relation_field), parent_id, &child_id);
         conn.write(relation_query)?;
     }
 

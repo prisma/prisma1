@@ -6,19 +6,19 @@ use crate::{
     schema::OperationTag,
     CoreError, CoreResult,
 };
-use connector::mutaction::*;
+use connector::write_query::*;
 use prisma_models::{Field as ModelField, ModelRef, PrismaArgs};
 use std::sync::Arc;
 
 pub struct SimpleNestedBuilder;
 
 impl SimpleNestedBuilder {
-    /// Build a set of nested value map mutations and attach them to an existing mutation level
+    /// Build a set of nested value map writes and attach them to an existing write level
     pub fn build(
         name: String,
         kind: String,
         map: ValueMap,
-        mutations: &mut NestedMutactions,
+        nested_write_queries: &mut NestedWriteQueries,
         model: ModelRef,
         where_map: Option<ValueMap>,
         top_level: OperationTag,
@@ -39,7 +39,7 @@ impl SimpleNestedBuilder {
 
         let mut non_list_args = values.clone().to_prisma_values();
         let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&relation_model), top_level)?;
+        let nested_writes = build_nested_root(&name, &nested, Arc::clone(&relation_model), top_level)?;
 
         match kind {
             "create" => {
@@ -48,7 +48,7 @@ impl SimpleNestedBuilder {
                 let mut non_list_args: PrismaArgs = non_list_args.into();
                 non_list_args.add_datetimes(Arc::clone(&model));
 
-                mutations.creates.push(NestedCreateRecord {
+                nested_write_queries.creates.push(NestedCreateRecord {
                     non_list_args,
                     list_args,
                     top_is_create: match top_level {
@@ -56,18 +56,20 @@ impl SimpleNestedBuilder {
                         _ => false,
                     },
                     relation_field,
-                    nested_mutactions,
+                    nested_writes,
                 });
             }
             "delete" => {
-                mutations.deletes.push(NestedDeleteRecord { relation_field, where_ });
+                nested_write_queries
+                    .deletes
+                    .push(NestedDeleteRecord { relation_field, where_ });
             }
             "connect" => {
                 let where_ = values.to_record_finder(Arc::clone(&relation_model)).map_or(
                     Err(CoreError::QueryValidationError("No `where` on connect".into())),
                     |w| Ok(w),
                 )?;
-                mutations.connects.push(NestedConnect {
+                nested_write_queries.connects.push(NestedConnect {
                     relation_field,
                     where_,
                     top_is_create: match top_level {
@@ -78,15 +80,17 @@ impl SimpleNestedBuilder {
             }
             "disconnect" => {
                 let where_ = values.to_record_finder(Arc::clone(&relation_model));
-                mutations.disconnects.push(NestedDisconnect { relation_field, where_ });
+                nested_write_queries
+                    .disconnects
+                    .push(NestedDisconnect { relation_field, where_ });
             }
             "update" => {
-                mutations.updates.push(NestedUpdateRecord {
+                nested_write_queries.updates.push(NestedUpdateRecord {
                     relation_field,
                     non_list_args: non_list_args.into(),
                     list_args,
                     where_,
-                    nested_mutactions,
+                    nested_writes,
                 });
             }
             "updateMany" => {
@@ -109,7 +113,7 @@ impl SimpleNestedBuilder {
                     utils::extract_query_args_inner(wheree.iter().map(|(a, b)| (a, b)), Arc::clone(&relation_model))?
                         .filter;
 
-                mutations.update_manys.push(NestedUpdateManyRecords {
+                nested_write_queries.update_manys.push(NestedUpdateManyRecords {
                     relation_field,
                     filter,
                     non_list_args: non_list_args.into(),
@@ -131,7 +135,7 @@ impl UpsertNestedBuilder {
         where_map: ValueMap,
         create: ValueMap,
         update: ValueMap,
-        mutations: &mut NestedMutactions,
+        nested_write_queries: &mut NestedWriteQueries,
         model: ModelRef,
         top_level: OperationTag,
     ) -> CoreResult<()> {
@@ -152,7 +156,7 @@ impl UpsertNestedBuilder {
             non_list_args.add_datetimes(Arc::clone(&model));
 
             let list_args = lists.into_iter().map(|la| la.convert()).collect();
-            let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), top_level)?;
+            let nested_writes = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), top_level)?;
             let relation_field = Arc::clone(&relation_field);
 
             NestedCreateRecord {
@@ -163,7 +167,7 @@ impl UpsertNestedBuilder {
                     _ => false,
                 },
                 relation_field,
-                nested_mutactions,
+                nested_writes,
             }
         };
 
@@ -171,7 +175,7 @@ impl UpsertNestedBuilder {
             let ValueSplit { values, lists, nested } = update.split();
             let non_list_args = values.to_prisma_values().into();
             let list_args = lists.into_iter().map(|la| la.convert()).collect();
-            let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), top_level)?;
+            let nested_writes = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), top_level)?;
             let relation_field = Arc::clone(&relation_field);
             let where_ = where_.clone();
 
@@ -180,11 +184,11 @@ impl UpsertNestedBuilder {
                 non_list_args,
                 list_args,
                 where_,
-                nested_mutactions,
+                nested_writes,
             }
         };
 
-        mutations.upserts.push(NestedUpsertRecord {
+        nested_write_queries.upserts.push(NestedUpsertRecord {
             relation_field,
             where_,
             create,

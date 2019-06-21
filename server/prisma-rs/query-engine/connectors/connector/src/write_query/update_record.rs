@@ -7,7 +7,7 @@ pub struct UpdateRecord {
     pub where_: RecordFinder,
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
-    pub nested_mutactions: NestedMutactions,
+    pub nested_writes: NestedWriteQueries,
 }
 
 #[derive(Debug, Clone)]
@@ -16,7 +16,7 @@ pub struct NestedUpdateRecord {
     pub where_: Option<RecordFinder>,
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
-    pub nested_mutactions: NestedMutactions,
+    pub nested_writes: NestedWriteQueries,
 }
 
 #[derive(Debug, Clone)]

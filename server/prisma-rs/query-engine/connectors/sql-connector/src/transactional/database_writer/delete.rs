@@ -1,6 +1,6 @@
 use crate::{
     error::SqlError,
-    mutaction::{DeleteActions, MutationBuilder, NestedActions},
+    write_query::{DeleteActions, NestedActions, WriteQueryBuilder},
     SqlResult, Transaction,
 };
 use connector::{error::RecordFinderInfo, filter::RecordFinder};
@@ -21,7 +21,7 @@ pub fn execute(conn: &mut Transaction, record_finder: &RecordFinder) -> SqlResul
         Ok(ids.into_iter().next())
     })?;
 
-    for delete in MutationBuilder::delete_many(model, &[&id]) {
+    for delete in WriteQueryBuilder::delete_many(model, &[&id]) {
         conn.delete(delete)?;
     }
 
@@ -84,7 +84,7 @@ pub fn execute_nested(
         Ok(ids.into_iter().next())
     })?;
 
-    for delete in MutationBuilder::delete_many(relation_field.related_model(), &[&child_id]) {
+    for delete in WriteQueryBuilder::delete_many(relation_field.related_model(), &[&child_id]) {
         conn.delete(delete)?;
     }
 

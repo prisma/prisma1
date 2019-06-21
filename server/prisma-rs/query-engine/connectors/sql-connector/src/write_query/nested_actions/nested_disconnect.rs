@@ -1,6 +1,6 @@
 use super::*;
 use crate::SqlResult;
-use connector::mutaction::NestedDisconnect;
+use connector::write_query::NestedDisconnect;
 use prisma_models::*;
 use prisma_query::ast::*;
 use std::sync::Arc;

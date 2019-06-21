@@ -1,11 +1,10 @@
+use crate::{error::SqlError, SqlResult};
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
-use crate::{error::SqlError, SqlResult};
+pub struct WriteQueryBuilder;
 
-pub struct MutationBuilder;
-
-impl MutationBuilder {
+impl WriteQueryBuilder {
     const PARAMETER_LIMIT: usize = 10000;
 
     pub fn create_record(model: ModelRef, mut args: PrismaArgs) -> (Insert, Option<GraphqlId>) {

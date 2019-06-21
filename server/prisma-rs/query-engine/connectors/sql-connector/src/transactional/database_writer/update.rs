@@ -1,4 +1,4 @@
-use crate::{mutaction::MutationBuilder, SqlResult, Transaction};
+use crate::{write_query::WriteQueryBuilder, SqlResult, Transaction};
 use connector::filter::RecordFinder;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
 use std::sync::Arc;
@@ -16,7 +16,7 @@ where
     let model = record_finder.field.model();
     let id = conn.find_id(record_finder)?;
 
-    if let Some(update) = MutationBuilder::update_one(Arc::clone(&model), &id, non_list_args)? {
+    if let Some(update) = WriteQueryBuilder::update_one(Arc::clone(&model), &id, non_list_args)? {
         conn.update(update)?;
     }
 
@@ -61,7 +61,7 @@ where
     for (field_name, list_value) in list_args {
         let field = model.fields().find_from_scalar(field_name.as_ref()).unwrap();
         let table = field.scalar_list_table();
-        let (deletes, inserts) = MutationBuilder::update_scalar_list_values(&table, &list_value, ids.to_vec());
+        let (deletes, inserts) = WriteQueryBuilder::update_scalar_list_values(&table, &list_value, ids.to_vec());
 
         for delete in deletes {
             conn.delete(delete)?;

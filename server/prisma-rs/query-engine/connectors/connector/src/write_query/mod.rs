@@ -1,4 +1,5 @@
-//! Combined mutation executions
+//! Combined write query executions
+
 mod create_record;
 mod delete_record;
 mod path;
@@ -19,23 +20,14 @@ use super::filter::{Filter, RecordFinder};
 use prisma_models::prelude::*;
 use std::sync::Arc;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum DatabaseMutactionResultType {
-    Create,
-    Update,
-    Delete,
-    Many,
-    Unit,
+#[derive(Debug, Clone)]
+pub enum WriteQuery {
+    Root(RootWriteQuery),
+    Nested(NestedWriteQuery),
 }
 
 #[derive(Debug, Clone)]
-pub enum DatabaseMutaction {
-    TopLevel(TopLevelDatabaseMutaction),
-    Nested(NestedDatabaseMutaction),
-}
-
-#[derive(Debug, Clone)]
-pub enum TopLevelDatabaseMutaction {
+pub enum RootWriteQuery {
     CreateRecord(CreateRecord),
     UpdateRecord(UpdateRecord),
     DeleteRecord(DeleteRecord),
@@ -46,7 +38,7 @@ pub enum TopLevelDatabaseMutaction {
 }
 
 #[derive(Debug, Clone)]
-pub enum NestedDatabaseMutaction {
+pub enum NestedWriteQuery {
     CreateRecord(NestedCreateRecord),
     UpdateRecord(NestedUpdateRecord),
     UpsertRecord(NestedUpsertRecord),
@@ -59,7 +51,7 @@ pub enum NestedDatabaseMutaction {
 }
 
 #[derive(Default, Debug, Clone)]
-pub struct NestedMutactions {
+pub struct NestedWriteQueries {
     pub creates: Vec<NestedCreateRecord>,
     pub updates: Vec<NestedUpdateRecord>,
     pub upserts: Vec<NestedUpsertRecord>,

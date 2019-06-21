@@ -14,7 +14,7 @@ struct ScalarListElement {
     value: PrismaValue,
 }
 
-impl<T> DataResolver for SqlDatabase<T>
+impl<T> DatabaseReader for SqlDatabase<T>
 where
     T: Transactional,
 {

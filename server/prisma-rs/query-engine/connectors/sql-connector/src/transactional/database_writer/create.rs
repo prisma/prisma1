@@ -1,6 +1,6 @@
 use crate::{
     error::SqlError,
-    mutaction::{MutationBuilder, NestedActions},
+    write_query::{NestedActions, WriteQueryBuilder},
     SqlResult, Transaction,
 };
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
@@ -16,7 +16,7 @@ pub fn execute<S>(
 where
     S: AsRef<str>,
 {
-    let (insert, returned_id) = MutationBuilder::create_record(Arc::clone(&model), non_list_args.clone());
+    let (insert, returned_id) = WriteQueryBuilder::create_record(Arc::clone(&model), non_list_args.clone());
 
     let last_id = match conn.insert(insert) {
         Ok(id) => id,
@@ -54,7 +54,7 @@ where
         let field = model.fields().find_from_scalar(field_name.as_ref()).unwrap();
         let table = field.scalar_list_table();
 
-        if let Some(insert) = MutationBuilder::create_scalar_list_value(table.table(), &list_value, &id) {
+        if let Some(insert) = WriteQueryBuilder::create_scalar_list_value(table.table(), &list_value, &id) {
             conn.insert(insert)?;
         }
     }
@@ -93,7 +93,7 @@ where
         execute(conn, relation_field.related_model(), &prisma_args, list_args)
     } else {
         let id = execute(conn, relation_field.related_model(), non_list_args, list_args)?;
-        let relation_query = MutationBuilder::create_relation(relation_field, parent_id, &id);
+        let relation_query = WriteQueryBuilder::create_relation(relation_field, parent_id, &id);
 
         conn.write(relation_query)?;
 

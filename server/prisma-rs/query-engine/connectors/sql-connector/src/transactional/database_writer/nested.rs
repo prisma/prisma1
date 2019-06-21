@@ -1,10 +1,14 @@
 use super::{create, delete, delete_many, relation, update, update_many};
 use crate::{error::SqlError, SqlResult, Transaction};
-use connector::mutaction::*;
+use connector::write_query::*;
 use prisma_models::GraphqlId;
 use std::sync::Arc;
 
-pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id: &GraphqlId) -> SqlResult<()> {
+pub fn execute(
+    conn: &mut Transaction,
+    nested_write_writes: &NestedWriteQueries,
+    parent_id: &GraphqlId,
+) -> SqlResult<()> {
     fn create(conn: &mut Transaction, parent_id: &GraphqlId, cn: &NestedCreateRecord) -> SqlResult<()> {
         let parent_id = create::execute_nested(
             conn,
@@ -15,7 +19,7 @@ pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id:
             &cn.list_args,
         )?;
 
-        execute(conn, &cn.nested_mutactions, &parent_id)?;
+        execute(conn, &cn.nested_writes, &parent_id)?;
 
         Ok(())
     }
@@ -30,20 +34,20 @@ pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id:
             &un.list_args,
         )?;
 
-        execute(conn, &un.nested_mutactions, &parent_id)?;
+        execute(conn, &un.nested_writes, &parent_id)?;
 
         Ok(())
     }
 
-    for create_record in mutactions.creates.iter() {
+    for create_record in nested_write_writes.creates.iter() {
         create(conn, parent_id, create_record)?;
     }
 
-    for update_record in mutactions.updates.iter() {
+    for update_record in nested_write_writes.updates.iter() {
         update(conn, parent_id, update_record)?;
     }
 
-    for upsert_record in mutactions.upserts.iter() {
+    for upsert_record in nested_write_writes.upserts.iter() {
         let id_opt = conn.find_id_by_parent(
             Arc::clone(&upsert_record.relation_field),
             parent_id,
@@ -57,7 +61,7 @@ pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id:
         }
     }
 
-    for delete_record in mutactions.deletes.iter() {
+    for delete_record in nested_write_writes.deletes.iter() {
         delete::execute_nested(
             conn,
             parent_id,
@@ -67,7 +71,7 @@ pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id:
         )?;
     }
 
-    for connect in mutactions.connects.iter() {
+    for connect in nested_write_writes.connects.iter() {
         relation::connect(
             conn,
             &parent_id,
@@ -77,15 +81,15 @@ pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id:
         )?;
     }
 
-    for set in mutactions.sets.iter() {
+    for set in nested_write_writes.sets.iter() {
         relation::set(conn, &parent_id, set, &set.wheres, Arc::clone(&set.relation_field))?;
     }
 
-    for disconnect in mutactions.disconnects.iter() {
+    for disconnect in nested_write_writes.disconnects.iter() {
         relation::disconnect(conn, &parent_id, disconnect, &disconnect.where_)?;
     }
 
-    for update_many in mutactions.update_manys.iter() {
+    for update_many in nested_write_writes.update_manys.iter() {
         update_many::execute_nested(
             conn,
             &parent_id,
@@ -96,7 +100,7 @@ pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id:
         )?;
     }
 
-    for delete_many in mutactions.delete_manys.iter() {
+    for delete_many in nested_write_writes.delete_manys.iter() {
         delete_many::execute_nested(
             conn,
             &parent_id,

@@ -7,49 +7,45 @@ mod update;
 mod update_many;
 
 use crate::{database::SqlDatabase, error::SqlError, RawQuery, SqlResult, Transaction, Transactional};
-use connector::{mutaction::*, ConnectorResult, DatabaseMutactionExecutor};
+use connector::{write_query::*, ConnectorResult, DatabaseWriter};
 use serde_json::Value;
 use std::sync::Arc;
 
-impl<T> DatabaseMutactionExecutor for SqlDatabase<T>
+impl<T> DatabaseWriter for SqlDatabase<T>
 where
     T: Transactional,
 {
-    fn execute(
-        &self,
-        db_name: String,
-        mutaction: TopLevelDatabaseMutaction,
-    ) -> ConnectorResult<DatabaseMutactionResult> {
+    fn execute(&self, db_name: String, write_query: RootWriteQuery) -> ConnectorResult<WriteQueryResult> {
         let result = self.executor.with_transaction(&db_name, |conn: &mut Transaction| {
-            fn create(conn: &mut Transaction, cn: &CreateRecord) -> SqlResult<DatabaseMutactionResult> {
+            fn create(conn: &mut Transaction, cn: &CreateRecord) -> SqlResult<WriteQueryResult> {
                 let parent_id = create::execute(conn, Arc::clone(&cn.model), &cn.non_list_args, &cn.list_args)?;
-                nested::execute(conn, &cn.nested_mutactions, &parent_id)?;
+                nested::execute(conn, &cn.nested_writes, &parent_id)?;
 
-                Ok(DatabaseMutactionResult {
+                Ok(WriteQueryResult {
                     identifier: Identifier::Id(parent_id),
-                    typ: DatabaseMutactionResultType::Create,
+                    typ: WriteQueryResultType::Create,
                 })
             }
 
-            fn update(conn: &mut Transaction, un: &UpdateRecord) -> SqlResult<DatabaseMutactionResult> {
+            fn update(conn: &mut Transaction, un: &UpdateRecord) -> SqlResult<WriteQueryResult> {
                 let parent_id = update::execute(conn, &un.where_, &un.non_list_args, &un.list_args)?;
-                nested::execute(conn, &un.nested_mutactions, &parent_id)?;
+                nested::execute(conn, &un.nested_writes, &parent_id)?;
 
-                Ok(DatabaseMutactionResult {
+                Ok(WriteQueryResult {
                     identifier: Identifier::Id(parent_id),
-                    typ: DatabaseMutactionResultType::Update,
+                    typ: WriteQueryResultType::Update,
                 })
             }
 
-            match mutaction {
-                TopLevelDatabaseMutaction::CreateRecord(ref cn) => Ok(create(conn, cn)?),
-                TopLevelDatabaseMutaction::UpdateRecord(ref un) => Ok(update(conn, un)?),
-                TopLevelDatabaseMutaction::UpsertRecord(ref ups) => match conn.find_id(&ups.where_) {
+            match write_query {
+                RootWriteQuery::CreateRecord(ref cn) => Ok(create(conn, cn)?),
+                RootWriteQuery::UpdateRecord(ref un) => Ok(update(conn, un)?),
+                RootWriteQuery::UpsertRecord(ref ups) => match conn.find_id(&ups.where_) {
                     Err(_e @ SqlError::RecordNotFoundForWhere { .. }) => Ok(create(conn, &ups.create)?),
                     Err(e) => return Err(e.into()),
                     Ok(_) => Ok(update(conn, &ups.update)?),
                 },
-                TopLevelDatabaseMutaction::UpdateManyRecords(ref uns) => {
+                RootWriteQuery::UpdateManyRecords(ref uns) => {
                     let count = update_many::execute(
                         conn,
                         Arc::clone(&uns.model),
@@ -58,33 +54,33 @@ where
                         &uns.list_args,
                     )?;
 
-                    Ok(DatabaseMutactionResult {
+                    Ok(WriteQueryResult {
                         identifier: Identifier::Count(count),
-                        typ: DatabaseMutactionResultType::Many,
+                        typ: WriteQueryResultType::Many,
                     })
                 }
-                TopLevelDatabaseMutaction::DeleteRecord(ref dn) => {
+                RootWriteQuery::DeleteRecord(ref dn) => {
                     let record = delete::execute(conn, &dn.where_)?;
 
-                    Ok(DatabaseMutactionResult {
+                    Ok(WriteQueryResult {
                         identifier: Identifier::Record(record),
-                        typ: DatabaseMutactionResultType::Delete,
+                        typ: WriteQueryResultType::Delete,
                     })
                 }
-                TopLevelDatabaseMutaction::DeleteManyRecords(ref dns) => {
+                RootWriteQuery::DeleteManyRecords(ref dns) => {
                     let count = delete_many::execute(conn, Arc::clone(&dns.model), &dns.filter)?;
 
-                    Ok(DatabaseMutactionResult {
+                    Ok(WriteQueryResult {
                         identifier: Identifier::Count(count),
-                        typ: DatabaseMutactionResultType::Many,
+                        typ: WriteQueryResultType::Many,
                     })
                 }
-                TopLevelDatabaseMutaction::ResetData(ref rd) => {
+                RootWriteQuery::ResetData(ref rd) => {
                     conn.truncate(Arc::clone(&rd.internal_data_model))?;
 
-                    Ok(DatabaseMutactionResult {
+                    Ok(WriteQueryResult {
                         identifier: Identifier::None,
-                        typ: DatabaseMutactionResultType::Unit,
+                        typ: WriteQueryResultType::Unit,
                     })
                 }
             }

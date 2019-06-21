@@ -3,7 +3,7 @@ use crate::{
     protobuf::{mutaction::*, prelude::*, InputValidation},
     BridgeError, BridgeResult, ExternalInterface,
 };
-use connector::{error::ConnectorError, filter::RecordFinder, DataResolver, DatabaseMutactionExecutor};
+use connector::{error::ConnectorError, filter::RecordFinder, DatabaseReader, DatabaseWriter};
 use prisma_common::config::*;
 use prisma_models::prelude::*;
 use prost::Message;
@@ -11,8 +11,8 @@ use sql_connector::{Mysql, PostgreSql, SqlDatabase, Sqlite};
 use std::{convert::TryFrom, sync::Arc};
 
 pub struct ProtoBufInterface {
-    data_resolver: Arc<DataResolver + Send + Sync + 'static>,
-    database_mutaction_executor: Arc<DatabaseMutactionExecutor + Send + Sync + 'static>,
+    data_resolver: Arc<DatabaseReader + Send + Sync + 'static>,
+    database_mutaction_executor: Arc<DatabaseWriter + Send + Sync + 'static>,
 }
 
 impl ProtoBufInterface {

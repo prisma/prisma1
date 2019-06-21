@@ -7,7 +7,7 @@ pub struct CreateRecord {
     pub model: ModelRef,
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
-    pub nested_mutactions: NestedMutactions,
+    pub nested_writes: NestedWriteQueries,
 }
 
 #[derive(Debug, Clone)]
@@ -16,11 +16,11 @@ pub struct NestedCreateRecord {
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
     pub top_is_create: bool,
-    pub nested_mutactions: NestedMutactions,
+    pub nested_writes: NestedWriteQueries,
 }
 
-impl From<CreateRecord> for DatabaseMutaction {
-    fn from(cn: CreateRecord) -> DatabaseMutaction {
-        DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateRecord(cn))
+impl From<CreateRecord> for WriteQuery {
+    fn from(cn: CreateRecord) -> WriteQuery {
+        WriteQuery::Root(RootWriteQuery::CreateRecord(cn))
     }
 }
