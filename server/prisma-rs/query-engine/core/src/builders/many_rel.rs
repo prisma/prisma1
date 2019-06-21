@@ -1,5 +1,5 @@
 use super::{utils, BuilderExt};
-use crate::{query_ast::ManyRelatedRecordsQuery, CoreResult};
+use crate::{read_query_ast::ManyRelatedRecordsQuery, CoreResult};
 
 use graphql_parser::query::Field;
 use prisma_models::{ModelRef, RelationFieldRef};

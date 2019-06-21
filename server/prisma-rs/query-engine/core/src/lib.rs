@@ -12,8 +12,8 @@ extern crate lazy_static;
 mod builders;
 mod error;
 mod executor;
-mod query_ast;
-mod query_results;
+mod read_query_ast;
+mod read_query_result;
 
 pub mod ir;
 pub mod schema;
@@ -21,8 +21,8 @@ pub mod schema;
 pub use builders::*;
 pub use error::*;
 pub use executor::*;
-pub use query_ast::*;
-pub use query_results::*;
+pub use read_query_ast::*;
+pub use read_query_result::*;
 pub use schema::*;
 
 pub type CoreResult<T> = Result<T, CoreError>;

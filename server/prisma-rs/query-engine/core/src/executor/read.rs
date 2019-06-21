@@ -1,7 +1,7 @@
-use crate::{query_ast, query_results::*, CoreResult};
+use crate::{read_query_ast, read_query_result::*, CoreResult};
 use connector::{ConnectorResult, DatabaseReader, ScalarListValues};
 use prisma_models::{GraphqlId, ScalarField, SelectedFields, SingleRecord};
-use query_ast::*;
+use read_query_ast::*;
 use std::{convert::TryFrom, sync::Arc};
 
 // Todo We could eliminate the trait object with enums.
