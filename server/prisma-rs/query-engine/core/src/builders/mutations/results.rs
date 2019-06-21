@@ -1,20 +1,20 @@
 //! WriteQuery results are kinda special
 
-use crate::{ReadQueryResult, SingleReadQueryResult, WriteQuery};
-use connector::mutaction::{DatabaseMutactionResult, Identifier};
-use prisma_models::{Node, PrismaValue, SingleNode};
+use crate::{ReadQueryResult, SingleReadQueryResult, WriteQueryTree};
+use connector::write_query::{Identifier, WriteQueryResult};
+use prisma_models::{PrismaValue, Record, SingleRecord};
 
-/// A structure that encodes the results from a database mutation
-pub struct WriteQueryResult {
-    /// The immediate mutation return
-    pub inner: DatabaseMutactionResult,
+/// A structure that encodes the results from a database write
+pub struct WriteQueryTreeResult {
+    /// The immediate write query return
+    pub inner: WriteQueryResult,
 
-    /// The WriteQuery is used for all sorts of stuff later
-    pub origin: WriteQuery,
+    /// The WriteQueryTree is used for all sorts of stuff later
+    pub origin: WriteQueryTree,
 }
 
-impl WriteQueryResult {
-    /// A function that's mostly invoked for `DeleteMany` mutations
+impl WriteQueryTreeResult {
+    /// A function that's mostly invoked for `DeleteMany` operations
     pub fn generate_result(&self) -> Option<ReadQueryResult> {
         match self.inner.identifier {
             Identifier::Count(c) => Some(ReadQueryResult::Single(SingleReadQueryResult {
@@ -26,8 +26,8 @@ impl WriteQueryResult {
                     .unwrap_or(&self.origin.field.name)
                     .clone(),
                 fields: vec!["count".into()],
-                scalars: Some(SingleNode::new(
-                    Node::new(vec![PrismaValue::Int(c as i64)]),
+                scalars: Some(SingleRecord::new(
+                    Record::new(vec![PrismaValue::Int(c as i64)]),
                     vec!["count".into()],
                 )),
                 nested: vec![],

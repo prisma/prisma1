@@ -7,14 +7,16 @@ use prisma_models::PrismaValue;
 pub fn build_map(result: SingleReadQueryResult) -> Option<Map> {
     // Build selected fields first
     let mut outer = match &result.scalars {
-        Some(single) => single
-            .field_names
-            .iter()
-            .zip(&single.node.values)
-            .fold(Map::new(), |mut map, (name, val)| {
-                map.insert(name.clone(), Item::Value(val.clone()));
-                map
-            }),
+        Some(single) => {
+            single
+                .field_names
+                .iter()
+                .zip(&single.record.values)
+                .fold(Map::new(), |mut map, (name, val)| {
+                    map.insert(name.clone(), Item::Value(val.clone()));
+                    map
+                })
+        }
         None => return None,
     };
 

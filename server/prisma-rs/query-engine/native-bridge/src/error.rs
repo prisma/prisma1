@@ -1,5 +1,5 @@
 use crate::protobuf;
-use connector::error::{ConnectorError, NodeSelectorInfo};
+use connector::error::{ConnectorError, RecordFinderInfo};
 use failure::{Error, Fail};
 use prisma_models::DomainError;
 use prost::DecodeError;
@@ -43,8 +43,8 @@ impl From<serde_json::error::Error> for BridgeError {
     }
 }
 
-impl From<NodeSelectorInfo> for protobuf::prisma::NodeSelector {
-    fn from(info: NodeSelectorInfo) -> Self {
+impl From<RecordFinderInfo> for protobuf::prisma::NodeSelector {
+    fn from(info: RecordFinderInfo) -> Self {
         Self {
             model_name: info.model,
             field_name: info.field,
@@ -90,17 +90,17 @@ impl From<BridgeError> for protobuf::prisma::error::Value {
                 protobuf::prisma::error::Value::RelationViolation(error)
             }
 
-            BridgeError::ConnectorError(ConnectorError::NodeNotFoundForWhere(info)) => {
-                let node_selector = protobuf::prisma::NodeSelector {
+            BridgeError::ConnectorError(ConnectorError::RecordNotFoundForWhere(info)) => {
+                let record_finder = protobuf::prisma::NodeSelector {
                     model_name: info.model,
                     field_name: info.field,
                     value: info.value.into(),
                 };
 
-                protobuf::prisma::error::Value::NodeNotFoundForWhere(node_selector)
+                protobuf::prisma::error::Value::NodeNotFoundForWhere(record_finder)
             }
 
-            BridgeError::ConnectorError(ConnectorError::NodesNotConnected {
+            BridgeError::ConnectorError(ConnectorError::RecordsNotConnected {
                 relation_name,
                 parent_name,
                 parent_where,

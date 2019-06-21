@@ -1,16 +1,16 @@
-use crate::filter::NodeSelector;
+use crate::filter::RecordFinder;
 use failure::{Error, Fail};
 use prisma_models::prelude::{DomainError, GraphqlId, ModelRef, PrismaValue};
 use std::fmt;
 
 #[derive(Debug)]
-pub struct NodeSelectorInfo {
+pub struct RecordFinderInfo {
     pub model: String,
     pub field: String,
     pub value: PrismaValue,
 }
 
-impl NodeSelectorInfo {
+impl RecordFinderInfo {
     pub fn for_id(model: ModelRef, value: &GraphqlId) -> Self {
         Self {
             model: model.name.clone(),
@@ -20,7 +20,7 @@ impl NodeSelectorInfo {
     }
 }
 
-impl fmt::Display for NodeSelectorInfo {
+impl fmt::Display for RecordFinderInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -30,8 +30,8 @@ impl fmt::Display for NodeSelectorInfo {
     }
 }
 
-impl From<&NodeSelector> for NodeSelectorInfo {
-    fn from(ns: &NodeSelector) -> Self {
+impl From<&RecordFinder> for RecordFinderInfo {
+    fn from(ns: &RecordFinder) -> Self {
         Self {
             model: ns.field.model().name.clone(),
             field: ns.field.name.clone(),
@@ -48,8 +48,8 @@ pub enum ConnectorError {
     #[fail(display = "Null constraint failed: {}", field_name)]
     NullConstraintViolation { field_name: String },
 
-    #[fail(display = "Node does not exist.")]
-    NodeDoesNotExist,
+    #[fail(display = "Record does not exist.")]
+    RecordDoesNotExist,
 
     #[fail(display = "Column does not exist")]
     ColumnDoesNotExist,
@@ -72,8 +72,8 @@ pub enum ConnectorError {
     #[fail(display = "{}", _0)]
     DomainError(DomainError),
 
-    #[fail(display = "Node not found: {}", _0)]
-    NodeNotFoundForWhere(NodeSelectorInfo),
+    #[fail(display = "Record not found: {}", _0)]
+    RecordNotFoundForWhere(RecordFinderInfo),
 
     #[fail(
         display = "Violating a relation {} between {} and {}",
@@ -86,15 +86,15 @@ pub enum ConnectorError {
     },
 
     #[fail(
-        display = "The relation {} has no node for the model {} connected to a Node for the model {} on your mutation path.",
+        display = "The relation {} has no record for the model {} connected to a record for the model {} on your write path.",
         relation_name, parent_name, child_name
     )]
-    NodesNotConnected {
+    RecordsNotConnected {
         relation_name: String,
         parent_name: String,
-        parent_where: Option<NodeSelectorInfo>,
+        parent_where: Option<RecordFinderInfo>,
         child_name: String,
-        child_where: Option<NodeSelectorInfo>,
+        child_where: Option<RecordFinderInfo>,
     },
 
     #[fail(display = "Conversion error: {}", _0)]

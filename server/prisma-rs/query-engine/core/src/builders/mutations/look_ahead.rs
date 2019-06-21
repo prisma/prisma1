@@ -5,22 +5,22 @@
 //! This is to get around issues with required references
 //! that are connected in a second step.
 
-use crate::{CoreResult, WriteQuery, WriteQuerySet};
-use connector::mutaction::*;
+use crate::{CoreResult, WriteQuerySet, WriteQueryTree};
+use connector::write_query::*;
 use graphql_parser::query::Field;
 use prisma_models::{ModelRef, PrismaArgs, PrismaValue};
 
 pub struct LookAhead;
 impl LookAhead {
-    pub fn eval(mut input: WriteQuery) -> CoreResult<WriteQuerySet> {
+    pub fn eval(mut input: WriteQueryTree) -> CoreResult<WriteQuerySet> {
         input.inner = match input.inner {
-            TopLevelDatabaseMutaction::CreateNode(mut cn) => {
+            RootWriteQuery::CreateRecord(mut cn) => {
                 create_connect(&mut cn)?;
-                TopLevelDatabaseMutaction::CreateNode(cn)
+                RootWriteQuery::CreateRecord(cn)
             }
-            TopLevelDatabaseMutaction::UpdateNode(mut un) => {
+            RootWriteQuery::UpdateRecord(mut un) => {
                 update_nested_connect(&mut un)?;
-                TopLevelDatabaseMutaction::UpdateNode(un)
+                RootWriteQuery::UpdateRecord(un)
             }
             who_even_cares => who_even_cares,
         };
@@ -30,23 +30,24 @@ impl LookAhead {
         flipped
     }
 
-    /// This function is called in the QueryExecutor, after executing a partial mutation tree
+    /// This function is called in the QueryExecutor, after executing a partial write query tree
     ///
     /// What it needs to do is work with the result of the partial execution,
-    /// then inject any IDs or data into the base mutation of the Dependents tree
-    pub fn eval_partial(next: &mut WriteQuerySet, self_: &WriteQuery, res: &DatabaseMutactionResult) -> CoreResult<()> {
-        let name = next.get_base_model()
-                    .fields()
-                    .find_from_relation_fields(&self_.model().name.to_lowercase())?
-                    .name
-                    .clone();
+    /// then inject any IDs or data into the base write query of the Dependents tree
+    pub fn eval_partial(next: &mut WriteQuerySet, self_: &WriteQueryTree, res: &WriteQueryResult) -> CoreResult<()> {
+        let name = next
+            .get_base_model()
+            .fields()
+            .find_from_relation_fields(&self_.model().name.to_lowercase())?
+            .name
+            .clone();
         let id: PrismaValue = match res.identifier {
             Identifier::Id(ref gqlid) => gqlid.into(),
             _ => unimplemented!(),
         };
 
         next.inject_at_base(move |query| match query.inner {
-            TopLevelDatabaseMutaction::CreateNode(ref mut cn) => cn.non_list_args.insert(name, id),
+            RootWriteQuery::CreateRecord(ref mut cn) => cn.non_list_args.insert(name, id),
             _ => unimplemented!(),
         });
 
@@ -55,23 +56,23 @@ impl LookAhead {
 }
 
 /// Merge connect's on required fields into the create
-fn create_connect(cn: &mut CreateNode) -> CoreResult<()> {
-    let connects = std::mem::replace(&mut cn.nested_mutactions.connects, vec![]);
+fn create_connect(cn: &mut CreateRecord) -> CoreResult<()> {
+    let connects = std::mem::replace(&mut cn.nested_writes.connects, vec![]);
 
     let mut new = vec![];
     connect_fold_into(&cn.model, &mut cn.non_list_args, &mut new, connects.into_iter())?;
-    cn.nested_mutactions.connects = new;
+    cn.nested_writes.connects = new;
 
     // Now recursively traverse all other creates
-    for ncn in cn.nested_mutactions.creates.iter_mut() {
+    for ncn in cn.nested_writes.creates.iter_mut() {
         nested_create_connect(ncn)?;
     }
 
     Ok(())
 }
 
-fn nested_create_connect(ncn: &mut NestedCreateNode) -> CoreResult<()> {
-    let connects = std::mem::replace(&mut ncn.nested_mutactions.connects, vec![]);
+fn nested_create_connect(ncn: &mut NestedCreateRecord) -> CoreResult<()> {
+    let connects = std::mem::replace(&mut ncn.nested_writes.connects, vec![]);
     let mut new = vec![];
 
     connect_fold_into(
@@ -81,36 +82,36 @@ fn nested_create_connect(ncn: &mut NestedCreateNode) -> CoreResult<()> {
         connects.into_iter(),
     )?;
 
-    ncn.nested_mutactions.connects = new;
+    ncn.nested_writes.connects = new;
 
-    for cn in ncn.nested_mutactions.creates.iter_mut() {
+    for cn in ncn.nested_writes.creates.iter_mut() {
         nested_create_connect(cn)?;
     }
 
     Ok(())
 }
 
-fn update_nested_connect(un: &mut UpdateNode) -> CoreResult<()> {
-    for ncn in un.nested_mutactions.creates.iter_mut() {
+fn update_nested_connect(un: &mut UpdateRecord) -> CoreResult<()> {
+    for ncn in un.nested_writes.creates.iter_mut() {
         nested_create_connect(ncn)?;
     }
 
     Ok(())
 }
 
-fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
+fn flip_create_order(wq: WriteQueryTree) -> CoreResult<WriteQuerySet> {
     match wq.inner {
-        TopLevelDatabaseMutaction::CreateNode(mut cn) => {
-            let creates = std::mem::replace(&mut cn.nested_mutactions.creates, vec![]);
+        RootWriteQuery::CreateRecord(mut cn) => {
+            let creates = std::mem::replace(&mut cn.nested_writes.creates, vec![]);
             let (required, normal) = creates.into_iter().partition(|nc| {
                 nc.relation_field.is_required
                     && check_should_flip(&cn.model, &nc.relation_field.related_field().model())
             });
 
-            cn.nested_mutactions.creates = normal;
+            cn.nested_writes.creates = normal;
 
-            let wq = WriteQuery {
-                inner: TopLevelDatabaseMutaction::CreateNode(cn),
+            let wq = WriteQueryTree {
+                inner: RootWriteQuery::CreateRecord(cn),
                 ..wq
             };
 
@@ -118,7 +119,7 @@ fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
                 .into_iter()
                 .fold(WriteQuerySet::Query(wq), |acc, req| match acc {
                     WriteQuerySet::Query(q) => WriteQuerySet::Dependents {
-                        self_: WriteQuery {
+                        self_: WriteQueryTree {
                             inner: hoist_nested_create(req),
                             name: q.name.clone(),
                             field: q.field.clone(),
@@ -129,7 +130,7 @@ fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
                         let (name, field) = get_name_field(&next);
 
                         WriteQuerySet::Dependents {
-                            self_: WriteQuery {
+                            self_: WriteQueryTree {
                                 inner: hoist_nested_create(req),
                                 name,
                                 field,
@@ -145,13 +146,13 @@ fn flip_create_order(wq: WriteQuery) -> CoreResult<WriteQuerySet> {
     }
 }
 
-/// Takes a NestedCreateNode and turns it into a TopLevelDatabaseMutaction::CreateNode
-fn hoist_nested_create(nc: NestedCreateNode) -> TopLevelDatabaseMutaction {
-    TopLevelDatabaseMutaction::CreateNode(CreateNode {
+/// Takes a NestedCreateRecord and turns it into a RootWriteQuery::CreateRecord
+fn hoist_nested_create(nc: NestedCreateRecord) -> RootWriteQuery {
+    RootWriteQuery::CreateRecord(CreateRecord {
         model: nc.relation_field.related_field().model(),
         non_list_args: nc.non_list_args,
         list_args: nc.list_args,
-        nested_mutactions: nc.nested_mutactions,
+        nested_writes: nc.nested_writes,
     })
 }
 

@@ -1,17 +1,17 @@
-mod data_resolver;
-mod mutaction_executor;
+mod database_reader;
+mod database_writer;
 
-pub use data_resolver::*;
-pub use mutaction_executor::*;
+pub use database_reader::*;
+pub use database_writer::*;
 
 use crate::{
     error::*,
-    query_builder::{QueryBuilder, RelatedNodesQueryBuilder},
+    query_builder::{ManyRelatedRecordsQueryBuilder, QueryBuilder},
     AliasedCondition, RawQuery, SqlResult, SqlRow,
 };
 use connector::{
-    error::NodeSelectorInfo,
-    filter::{Filter, NodeSelector},
+    error::RecordFinderInfo,
+    filter::{Filter, RecordFinder},
 };
 use prisma_models::*;
 use prisma_query::ast::*;
@@ -23,8 +23,8 @@ use std::{convert::TryFrom, sync::Arc};
 /// rollback in case of an error.
 pub trait Transactional {
     /// This we use to differentiate between databases with or without
-    /// `ROW_NUMBER` function for related nodes pagination.
-    type RelatedNodesBuilder: RelatedNodesQueryBuilder;
+    /// `ROW_NUMBER` function for related records pagination.
+    type ManyRelatedRecordsBuilder: ManyRelatedRecordsQueryBuilder;
 
     /// Wrap a closure into a transaction. All actions done through the
     /// `Transaction` are commited automatically, or rolled back in case of any
@@ -38,7 +38,7 @@ pub trait Transactional {
 /// handled per-database basis, `Transaction` providing a minimal interface over
 /// different databases.
 pub trait Transaction {
-    /// Burn them. BURN THEM ALL!
+    /// Truncates (clears) the entire database table.
     fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> SqlResult<()>;
 
     /// Write to the database, returning the change count and last id inserted.
@@ -70,22 +70,22 @@ pub trait Transaction {
     }
 
     /// Find one full record selecting all scalar fields.
-    fn find_record(&mut self, node_selector: &NodeSelector) -> SqlResult<SingleNode> {
+    fn find_record(&mut self, record_finder: &RecordFinder) -> SqlResult<SingleRecord> {
         use SqlError::*;
 
-        let model = node_selector.field.model();
+        let model = record_finder.field.model();
         let selected_fields = SelectedFields::from(Arc::clone(&model));
-        let select = QueryBuilder::get_nodes(model, &selected_fields, node_selector);
+        let select = QueryBuilder::get_records(model, &selected_fields, record_finder);
         let idents = selected_fields.type_identifiers();
 
         let row = self.find(select, idents.as_slice()).map_err(|e| match e {
-            NodeDoesNotExist => NodeNotFoundForWhere(NodeSelectorInfo::from(node_selector)),
+            RecordDoesNotExist => RecordNotFoundForWhere(RecordFinderInfo::from(record_finder)),
             e => e,
         })?;
 
-        let node = Node::from(row);
+        let record = Record::from(row);
 
-        Ok(SingleNode::new(node, selected_fields.names()))
+        Ok(SingleRecord::new(record, selected_fields.names()))
     }
 
     /// Select one row from the database.
@@ -93,7 +93,7 @@ pub trait Transaction {
         self.filter(q.limit(1).into(), idents)?
             .into_iter()
             .next()
-            .ok_or(SqlError::NodeDoesNotExist)
+            .ok_or(SqlError::RecordDoesNotExist)
     }
 
     /// Read the first column from the first row as an integer.
@@ -105,15 +105,15 @@ pub trait Transaction {
     }
 
     /// Read the first column from the first row as an `GraphqlId`.
-    fn find_id(&mut self, node_selector: &NodeSelector) -> SqlResult<GraphqlId> {
-        let model = node_selector.field.model();
-        let filter = Filter::from(node_selector.clone());
+    fn find_id(&mut self, record_finder: &RecordFinder) -> SqlResult<GraphqlId> {
+        let model = record_finder.field.model();
+        let filter = Filter::from(record_finder.clone());
 
         let id = self
             .filter_ids(model, filter)?
             .into_iter()
             .next()
-            .ok_or_else(|| SqlError::NodeNotFoundForWhere(NodeSelectorInfo::from(node_selector)))?;
+            .ok_or_else(|| SqlError::RecordNotFoundForWhere(RecordFinderInfo::from(record_finder)))?;
 
         Ok(id)
     }
@@ -146,7 +146,7 @@ pub trait Transaction {
         &mut self,
         parent_field: RelationFieldRef,
         parent_id: &GraphqlId,
-        selector: &Option<NodeSelector>,
+        selector: &Option<RecordFinder>,
     ) -> SqlResult<GraphqlId> {
         let ids = self.filter_ids_by_parents(
             Arc::clone(&parent_field),
@@ -154,18 +154,18 @@ pub trait Transaction {
             selector.clone().map(Filter::from),
         )?;
 
-        let id = ids.into_iter().next().ok_or_else(|| SqlError::NodesNotConnected {
+        let id = ids.into_iter().next().ok_or_else(|| SqlError::RecordsNotConnected {
             relation_name: parent_field.relation().name.clone(),
             parent_name: parent_field.model().name.clone(),
             parent_where: None,
             child_name: parent_field.related_model().name.clone(),
-            child_where: selector.as_ref().map(NodeSelectorInfo::from),
+            child_where: selector.as_ref().map(RecordFinderInfo::from),
         })?;
 
         Ok(id)
     }
 
-    /// Find all children node id's with the given parent id's, optionally given
+    /// Find all children record id's with the given parent id's, optionally given
     /// a `Filter` for extra filtering.
     fn filter_ids_by_parents(
         &mut self,

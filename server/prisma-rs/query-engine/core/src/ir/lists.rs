@@ -111,7 +111,7 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
 
                     let records_for_parent = parents_with_records
                         .get_mut(&parent_id)
-                        .expect("Expected records to parent mapping to contain entries for all nodes.");
+                        .expect("Expected records to parent mapping to contain entries for all records.");
 
                     records_for_parent.push(Item::Map(parent_opt, i));
                 }
@@ -135,7 +135,7 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
             .expect("Expected lists to groups to contain entries for all list fields.");
 
         list_values.into_iter().for_each(|value| {
-            map.insert(value.node_id, value.values);
+            map.insert(value.record_id, value.values);
         });
     });
 
@@ -152,7 +152,7 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
     // There is always at least one scalar selected (id), making scalars the perfect entry point.
     result
         .scalars
-        .nodes
+        .records
         .into_iter()
         .map(|record| {
             let record_id = record
@@ -191,7 +191,7 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                 }
             });
 
-            // For each list, find the relevant nodes and insert them into the map.
+            // For each list, find the relevant records and insert them into the map.
             lists_to_groups.iter_mut().for_each(|(list_field_name, mapping)| {
                 match mapping.remove(&record_id) {
                     Some(values) => base_map.insert(

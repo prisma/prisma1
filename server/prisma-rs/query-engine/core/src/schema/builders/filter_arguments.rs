@@ -44,9 +44,9 @@ lazy_static! {
         ],
 
         multi_relation: vec![
-            FilterArgument { suffix: "_every",is_list: false }, // All nodes where all nodes in the relation satisfy the given condition.
-            FilterArgument { suffix: "_some",is_list: false }, // All nodes that have at least one node in the relation satisfying the given condition.
-            FilterArgument { suffix: "_none",is_list: false } // All nodes that have no node in the relation satisfying the given condition.
+            FilterArgument { suffix: "_every",is_list: false }, // All records where all records in the relation satisfy the given condition.
+            FilterArgument { suffix: "_some",is_list: false }, // All records that have at least one record in the relation satisfying the given condition.
+            FilterArgument { suffix: "_none",is_list: false } // All records that have no record in the relation satisfying the given condition.
         ],
 
         one_relation: vec![FilterArgument { suffix: "", is_list: false }],

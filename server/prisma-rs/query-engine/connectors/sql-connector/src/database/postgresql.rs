@@ -1,6 +1,6 @@
 use crate::{
-    error::SqlError, query_builder::RelatedNodesWithRowNumber, MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow,
-    ToSqlRow, Transaction, Transactional,
+    error::SqlError, query_builder::ManyRelatedRecordsWithRowNumber, RawQuery, SqlId, SqlResult, SqlRow, ToSqlRow,
+    Transaction, Transactional, WriteQueryBuilder,
 };
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};
@@ -147,7 +147,7 @@ impl TryFrom<&ConnectionStringConfig> for PostgreSql {
 }
 
 impl Transactional for PostgreSql {
-    type RelatedNodesBuilder = RelatedNodesWithRowNumber;
+    type ManyRelatedRecordsBuilder = ManyRelatedRecordsWithRowNumber;
 
     fn with_transaction<F, T>(&self, _: &str, f: F) -> SqlResult<T>
     where
@@ -240,7 +240,7 @@ impl<'a> Transaction for PostgresTransaction<'a> {
     fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> SqlResult<()> {
         self.write(Query::from("SET CONSTRAINTS ALL DEFERRED"))?;
 
-        for delete in MutationBuilder::truncate_tables(internal_data_model) {
+        for delete in WriteQueryBuilder::truncate_tables(internal_data_model) {
             self.delete(delete)?;
         }
 

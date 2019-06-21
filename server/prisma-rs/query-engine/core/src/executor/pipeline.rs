@@ -16,7 +16,7 @@
 
 #![allow(warnings)]
 
-use crate::{Query, ReadQuery, ReadQueryResult, WriteQuery, WriteQueryResult, WriteQuerySet};
+use crate::{Query, ReadQuery, ReadQueryResult, WriteQuerySet, WriteQueryTree, WriteQueryTreeResult};
 use indexmap::IndexMap;
 use std::mem::replace;
 
@@ -145,7 +145,7 @@ impl QueryPipeline {
     }
 
     /// Store relevant WriteQuery return values and generate ReadQueries
-    pub fn process_writes(&mut self, writes: Vec<(Option<usize>, WriteQueryResult)>) -> Vec<(usize, ReadQuery)> {
+    pub fn process_writes(&mut self, writes: Vec<(Option<usize>, WriteQueryTreeResult)>) -> Vec<(usize, ReadQuery)> {
         writes
             .into_iter()
             .filter_map(|(idx, result)| {

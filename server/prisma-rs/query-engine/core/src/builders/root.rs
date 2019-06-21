@@ -1,5 +1,5 @@
 use super::Builder;
-use crate::{CoreResult, MutationBuilder, Query as PrismaQuery, QuerySchemaRef};
+use crate::{CoreResult, Query as PrismaQuery, QuerySchemaRef, RootWriteQueryBuilder};
 use graphql_parser::query::*;
 use std::sync::Arc;
 
@@ -64,7 +64,7 @@ impl RootBuilder {
         root_fields
             .iter()
             .map(|item| match item {
-                Selection::Field(root_field) => MutationBuilder::new(Arc::clone(&self.query_schema), root_field)
+                Selection::Field(root_field) => RootWriteQueryBuilder::new(Arc::clone(&self.query_schema), root_field)
                     .build()
                     .map(|q| PrismaQuery::Write(q)),
                 _ => unimplemented!(),

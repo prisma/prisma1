@@ -1,5 +1,5 @@
 use crate::SqlResult;
-use prisma_models::{GraphqlId, Node, PrismaValue, TypeIdentifier};
+use prisma_models::{GraphqlId, PrismaValue, Record, TypeIdentifier};
 use prisma_query::ast::DatabaseValue;
 use uuid::Uuid;
 
@@ -9,9 +9,9 @@ pub struct SqlRow {
     pub values: Vec<PrismaValue>,
 }
 
-impl From<SqlRow> for Node {
-    fn from(row: SqlRow) -> Node {
-        Node::new(row.values)
+impl From<SqlRow> for Record {
+    fn from(row: SqlRow) -> Record {
+        Record::new(row.values)
     }
 }
 

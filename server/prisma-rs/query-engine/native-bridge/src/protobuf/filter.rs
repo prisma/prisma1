@@ -115,10 +115,10 @@ impl IntoFilter for pb::RelationFilter {
         let nested_filter: Box<Filter> = Box::new((*self.nested_filter).into_filter(field.related_model()));
 
         let condition = match condition {
-            pb::relation_filter::Condition::EveryRelatedNode => RelationCondition::EveryRelatedNode,
-            pb::relation_filter::Condition::AtLeastOneRelatedNode => RelationCondition::AtLeastOneRelatedNode,
-            pb::relation_filter::Condition::NoRelatedNode => RelationCondition::NoRelatedNode,
-            pb::relation_filter::Condition::ToOneRelatedNode => RelationCondition::ToOneRelatedNode,
+            pb::relation_filter::Condition::EveryRelatedNode => RelationCondition::EveryRelatedRecord,
+            pb::relation_filter::Condition::AtLeastOneRelatedNode => RelationCondition::AtLeastOneRelatedRecord,
+            pb::relation_filter::Condition::NoRelatedNode => RelationCondition::NoRelatedRecord,
+            pb::relation_filter::Condition::ToOneRelatedNode => RelationCondition::ToOneRelatedRecord,
         };
 
         Filter::Relation(RelationFilter {

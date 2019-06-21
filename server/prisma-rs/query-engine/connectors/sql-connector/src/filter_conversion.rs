@@ -189,10 +189,10 @@ impl AliasedCondition for RelationFilter {
         let sub_select = self.aliased_sel(alias.map(|a| a.inc(AliasMode::Table)));
 
         let comparison = match condition {
-            RelationCondition::EveryRelatedNode => column.not_in_selection(sub_select),
-            RelationCondition::NoRelatedNode => column.not_in_selection(sub_select),
-            RelationCondition::AtLeastOneRelatedNode => column.in_selection(sub_select),
-            RelationCondition::ToOneRelatedNode => column.in_selection(sub_select),
+            RelationCondition::EveryRelatedRecord => column.not_in_selection(sub_select),
+            RelationCondition::NoRelatedRecord => column.not_in_selection(sub_select),
+            RelationCondition::AtLeastOneRelatedRecord => column.in_selection(sub_select),
+            RelationCondition::ToOneRelatedRecord => column.in_selection(sub_select),
         };
 
         comparison.into()
@@ -234,10 +234,10 @@ impl AliasedSelect for RelationFilter {
                 let sub_select = filter.aliased_sel(Some(alias.inc(AliasMode::Table)));
 
                 let tree: ConditionTree = match sub_condition {
-                    RelationCondition::EveryRelatedNode => other_column.not_in_selection(sub_select),
-                    RelationCondition::NoRelatedNode => other_column.not_in_selection(sub_select),
-                    RelationCondition::AtLeastOneRelatedNode => other_column.in_selection(sub_select),
-                    RelationCondition::ToOneRelatedNode => other_column.in_selection(sub_select),
+                    RelationCondition::EveryRelatedRecord => other_column.not_in_selection(sub_select),
+                    RelationCondition::NoRelatedRecord => other_column.not_in_selection(sub_select),
+                    RelationCondition::AtLeastOneRelatedRecord => other_column.in_selection(sub_select),
+                    RelationCondition::ToOneRelatedRecord => other_column.in_selection(sub_select),
                 }
                 .into();
 

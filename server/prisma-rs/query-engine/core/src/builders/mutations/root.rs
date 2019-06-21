@@ -5,25 +5,25 @@ use crate::{
     builders::{utils, LookAhead, NestedValue, ValueList, ValueMap, ValueSplit},
     extend_defaults,
     schema::{ModelOperation, OperationTag},
-    CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
-    WriteQuerySet,
+    CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuerySet,
+    WriteQueryTree,
 };
-use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
+use connector::{filter::RecordFinder, write_query::*};
 use graphql_parser::query::{Field, Value};
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue, Project};
 use std::{collections::BTreeMap, sync::Arc};
 
-/// A TopLevelMutation builder
+/// A root write query builder
 ///
 /// It takes a GraphQL field and model
-/// and builds a mutation tree from it
+/// and builds a write query tree from it
 #[derive(Debug)]
-pub struct MutationBuilder<'field> {
+pub struct RootWriteQueryBuilder<'field> {
     field: &'field Field,
     query_schema: QuerySchemaRef,
 }
 
-impl<'field> MutationBuilder<'field> {
+impl<'field> RootWriteQueryBuilder<'field> {
     pub fn new(query_schema: QuerySchemaRef, field: &'field Field) -> Self {
         Self { field, query_schema }
     }
@@ -50,25 +50,25 @@ impl<'field> MutationBuilder<'field> {
                     non_list_args.add_datetimes(Arc::clone(&model));
 
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
-                    let nested_mutactions = build_nested_root(
+                    let nested_writes = build_nested_root(
                         model.name.as_str(),
                         &nested,
                         Arc::clone(&model),
                         model_operation.operation,
                     )?;
 
-                    TopLevelDatabaseMutaction::CreateNode(CreateNode {
+                    RootWriteQuery::CreateRecord(CreateRecord {
                         model: Arc::clone(&model),
                         non_list_args,
                         list_args,
-                        nested_mutactions,
+                        nested_writes,
                     })
                 }
                 OperationTag::UpdateOne => {
                     let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
                     let non_list_args = values.to_prisma_values().into();
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
-                    let nested_mutactions = build_nested_root(
+                    let nested_writes = build_nested_root(
                         model.name.as_str(),
                         &nested,
                         Arc::clone(&model),
@@ -76,24 +76,24 @@ impl<'field> MutationBuilder<'field> {
                     )?;
 
                     let where_ = ValueMap(shift_data(&args, "where")?)
-                        .to_node_selector(Arc::clone(&model))
+                        .to_record_finder(Arc::clone(&model))
                         .map_or(
                             Err(CoreError::QueryValidationError("No `where` on connect".into())),
                             |w| Ok(w),
                         )?;
 
-                    TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
+                    RootWriteQuery::UpdateRecord(UpdateRecord {
                         where_,
                         non_list_args,
                         list_args,
-                        nested_mutactions,
+                        nested_writes,
                     })
                 }
                 OperationTag::UpdateMany => {
                     let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
                     let non_list_args = values.to_prisma_values().into();
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
-                    let nested_mutactions = build_nested_root(
+                    let nested_writes = build_nested_root(
                         model.name.as_str(),
                         &nested,
                         Arc::clone(&model),
@@ -105,7 +105,7 @@ impl<'field> MutationBuilder<'field> {
                         Err(CoreError::QueryValidationError("Required filters not found!".into()))
                     })?;
 
-                    TopLevelDatabaseMutaction::UpdateNodes(UpdateNodes {
+                    RootWriteQuery::UpdateManyRecords(UpdateManyRecords {
                         model: Arc::clone(&model),
                         filter,
                         non_list_args,
@@ -114,13 +114,13 @@ impl<'field> MutationBuilder<'field> {
                 }
                 OperationTag::DeleteOne => {
                     let where_ = ValueMap(shift_data(&args, "where")?)
-                        .to_node_selector(Arc::clone(&model))
+                        .to_record_finder(Arc::clone(&model))
                         .map_or(
                             Err(CoreError::QueryValidationError("No `where` on connect".into())),
                             |w| Ok(w),
                         )?;
 
-                    TopLevelDatabaseMutaction::DeleteNode(DeleteNode { where_ })
+                    RootWriteQuery::DeleteRecord(DeleteRecord { where_ })
                 }
                 OperationTag::DeleteMany => {
                     let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
@@ -128,10 +128,10 @@ impl<'field> MutationBuilder<'field> {
                         Err(CoreError::QueryValidationError("Required filters not found!".into()))
                     })?;
 
-                    TopLevelDatabaseMutaction::DeleteNodes(DeleteNodes { model, filter })
+                    RootWriteQuery::DeleteManyRecords(DeleteManyRecords { model, filter })
                 }
                 OperationTag::UpsertOne => {
-                    let where_ = utils::extract_node_selector(self.field, Arc::clone(&model))?;
+                    let where_ = utils::extract_record_finder(self.field, Arc::clone(&model))?;
 
                     let create = {
                         let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "create")?).split();
@@ -142,7 +142,7 @@ impl<'field> MutationBuilder<'field> {
                         non_list_args.add_datetimes(Arc::clone(&model));
 
                         let list_args = lists.into_iter().map(|la| la.convert()).collect();
-                        let nested_mutactions = build_nested_root(
+                        let nested_writes = build_nested_root(
                             model.name.as_str(),
                             &nested,
                             Arc::clone(&model),
@@ -150,11 +150,11 @@ impl<'field> MutationBuilder<'field> {
                         )?;
                         let model = Arc::clone(&model);
 
-                        CreateNode {
+                        CreateRecord {
                             model,
                             non_list_args,
                             list_args,
-                            nested_mutactions,
+                            nested_writes: nested_writes,
                         }
                     };
 
@@ -162,7 +162,7 @@ impl<'field> MutationBuilder<'field> {
                         let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "update")?).split();
                         let non_list_args = values.to_prisma_values().into();
                         let list_args = lists.into_iter().map(|la| la.convert()).collect();
-                        let nested_mutactions = build_nested_root(
+                        let nested_writes = build_nested_root(
                             model.name.as_str(),
                             &nested,
                             Arc::clone(&model),
@@ -170,21 +170,21 @@ impl<'field> MutationBuilder<'field> {
                         )?;
                         let where_ = where_.clone();
 
-                        UpdateNode {
+                        UpdateRecord {
                             where_,
                             non_list_args,
                             list_args,
-                            nested_mutactions,
+                            nested_writes,
                         }
                     };
 
-                    TopLevelDatabaseMutaction::UpsertNode(UpsertNode { where_, create, update })
+                    RootWriteQuery::UpsertRecord(UpsertRecord { where_, create, update })
                 }
                 _ => unimplemented!(),
             };
 
         // FIXME: Cloning is unethical and should be avoided
-        LookAhead::eval(WriteQuery {
+        LookAhead::eval(WriteQueryTree {
             inner,
             name: raw_name,
             field: self.field.clone(),
@@ -194,8 +194,8 @@ impl<'field> MutationBuilder<'field> {
 
 /// A trap-door function that handles `resetData` without doing a whole bunch of other stuff
 fn handle_reset(field: &Field, internal_data_model: InternalDataModelRef) -> CoreResult<WriteQuerySet> {
-    Ok(WriteQuerySet::Query(WriteQuery {
-        inner: TopLevelDatabaseMutaction::ResetData(ResetData { internal_data_model }),
+    Ok(WriteQuerySet::Query(WriteQueryTree {
+        inner: RootWriteQuery::ResetData(ResetData { internal_data_model }),
         name: "resetData".into(),
         field: field.clone(),
     }))
@@ -223,7 +223,7 @@ fn shift_data(from: &BTreeMap<String, Value>, idx: &str) -> CoreResult<BTreeMap<
     )
 }
 
-/// Parse the mutation name into an operation to perform.
+/// Parse the field name into an operation to perform.
 fn parse_model_action(name: &str, query_schema: QuerySchemaRef) -> CoreResult<ModelOperation> {
     match query_schema.find_mutation_field(name) {
         Some(field) => Ok(field
@@ -238,14 +238,14 @@ fn parse_model_action(name: &str, query_schema: QuerySchemaRef) -> CoreResult<Mo
     }
 }
 
-/// Build nested mutations for a given field/model (called recursively)
+/// Build nested writes for a given field/model (called recursively)
 pub(crate) fn build_nested_root<'f>(
     name: &'f str,
     args: &'f ValueMap,
     model: ModelRef,
     top_level: OperationTag,
-) -> CoreResult<NestedMutactions> {
-    let mut collection = NestedMutactions::default();
+) -> CoreResult<NestedWriteQueries> {
+    let mut collection = NestedWriteQueries::default();
     let eval = args.eval_tree(model.name.as_str());
 
     for value in eval.into_iter() {
