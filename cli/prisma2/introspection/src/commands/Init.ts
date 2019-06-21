@@ -73,12 +73,8 @@ Please run ${chalk.bold('prisma2 init')} in an empty directory.`)
       }
 
       const template = findTemplate(result.initConfiguration.template, result.initConfiguration.language)
-      if (
-        result.introspectionResult &&
-        result.introspectionResult.credentials &&
-        result.introspectionResult.credentials.type === 'sqlite' &&
-        !template
-      ) {
+
+      if (result.initConfiguration && result.initConfiguration.databaseType === 'sqlite' && !template) {
         this.printDefaultApp(result, outputDir)
         process.exit(0)
         return

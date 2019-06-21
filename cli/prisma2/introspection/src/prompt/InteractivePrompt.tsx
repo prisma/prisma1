@@ -45,6 +45,7 @@ const initialState: PromptState & InitConfiguration = {
   photon: false,
   language: 'TypeScript',
   template: 'from_scratch',
+  databaseType: DatabaseType.sqlite
 }
 
 export const dbTypeTodbName: Record<DatabaseType, string> = {

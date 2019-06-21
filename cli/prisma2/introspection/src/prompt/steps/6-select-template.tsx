@@ -39,6 +39,7 @@ export function renderSelectTemplate(
             lift: state.lift,
             photon: state.photon,
             template: selectedTemplate,
+            databaseType: state.databaseType
           },
         } as InitPromptResult)
       }}

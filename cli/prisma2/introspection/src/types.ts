@@ -34,6 +34,7 @@ export type PromptType = 'init' | 'introspect'
 
 // TODO: Bad interface naming :(
 export interface InitConfiguration {
+  databaseType: DatabaseType
   lift: boolean
   photon: boolean
   language: 'TypeScript' | 'JavaScript'

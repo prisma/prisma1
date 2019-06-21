@@ -4,7 +4,7 @@
  * Dependencies
  */
 import { isError, HelpError, Env } from '@prisma/cli'
-import { Introspect } from './commands/Introspect'
+import { Init } from './commands/Init'
 
 /**
  * Main function
@@ -17,7 +17,7 @@ async function main(): Promise<number> {
     return 1
   }
   // create a new CLI with our subcommands
-  const cli = Introspect.new(env)
+  const cli = Init.new(env)
   // parse the arguments
   const result = await cli.parse(process.argv.slice(2))
   if (result instanceof HelpError) {

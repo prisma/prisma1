@@ -91,6 +91,7 @@ export const promptReducer: React.Reducer<PromptState, ActionType> = (state, act
           ...state.credentials,
           type: action.payload,
         },
+        databaseType: action.payload
       }
     case 'connect_db':
       return {
