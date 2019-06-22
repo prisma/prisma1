@@ -353,22 +353,22 @@ const newUser = await prisma.createUser({
 <Code hideCopy={true} languages={["Manual", "Automatic"]}>
 
 ```ts
-return sequelize.transaction(async transaction => {
+return sequelize.transaction(async t => {
   const user = await User.create({
     name: "Alice",
     email: "alice@prisma,io"
   }, { 
-    transaction 
+    transaction: t 
   })
   const post1 = await Post.create({
     title: "Join us for GraphQL Conf in 2019"
   }, { 
-    transaction 
+    transaction: t 
   })
   const post2 = await Post.create({
     title: "Subscribe to GraphQL Weekly for GraphQL news"
   }, { 
-    transaction 
+    transaction: t 
   })
   await user.setPosts([post1, post2])
 })
@@ -389,7 +389,7 @@ return sequelize.transaction(async transaction => {
     })
     await user.setPosts([post1, post2])
   } catch(e) {
-    return transaction.rollback()
+    return t.rollback()
   }
 })
 ```
