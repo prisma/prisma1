@@ -1,7 +1,7 @@
 //! Json serialisation for query engine IR
 
 use crate::{PrismaError, PrismaResult};
-use core::ir::{Item, Response, ResponseSet};
+use core::result_ir::{Item, Response, ResponseSet};
 use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
 use serde_json::{Map, Number, Value};

@@ -15,7 +15,7 @@ mod query_builders;
 mod read_query_ast;
 mod read_query_result;
 
-pub mod ir;
+pub mod result_ir;
 pub mod schema;
 
 pub use error::*;
