@@ -1,7 +1,7 @@
 //! Simple wrapper for WriteQueries
 
 use crate::{
-    builders::utils::{self, UuidString},
+    query_builders::utils::{self, UuidString},
     BuilderExt, OneBuilder, ReadQuery,
 };
 use connector::write_query::{Identifier, RootWriteQuery, WriteQueryResult};

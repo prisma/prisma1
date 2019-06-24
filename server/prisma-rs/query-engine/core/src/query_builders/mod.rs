@@ -1,5 +1,13 @@
-use super::Builder;
-use crate::{CoreResult, Query as PrismaQuery, QuerySchemaRef, RootWriteQueryBuilder};
+//! Query builders module
+
+mod read;
+mod write;
+
+pub use read::*;
+pub use write::*;
+
+//use super::ReadQueryBuilder;
+use crate::{CoreResult, Query as PrismaQuery, QuerySchemaRef};
 use graphql_parser::query::*;
 use std::sync::Arc;
 
@@ -50,7 +58,7 @@ impl RootBuilder {
             .map(|item| {
                 // First query-level fields map to a model in our internal_data_model, either a plural or singular
                 match item {
-                    Selection::Field(root_field) => Builder::new(Arc::clone(&self.query_schema), root_field)?
+                    Selection::Field(root_field) => ReadQueryBuilder::new(Arc::clone(&self.query_schema), root_field)?
                         .build()
                         .map(|q| PrismaQuery::Read(q)),
                     _ => unimplemented!(),
@@ -70,15 +78,5 @@ impl RootBuilder {
                 _ => unimplemented!(),
             })
             .collect()
-    }
-}
-
-trait UuidCheck {
-    fn is_uuid(&self) -> bool;
-}
-
-impl UuidCheck for String {
-    fn is_uuid(&self) -> bool {
-        false
     }
 }

@@ -9,18 +9,18 @@ extern crate debug_stub_derive;
 #[macro_use]
 extern crate lazy_static;
 
-mod builders;
 mod error;
 mod executor;
+mod query_builders;
 mod read_query_ast;
 mod read_query_result;
 
 pub mod ir;
 pub mod schema;
 
-pub use builders::*;
 pub use error::*;
 pub use executor::*;
+pub use query_builders::*;
 pub use read_query_ast::*;
 pub use read_query_result::*;
 pub use schema::*;

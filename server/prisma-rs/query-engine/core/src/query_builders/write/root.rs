@@ -2,8 +2,8 @@
 #![allow(warnings)]
 
 use crate::{
-    builders::{utils, LookAhead, NestedValue, ValueList, ValueMap, ValueSplit},
     extend_defaults,
+    query_builders::{utils, LookAhead, NestedValue, ValueList, ValueMap, ValueSplit},
     schema::{ModelOperation, OperationTag},
     CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuerySet,
     WriteQueryTree,

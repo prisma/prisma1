@@ -1,7 +1,7 @@
 //! A set of utilities to build (read & write) queries
 
 use super::filters;
-use crate::{Builder, BuilderExt, CoreError, CoreResult, ReadQuery};
+use crate::{BuilderExt, CoreError, CoreResult, ReadQuery, ReadQueryBuilder};
 use connector::{filter::RecordFinder, QueryArguments};
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
@@ -169,7 +169,7 @@ pub(crate) fn collect_nested_queries<'field>(
     model: ModelRef,
     ast_field: &'field Field,
     _internal_data_model: InternalDataModelRef,
-) -> CoreResult<Vec<Builder<'field>>> {
+) -> CoreResult<Vec<ReadQueryBuilder<'field>>> {
     ast_field
         .selection_set
         .items
@@ -183,7 +183,7 @@ pub(crate) fn collect_nested_queries<'field>(
                         let model = f.related_model();
                         let parent = Some(Arc::clone(&f));
 
-                        Builder::infer_nested(&model, x, parent).map(|r| Ok(r))
+                        ReadQueryBuilder::infer_nested(&model, x, parent).map(|r| Ok(r))
                     }
                     _ => Some(Err(CoreError::QueryValidationError(format!(
                         "Selected field {} not found on model {}",
@@ -199,12 +199,12 @@ pub(crate) fn collect_nested_queries<'field>(
         .collect()
 }
 
-pub(crate) fn build_nested_queries(builders: Vec<Builder>) -> CoreResult<Vec<ReadQuery>> {
+pub(crate) fn build_nested_queries(builders: Vec<ReadQueryBuilder>) -> CoreResult<Vec<ReadQuery>> {
     builders
         .into_iter()
         .map(|b| match b {
-            Builder::OneRelation(b) => Ok(ReadQuery::RelatedRecordQuery(b.build()?)),
-            Builder::ManyRelation(b) => Ok(ReadQuery::ManyRelatedRecordsQuery(b.build()?)),
+            ReadQueryBuilder::OneRelation(b) => Ok(ReadQuery::RelatedRecordQuery(b.build()?)),
+            ReadQueryBuilder::ManyRelation(b) => Ok(ReadQuery::ManyRelatedRecordsQuery(b.build()?)),
             _ => unreachable!(),
         })
         .collect()
