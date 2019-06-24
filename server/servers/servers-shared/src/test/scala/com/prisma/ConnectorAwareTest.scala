@@ -119,6 +119,12 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
 //    if (connector.active && connectorTag != ConnectorTag.MongoConnectorTag) assertion
   }
 
+  def ifConnectorHasSubscriptions[T](assertion: => T): Unit = {
+    if (connector.connector != "native-integration-tests") {
+      assertion
+    }
+  }
+
   private def ignoredTestsBasedOnIndividualTagging(connector: DatabaseConfig) = {
     super.tags.mapValues { tagNames =>
       val connectorTagsToIgnore: Set[ConnectorTag] = for {

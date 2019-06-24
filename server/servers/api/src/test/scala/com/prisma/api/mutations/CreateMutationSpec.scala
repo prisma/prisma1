@@ -51,13 +51,15 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     res should be(
       s"""{"data":{"createScalarModel":{"id":"$id","optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}}}""".parseJson)
 
-    testDependencies.sssEventsPubSub.expectPublishedMsg(
-      Message(s"subscription:event:${project.id}:createScalarModel", s"""{"nodeId":"$id","modelId":"ScalarModel","mutationType":"CreateNode"}"""))
+    ifConnectorHasSubscriptions {
+      testDependencies.sssEventsPubSub.expectPublishedMsg(
+        Message(s"subscription:event:${project.id}:createScalarModel", s"""{"nodeId":"$id","modelId":"ScalarModel","mutationType":"CreateNode"}"""))
+    }
 
     val queryRes = server.query("""{ scalarModels{optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""", project = project)
 
-    queryRes should be(Json.parse(
-      s"""{"data":{"scalarModels":[{"optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}]}}"""))
+    queryRes should be(
+      s"""{"data":{"scalarModels":[{"optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}]}}""".parseJson)
   }
 
   "A Create Mutation" should "create and return item with empty string" in {
@@ -69,7 +71,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
       project = project
     )
 
-    res.toString should be("""{"data":{"createScalarModel":{"optJson":null,"optInt":null,"optBoolean":null,"optString":"","optEnum":null,"optFloat":null}}}""")
+    res should be("""{"data":{"createScalarModel":{"optJson":null,"optInt":null,"optBoolean":null,"optString":"","optEnum":null,"optFloat":null}}}""".parseJson)
   }
 
   "A Create Mutation" should "create and return item with explicit null attributes" in {
@@ -82,8 +84,8 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    res.toString should be(
-      """{"data":{"createScalarModel":{"optJson":null,"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}}}""")
+    res should be(
+      """{"data":{"createScalarModel":{"optJson":null,"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}}}""".parseJson)
   }
 
   "A Create Mutation" should "create and return item with explicit null attributes when other mutation has explicit non-null values" in {
@@ -96,15 +98,15 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
       project = project
     )
 
-    res.pathAs[JsValue]("data.a").toString should be("""{"optJson":[1,2,3],"optInt":123,"optBoolean":true,"optString":"lala","optEnum":"A","optFloat":1.23}""")
-    res.pathAs[JsValue]("data.b").toString should be("""{"optJson":null,"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}""")
+    res.pathAs[JsValue]("data.a") should be("""{"optJson":[1,2,3],"optInt":123,"optBoolean":true,"optString":"lala","optEnum":"A","optFloat":1.23}""".parseJson)
+    res.pathAs[JsValue]("data.b") should be("""{"optJson":null,"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}""".parseJson)
   }
 
   "A Create Mutation" should "create and return item with implicit null attributes" in {
     val res = server.query("""mutation {createScalarModel(data:{}){optString, optInt, optFloat, optBoolean, optEnum, optJson}}""", project)
 
-    res.toString should be(
-      """{"data":{"createScalarModel":{"optJson":null,"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}}}""")
+    res should be(
+      """{"data":{"createScalarModel":{"optJson":null,"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}}}""".parseJson)
   }
 
   "A Create Mutation" should "fail when text is over 256k long" in {
