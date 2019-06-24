@@ -15,6 +15,7 @@ mod query_builders;
 mod read_query_ast;
 mod read_query_result;
 
+pub mod query_ir;
 pub mod result_ir;
 pub mod schema;
 

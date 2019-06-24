@@ -35,6 +35,10 @@ pub enum PrismaError {
 
     #[fail(display = "{}", _0)]
     InvocationError(String),
+
+    /// (Feature name, additional error text)
+    #[fail(display = "Unsupported feature: {}. {}", _0, _1)]
+    UnsupportedFeatureError(&'static str, String),
 }
 
 /// Pretty print helper errors.
