@@ -1,5 +1,6 @@
-use super::{PrismaRequest, RequestHandler};
-use crate::{context::PrismaContext, error::PrismaError, serializer::json, PrismaResult};
+use crate::{
+    context::PrismaContext, error::PrismaError, serializers::json, PrismaRequest, PrismaResult, RequestHandler,
+};
 use core::{
     result_ir::{self as rir, Builder},
     RootBuilder,

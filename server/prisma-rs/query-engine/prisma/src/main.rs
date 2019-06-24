@@ -7,16 +7,13 @@ extern crate rust_embed;
 #[macro_use]
 extern crate debug_stub_derive;
 
-// #[macro_use]
-// extern crate human_panic;
-
 mod context;
 mod data_model_loader;
 mod dmmf; // Temporary
 mod error;
 mod exec_loader;
-mod req_handlers;
-mod serializer;
+mod request_handlers;
+mod serializers;
 mod utilities;
 
 use crate::data_model_loader::*;
@@ -31,7 +28,10 @@ use core::{
     BuildMode,
 };
 use error::*;
-use req_handlers::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
+use request_handlers::{
+    graphql::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler},
+    PrismaRequest, RequestHandler,
+};
 use serde_json;
 use std::{env, process, sync::Arc, time::Instant};
 
@@ -50,9 +50,6 @@ struct RequestContext {
 }
 
 fn main() {
-    // Setup a more user-friendly panic handler
-    // setup_panic!();
-
     let matches = ClapApp::new("Prisma Query Engine")
         .version(env!("CARGO_PKG_VERSION"))
         .arg(
