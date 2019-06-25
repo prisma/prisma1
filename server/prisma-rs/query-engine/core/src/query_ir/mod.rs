@@ -15,19 +15,20 @@ pub enum Operation {
 }
 
 pub struct ReadOperation {
-    name: Option<String>,
-    selections: Vec<Selection>,
+    pub name: Option<String>,
+    pub selections: Vec<Selection>,
 }
 
 pub struct WriteOperation {
-    name: Option<String>,
-    selections: Vec<Selection>,
+    pub name: Option<String>,
+    pub selections: Vec<Selection>,
 }
 
 pub struct Selection {
-    name: String,
-    arguments: Vec<(String, QueryValue)>,
-    sub_selections: Vec<Selection>,
+    pub name: String,
+    pub alias: Option<String>,
+    pub arguments: Vec<(String, QueryValue)>,
+    pub sub_selections: Vec<Selection>,
 }
 
 pub enum QueryValue {
