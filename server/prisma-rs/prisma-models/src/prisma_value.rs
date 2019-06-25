@@ -63,7 +63,8 @@ impl PrismaValue {
         }
     }
 
-    pub fn from_value(v: &GraphqlValue) -> Self {
+    // this function is broken because it does not operate on the type identifier of a field. It is just guessing.
+    pub fn from_value_broken(v: &GraphqlValue) -> Self {
         match v {
             GraphqlValue::Boolean(b) => PrismaValue::Boolean(b.clone()),
             GraphqlValue::Enum(e) => PrismaValue::Enum(e.clone()),
@@ -73,8 +74,8 @@ impl PrismaValue {
             GraphqlValue::String(s) => Self::str_as_json(s)
                 .or_else(|| Self::str_as_datetime(s))
                 .unwrap_or(PrismaValue::String(s.clone())),
-            GraphqlValue::List(l) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i)).collect())),
-            GraphqlValue::Object(obj) if obj.contains_key("set") => Self::from_value(obj.get("set").unwrap()),
+            GraphqlValue::List(l) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value_broken(i)).collect())),
+            GraphqlValue::Object(obj) if obj.contains_key("set") => Self::from_value_broken(obj.get("set").unwrap()),
             value => panic!(format!("Unable to make {:?} to PrismaValue", value)),
         }
     }

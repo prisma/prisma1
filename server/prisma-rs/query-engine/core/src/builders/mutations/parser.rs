@@ -52,7 +52,7 @@ impl ValueList {
         (
             self.0,
             match self.1 {
-                Some(vec) => Some(vec.into_iter().map(|v| PrismaValue::from_value(&v)).collect()),
+                Some(vec) => Some(vec.into_iter().map(|v| PrismaValue::from_value_broken(&v)).collect()),
                 None => None,
             },
         )
@@ -127,7 +127,7 @@ impl ValueMap {
     pub fn to_prisma_values(self) -> BTreeMap<String, PrismaValue> {
         self.0
             .into_iter()
-            .map(|(k, v)| (k, PrismaValue::from_value(&v)))
+            .map(|(k, v)| (k, PrismaValue::from_value_broken(&v)))
             .collect()
     }
 
@@ -139,7 +139,7 @@ impl ValueMap {
                     .fields()
                     .find_from_scalar(&field)
                     .ok()
-                    .map(|f| (f, PrismaValue::from_value(&value)))
+                    .map(|f| (f, PrismaValue::from_value_broken(&value)))
             })
             .nth(0)
             .map(|(field, value)| RecordFinder { field, value })
