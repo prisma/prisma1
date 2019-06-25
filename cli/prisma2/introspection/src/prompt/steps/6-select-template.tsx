@@ -3,7 +3,7 @@ import { Prompt } from '../../prompt-lib/BoxPrompt'
 import { InitPromptResult } from '../../types'
 import { PromptProps, PromptState } from '../InteractivePrompt'
 import { ActionType } from '../reducer'
-import { Steps, stepsToElements } from '../steps-definition'
+import { Step, formByStep } from '../steps-definition'
 
 export function renderSelectTemplate(
   dispatch: React.Dispatch<ActionType>,
@@ -12,10 +12,10 @@ export function renderSelectTemplate(
 ) {
   return (
     <Prompt
-      key={Steps.SELECT_TEMPLATE}
+      key={Step.SELECT_TEMPLATE}
       title="Which parts of Prisma do you want to use?"
       subtitle="Learn more about the tools at prisma.io/docs"
-      elements={stepsToElements[Steps.SELECT_TEMPLATE]()}
+      elements={formByStep[Step.SELECT_TEMPLATE]()}
       formValues={{}}
       withBackButton={{
         label: 'Back',

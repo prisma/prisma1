@@ -2,15 +2,15 @@ import * as React from 'react'
 import { Prompt } from '../../prompt-lib/BoxPrompt'
 import { PromptState } from '../InteractivePrompt'
 import { ActionType } from '../reducer'
-import { Steps, stepsToElements } from '../steps-definition'
+import { formByStep, Step } from '../steps-definition'
 
 export function renderSelectTool(dispatch: React.Dispatch<ActionType>, state: PromptState) {
   return (
     <Prompt
-      key={Steps.SELECT_TOOL}
+      key={Step.SELECT_TOOL}
       title="Which parts of Prisma do you want to use?"
       subtitle="Learn more about the tools at prisma.io/docs"
-      elements={stepsToElements[Steps.SELECT_TOOL]()}
+      elements={formByStep[Step.SELECT_TOOL]()}
       formValues={state}
       withBackButton={{
         label: 'Back',
@@ -30,7 +30,7 @@ export function renderSelectTool(dispatch: React.Dispatch<ActionType>, state: Pr
           return dispatch({ type: 'back' })
         }
         if (params.selectedValue === '__CREATE__' && (state.lift || state.photon)) {
-          dispatch({ type: 'set_step', payload: { step: Steps.SELECT_LANGUAGE } })
+          dispatch({ type: 'forward' })
         } else {
           params.stopSpinner({ state: 'failed', message: 'Please, select at list one tool' })
         }
