@@ -58,7 +58,9 @@ object ConnectorCapabilities extends BooleanUtils {
   def apply(capabilities: ConnectorCapability*): ConnectorCapabilities = ConnectorCapabilities(Set(capabilities: _*))
 
   lazy val sqliteNative: ConnectorCapabilities = {
-    val filteredCapas = sqliteJdbcPrototype.capabilities.filter(_ != TransactionalExecutionCapability)
+    val filteredCapas = sqliteJdbcPrototype.capabilities
+      .filter(_ != TransactionalExecutionCapability)
+      .filter(_ != NodeQueryCapability)
     ConnectorCapabilities(filteredCapas)
   }
 

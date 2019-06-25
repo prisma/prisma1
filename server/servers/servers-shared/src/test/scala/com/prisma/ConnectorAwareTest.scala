@@ -119,7 +119,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
 //    if (connector.active && connectorTag != ConnectorTag.MongoConnectorTag) assertion
   }
 
-  def ifConnectorHasSubscriptions[T](assertion: => T): Unit = {
+  def ifIsNotPrisma2[T](assertion: => T): Unit = {
     if (connector.connector != "native-integration-tests") {
       assertion
     }

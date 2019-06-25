@@ -51,7 +51,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     res should be(
       s"""{"data":{"createScalarModel":{"id":"$id","optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}}}""".parseJson)
 
-    ifConnectorHasSubscriptions {
+    ifIsNotPrisma2 {
       testDependencies.sssEventsPubSub.expectPublishedMsg(
         Message(s"subscription:event:${project.id}:createScalarModel", s"""{"nodeId":"$id","modelId":"ScalarModel","mutationType":"CreateNode"}"""))
     }
