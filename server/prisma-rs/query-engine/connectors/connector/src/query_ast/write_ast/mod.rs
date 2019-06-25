@@ -4,7 +4,6 @@ mod create_record;
 mod delete_record;
 mod path;
 mod record_address;
-mod result;
 mod update_record;
 mod upsert_record;
 
@@ -12,11 +11,10 @@ pub use create_record::*;
 pub use delete_record::*;
 pub use path::*;
 pub use record_address::*;
-pub use result::*;
 pub use update_record::*;
 pub use upsert_record::*;
 
-use super::filter::{Filter, RecordFinder};
+use crate::filter::{Filter, RecordFinder};
 use prisma_models::prelude::*;
 use std::sync::Arc;
 

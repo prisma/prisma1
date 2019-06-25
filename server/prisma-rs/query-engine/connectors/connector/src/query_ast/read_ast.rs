@@ -1,6 +1,6 @@
-//! Prisma read query AST module
+//! Prisma read query AST
 
-use connector::{filter::RecordFinder, QueryArguments};
+use crate::{filter::RecordFinder, QueryArguments};
 use prisma_models::prelude::*;
 
 #[derive(Debug, Clone)]

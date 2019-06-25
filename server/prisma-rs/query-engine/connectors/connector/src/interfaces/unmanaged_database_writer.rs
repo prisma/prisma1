@@ -1,11 +1,8 @@
-use crate::{
-    write_query::{RootWriteQuery, WriteQueryResult},
-    ConnectorResult,
-};
+use crate::{ConnectorResult, RootWriteQuery, WriteQueryResult};
 use serde_json::Value;
 
 /// Methods for writing data.
-pub trait DatabaseWriter {
+pub trait UnmanagedDatabaseWriter {
     /// Execute raw SQL string without any safety guarantees, returning the result as JSON.
     fn execute_raw(&self, db_name: String, query: String) -> ConnectorResult<Value>;
 

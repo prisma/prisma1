@@ -2,8 +2,8 @@ use crate::{filter::RecordFinder, query_arguments::QueryArguments, ConnectorResu
 use prisma_models::prelude::*;
 use prisma_models::ScalarFieldRef;
 
-/// Methods for fetching data.
-pub trait DatabaseReader {
+/// Managed interface for fetching data.
+pub trait ManagedDatabaseReader {
     /// Find one record.
     fn get_single_record(
         &self,

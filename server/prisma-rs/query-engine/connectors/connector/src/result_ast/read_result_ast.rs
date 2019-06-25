@@ -1,4 +1,4 @@
-use connector::{QueryArguments, ScalarListValues};
+use crate::{QueryArguments, ScalarListValues};
 use prisma_models::{GraphqlId, ManyRecords, PrismaValue, SelectedFields, SelectedScalarField, SingleRecord};
 
 #[derive(Debug)]
@@ -60,13 +60,6 @@ pub struct ManyReadQueryResults {
 }
 
 impl SingleReadQueryResult {
-    /// Returns the implicitly added fields
-    #[deprecated]
-    #[allow(warnings)]
-    pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
-        self.selected_fields.get_implicit_fields()
-    }
-
     pub fn parent_id(&self) -> Option<&GraphqlId> {
         self.scalars.as_ref().map_or(None, |r| r.record.parent_id.as_ref())
     }
