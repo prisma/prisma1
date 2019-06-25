@@ -89,7 +89,6 @@ fn serialize_prisma_value(value: PrismaValue) -> PrismaResult<Value> {
             Some(num) => num,
             None => return Err(PrismaError::SerializationError("`f64` number was invalid".into())),
         }),
-        PrismaValue::Relation(_) => unreachable!(),
         PrismaValue::Null => Value::Null,
         PrismaValue::Uuid(x) => Value::String(x.to_hyphenated().to_string()),
         PrismaValue::GraphqlId(x) => serialize_graphql_id(&x)?,

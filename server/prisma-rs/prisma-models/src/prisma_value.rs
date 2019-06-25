@@ -29,19 +29,29 @@ impl GraphqlId {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-#[serde(untagged)]
+#[serde(tag = "gcValueType", content = "value")]
 pub enum PrismaValue {
+    #[serde(rename = "string")]
     String(String),
+    #[serde(rename = "float")]
     Float(f64),
+    #[serde(rename = "bool")]
     Boolean(bool),
+    #[serde(rename = "datetime")]
     DateTime(DateTime<Utc>),
+    #[serde(rename = "enum")]
     Enum(String),
+    #[serde(rename = "json")]
     Json(Value),
+    #[serde(rename = "int")]
     Int(i64),
-    Relation(usize),
+    #[serde(rename = "null")]
     Null,
+    #[serde(rename = "uuid")]
     Uuid(Uuid),
+    #[serde(rename = "graphQlId")]
     GraphqlId(GraphqlId),
+    #[serde(rename = "list")]
     List(PrismaListValue),
 }
 
@@ -93,7 +103,6 @@ impl fmt::Display for PrismaValue {
             PrismaValue::Enum(x) => x.fmt(f),
             PrismaValue::Json(x) => x.fmt(f),
             PrismaValue::Int(x) => x.fmt(f),
-            PrismaValue::Relation(x) => x.fmt(f),
             PrismaValue::Null => "null".fmt(f),
             PrismaValue::Uuid(x) => x.fmt(f),
             PrismaValue::GraphqlId(x) => match x {
@@ -255,7 +264,6 @@ impl From<PrismaValue> for DatabaseValue {
             PrismaValue::Enum(e) => e.into(),
             PrismaValue::Json(j) => j.to_string().into(),
             PrismaValue::Int(i) => (i as i64).into(),
-            PrismaValue::Relation(i) => (i as i64).into(),
             PrismaValue::Null => DatabaseValue::Parameterized(ParameterizedValue::Null),
             PrismaValue::Uuid(u) => u.into(),
             PrismaValue::GraphqlId(id) => id.into(),
