@@ -1,8 +1,10 @@
 import chalk from 'chalk'
 
+type Language = 'javascript' | 'typescript'
+
 export interface Template {
   name: string
-  language: 'javascript' | 'typescript'
+  language: Language
   description: string
   repo: TemplateRepository
   postIntallMessage: string
@@ -14,27 +16,50 @@ export interface TemplateRepository {
   path: string
 }
 
-export const defaultTemplate: Template = {
-  name: 'graphql_boilerplate',
-  language: 'typescript',
-  description: 'GraphQL starter with Prisma 2',
-  repo: {
-    uri: 'https://github.com/prisma/photonjs',
-    branch: 'master',
-    path: '/examples/typescript/graphql',
-  },
-  postIntallMessage: `
-Your template has been successfully set up!
-  
-Here are the next steps to get you started:
-  1. Run ${chalk.yellow(`yarn seed`)} to seed the database. 
-  2. Run ${chalk.yellow(`yarn start`)} (Starts the GraphQL server)
-  3. That's it !
-  `,
+export const defaultTemplate: (language: Language) => Template = (language = 'typescript') => {
+  return {
+    name: 'from_scratch',
+    language: language.toLowerCase() as Language,
+    description: 'GraphQL starter with Prisma 2',
+    repo: {
+      uri: 'https://github.com/prisma/photonjs',
+      branch: 'master',
+      path: `/examples/${language.toLowerCase()}/script`,
+    },
+    postIntallMessage: `
+  Your template has been successfully set up!
+    
+  Here are the next steps to get you started:
+    1. Run ${chalk.yellow(`prisma2 lift save --name init`)} to create a migration.
+    2. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migration.
+    3. Run ${chalk.yellow(`yarn seed`)} to seed the database.
+    4. Run ${chalk.yellow(`yarn start`)} (Runs the default script)
+    5. That's it !
+    `,
+  }
 }
 
 export const availableTemplates: Template[] = [
-  defaultTemplate,
+  {
+    name: 'graphql_boilerplate',
+    language: 'typescript',
+    description: 'GraphQL starter with Prisma 2',
+    repo: {
+      uri: 'https://github.com/prisma/photonjs',
+      branch: 'master',
+      path: '/examples/typescript/graphql',
+    },
+    postIntallMessage: `
+  Your template has been successfully set up!
+    
+  Here are the next steps to get you started:
+    1. Run ${chalk.yellow(`prisma2 lift save --name init`)} to create a migration.
+    2. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migration.
+    3. Run ${chalk.yellow(`yarn seed`)} to seed the database.
+    4. Run ${chalk.yellow(`yarn start`)} (Starts the GraphQL server)
+    5. That's it !
+    `,
+  },
   {
     name: 'rest_boilerplate',
     language: 'typescript',
@@ -48,9 +73,11 @@ export const availableTemplates: Template[] = [
 Your template has been successfully set up!
   
 Here are the next steps to get you started:
-  1. Run ${chalk.yellow(`yarn seed`)} to seed the database. 
-  2. Run ${chalk.yellow(`yarn start`)} (Starts the REST with express server)
-  3. That's it !
+  1. Run ${chalk.yellow(`prisma2 lift save --name init`)} to create a migration.
+  2. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migration.
+  3. Run ${chalk.yellow(`yarn seed`)} to seed the database.
+  4. Run ${chalk.yellow(`yarn start`)} (Starts the REST with express server)
+  5. That's it !
   `,
   },
   {
@@ -66,9 +93,11 @@ Here are the next steps to get you started:
 Your template has been successfully set up!
   
 Here are the next steps to get you started:
-  1. Run ${chalk.yellow(`yarn seed`)} to seed the database. 
-  2. Run ${chalk.yellow(`yarn start`)} (Starts the gRPC server)
-  3. That's it !
+  1. Run ${chalk.yellow(`prisma2 lift save --name init`)} to create a migration.
+  2. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migration.
+  3. Run ${chalk.yellow(`yarn seed`)} to seed the database.
+  4. Run ${chalk.yellow(`yarn start`)} (Starts the gRPC server)
+  5. That's it !
   `,
   },
   {
@@ -84,9 +113,11 @@ Here are the next steps to get you started:
   Your template has been successfully set up!
     
   Here are the next steps to get you started:
-    1. Run ${chalk.yellow(`yarn seed`)} to seed the database. 
-    2. Run ${chalk.yellow(`yarn start`)} (Starts the GraphQL server)
-    3. That's it !
+    1. Run ${chalk.yellow(`prisma2 lift save --name init`)} to create a migration.
+    2. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migration.
+    3. Run ${chalk.yellow(`yarn seed`)} to seed the database.
+    4. Run ${chalk.yellow(`yarn start`)} (Starts the GraphQL server)
+    5. That's it !
     `,
   },
   {
@@ -102,9 +133,11 @@ Here are the next steps to get you started:
 Your template has been successfully set up!
   
 Here are the next steps to get you started:
-  1. Run ${chalk.yellow(`yarn seed`)} to seed the database. 
-  2. Run ${chalk.yellow(`yarn start`)} (Starts the REST with express server)
-  3. That's it !
+  1. Run ${chalk.yellow(`prisma2 lift save --name init`)} to create a migration.
+  2. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migration.
+  3. Run ${chalk.yellow(`yarn seed`)} to seed the database.
+  4. Run ${chalk.yellow(`yarn start`)} (Starts the REST with express server)
+  5. That's it !
   `,
   },
   {
@@ -120,9 +153,11 @@ Here are the next steps to get you started:
 Your template has been successfully set up!
   
 Here are the next steps to get you started:
-  1. Run ${chalk.yellow(`yarn seed`)} to seed the database. 
-  2. Run ${chalk.yellow(`yarn start`)} (Starts the gRPC server)
-  3. That's it !
+  1. Run ${chalk.yellow(`prisma2 lift save --name init`)} to create a migration.
+  2. Run ${chalk.yellow(`prisma2 lift up`)} to apply the migration.
+  3. Run ${chalk.yellow(`yarn seed`)} to seed the database.
+  4. Run ${chalk.yellow(`yarn start`)} (Starts the gRPC server)
+  5. That's it !
   `,
   },
 ]
@@ -130,5 +165,11 @@ Here are the next steps to get you started:
 export const templatesNames = availableTemplates.map(t => `\`${t.name}\``).join(', ')
 
 export function findTemplate(name, language) {
-  return availableTemplates.find(template => template.name === name && template.language === language.toLowerCase())
+  const template = availableTemplates.find(
+    template => template.name === name && template.language === language.toLowerCase(),
+  )
+  if (!template) {
+    return defaultTemplate(language)
+  }
+  return template
 }

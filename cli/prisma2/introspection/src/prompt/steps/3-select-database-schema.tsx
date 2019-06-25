@@ -1,15 +1,15 @@
 import chalk from 'chalk'
 import { Box, Color } from 'ink'
 import * as React from 'react'
+import { credentialsToUri } from '../../convertCredentials'
 import { ConnectorData, minimalPrettyTime } from '../../introspect/util'
 import { OnSubmitParams, Prompt } from '../../prompt-lib/BoxPrompt'
 import { DatabaseCredentials } from '../../types'
 import { defaultCredentials, PromptProps, PromptState } from '../InteractivePrompt'
 import { ActionType } from '../reducer'
-import { Steps, stepsToElements } from '../steps-definition'
+import { formByStep, Step } from '../steps-definition'
 
 import figures = require('figures')
-import { credentialsToUri } from '../../convertCredentials'
 
 export function renderSelectDatabaseSchema(
   dispatch: React.Dispatch<ActionType>,
@@ -20,10 +20,10 @@ export function renderSelectDatabaseSchema(
     <Box flexDirection="column">
       <Color green>{figures.tick} Connected to database</Color>
       <Prompt
-        key={Steps.SELECT_DATABASE_SCHEMA}
+        key={Step.SELECT_DATABASE_SCHEMA}
         title="Select the schema you want to introspect"
         formValues={state.credentials}
-        elements={stepsToElements[Steps.SELECT_DATABASE_SCHEMA](state.schemas)}
+        elements={formByStep[Step.SELECT_DATABASE_SCHEMA](state.schemas)}
         onFormChanged={({ values, triggeredInput }) => {
           // Select only one or the other
           if (triggeredInput.identifier === 'schema') {

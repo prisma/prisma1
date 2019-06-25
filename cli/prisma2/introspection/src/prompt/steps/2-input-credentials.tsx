@@ -5,13 +5,13 @@ import { onFormChangedParams, OnSubmitParams, Prompt } from '../../prompt-lib/Bo
 import { DatabaseCredentials } from '../../types'
 import { dbTypeTodbName, defaultCredentials, PromptState } from '../InteractivePrompt'
 import { ActionType } from '../reducer'
-import { Steps, stepsToElements } from '../steps-definition'
+import { formByStep, Step } from '../steps-definition'
 
 export function renderInputDatabaseCredentials(dispatch: React.Dispatch<ActionType>, state: PromptState) {
   return (
     <Prompt
-      key={Steps.INPUT_DATABASE_CREDENTIALS}
-      elements={stepsToElements[Steps.INPUT_DATABASE_CREDENTIALS](state.credentials.type!)}
+      key={Step.INPUT_DATABASE_CREDENTIALS}
+      elements={formByStep[Step.INPUT_DATABASE_CREDENTIALS](state.credentials.type!)}
       title={`Enter ${dbTypeTodbName[state.credentials.type!]} credentials`}
       subtitle={`Learn how to set up a ${dbTypeTodbName[state.credentials.type!]} database: prisma.io/docs`}
       formValues={state.credentials}

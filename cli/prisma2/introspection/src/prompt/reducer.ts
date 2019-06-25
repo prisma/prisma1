@@ -3,7 +3,6 @@ import { DatabaseMetadata } from 'prisma-db-introspection/dist/common/introspect
 import { ConnectorAndDisconnect } from '../introspect/util'
 import { DatabaseCredentials, IntrospectionResult } from '../types'
 import { PromptState } from './InteractivePrompt'
-import { Steps, stepToPrevStep } from './steps-definition'
 
 export type ActionChooseDB = {
   type: 'choose_db'
@@ -21,10 +20,6 @@ export type ActionConnect = {
 
 export type ActionBack = {
   type: 'back'
-  payload?: {
-    prevStep?: Steps
-    credentials?: DatabaseCredentials
-  }
 }
 
 export type ActionSetCredentials = {
@@ -56,11 +51,8 @@ export type ActionSetTemplate = {
   }
 }
 
-export type ActionSetStep = {
-  type: 'set_step'
-  payload: {
-    step: Steps
-  }
+export type ActionForward = {
+  type: 'forward'
 }
 
 export type ActionSetIntrospectionResult = {
@@ -76,27 +68,27 @@ export type ActionType =
   | ActionBack
   | ActionSetCredentials
   | ActionSetTools
-  | ActionSetStep
+  | ActionForward
   | ActionSetLanguage
   | ActionSetTemplate
   | ActionSetIntrospectionResult
 
-export const promptReducer: React.Reducer<PromptState, ActionType> = (state, action) => {
+export const promptReducer: React.Reducer<PromptState, ActionType> = (state, action): PromptState => {
   switch (action.type) {
     case 'choose_db':
       return {
         ...state,
-        step: action.payload === 'sqlite' ? Steps.SELECT_TOOL : Steps.INPUT_DATABASE_CREDENTIALS,
+        stepCursor: state.stepCursor + 1,
         credentials: {
           ...state.credentials,
           type: action.payload,
         },
-        databaseType: action.payload
+        databaseType: action.payload,
       }
     case 'connect_db':
       return {
         ...state,
-        step: Steps.SELECT_DATABASE_SCHEMA,
+        stepCursor: state.stepCursor + 1,
         credentials: {
           ...state.credentials,
           ...action.payload.credentials,
@@ -105,25 +97,18 @@ export const promptReducer: React.Reducer<PromptState, ActionType> = (state, act
         connectorData: action.payload.connectorAndDisconnect,
       }
     case 'back':
-      if (!action.payload) {
-        action.payload = {}
-      }
-
-      if (!action.payload.prevStep) {
-        action.payload.prevStep = stepToPrevStep[state.step]
+      if (state.stepCursor === 0) {
+        return state
       }
 
       return {
         ...state,
-        step: action.payload.prevStep,
-        credentials: !action.payload.credentials
-          ? state.credentials
-          : { ...state.credentials, ...action.payload.credentials },
+        stepCursor: state.stepCursor - 1,
       }
-    case 'set_step':
+    case 'forward':
       return {
         ...state,
-        step: action.payload.step,
+        stepCursor: state.stepCursor + 1,
       }
     case 'set_credentials':
       return {
@@ -137,7 +122,7 @@ export const promptReducer: React.Reducer<PromptState, ActionType> = (state, act
       return {
         ...state,
         introspectionResult: action.payload.introspectionResult,
-        step: Steps.SELECT_TOOL,
+        stepCursor: state.stepCursor + 1,
       }
     case 'set_tools':
       return {
@@ -149,7 +134,7 @@ export const promptReducer: React.Reducer<PromptState, ActionType> = (state, act
       return {
         ...state,
         ...action.payload,
-        step: Steps.SELECT_TEMPLATE,
+        stepCursor: state.stepCursor + 1,
       }
     case 'set_template':
       return {
