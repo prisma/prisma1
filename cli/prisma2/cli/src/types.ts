@@ -25,6 +25,9 @@ export type GeneratorOptions = {
   generator: GeneratorConfig
   otherGenerators: GeneratorConfig[]
   cwd: string
+  dmmf: any
+  dataSources: any
+  datamodel: string
 }
 
 export type GeneratorFunction = (options: GeneratorOptions) => Promise<string>

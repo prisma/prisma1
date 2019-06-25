@@ -15,7 +15,7 @@ process.on('unhandledRejection', e => {
  * Dependencies
  */
 import { isError, HelpError, Env, getCwd } from '@prisma/cli'
-import { LiftCommand, LiftSave, LiftUp, LiftDown, LiftWatch, Converter, getCompiledGenerators } from '@prisma/lift'
+import { LiftCommand, LiftSave, LiftUp, LiftDown, LiftWatch, Converter } from '@prisma/lift'
 import { CLI } from './CLI'
 import { Introspect, Init } from '@prisma/introspection'
 import { Version } from './Version'
