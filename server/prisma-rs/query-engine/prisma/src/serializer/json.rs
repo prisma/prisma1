@@ -1,78 +1,69 @@
 //! Json serialisation for query engine IR
 
 use crate::{PrismaError, PrismaResult};
-use core::ir::{Item, Response, ResponseSet};
+use core::ir::{ Item, Response };
 use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
 use serde_json::{Map, Number, Value};
 
-type JsonMap = Map<String, Value>;
-type JsonVec = Vec<Value>;
 
-macro_rules! envelope {
-    ($name:expr, $producer:expr) => {{
-        let mut m = JsonMap::new();
-        m.insert($name, $producer);
-        Value::Object(m)
-    }};
-}
 
-pub fn serialize(resp: ResponseSet) -> Value {
-    let mut map = Map::new();
+pub fn serialize(responses: Vec<Response>) -> Value {
+    let mut outer_envelope = Map::new();
+    let mut data_envelope = Map::new();
+    let mut errors: Vec<Value> = Vec::new();
 
-    // Error workaround
-    if let Response::Error(err) = resp.first().unwrap() {
-        map.insert(
-            "errors".into(),
-            Value::Array(vec![envelope!("error".into(), Value::String(err.to_string()))]),
-        );
-    } else {
-        let vals: Vec<Value> = resp
-            .into_iter()
-            .map(|res| match res {
-                Response::Data(name, Item::List(list)) => envelope!(name, Value::Array(serialize_list(list))),
-                Response::Data(name, Item::Map(_parent, map)) => envelope!(name, Value::Object(serialize_map(map))),
-                _ => unreachable!(),
-            })
-            .collect();
-
-        map.insert(
-            "data".into(),
-            if vals.len() == 1 {
-                vals.first().unwrap().clone()
-            } else {
-                Value::Array(vals)
+    for response in responses {
+        match response {
+            Response::Data(name, item) => {
+                data_envelope.insert(name, serialize_item(item));
+            }
+            Response::Error(err) => {
+                let mut error_map = Map::new();
+                error_map.insert("error".into(), Value::String(err.clone()));
+                errors.push(Value::Object(error_map));
             },
-        );
+        }
     }
 
-    Value::Object(map)
+    if !errors.is_empty() {
+        outer_envelope.insert(
+            "errors".into(),
+            Value::Array(errors),
+        );
+    }
+    outer_envelope.insert(
+        "data".into(),
+        Value::Object(data_envelope),
+    );
+
+    Value::Object(outer_envelope)
 }
 
-macro_rules! match_serialize {
-    ($val:ident) => {
-        match $val {
-            Item::List(l) => Value::Array(serialize_list(l)),
-            Item::Map(_, m) => Value::Object(serialize_map(m)),
-            Item::Value(v) => serialize_prisma_value(v).unwrap(),
-        }
-    };
-}
 
 /// Recursively serialize query results
-fn serialize_map(map: IndexMap<String, Item>) -> JsonMap {
-    map.into_iter().fold(JsonMap::new(), |mut map, (k, v)| {
-        map.insert(k, match_serialize!(v));
+fn serialize_item(item: Item) -> Value {
+    match item {
+        Item::List(l) => Value::Array(serialize_list(l)),
+        Item::Map(_, m) => Value::Object(serialize_map(m)),
+        Item::Value(v) => serialize_prisma_value(v).unwrap(),
+    }
+}
+
+fn serialize_map(map: IndexMap<String, Item>) -> Map<String,Value> {
+    map.into_iter().fold(Map::new(), |mut map, (k, v)| {
+        map.insert(k, serialize_item(v));
         map
     })
 }
 
-fn serialize_list(list: Vec<Item>) -> JsonVec {
-    list.into_iter().fold(JsonVec::new(), |mut vec, i| {
-        vec.push(match_serialize!(i));
+fn serialize_list(list: Vec<Item>) -> Vec<Value> {
+    list.into_iter().fold(Vec::new(), |mut vec, i| {
+        vec.push(serialize_item(i));
         vec
     })
 }
+
 
 fn serialize_prisma_value(value: PrismaValue) -> PrismaResult<Value> {
     Ok(match value {
