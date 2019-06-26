@@ -1,4 +1,4 @@
-use crate::{DomainError, DomainResult};
+use crate::{DomainError, DomainResult, ScalarFieldRef, TypeIdentifier};
 use chrono::prelude::*;
 use graphql_parser::query::{Number, Value as GraphqlValue};
 use serde::{Deserialize, Serialize};
@@ -77,6 +77,24 @@ impl PrismaValue {
             GraphqlValue::List(l) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value_broken(i)).collect())),
             GraphqlValue::Object(obj) if obj.contains_key("set") => Self::from_value_broken(obj.get("set").unwrap()),
             value => panic!(format!("Unable to make {:?} to PrismaValue", value)),
+        }
+    }
+
+    pub fn from_value(value: &GraphqlValue, field: &ScalarFieldRef) -> Self {
+        match (value, field.type_identifier) {
+            (GraphqlValue::Boolean(b), TypeIdentifier::Boolean) => PrismaValue::Boolean(b.clone()),
+            (GraphqlValue::Enum(e), TypeIdentifier::Enum) => PrismaValue::Enum(e.clone()),
+            (GraphqlValue::Float(f), TypeIdentifier::Float) => PrismaValue::Float(f.clone()),
+            (GraphqlValue::Int(i), TypeIdentifier::Int) => PrismaValue::Int(i.as_i64().unwrap()),
+            (GraphqlValue::Null, _) => PrismaValue::Null,
+            (GraphqlValue::String(s), TypeIdentifier::String) => PrismaValue::String(s.clone()),
+            (GraphqlValue::String(s), TypeIdentifier::GraphQLID) => PrismaValue::GraphqlId(GraphqlId::String(s.clone())),
+//            (GraphqlValue::Int(s), TypeIdentifier::GraphQLID) => PrismaValue::GraphqlId(GraphqlId::Int(s)),
+            (GraphqlValue::String(s), TypeIdentifier::Json) => Self::str_as_json(s).expect("received invalid json"),
+            (GraphqlValue::String(s), TypeIdentifier::DateTime) => Self::str_as_datetime(s).expect("received invalid datetime"),
+            (GraphqlValue::List(l), _) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i, &field)).collect())),
+            (GraphqlValue::Object(obj), _) if obj.contains_key("set") => Self::from_value_broken(obj.get("set").unwrap()),
+            (value, _) => panic!(format!("Unable to make {:?} to PrismaValue. Field was {} with type identifier {:?}", value, field.name, field.type_identifier)),
         }
     }
 
