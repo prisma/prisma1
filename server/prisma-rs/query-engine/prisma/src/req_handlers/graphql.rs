@@ -1,15 +1,13 @@
 use super::{PrismaRequest, RequestHandler};
-use crate::{context::PrismaContext, error::PrismaError, serializer::json, PrismaResult};
+use crate::{context::PrismaContext, serializer::json };
 use core::{
     ir::{self, Builder},
     RootBuilder,
 };
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use serde_json::Value;
 use std::{collections::HashMap, sync::Arc};
-
-type JsonMap = Map<String, Value>;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -26,24 +24,19 @@ impl RequestHandler for GraphQlRequestHandler {
     type Body = GraphQlBody;
 
     fn handle<S: Into<PrismaRequest<Self::Body>>>(&self, req: S, ctx: &PrismaContext) -> Value {
-        // Handle incoming request and deal with errors properly
-        match handle_safely(req.into(), ctx) {
-            Ok(val) => val,
-            Err(err) => {
-                let mut map = Map::new();
-                map.insert("reason".into(), format!("{}", err).into());
-                json_envelope("error", map)
-            }
-        }
+        handle_safely(req.into(), ctx)
     }
 }
 
-fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> PrismaResult<Value> {
+fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Value {
     debug!("Incoming GQL query: {:?}", &req.body.query);
 
     let query_doc = match gql::parse_query(&req.body.query) {
         Ok(doc) => doc,
-        Err(e) => return Err(PrismaError::QueryParsingError(format!("{:?}", e))),
+        Err(err) => {
+            let ir = vec![ir::Response::Error(format!("{:?}", err))];
+            return json::serialize(ir)
+        },
     };
 
     let rb = RootBuilder {
@@ -65,12 +58,5 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         Err(err) => vec![ir::Response::Error(format!("{:?}", err))], // This is merely a workaround
     };
 
-    Ok(json::serialize(ir))
-}
-
-/// Create a json envelope
-fn json_envelope(id: &str, map: serde_json::Map<String, Value>) -> Value {
-    let mut envelope = JsonMap::new();
-    envelope.insert(id.to_owned(), Value::Object(map));
-    Value::Object(envelope)
+    json::serialize(ir)
 }

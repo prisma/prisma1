@@ -35,8 +35,7 @@ impl<'field> RootWriteQueryBuilder<'field> {
         }
 
         let args = into_tree(&self.field.arguments);
-        let raw_name = self.field.alias.as_ref().unwrap_or_else(|| &self.field.name).clone();
-        let model_operation = parse_model_action(raw_name.as_str(), Arc::clone(&self.query_schema))?;
+        let model_operation = parse_model_action(&self.field.name, Arc::clone(&self.query_schema))?;
         let model = Arc::clone(&model_operation.model);
 
         let inner =
@@ -186,7 +185,7 @@ impl<'field> RootWriteQueryBuilder<'field> {
         // FIXME: Cloning is unethical and should be avoided
         LookAhead::eval(WriteQueryTree {
             inner,
-            name: raw_name,
+            name: self.field.alias.as_ref().unwrap_or_else(|| &self.field.name).clone(),
             field: self.field.clone(),
         })
     }
