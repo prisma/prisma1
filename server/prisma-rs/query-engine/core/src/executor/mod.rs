@@ -1,23 +1,43 @@
-//! A slightly more generic interface over executing read and write queries
-
 mod pipeline;
 mod read;
 mod write;
 
 use self::pipeline::*;
 
-pub use read::ReadQueryExecutor;
-pub use write::WriteQueryExecutor;
+use crate::{query_ir::QueryDocument, result_ir::ResponseSet, CoreResult, QuerySchemaRef};
+use connector::{Query, ReadQueryResult};
+use read::ReadQueryExecutor;
+use write::WriteQueryExecutor;
 
-use crate::{CoreResult, Query, ReadQueryResult};
-
-/// A wrapper around QueryExecutor
-pub struct Executor {
-    pub read_exec: ReadQueryExecutor,
-    pub write_exec: WriteQueryExecutor,
+/// Central query executor and main entry point into the query core.
+pub struct QueryExecutor {
+    query_schema: QuerySchemaRef,
+    read_executor: ReadQueryExecutor,
+    write_executor: WriteQueryExecutor,
 }
 
-impl Executor {
+impl QueryExecutor {
+    pub fn new(
+        query_schema: QuerySchemaRef,
+        read_executor: ReadQueryExecutor,
+        write_executor: WriteQueryExecutor,
+    ) -> Self {
+        QueryExecutor {
+            query_schema,
+            read_executor,
+            write_executor,
+        }
+    }
+
+    pub fn execute(query_doc: QueryDocument) -> CoreResult<ResponseSet> {
+        // 1. Parse and validate query document (building)
+        // 2. Build query plan
+        // 3. Execute query plan
+
+        unimplemented!()
+    }
+
+    /// Legacy path
     /// Can be given a list of both ReadQueries and WriteQueries
     ///
     /// Will execute WriteQueries first, then all ReadQueries, while preserving order.
@@ -27,24 +47,24 @@ impl Executor {
 
         // Execute prefetch queries for destructive writes
         let (idx, queries): (Vec<_>, Vec<_>) = pipeline.prefetch().into_iter().unzip();
-        let results = self.read_exec.execute(&queries)?;
+        let results = self.read_executor.execute(&queries)?;
         pipeline.store_prefetch(idx.into_iter().zip(results).collect());
 
         // Execute write queries and generate required read queries
         let (idx, writes): (Vec<_>, Vec<_>) = pipeline.get_writes().into_iter().unzip();
-        let results = self.write_exec.execute(writes)?;
+        let results = self.write_executor.execute(writes)?;
         let (idx, reads): (Vec<_>, Vec<_>) = pipeline
             .process_writes(idx.into_iter().zip(results).collect())
             .into_iter()
             .unzip();
 
         // Execute read queries created by write-queries
-        let results = self.read_exec.execute(&reads)?;
+        let results = self.read_executor.execute(&reads)?;
         pipeline.store_reads(idx.into_iter().zip(results.into_iter()).collect());
 
         // Now execute all remaining reads
         let (idx, queries): (Vec<_>, Vec<_>) = pipeline.get_reads().into_iter().unzip();
-        let results = self.read_exec.execute(&queries)?;
+        let results = self.read_executor.execute(&queries)?;
         pipeline.store_reads(idx.into_iter().zip(results).collect());
 
         // Consume pipeline into return value
@@ -53,6 +73,6 @@ impl Executor {
 
     /// Returns db name used in the executor.
     pub fn db_name(&self) -> String {
-        self.write_exec.db_name.clone()
+        self.write_executor.db_name.clone()
     }
 }

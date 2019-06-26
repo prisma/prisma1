@@ -13,7 +13,8 @@ pub use many_rel::*;
 pub use one::*;
 pub use one_rel::*;
 
-use crate::{schema::OperationTag, CoreError, CoreResult, ModelOperation, QuerySchemaRef, ReadQuery};
+use crate::{schema::OperationTag, CoreError, CoreResult, ModelOperation, QuerySchemaRef};
+use connector::read_ast::ReadQuery;
 use graphql_parser::query::Field;
 use prisma_models::{ModelRef, RelationFieldRef};
 use std::sync::Arc;

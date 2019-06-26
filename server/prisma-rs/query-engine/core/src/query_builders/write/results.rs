@@ -1,7 +1,7 @@
 //! WriteQuery results are kinda special
 
-use crate::{ReadQueryResult, SingleReadQueryResult, WriteQueryTree};
-use connector::write_query::{Identifier, WriteQueryResult};
+use crate::WriteQueryTree;
+use connector::{Identifier, ReadQueryResult, SingleReadQueryResult, WriteQueryResult};
 use prisma_models::{PrismaValue, Record, SingleRecord};
 
 /// A structure that encodes the results from a database write

@@ -6,16 +6,14 @@
 //! different AST
 //!
 //! This IR (intermediate representation) is meant for general
-//! processing and storage. It can also be easily serialised.
+//! processing and storage. It can also be easily serialized.
 
 mod lists;
 mod maps;
 
-use crate::ReadQueryResult;
-use connector::QueryArguments;
+use connector::{QueryArguments, ReadQueryResult};
 use indexmap::IndexMap;
-use prisma_models::GraphqlId;
-use prisma_models::PrismaValue;
+use prisma_models::{GraphqlId, PrismaValue};
 
 /// A response set maps to a Vec<PrismaQueryResponse>
 /// where each represents the result of a query

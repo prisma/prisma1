@@ -1,7 +1,7 @@
 //! Process a set of records into an IR List
 
 use super::{maps::build_map, trim_records, Item, List, Map};
-use crate::{ManyReadQueryResults, ReadQueryResult};
+use connector::{ManyReadQueryResults, ReadQueryResult};
 use prisma_models::{GraphqlId, PrismaValue};
 use std::{
     collections::{hash_map::IterMut, HashMap},

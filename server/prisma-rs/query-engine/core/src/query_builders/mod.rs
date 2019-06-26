@@ -1,13 +1,14 @@
 //! Query builders module
 
+mod query_builder;
 mod read;
 mod write;
 
 pub use read::*;
 pub use write::*;
 
-//use super::ReadQueryBuilder;
-use crate::{CoreResult, Query as PrismaQuery, QuerySchemaRef};
+use crate::{CoreResult, QuerySchemaRef};
+use connector::Query as PrismaQuery;
 use graphql_parser::query::*;
 use std::sync::Arc;
 
@@ -19,7 +20,6 @@ pub struct RootBuilder {
 }
 
 impl RootBuilder {
-    // FIXME: Find op name and only execute op!
     pub fn build(self) -> CoreResult<Vec<PrismaQuery>> {
         self.query
             .definitions
@@ -69,14 +69,16 @@ impl RootBuilder {
 
     /// Mutations do something to the database and then follow-up with a query
     fn build_mutation(&self, root_fields: &Vec<Selection>) -> CoreResult<Vec<PrismaQuery>> {
-        root_fields
-            .iter()
-            .map(|item| match item {
-                Selection::Field(root_field) => RootWriteQueryBuilder::new(Arc::clone(&self.query_schema), root_field)
-                    .build()
-                    .map(|q| PrismaQuery::Write(q)),
-                _ => unimplemented!(),
-            })
-            .collect()
+        // TODO
+        //        root_fields
+        //            .iter()
+        //            .map(|item| match item {
+        //                Selection::Field(root_field) => RootWriteQueryBuilder::new(Arc::clone(&self.query_schema), root_field)
+        //                    .build()
+        //                    .map(|q| PrismaQuery::Write(q)),
+        //                _ => unimplemented!(),
+        //            })
+        //            .collect()
+        unimplemented!()
     }
 }

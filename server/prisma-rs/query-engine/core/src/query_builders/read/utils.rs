@@ -1,8 +1,8 @@
 //! A set of utilities to build (read & write) queries
 
-use super::filters;
-use crate::{BuilderExt, CoreError, CoreResult, ReadQuery, ReadQueryBuilder};
-use connector::{filter::RecordFinder, QueryArguments};
+use super::{filters, BuilderExt};
+use crate::{CoreError, CoreResult, ReadQueryBuilder};
+use connector::{filter::RecordFinder, read_ast::ReadQuery, QueryArguments};
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
     Field as ModelField, GraphqlId, InternalDataModelRef, ModelRef, OrderBy, PrismaValue, RelationFieldRef,
@@ -24,7 +24,7 @@ pub(crate) fn extract_record_finder(field: &Field, model: ModelRef) -> CoreResul
 
             Ok(RecordFinder {
                 field: Arc::clone(&field),
-                value: value,
+                value,
             })
         }
         _ => unreachable!(),

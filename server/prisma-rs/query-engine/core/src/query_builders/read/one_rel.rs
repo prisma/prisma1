@@ -1,6 +1,6 @@
 use super::{utils, BuilderExt};
-use crate::{read_query_ast::RelatedRecordQuery, CoreResult};
-
+use crate::CoreResult;
+use connector::read_ast::RelatedRecordQuery;
 use graphql_parser::query::Field;
 use prisma_models::{ModelRef, RelationFieldRef};
 use std::sync::Arc;

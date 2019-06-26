@@ -6,7 +6,7 @@ use crate::{
     schema::OperationTag,
     CoreError, CoreResult,
 };
-use connector::write_query::*;
+use connector::write_ast::*;
 use prisma_models::{Field, ModelRef, PrismaArgs, RelationFieldRef};
 use std::sync::Arc;
 

@@ -1,5 +1,5 @@
 use crate::{data_model_loader::*, exec_loader, PrismaError, PrismaResult};
-use core::{BuildMode, Executor, QuerySchemaBuilder, QuerySchemaRef, SupportedCapabilities};
+use core::{BuildMode, QueryExecutor, QuerySchemaBuilder, QuerySchemaRef, SupportedCapabilities};
 use datamodel::{Datamodel, Source};
 use prisma_common::{config::load as load_config, error::CommonError};
 use prisma_models::InternalDataModelRef;
@@ -19,9 +19,9 @@ pub struct PrismaContext {
     /// Setting this option will make the /dmmf route available.
     pub dm: Option<datamodel::Datamodel>,
 
-    /// Central executor for read and write queries.
-    #[debug_stub = "#Executor#"]
-    pub executor: Executor,
+    /// Central query executor.
+    #[debug_stub = "#QueryExecutor#"]
+    pub executor: QueryExecutor,
 }
 
 impl PrismaContext {

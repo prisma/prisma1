@@ -16,7 +16,8 @@
 
 #![allow(warnings)]
 
-use crate::{Query, ReadQuery, ReadQueryResult, WriteQuerySet, WriteQueryTree, WriteQueryTreeResult};
+use crate::{WriteQuerySet, WriteQueryTree, WriteQueryTreeResult};
+use connector::{read_ast::ReadQuery, write_ast::WriteQuery, Query, ReadQueryResult};
 use indexmap::IndexMap;
 use std::mem::replace;
 
@@ -65,7 +66,15 @@ impl From<Vec<Query>> for QueryPipeline {
             vec.into_iter()
                 .zip(0..)
                 .map(|(q, idx)| match q {
-                    Query::Write(query) => Stage::Write(idx, query),
+                    Query::Write(query) => {
+                        // TODO
+                        // let query = match query {
+                        // WriteQuery::Root(rq) => WriteQueryTree { inner: rq, name: rq }),
+                        // _ => unreachable!(),
+                        // };
+                        // Stage::Write(idx, WriteQuerySet::Query(qiery))
+                        unimplemented!()
+                    }
                     Query::Read(query) => Stage::Read(idx, query),
                 })
                 .collect(),

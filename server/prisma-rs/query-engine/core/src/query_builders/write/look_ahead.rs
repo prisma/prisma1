@@ -6,7 +6,7 @@
 //! that are connected in a second step.
 
 use crate::{CoreResult, WriteQuerySet, WriteQueryTree};
-use connector::write_query::*;
+use connector::{write_ast::*, Identifier, WriteQueryResult};
 use graphql_parser::query::Field;
 use prisma_models::{ModelRef, PrismaArgs, PrismaValue};
 

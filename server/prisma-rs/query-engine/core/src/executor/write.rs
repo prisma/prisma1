@@ -1,12 +1,12 @@
 use crate::{query_builders::LookAhead, CoreResult, WriteQuerySet, WriteQueryTreeResult};
-use connector::DatabaseWriter;
+use connector::UnmanagedDatabaseWriter;
 
 use std::sync::Arc;
 
 /// A small wrapper around running WriteQueries
 pub struct WriteQueryExecutor {
     pub db_name: String,
-    pub write_executor: Arc<DatabaseWriter + Send + Sync + 'static>,
+    pub write_executor: Arc<UnmanagedDatabaseWriter + Send + Sync + 'static>,
 }
 
 impl WriteQueryExecutor {

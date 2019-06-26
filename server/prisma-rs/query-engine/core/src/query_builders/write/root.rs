@@ -8,7 +8,7 @@ use crate::{
     CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuerySet,
     WriteQueryTree,
 };
-use connector::{filter::RecordFinder, write_query::*};
+use connector::{filter::RecordFinder, write_ast::*};
 use graphql_parser::query::{Field, Value};
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue, Project};
 use std::{collections::BTreeMap, sync::Arc};

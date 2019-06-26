@@ -2,9 +2,9 @@
 
 use crate::{
     query_builders::utils::{self, UuidString},
-    BuilderExt, OneBuilder, ReadQuery,
+    BuilderExt, OneBuilder,
 };
-use connector::write_query::{Identifier, RootWriteQuery, WriteQueryResult};
+use connector::{read_ast::ReadQuery, write_ast::RootWriteQuery, Identifier, WriteQueryResult};
 use graphql_parser::query::Field;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaValue};
 use std::sync::Arc;

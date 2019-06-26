@@ -1,12 +1,13 @@
-use crate::{read_query_ast, read_query_result::*, CoreResult};
-use connector::{ConnectorResult, DatabaseReader, ScalarListValues};
+use crate::CoreResult;
+use connector::{
+    read_ast::*, ConnectorResult, ManagedDatabaseReader, ManyReadQueryResults, ReadQueryResult, ScalarListValues,
+    SingleReadQueryResult,
+};
 use prisma_models::{GraphqlId, ScalarField, SelectedFields, SingleRecord};
-use read_query_ast::*;
 use std::{convert::TryFrom, sync::Arc};
 
-// Todo We could eliminate the trait object with enums.
 pub struct ReadQueryExecutor {
-    pub data_resolver: Arc<dyn DatabaseReader + Send + Sync + 'static>,
+    pub data_resolver: Arc<dyn ManagedDatabaseReader + Send + Sync + 'static>,
 }
 
 impl ReadQueryExecutor {

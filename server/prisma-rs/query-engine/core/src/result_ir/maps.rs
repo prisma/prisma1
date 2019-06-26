@@ -1,7 +1,7 @@
 //! Process a record into an IR Map
 
 use super::{lists::build_list, trim_records, Item, Map};
-use crate::{ReadQueryResult, SingleReadQueryResult};
+use connector::{ReadQueryResult, SingleReadQueryResult};
 use prisma_models::PrismaValue;
 
 pub fn build_map(result: SingleReadQueryResult) -> Option<Map> {

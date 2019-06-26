@@ -1,5 +1,5 @@
 use crate::{PrismaError, PrismaResult};
-use core::{Executor, ReadQueryExecutor, WriteQueryExecutor};
+use core::executor::{QueryExecutor, ReadQueryExecutor, WriteQueryExecutor};
 use datamodel::{
     configuration::{MYSQL_SOURCE_NAME, POSTGRES_SOURCE_NAME, SQLITE_SOURCE_NAME},
     Source,
@@ -10,7 +10,7 @@ use url::Url;
 #[cfg(feature = "sql")]
 use sql_connector::{Mysql, PostgreSql, SqlDatabase, Sqlite, Transactional};
 
-pub fn load(source: &Box<dyn Source>) -> PrismaResult<Executor> {
+pub fn load(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
     match source.connector_type() {
         #[cfg(feature = "sql")]
         SQLITE_SOURCE_NAME => sqlite(source),
@@ -29,7 +29,7 @@ pub fn load(source: &Box<dyn Source>) -> PrismaResult<Executor> {
 }
 
 #[cfg(feature = "sql")]
-fn sqlite(source: &Box<dyn Source>) -> PrismaResult<Executor> {
+fn sqlite(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
     trace!("Loading SQLite connector...");
 
     let sqlite = Sqlite::try_from(source)?;
@@ -42,7 +42,7 @@ fn sqlite(source: &Box<dyn Source>) -> PrismaResult<Executor> {
 }
 
 #[cfg(feature = "sql")]
-fn postgres(source: &Box<dyn Source>) -> PrismaResult<Executor> {
+fn postgres(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
     trace!("Loading Postgres connector...");
 
     let psql = PostgreSql::try_from(source)?;
@@ -54,7 +54,7 @@ fn postgres(source: &Box<dyn Source>) -> PrismaResult<Executor> {
 }
 
 #[cfg(feature = "sql")]
-fn mysql(source: &Box<dyn Source>) -> PrismaResult<Executor> {
+fn mysql(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
     trace!("Loading MySQL connector...");
 
     let psql = Mysql::try_from(source)?;
@@ -71,7 +71,7 @@ fn mysql(source: &Box<dyn Source>) -> PrismaResult<Executor> {
 }
 
 #[cfg(feature = "sql")]
-fn sql_executor<T>(db_name: String, connector: SqlDatabase<T>) -> Executor
+fn sql_executor<T>(db_name: String, connector: SqlDatabase<T>) -> QueryExecutor
 where
     T: Transactional + Send + Sync + 'static,
 {
@@ -84,5 +84,8 @@ where
         write_executor: arc,
     };
 
-    Executor { read_exec, write_exec }
+    QueryExecutor {
+        read_executor: read_exec,
+        write_executor: write_exec,
+    }
 }

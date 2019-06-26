@@ -3,7 +3,6 @@ use crate::{
     PrismaResult,
 };
 use core::query_ir::*;
-use core::Query;
 use graphql_parser::query::{
     Definition, Document, OperationDefinition, Selection as GqlSelection, SelectionSet, Value,
 };
