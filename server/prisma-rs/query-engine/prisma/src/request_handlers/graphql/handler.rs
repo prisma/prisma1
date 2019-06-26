@@ -41,9 +41,10 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Value 
     // --- New flow ---
     let query_schema = Arc::clone(&ctx.query_schema);
     let query_doc = GraphQLProtocolAdapter::convert(query_doc, req.body.operation_name).unwrap();
-    let result_set = QueryPipeline::new(query_schema, query_doc).execute().unwrap();
+    //    let result_set = QueryPipeline::new(query_schema, query_doc).execute().unwrap();
 
-    Ok(json::serialize(result_set))
+    //    Ok(json::serialize(result_set))
+    unimplemented!()
 
     // --- Old flow ---
     //    let rb = RootBuilder {

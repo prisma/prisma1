@@ -1,7 +1,7 @@
 //! A set of utilities to build (read & write) queries
 
 use super::{filters, BuilderExt};
-use crate::{CoreError, CoreResult, ReadQueryBuilder};
+use crate::{query_builders::ReadQueryBuilder, CoreError, CoreResult};
 use connector::{filter::RecordFinder, read_ast::ReadQuery, QueryArguments};
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{

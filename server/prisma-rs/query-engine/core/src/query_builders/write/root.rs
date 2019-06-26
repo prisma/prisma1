@@ -2,11 +2,12 @@
 #![allow(warnings)]
 
 use crate::{
-    extend_defaults,
-    query_builders::{utils, LookAhead, NestedValue, ValueList, ValueMap, ValueSplit},
+    query_builders::{
+        utils, write::extend_defaults, LookAhead, ManyNestedBuilder, NestedValue, SimpleNestedBuilder,
+        UpsertNestedBuilder, ValueList, ValueMap, ValueSplit, WriteQuerySet, WriteQueryTree,
+    },
     schema::{ModelOperation, OperationTag},
-    CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuerySet,
-    WriteQueryTree,
+    CoreError, CoreResult, QuerySchemaRef,
 };
 use connector::{filter::RecordFinder, write_ast::*};
 use graphql_parser::query::{Field, Value};

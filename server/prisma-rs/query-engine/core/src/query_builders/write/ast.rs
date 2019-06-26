@@ -2,7 +2,7 @@
 
 use crate::{
     query_builders::utils::{self, UuidString},
-    BuilderExt, OneBuilder,
+    query_builders::{BuilderExt, OneBuilder},
 };
 use connector::{read_ast::ReadQuery, write_ast::RootWriteQuery, Identifier, WriteQueryResult};
 use graphql_parser::query::Field;

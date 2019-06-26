@@ -11,9 +11,9 @@ extern crate debug_stub_derive;
 extern crate lazy_static;
 
 mod error;
-mod query_builders;
 
 pub mod executor;
+pub mod query_builders;
 pub mod query_ir;
 pub mod result_ir;
 pub mod schema;

@@ -16,7 +16,7 @@
 
 #![allow(warnings)]
 
-use crate::{WriteQuerySet, WriteQueryTree, WriteQueryTreeResult};
+use crate::query_builders::{WriteQuerySet, WriteQueryTree, WriteQueryTreeResult};
 use connector::{read_ast::ReadQuery, write_ast::WriteQuery, Query, ReadQueryResult};
 use indexmap::IndexMap;
 use std::mem::replace;

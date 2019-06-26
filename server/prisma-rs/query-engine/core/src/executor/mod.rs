@@ -2,12 +2,12 @@ mod pipeline;
 mod read;
 mod write;
 
-use self::pipeline::*;
+pub use read::ReadQueryExecutor;
+pub use write::WriteQueryExecutor;
 
-use crate::{query_ir::QueryDocument, result_ir::ResponseSet, CoreResult, QuerySchemaRef};
+use self::pipeline::*;
+use crate::{query_ir::QueryDocument, CoreResult, QuerySchemaRef};
 use connector::{Query, ReadQueryResult};
-use read::ReadQueryExecutor;
-use write::WriteQueryExecutor;
 
 /// Central query executor and main entry point into the query core.
 pub struct QueryExecutor {
@@ -29,7 +29,7 @@ impl QueryExecutor {
         }
     }
 
-    pub fn execute(query_doc: QueryDocument) -> CoreResult<ResponseSet> {
+    pub fn execute(query_doc: QueryDocument) -> CoreResult<()> {
         // 1. Parse and validate query document (building)
         // 2. Build query plan
         // 3. Execute query plan

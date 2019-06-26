@@ -1,4 +1,7 @@
-use crate::{query_builders::LookAhead, CoreResult, WriteQuerySet, WriteQueryTreeResult};
+use crate::{
+    query_builders::{LookAhead, WriteQuerySet, WriteQueryTreeResult},
+    CoreResult,
+};
 use connector::UnmanagedDatabaseWriter;
 
 use std::sync::Arc;

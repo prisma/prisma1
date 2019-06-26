@@ -1,8 +1,7 @@
 #![warn(warnings)]
 
 use crate::{
-    extend_defaults,
-    query_builders::{build_nested_root, utils, ValueMap, ValueSplit},
+    query_builders::{build_nested_root, utils, write::extend_defaults, ValueMap, ValueSplit},
     schema::OperationTag,
     CoreError, CoreResult,
 };

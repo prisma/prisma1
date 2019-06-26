@@ -84,8 +84,11 @@ where
         write_executor: arc,
     };
 
-    QueryExecutor {
-        read_executor: read_exec,
-        write_executor: write_exec,
-    }
+    //    QueryExecutor {
+    //        read_executor: read_exec,
+    //        write_executor: write_exec,
+    //    }
+
+    // TODO
+    unimplemented!()
 }

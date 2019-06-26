@@ -1,6 +1,6 @@
 //! WriteQuery results are kinda special
 
-use crate::WriteQueryTree;
+use crate::query_builders::WriteQueryTree;
 use connector::{Identifier, ReadQueryResult, SingleReadQueryResult, WriteQueryResult};
 use prisma_models::{PrismaValue, Record, SingleRecord};
 
