@@ -1,5 +1,5 @@
 use super::update;
-use crate::{write_query::WriteQueryBuilder, SqlResult, Transaction};
+use crate::{query_builder::write::WriteQueryBuilder, SqlResult, Transaction};
 use connector::filter::Filter;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
 use std::sync::Arc;

@@ -1,6 +1,6 @@
 use super::*;
 use crate::SqlResult;
-use connector::write_query::NestedSet;
+use connector::write_ast::NestedSet;
 use prisma_models::*;
 use prisma_query::ast::*;
 

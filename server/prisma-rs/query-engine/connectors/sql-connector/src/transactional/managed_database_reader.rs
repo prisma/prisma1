@@ -1,7 +1,7 @@
 use crate::{
     database::SqlDatabase,
     error::SqlError,
-    query_builder::{ManyRelatedRecordsBaseQuery, ManyRelatedRecordsQueryBuilder, QueryBuilder},
+    query_builder::read::{ManyRelatedRecordsBaseQuery, ManyRelatedRecordsQueryBuilder, ReadQueryBuilder},
     Transactional,
 };
 use connector::{error::ConnectorError, filter::RecordFinder, *};
@@ -14,7 +14,7 @@ struct ScalarListElement {
     value: PrismaValue,
 }
 
-impl<T> DatabaseReader for SqlDatabase<T>
+impl<T> ManagedDatabaseReader for SqlDatabase<T>
 where
     T: Transactional,
 {
@@ -24,7 +24,7 @@ where
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<Option<SingleRecord>> {
         let db_name = &record_finder.field.model().internal_data_model().db_name;
-        let query = QueryBuilder::get_records(record_finder.field.model(), selected_fields, record_finder);
+        let query = ReadQueryBuilder::get_records(record_finder.field.model(), selected_fields, record_finder);
         let field_names = selected_fields.names();
         let idents = selected_fields.type_identifiers();
 
@@ -53,7 +53,7 @@ where
         let db_name = &model.internal_data_model().db_name;
         let field_names = selected_fields.names();
         let idents = selected_fields.type_identifiers();
-        let query = QueryBuilder::get_records(model, selected_fields, query_arguments);
+        let query = ReadQueryBuilder::get_records(model, selected_fields, query_arguments);
 
         let records = self
             .executor
@@ -113,7 +113,7 @@ where
 
     fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> ConnectorResult<usize> {
         let db_name = &model.internal_data_model().db_name;
-        let query = QueryBuilder::count_by_model(model, query_arguments);
+        let query = ReadQueryBuilder::count_by_model(model, query_arguments);
 
         let result = self
             .executor
@@ -124,7 +124,7 @@ where
     }
 
     fn count_by_table(&self, database: &str, table: &str) -> ConnectorResult<usize> {
-        let query = QueryBuilder::count_by_table(database, table);
+        let query = ReadQueryBuilder::count_by_table(database, table);
 
         let result = self
             .executor
@@ -141,7 +141,7 @@ where
     ) -> ConnectorResult<Vec<ScalarListValues>> {
         let db_name = &list_field.model().internal_data_model().db_name;
         let type_identifier = list_field.type_identifier;
-        let query = QueryBuilder::get_scalar_list_values_by_record_ids(list_field, record_ids);
+        let query = ReadQueryBuilder::get_scalar_list_values_by_record_ids(list_field, record_ids);
 
         let results: Vec<ScalarListElement> = self.executor.with_transaction(db_name, |conn| {
             let rows = conn.filter(query.into(), &[TypeIdentifier::GraphQLID, type_identifier])?;

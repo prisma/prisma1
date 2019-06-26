@@ -1,4 +1,4 @@
-use crate::{ConnectorResult, RootWriteQuery, WriteQueryResult};
+use crate::{write_ast::RootWriteQuery, ConnectorResult, WriteQueryResult};
 use serde_json::Value;
 
 /// Methods for writing data.

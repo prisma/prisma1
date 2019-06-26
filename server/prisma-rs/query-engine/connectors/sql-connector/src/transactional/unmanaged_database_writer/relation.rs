@@ -1,5 +1,5 @@
 use crate::{
-    write_query::{NestedActions, WriteQueryBuilder},
+    query_builder::write::{NestedActions, WriteQueryBuilder},
     SqlResult, Transaction,
 };
 use connector::filter::RecordFinder;

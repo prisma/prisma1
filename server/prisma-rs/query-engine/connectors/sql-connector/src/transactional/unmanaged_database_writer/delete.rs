@@ -1,6 +1,6 @@
 use crate::{
     error::SqlError,
-    write_query::{DeleteActions, NestedActions, WriteQueryBuilder},
+    query_builder::write::{DeleteActions, NestedActions, WriteQueryBuilder},
     SqlResult, Transaction,
 };
 use connector::{error::RecordFinderInfo, filter::RecordFinder};

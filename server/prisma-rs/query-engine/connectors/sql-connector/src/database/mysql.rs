@@ -1,6 +1,7 @@
 use crate::{
-    error::SqlError, query_builder::ManyRelatedRecordsWithUnionAll, RawQuery, SqlResult, SqlRow, ToSqlRow, Transaction,
-    Transactional, WriteQueryBuilder,
+    error::SqlError,
+    query_builder::{read::ManyRelatedRecordsWithUnionAll, write::WriteQueryBuilder},
+    RawQuery, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional,
 };
 use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};

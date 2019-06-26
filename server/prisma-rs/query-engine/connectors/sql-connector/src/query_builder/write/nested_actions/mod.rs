@@ -10,8 +10,7 @@ pub use nested_delete_record::*;
 pub use nested_disconnect::*;
 pub use nested_set::*;
 
-use crate::query_builder::QueryBuilder;
-use crate::{error::*, SqlResult};
+use crate::{error::*, query_builder::read::ReadQueryBuilder, SqlResult};
 use connector::{error::RecordFinderInfo, filter::RecordFinder};
 use prisma_models::*;
 use prisma_query::ast::*;
@@ -153,7 +152,7 @@ pub trait NestedActions {
         let relation_column = relation.column_for_relation_side(rf.relation_side);
         let opposite_column = relation.column_for_relation_side(rf.relation_side.opposite());
 
-        let sub_select = QueryBuilder::get_records(
+        let sub_select = ReadQueryBuilder::get_records(
             rf.model(),
             &SelectedFields::from(rf.model().fields().id()),
             record_finder.clone(),

@@ -1,6 +1,6 @@
 use crate::{
     error::SqlError,
-    write_query::{NestedActions, WriteQueryBuilder},
+    query_builder::write::{NestedActions, WriteQueryBuilder},
     SqlResult, Transaction,
 };
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};

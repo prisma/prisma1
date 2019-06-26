@@ -1,6 +1,6 @@
 use super::*;
 use crate::SqlResult;
-use connector::write_query::NestedDeleteRecord;
+use connector::write_ast::NestedDeleteRecord;
 use prisma_models::*;
 use prisma_query::ast::*;
 

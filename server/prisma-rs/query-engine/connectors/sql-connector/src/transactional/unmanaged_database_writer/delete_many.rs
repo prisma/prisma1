@@ -1,5 +1,5 @@
 use crate::{
-    write_query::{DeleteActions, WriteQueryBuilder},
+    query_builder::write::{DeleteActions, WriteQueryBuilder},
     SqlResult, Transaction,
 };
 use connector::filter::Filter;
