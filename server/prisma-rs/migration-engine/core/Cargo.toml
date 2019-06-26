@@ -6,7 +6,6 @@ edition = "2018"
 
 [dependencies]
 migration-connector = { path = "../connectors/migration-connector" }
-nullable = { path = "../../libs/nullable" }
 datamodel = { path = "../../libs/datamodel" }
 prisma-models = { path = "../../prisma-models" }
 chrono = { version = "0.4", features = ["serde"] }

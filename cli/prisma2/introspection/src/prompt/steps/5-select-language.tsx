@@ -1,15 +1,15 @@
 import * as React from 'react'
 import { Prompt } from '../../prompt-lib/BoxPrompt'
 import { ActionType } from '../reducer'
-import { Steps, stepsToElements } from '../steps-definition'
+import { formByStep, Step } from '../steps-definition'
 
 export function renderSelectLanguage(dispatch: React.Dispatch<ActionType>) {
   return (
     <Prompt
-      key={Steps.SELECT_LANGUAGE}
+      key={Step.SELECT_LANGUAGE}
       title="Which parts of Prisma do you want to use?"
       subtitle="Learn more about the tools at prisma.io/docs"
-      elements={stepsToElements[Steps.SELECT_LANGUAGE]()}
+      elements={formByStep[Step.SELECT_LANGUAGE]()}
       formValues={{}}
       withBackButton={{
         label: 'Back',

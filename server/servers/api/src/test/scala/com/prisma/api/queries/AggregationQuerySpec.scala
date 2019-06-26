@@ -2,10 +2,14 @@ package com.prisma.api.queries
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
+import com.prisma.shared.models.ConnectorCapability
+import com.prisma.shared.models.ConnectorCapability.Prisma2Capability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class AggregationQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
+
+  override def doNotRunForCapabilities: Set[ConnectorCapability] = Set(Prisma2Capability)
 
   val project = SchemaDsl.fromStringV11() {
     """type Todo {

@@ -1135,7 +1135,6 @@ dependencies = [
  "datamodel 0.1.0",
  "jsonrpc-core 11.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "migration-connector 0.1.0",
- "nullable 0.1.0",
  "prisma-models 0.0.0",
  "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)",
  "serde 1.0.92 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1365,13 +1364,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "memchr 2.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "version_check 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "nullable"
-version = "0.1.0"
-dependencies = [
- "serde 1.0.92 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

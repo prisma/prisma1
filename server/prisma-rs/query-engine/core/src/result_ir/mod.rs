@@ -15,9 +15,6 @@ use connector::{QueryArguments, ReadQueryResult};
 use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
 
-/// A response set maps to a Vec<PrismaQueryResponse>
-/// where each represents the result of a query
-pub type ResponseSet = Vec<Response>;
 
 /// A response can either be some `key-value` data representation
 /// or an error that occured.
@@ -59,7 +56,7 @@ impl Builder {
     }
 
     /// Parse collected queries into the return wrapper type
-    pub fn build(self) -> ResponseSet {
+    pub fn build(self) -> Vec<Response> {
         self.0.into_iter().fold(vec![], |mut vec, res| {
             vec.push(match res {
                 ReadQueryResult::Single(query) => {

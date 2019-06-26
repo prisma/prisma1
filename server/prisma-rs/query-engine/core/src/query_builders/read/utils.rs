@@ -20,7 +20,7 @@ pub(crate) fn extract_record_finder(field: &Field, model: ModelRef) -> CoreResul
         Value::Object(obj) => {
             let (field_name, value) = obj.iter().next().expect("object was empty");
             let field = model.fields().find_from_scalar(field_name).unwrap();
-            let value = PrismaValue::from_value(value);
+            let value = PrismaValue::from_value_broken(value);
 
             Ok(RecordFinder {
                 field: Arc::clone(&field),

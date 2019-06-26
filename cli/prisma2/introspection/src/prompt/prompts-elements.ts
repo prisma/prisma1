@@ -2,11 +2,11 @@ import { DatabaseType } from 'prisma-datamodel'
 import { PromptElement, RadioElement } from '../prompt-lib/types'
 import { DatabaseCredentials, SchemaWithMetadata } from '../types'
 
-const dbTypeToDbPort: Record<DatabaseType, string> = {
+export const dbTypeToDbPort: Record<DatabaseType, string> = {
   postgres: '5432',
   mysql: '3306',
   sqlite: '3306',
-  mongo: '3306',
+  mongo: '27017',
 }
 
 const dbTypeToDefaultConnectionString: Record<DatabaseType, string> = {

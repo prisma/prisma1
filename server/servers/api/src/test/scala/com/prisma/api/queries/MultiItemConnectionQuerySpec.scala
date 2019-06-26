@@ -4,8 +4,12 @@ import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 import com.prisma.IgnoreSQLite
+import com.prisma.shared.models.ConnectorCapability
+import com.prisma.shared.models.ConnectorCapability.Prisma2Capability
 
 class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
+
+  override def doNotRunForCapabilities: Set[ConnectorCapability] = Set(Prisma2Capability)
 
   val project = SchemaDsl.fromStringV11() {
     """type Todo {

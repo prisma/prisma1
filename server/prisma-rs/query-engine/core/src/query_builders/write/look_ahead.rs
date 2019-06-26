@@ -38,7 +38,10 @@ impl LookAhead {
         let name = next
             .get_base_model()
             .fields()
-            .find_from_relation_fields(&self_.model().name.to_lowercase())?
+            .relation()
+            .iter()
+            .find(|rf| rf.related_model().name == self_.model().name)
+            .unwrap()
             .name
             .clone();
         let id: PrismaValue = match res.identifier {
@@ -105,7 +108,7 @@ fn flip_create_order(wq: WriteQueryTree) -> CoreResult<WriteQuerySet> {
             let creates = std::mem::replace(&mut cn.nested_writes.creates, vec![]);
             let (required, normal) = creates.into_iter().partition(|nc| {
                 nc.relation_field.is_required
-                    && check_should_flip(&cn.model, &nc.relation_field.related_field().model())
+                    && nc.relation_field.relation_is_inlined_in_parent()
             });
 
             cn.nested_writes.creates = normal;
@@ -162,10 +165,6 @@ fn get_name_field(next: &WriteQuerySet) -> (String, Field) {
         WriteQuerySet::Dependents { self_: _, next } => get_name_field(&next),
         WriteQuerySet::Query(q) => (q.name.clone(), q.field.clone()),
     }
-}
-
-fn check_should_flip(self_: &ModelRef, other: &ModelRef) -> bool {
-    self_.name > other.name
 }
 
 /// Fold require `connect` operations into their parent

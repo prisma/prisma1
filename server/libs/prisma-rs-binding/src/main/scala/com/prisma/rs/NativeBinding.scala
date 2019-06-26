@@ -189,7 +189,6 @@ object NativeBinding {
       case ValueContainer.PrismaValue.Int(i: Int)          => IntGCValue(i)
       case ValueContainer.PrismaValue.Json(j: String)      => JsonGCValue(Json.parse(j))
       case ValueContainer.PrismaValue.Null(_)              => NullGCValue
-      case ValueContainer.PrismaValue.Relation(r: Long)    => ??? // What are we supposed to do here?
       case ValueContainer.PrismaValue.String(s: String)    => StringGCValue(s)
       case ValueContainer.PrismaValue.Uuid(uuid: String)   => UuidGCValue.parse(uuid).get
       case ValueContainer.PrismaValue.List(values) =>

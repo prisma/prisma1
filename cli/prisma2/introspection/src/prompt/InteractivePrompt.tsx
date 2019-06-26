@@ -1,4 +1,3 @@
-import { render } from 'ink'
 import { DatabaseType } from 'prisma-datamodel'
 import * as React from 'react'
 import { ConnectorData } from '../introspect/util'
@@ -10,6 +9,7 @@ import {
   PromptType,
   SchemaWithMetadata,
 } from '../types'
+import { dbTypeToDbPort } from './prompts-elements'
 import { ActionType, promptReducer } from './reducer'
 import {
   renderInputDatabaseCredentials,
@@ -19,7 +19,7 @@ import {
   renderSelectTemplate,
   renderSelectTool,
 } from './steps'
-import { Steps } from './steps-definition'
+import { Step, stepsByDatabaseType } from './steps-definition'
 
 export interface PromptProps {
   onSubmit: (introspectionResult: IntrospectionResult | InitPromptResult) => void
@@ -28,7 +28,7 @@ export interface PromptProps {
 }
 
 export type PromptState = {
-  step: Steps
+  stepCursor: number
   credentials: Partial<DatabaseCredentials>
   connectorData: Partial<ConnectorData>
   introspectionResult: IntrospectionResult | null
@@ -36,7 +36,7 @@ export type PromptState = {
 } & InitConfiguration
 
 const initialState: PromptState & InitConfiguration = {
-  step: Steps.SELECT_DATABASE_TYPE,
+  stepCursor: 0,
   credentials: {},
   connectorData: {},
   schemas: [],
@@ -45,7 +45,7 @@ const initialState: PromptState & InitConfiguration = {
   photon: false,
   language: 'TypeScript',
   template: 'from_scratch',
-  databaseType: DatabaseType.sqlite
+  databaseType: DatabaseType.sqlite,
 }
 
 export const dbTypeTodbName: Record<DatabaseType, string> = {
@@ -57,7 +57,7 @@ export const dbTypeTodbName: Record<DatabaseType, string> = {
 
 export const defaultCredentials = (dbType: DatabaseType): DatabaseCredentials => ({
   host: 'localhost',
-  port: 5432,
+  port: parseInt(dbTypeToDbPort[dbType], 10),
   type: dbType,
 })
 
@@ -67,18 +67,24 @@ export const defaultCredentials = (dbType: DatabaseType): DatabaseCredentials =>
 export const InteractivePrompt: React.FC<PromptProps> = props => {
   const [state, dispatch] = React.useReducer<React.Reducer<PromptState, ActionType>>(promptReducer, initialState)
 
-  switch (state.step) {
-    case Steps.SELECT_DATABASE_TYPE:
-      return renderSelectDatabaseType(dispatch, state)
-    case Steps.INPUT_DATABASE_CREDENTIALS:
+  if (state.stepCursor === 0) {
+    return renderSelectDatabaseType(dispatch, state)
+  }
+
+  const currentStep = stepsByDatabaseType[state.databaseType][state.stepCursor]
+
+  switch (currentStep) {
+    case Step.INPUT_DATABASE_CREDENTIALS:
       return renderInputDatabaseCredentials(dispatch, state)
-    case Steps.SELECT_DATABASE_SCHEMA:
+    case Step.SELECT_DATABASE_SCHEMA:
       return renderSelectDatabaseSchema(dispatch, state, props)
-    case Steps.SELECT_TOOL:
+    case Step.SELECT_TOOL:
       return renderSelectTool(dispatch, state)
-    case Steps.SELECT_LANGUAGE:
+    case Step.SELECT_LANGUAGE:
       return renderSelectLanguage(dispatch)
-    case Steps.SELECT_TEMPLATE:
+    case Step.SELECT_TEMPLATE:
       return renderSelectTemplate(dispatch, state, props)
+    default:
+      return renderSelectDatabaseType(dispatch, state)
   }
 }
