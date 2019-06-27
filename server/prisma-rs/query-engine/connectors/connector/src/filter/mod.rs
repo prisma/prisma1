@@ -39,6 +39,10 @@ impl Filter {
     pub fn not(filters: Vec<Filter>) -> Self {
         Filter::Not(filters.into_iter().map(Box::new).collect())
     }
+
+    pub fn empty() -> Self {
+        Filter::BoolFilter(true)
+    }
 }
 
 impl From<ScalarFilter> for Filter {

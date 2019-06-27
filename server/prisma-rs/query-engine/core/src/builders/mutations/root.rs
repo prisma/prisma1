@@ -8,7 +8,7 @@ use crate::{
     CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuerySet,
     WriteQueryTree,
 };
-use connector::{filter::RecordFinder, write_query::*};
+use connector::{filter::{RecordFinder, Filter}, write_query::*};
 use graphql_parser::query::{Field, Value};
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue, Project};
 use std::{collections::BTreeMap, sync::Arc};
@@ -100,9 +100,7 @@ impl<'field> RootWriteQueryBuilder<'field> {
                     )?;
 
                     let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
-                    let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
-                        Err(CoreError::QueryValidationError("Required filters not found!".into()))
-                    })?;
+                    let filter = query_args.filter.unwrap_or(Filter::empty());
 
                     RootWriteQuery::UpdateManyRecords(UpdateManyRecords {
                         model: Arc::clone(&model),
@@ -123,9 +121,7 @@ impl<'field> RootWriteQueryBuilder<'field> {
                 }
                 OperationTag::DeleteMany => {
                     let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
-                    let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
-                        Err(CoreError::QueryValidationError("Required filters not found!".into()))
-                    })?;
+                    let filter = query_args.filter.unwrap_or(Filter::empty());
 
                     RootWriteQuery::DeleteManyRecords(DeleteManyRecords { model, filter })
                 }
