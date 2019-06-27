@@ -146,7 +146,7 @@ fn attach_update_many(
     rel_model: &ModelRef,
 ) -> CoreResult<()> {
     let data = map.0.remove("data").map(|s| Ok(s)).unwrap_or_else(|| {
-        Err(CoreError::QueryValidationError(
+        Err(CoreError::LegacyQueryValidationError(
             "Malformed mutation: `data` section not found!".into(),
         ))
     })?;
@@ -198,7 +198,7 @@ fn attach_delete_many(
     rel_model: &ModelRef,
 ) -> CoreResult<()> {
     let _ = map.0.remove("data").map(|s| Ok(s)).unwrap_or_else(|| {
-        Err(CoreError::QueryValidationError(
+        Err(CoreError::LegacyQueryValidationError(
             "Malformed mutation: `data` section not found!".into(),
         ))
     })?;

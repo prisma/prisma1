@@ -227,7 +227,7 @@ pub struct InputField {
     // FromInput conversion -> Take a look at that.
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum InputType {
     Enum(EnumType),
     List(Box<InputType>),
@@ -341,7 +341,7 @@ impl OutputType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ScalarType {
     String,
     Int,
@@ -354,21 +354,36 @@ pub enum ScalarType {
     ID,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EnumType {
     pub name: String,
     pub values: Vec<EnumValue>,
 }
 
+impl EnumType {
+    /// Attempts to find an enum value for the given value key.
+    pub fn value_for(&self, name: &str) -> Option<&EnumValue> {
+        self.values.iter().find(|val| val.name == name)
+    }
+}
+
 /// Values in enums are solved with an enum rather than a trait or generic
 /// to avoid cluttering all type defs in this file, essentially.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EnumValue {
     pub name: String,
     pub value: EnumValueWrapper,
 }
 
 impl EnumValue {
+    /// Attempts to represent this enum value as string.
+    pub fn as_string(&self) -> Option<String> {
+        match self.value {
+            EnumValueWrapper::String(ref s) => Some(s.clone()),
+            EnumValueWrapper::OrderBy(_) => None,
+        }
+    }
+
     pub fn order_by<T>(name: T, field: Arc<ScalarField>, sort_order: SortOrder) -> Self
     where
         T: Into<String>,
@@ -390,7 +405,7 @@ impl EnumValue {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum EnumValueWrapper {
     OrderBy(OrderBy),
     String(String),

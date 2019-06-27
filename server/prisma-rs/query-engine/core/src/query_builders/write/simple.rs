@@ -65,7 +65,7 @@ impl SimpleNestedBuilder {
             }
             "connect" => {
                 let where_ = values.to_record_finder(Arc::clone(&relation_model)).map_or(
-                    Err(CoreError::QueryValidationError("No `where` on connect".into())),
+                    Err(CoreError::LegacyQueryValidationError("No `where` on connect".into())),
                     |w| Ok(w),
                 )?;
                 nested_write_queries.connects.push(NestedConnect {
@@ -101,7 +101,9 @@ impl SimpleNestedBuilder {
                     Value::Object(
                         where_map
                             .map_or(
-                                Err(CoreError::QueryValidationError("Failed to read `where` block".into())),
+                                Err(CoreError::LegacyQueryValidationError(
+                                    "Failed to read `where` block".into(),
+                                )),
                                 |w| Ok(w),
                             )?
                             .0,

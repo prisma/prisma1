@@ -5,25 +5,30 @@
 ///! agnostic to whatever protocol is implemented on upper layers.
 use std::collections::BTreeMap;
 
+#[derive(Debug)]
 pub struct QueryDocument {
     pub operations: Vec<Operation>,
 }
 
+#[derive(Debug)]
 pub enum Operation {
     Read(ReadOperation),
     Write(WriteOperation),
 }
 
+#[derive(Debug)]
 pub struct ReadOperation {
     pub name: Option<String>,
     pub selections: Vec<Selection>,
 }
 
+#[derive(Debug)]
 pub struct WriteOperation {
     pub name: Option<String>,
     pub selections: Vec<Selection>,
 }
 
+#[derive(Debug)]
 pub struct Selection {
     pub name: String,
     pub alias: Option<String>,
@@ -31,6 +36,7 @@ pub struct Selection {
     pub sub_selections: Vec<Selection>,
 }
 
+#[derive(Debug, Clone)]
 pub enum QueryValue {
     Int(i64),
     Float(f64),

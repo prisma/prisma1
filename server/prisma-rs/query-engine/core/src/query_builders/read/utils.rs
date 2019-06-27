@@ -42,31 +42,31 @@ pub(crate) fn extract_query_args_inner<'a>(
                 match (k.to_lowercase().as_str(), v) {
                     ("skip", Value::Int(num)) => match num.as_i64() {
                         Some(num) => Ok(QueryArguments { skip: Some(num as u32), ..res }),
-                        None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
+                        None => Err(CoreError::LegacyQueryValidationError("Invalid number provided".into())),
                     },
                     ("first", Value::Int(num)) => match num.as_i64() {
                         Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
-                        None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
+                        None => Err(CoreError::LegacyQueryValidationError("Invalid number provided".into())),
                     },
                     ("last", Value::Int(num)) => match num.as_i64() {
                         Some(num) => Ok(QueryArguments { last: Some(num as u32), ..res }),
-                        None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
+                        None => Err(CoreError::LegacyQueryValidationError("Invalid number provided".into())),
                     },
                     ("after", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { after: Some(GraphqlId::UUID(s.as_uuid())), ..res }),
                     ("after", Value::String(s)) => Ok(QueryArguments { after: Some(s.clone().into()), ..res }),
                     ("after", Value::Int(num)) => match num.as_i64() {
                         Some(num) => Ok(QueryArguments { after: Some((num as usize).into()), ..res }),
-                        None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
+                        None => Err(CoreError::LegacyQueryValidationError("Invalid number provided".into())),
                     },
                     ("before", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { before: Some(GraphqlId::UUID(s.as_uuid())), ..res }),
                     ("before", Value::String(s)) => Ok(QueryArguments { before: Some(s.clone().into()), ..res }),
                     ("before", Value::Int(num)) => match num.as_i64() {
                         Some(num) => Ok(QueryArguments { after: Some((num as usize).into()), ..res }),
-                        None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
+                        None => Err(CoreError::LegacyQueryValidationError("Invalid number provided".into())),
                     },
                     ("orderby", Value::Enum(order_arg)) => extract_order_by(res, order_arg, Arc::clone(&model)),
                     ("where", Value::Object(o)) => extract_filter(res, o, Arc::clone(&model)),
-                    (name, _) => Err(CoreError::QueryValidationError(format!("Unknown key: `{}`", name))),
+                    (name, _) => Err(CoreError::LegacyQueryValidationError(format!("Unknown key: `{}`", name))),
                 }
             } else {
                 result
@@ -107,9 +107,9 @@ pub(crate) fn extract_order_by(
                 }),
                 ..aggregator
             })
-            .map_err(|_| CoreError::QueryValidationError(format!("Unknown field `{}`", vec[0])))
+            .map_err(|_| CoreError::LegacyQueryValidationError(format!("Unknown field `{}`", vec[0])))
     } else {
-        Err(CoreError::QueryValidationError("...".into()))
+        Err(CoreError::LegacyQueryValidationError("...".into()))
     }
 }
 
@@ -150,7 +150,7 @@ pub(crate) fn collect_selected_fields<I: Into<Option<RelationFieldRef>>>(
                         field: Arc::clone(&field),
                         selected_fields: SelectedFields::new(vec![], None),
                     }))),
-                    _ => Some(Err(CoreError::QueryValidationError(format!(
+                    _ => Some(Err(CoreError::LegacyQueryValidationError(format!(
                         "Selected field {} not found on model {}",
                         f.name, model.name,
                     )))),
@@ -185,7 +185,7 @@ pub(crate) fn collect_nested_queries<'field>(
 
                         ReadQueryBuilder::infer_nested(&model, x, parent).map(|r| Ok(r))
                     }
-                    _ => Some(Err(CoreError::QueryValidationError(format!(
+                    _ => Some(Err(CoreError::LegacyQueryValidationError(format!(
                         "Selected field {} not found on model {}",
                         x.name, model.name,
                     )))),

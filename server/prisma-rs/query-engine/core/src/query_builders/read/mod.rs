@@ -32,7 +32,7 @@ impl<'a> ReadQueryBuilder<'a> {
     pub fn new(query_schema: QuerySchemaRef, root_field: &'a Field) -> CoreResult<Self> {
         let query_field = match query_schema.find_query_field(root_field.name.as_ref()) {
             Some(field) => Ok(field),
-            None => Err(CoreError::QueryValidationError(format!(
+            None => Err(CoreError::LegacyQueryValidationError(format!(
                 "Field not found on type Query: {}",
                 &root_field.name
             ))),
@@ -58,7 +58,7 @@ impl<'a> ReadQueryBuilder<'a> {
             OperationTag::FindMany => Ok(ReadQueryBuilder::Many(
                 ManyBuilder::new().setup(Arc::clone(&model), field),
             )),
-            _ => Err(CoreError::QueryValidationError(format!(
+            _ => Err(CoreError::LegacyQueryValidationError(format!(
                 "Invalid root operation on Query: {:?}",
                 operation
             ))),

@@ -88,7 +88,12 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
             });
 
             let op = match op {
-                None => return Err(CoreError::QueryValidationError(format!("Query argument {} invalid", k))),
+                None => {
+                    return Err(CoreError::LegacyQueryValidationError(format!(
+                        "Query argument {} invalid",
+                        k
+                    )))
+                }
                 Some(op) => op,
             };
 
@@ -164,7 +169,7 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
                                     r.to_one_related(extract_filter(value, r.related_model())?)
                                 }
                                 (FilterOp::Field, None) => r.one_relation_is_null(),
-                                (op, val) => Err(CoreError::QueryValidationError(format!(
+                                (op, val) => Err(CoreError::LegacyQueryValidationError(format!(
                                     "Invalid filter: Operation {:?} with {:?}",
                                     op, val
                                 )))?,
