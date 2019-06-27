@@ -7,7 +7,7 @@ use crate::{
     CoreError, CoreResult,
 };
 use connector::write_query::*;
-use prisma_models::{Field, ModelRef, PrismaArgs, RelationFieldRef};
+use prisma_models::{ ModelRef, PrismaArgs, RelationFieldRef};
 use std::sync::Arc;
 
 pub struct ManyNestedBuilder;
@@ -24,22 +24,17 @@ impl ManyNestedBuilder {
     ) -> CoreResult<()> {
         let name = name.as_str();
         let kind = kind.as_str();
-
-        let field = model.fields().find_from_all(&name).unwrap();
-        let (rel_field, rel_model) = match &field {
-            Field::Relation(f) => (Arc::clone(&f), f.related_model()),
-            _ => unimplemented!(),
-        };
+        let rel_field = model.fields().find_from_relation_fields(&name).unwrap();
 
         for map in many.into_iter() {
             match kind {
-                "create" => attach_create(name, map, write_queries, &rel_field, &rel_model, top_level)?,
-                "connect" => attach_connect(map, write_queries, &rel_field, &rel_model, top_level)?,
-                "disconnect" => attach_disconnect(map, write_queries, &model, &rel_field)?,
-                "update" => attach_update(name, map, write_queries, &model, &rel_field, &rel_model, top_level)?,
-                "updateMany" => attach_update_many(map, write_queries, &rel_field, &rel_model)?,
+                "create" => attach_create(name, map, write_queries, &rel_field, top_level)?,
+                "connect" => attach_connect(map, write_queries, &rel_field,top_level)?,
+                "disconnect" => attach_disconnect(map, write_queries, &rel_field)?,
+                "update" => attach_update(name, map, write_queries, &model, &rel_field, top_level)?,
+                "updateMany" => attach_update_many(map, write_queries, &rel_field)?,
                 "delete" => attach_delete(map, write_queries, &model, &rel_field)?,
-                "deleteMany" => attach_delete_many(map, write_queries, &rel_field, &rel_model)?,
+                "deleteMany" => attach_delete_many(map, write_queries, &rel_field)?,
                 verb => panic!("Invalid verb {:?}", verb),
             };
         }
@@ -53,9 +48,9 @@ fn attach_create(
     map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
     rel_field: &RelationFieldRef,
-    rel_model: &ModelRef,
     top_level: OperationTag,
 ) -> CoreResult<()> {
+    let rel_model = rel_field.related_model();
     let ValueSplit { values, lists, nested } = map.split();
     let mut non_list_args = values.to_prisma_values();
     extend_defaults(&rel_model, &mut non_list_args);
@@ -84,12 +79,11 @@ fn attach_connect(
     map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
     rel_field: &RelationFieldRef,
-    rel_model: &ModelRef,
     top_level: OperationTag,
 ) -> CoreResult<()> {
     nested_write_queries.connects.push(NestedConnect {
         relation_field: Arc::clone(&rel_field),
-        where_: map.to_record_finder(Arc::clone(&rel_model)).unwrap(),
+        where_: map.to_record_finder(Arc::clone(&rel_field.related_model())).unwrap(),
         top_is_create: match top_level {
             OperationTag::CreateOne => true,
             _ => false,
@@ -102,12 +96,11 @@ fn attach_connect(
 fn attach_disconnect(
     map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
-    model: &ModelRef,
     rel_field: &RelationFieldRef,
 ) -> CoreResult<()> {
     nested_write_queries.disconnects.push(NestedDisconnect {
         relation_field: Arc::clone(&rel_field),
-        where_: map.to_record_finder(Arc::clone(&model)),
+        where_: map.to_record_finder(Arc::clone(&rel_field.related_model())),
     });
 
     Ok(())
@@ -119,9 +112,9 @@ fn attach_update(
     nested_write_queries: &mut NestedWriteQueries,
     model: &ModelRef,
     rel_field: &RelationFieldRef,
-    rel_model: &ModelRef,
     top_level: OperationTag,
 ) -> CoreResult<()> {
+    let rel_model = rel_field.related_model();
     let where_ = map.to_record_finder(Arc::clone(&model));
     let ValueSplit { values, lists, nested } = map.split();
 
@@ -144,8 +137,8 @@ fn attach_update_many(
     mut map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
     rel_field: &RelationFieldRef,
-    rel_model: &ModelRef,
 ) -> CoreResult<()> {
+    let rel_model = rel_field.related_model();
     let data = map.0.remove("data").map(|s| Ok(s)).unwrap_or_else(|| {
         Err(CoreError::QueryValidationError(
             "Malformed mutation: `data` section not found!".into(),
@@ -196,8 +189,8 @@ fn attach_delete_many(
     mut map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
     rel_field: &RelationFieldRef,
-    rel_model: &ModelRef,
 ) -> CoreResult<()> {
+    let rel_model = rel_field.related_model();
     let _ = map.0.remove("data").map(|s| Ok(s)).unwrap_or_else(|| {
         Err(CoreError::QueryValidationError(
             "Malformed mutation: `data` section not found!".into(),

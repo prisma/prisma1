@@ -32,14 +32,16 @@ impl SimpleNestedBuilder {
 
         let ValueSplit { values, lists, nested } = map.split();
         let f = model.fields().find_from_all(&name);
-        let (relation_field, relation_model) = match &f {
+        let (relation_field, related_model) = match &f {
             Ok(ModelField::Relation(f)) => (Arc::clone(&f), f.related_model()),
             wat => panic!("Invalid state: `{:#?}`", wat),
         };
 
+        println!("FOOBAR {:?} {:?} {:?}", f, relation_field, related_model);
+
         let mut non_list_args = values.clone().to_prisma_values();
         let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        let nested_writes = build_nested_root(&name, &nested, Arc::clone(&relation_model), top_level)?;
+        let nested_writes = build_nested_root(&name, &nested, Arc::clone(&related_model), top_level)?;
 
         match kind {
             "create" => {
@@ -65,7 +67,7 @@ impl SimpleNestedBuilder {
                     .push(NestedDeleteRecord { relation_field, where_ });
             }
             "connect" => {
-                let where_ = values.to_record_finder(Arc::clone(&relation_model)).map_or(
+                let where_ = values.to_record_finder(Arc::clone(&related_model)).map_or(
                     Err(CoreError::QueryValidationError("No `where` on connect".into())),
                     |w| Ok(w),
                 )?;
@@ -79,7 +81,7 @@ impl SimpleNestedBuilder {
                 });
             }
             "disconnect" => {
-                let where_ = values.to_record_finder(Arc::clone(&relation_model));
+                let where_ = values.to_record_finder(Arc::clone(&related_model));
                 nested_write_queries
                     .disconnects
                     .push(NestedDisconnect { relation_field, where_ });
@@ -110,7 +112,7 @@ impl SimpleNestedBuilder {
                 );
 
                 let filter =
-                    utils::extract_query_args_inner(wheree.iter().map(|(a, b)| (a, b)), Arc::clone(&relation_model))?
+                    utils::extract_query_args_inner(wheree.iter().map(|(a, b)| (a, b)), Arc::clone(&related_model))?
                         .filter;
 
                 nested_write_queries.update_manys.push(NestedUpdateManyRecords {
