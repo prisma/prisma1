@@ -171,7 +171,7 @@ impl QueryBuilder {
             .into_iter()
             .map(|val| match val {
                 ParsedValue::Single(inner) => inner,
-                _ => unreachable!(), // Objects are relations, which are handled separately and can't occur for scalar lists.
+                _ => unreachable!(), // Objects represent relations, which are handled separately and can't occur for scalar lists.
             })
             .collect();
 
@@ -188,12 +188,18 @@ impl QueryBuilder {
             .iter()
             .map(|field| {
                 // Find field in the passed object
-                // Check type
-                // If not present - take default of the input field TODO this needs to be implemented on the schema building as well!
-                // The type check will fail in the parse_value - nothing needs to be done here. Simply gather all the fields and return
-                unimplemented!()
+                match object.iter().find(|(k, v)| *k == &field.name) {
+                    Some((k, v)) => self
+                        .parse_value(Some(v), &field.field_type)
+                        .map(|parsed| (k.clone(), parsed)),
+                    None => {
+                        // If not present - take default of the input field TODO this needs to be implemented on the schema building as well!
+                        Err(QueryValidationError::FieldNotFoundError)
+                    }
+                }
             })
-            .collect()
+            .collect::<QueryBuilderResult<Vec<(String, ParsedValue)>>>()
+            .map(|tuples| tuples.into_iter().collect())
     }
 }
 
