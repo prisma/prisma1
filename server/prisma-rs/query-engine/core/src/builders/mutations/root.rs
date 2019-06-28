@@ -50,7 +50,6 @@ impl<'field> RootWriteQueryBuilder<'field> {
 
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
                     let nested_writes = build_nested_root(
-                        model.name.as_str(),
                         &nested,
                         Arc::clone(&model),
                         model_operation.operation,
@@ -68,7 +67,6 @@ impl<'field> RootWriteQueryBuilder<'field> {
                     let non_list_args = values.to_prisma_values().into();
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
                     let nested_writes = build_nested_root(
-                        model.name.as_str(),
                         &nested,
                         Arc::clone(&model),
                         model_operation.operation,
@@ -93,7 +91,6 @@ impl<'field> RootWriteQueryBuilder<'field> {
                     let non_list_args = values.to_prisma_values().into();
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
                     let nested_writes = build_nested_root(
-                        model.name.as_str(),
                         &nested,
                         Arc::clone(&model),
                         model_operation.operation,
@@ -138,7 +135,6 @@ impl<'field> RootWriteQueryBuilder<'field> {
 
                         let list_args = lists.into_iter().map(|la| la.convert()).collect();
                         let nested_writes = build_nested_root(
-                            model.name.as_str(),
                             &nested,
                             Arc::clone(&model),
                             model_operation.operation,
@@ -158,7 +154,6 @@ impl<'field> RootWriteQueryBuilder<'field> {
                         let non_list_args = values.to_prisma_values().into();
                         let list_args = lists.into_iter().map(|la| la.convert()).collect();
                         let nested_writes = build_nested_root(
-                            model.name.as_str(),
                             &nested,
                             Arc::clone(&model),
                             model_operation.operation,
@@ -235,7 +230,6 @@ fn parse_model_action(name: &str, query_schema: QuerySchemaRef) -> CoreResult<Mo
 
 /// Build nested writes for a given field/model (called recursively)
 pub(crate) fn build_nested_root<'f>(
-    name: &'f str,
     args: &'f ValueMap,
     model: ModelRef,
     top_level: OperationTag,

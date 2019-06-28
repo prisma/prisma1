@@ -28,10 +28,10 @@ impl ManyNestedBuilder {
 
         for map in many.into_iter() {
             match kind {
-                "create" => attach_create(name, map, write_queries, &rel_field, top_level)?,
+                "create" => attach_create(map, write_queries, &rel_field, top_level)?,
                 "connect" => attach_connect(map, write_queries, &rel_field,top_level)?,
                 "disconnect" => attach_disconnect(map, write_queries, &rel_field)?,
-                "update" => attach_update(name, map, write_queries, &rel_field, top_level)?,
+                "update" => attach_update(map, write_queries, &rel_field, top_level)?,
                 "updateMany" => attach_update_many(map, write_queries, &rel_field)?,
                 "delete" => attach_delete(map, write_queries, &model, &rel_field)?,
                 "deleteMany" => attach_delete_many(map, write_queries, &rel_field)?,
@@ -44,7 +44,6 @@ impl ManyNestedBuilder {
 }
 
 fn attach_create(
-    name: &str,
     map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
     rel_field: &RelationFieldRef,
@@ -59,7 +58,7 @@ fn attach_create(
     non_list_args.add_datetimes(Arc::clone(&rel_model));
 
     let list_args = lists.into_iter().map(|la| la.convert()).collect();
-    let nested_writes = build_nested_root(&name, &nested, Arc::clone(&rel_model), top_level)?;
+    let nested_writes = build_nested_root(&nested, Arc::clone(&rel_model), top_level)?;
 
     nested_write_queries.creates.push(NestedCreateRecord {
         non_list_args,
@@ -107,7 +106,6 @@ fn attach_disconnect(
 }
 
 fn attach_update(
-    name: &str,
     map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
     rel_field: &RelationFieldRef,
@@ -119,7 +117,7 @@ fn attach_update(
 
     let non_list_args = values.to_prisma_values().into();
     let list_args = lists.into_iter().map(|la| la.convert()).collect();
-    let nested_writes = build_nested_root(&name, &nested, Arc::clone(&rel_model), top_level)?;
+    let nested_writes = build_nested_root(&nested, Arc::clone(&rel_model), top_level)?;
 
     nested_write_queries.updates.push(NestedUpdateRecord {
         relation_field: Arc::clone(&rel_field),

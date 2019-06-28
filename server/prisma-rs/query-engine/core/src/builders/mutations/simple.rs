@@ -41,7 +41,7 @@ impl SimpleNestedBuilder {
 
         let mut non_list_args = values.clone().to_prisma_values();
         let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        let nested_writes = build_nested_root(&name, &nested, Arc::clone(&related_model), top_level)?;
+        let nested_writes = build_nested_root( &nested, Arc::clone(&related_model), top_level)?;
 
         match kind {
             "create" => {
@@ -158,7 +158,7 @@ impl UpsertNestedBuilder {
             non_list_args.add_datetimes(Arc::clone(&model));
 
             let list_args = lists.into_iter().map(|la| la.convert()).collect();
-            let nested_writes = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), top_level)?;
+            let nested_writes = build_nested_root(&nested, Arc::clone(&model), top_level)?;
             let relation_field = Arc::clone(&relation_field);
 
             NestedCreateRecord {
@@ -177,7 +177,7 @@ impl UpsertNestedBuilder {
             let ValueSplit { values, lists, nested } = update.split();
             let non_list_args = values.to_prisma_values().into();
             let list_args = lists.into_iter().map(|la| la.convert()).collect();
-            let nested_writes = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), top_level)?;
+            let nested_writes = build_nested_root(&nested, Arc::clone(&model), top_level)?;
             let relation_field = Arc::clone(&relation_field);
             let where_ = where_.clone();
 
