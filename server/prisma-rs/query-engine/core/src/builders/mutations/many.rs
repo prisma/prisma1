@@ -31,7 +31,7 @@ impl ManyNestedBuilder {
                 "create" => attach_create(name, map, write_queries, &rel_field, top_level)?,
                 "connect" => attach_connect(map, write_queries, &rel_field,top_level)?,
                 "disconnect" => attach_disconnect(map, write_queries, &rel_field)?,
-                "update" => attach_update(name, map, write_queries, &model, &rel_field, top_level)?,
+                "update" => attach_update(name, map, write_queries, &rel_field, top_level)?,
                 "updateMany" => attach_update_many(map, write_queries, &rel_field)?,
                 "delete" => attach_delete(map, write_queries, &model, &rel_field)?,
                 "deleteMany" => attach_delete_many(map, write_queries, &rel_field)?,
@@ -110,12 +110,11 @@ fn attach_update(
     name: &str,
     map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
-    model: &ModelRef,
     rel_field: &RelationFieldRef,
     top_level: OperationTag,
 ) -> CoreResult<()> {
     let rel_model = rel_field.related_model();
-    let where_ = map.to_record_finder(Arc::clone(&model));
+    let where_ = map.to_record_finder(Arc::clone(&rel_model));
     let ValueSplit { values, lists, nested } = map.split();
 
     let non_list_args = values.to_prisma_values().into();
