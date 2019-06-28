@@ -29,7 +29,7 @@ impl SimpleNestedBuilder {
             .or(Some(&map))
             .and_then(|m| m.to_record_finder(Arc::clone(&model)));
 
-        let ValueSplit { values, lists, nested } = map.split();
+        let ValueSplit { values, lists, nested } = map.clone().split();
         let f = model.fields().find_from_all(&relation_field_name);
         let (relation_field, related_model) = match &f {
             Ok(ModelField::Relation(f)) => (Arc::clone(&f), f.related_model()),
@@ -120,6 +120,22 @@ impl SimpleNestedBuilder {
                     filter,
                     non_list_args: non_list_args.into(),
                     list_args,
+                });
+            }
+            "deleteMany" => {
+                use graphql_parser::query::Value;
+                use std::collections::BTreeMap;
+                let mut wheree: BTreeMap<String, Value> = BTreeMap::new();
+                wheree.insert(
+                    "where".into(),
+                    Value::Object(map.0),
+                );
+                let filter =
+                    utils::extract_query_args_inner(wheree.iter().map(|(a, b)| (a, b)), Arc::clone(&related_model))?
+                        .filter;
+                nested_write_queries.delete_manys.push(NestedDeleteManyRecords {
+                    relation_field,
+                    filter,
                 });
             }
             _ => unimplemented!(),

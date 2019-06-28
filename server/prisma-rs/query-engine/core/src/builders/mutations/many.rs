@@ -186,18 +186,18 @@ fn attach_delete_many(
     nested_write_queries: &mut NestedWriteQueries,
     rel_field: &RelationFieldRef,
 ) -> CoreResult<()> {
+    use graphql_parser::query::Value;
+    use std::collections::BTreeMap;
+
     let rel_model = rel_field.related_model();
-    let _ = map.0.remove("data").map(|s| Ok(s)).unwrap_or_else(|| {
-        Err(CoreError::QueryValidationError(
-            "Malformed mutation: `data` section not found!".into(),
-        ))
-    })?;
+    let mut wheree: BTreeMap<String, Value> = BTreeMap::new();
+    wheree.insert(
+        "where".into(),
+        Value::Object(map.0),
+    );
 
     let filter = utils::extract_query_args_inner(
-        map.0
-            .iter()
-            .filter(|(arg, _)| arg.as_str() != "data")
-            .map(|(a, b)| (a, b)),
+        wheree.iter().map(|(a, b)| (a, b)),
         Arc::clone(&rel_model),
     )?
     .filter;
