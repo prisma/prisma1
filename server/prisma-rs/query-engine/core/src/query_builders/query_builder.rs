@@ -193,8 +193,11 @@ impl QueryBuilder {
                         .parse_value(Some(v), &field.field_type)
                         .map(|parsed| (k.clone(), parsed)),
                     None => {
-                        // If not present - take default of the input field TODO this needs to be implemented on the schema building as well!
-                        Err(QueryValidationError::FieldNotFoundError)
+                        // Find default value and use that one if the field can't be found.
+                        match field.default_value.clone().map(|def| (&field.name, def)) {
+                            Some((k, v)) => Ok((k.clone(), ParsedValue::Single(v))),
+                            None => Err(QueryValidationError::FieldNotFoundError),
+                        }
                     }
                 }
             })
