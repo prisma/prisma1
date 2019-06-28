@@ -266,15 +266,6 @@ impl ValueMap {
                                 map: ValueMap::from(&vec![]),
                             });
                         }
-                        // FIXME: The problem here is that we don't have information about what mutation "kind" we are dealing with
-                        //        anymore. That's why we just make some assumptions and call it "update" here
-                        Value::String(s) => {
-                            vec.push(NestedValue::Simple {
-                                name: self_name.to_owned(),
-                                kind: "update".into(),
-                                map: ValueMap::from(&vec![(action.clone(), Value::String(s.clone()))]),
-                            });
-                        }
                         value => panic!("Unreachable structure: {:?}", value),
                     }
                 }
