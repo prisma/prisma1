@@ -177,6 +177,7 @@ pub enum NestedValue {
 impl ValueMap {
     /// Extract mutation arguments from a value map
     pub fn eval_tree(&self, self_name: &str) -> Vec<NestedValue> {
+        println!("eval_tree");
         let mut vec = Vec::new();
 
         // Go through all the objects on this level
@@ -217,11 +218,29 @@ impl ValueMap {
                 } else {
                     match nested {
                         Value::Object(obj) => {
-                            vec.push(NestedValue::Simple {
-                                name: name.clone(),
-                                kind: action.clone(),
-                                map: ValueMap(obj.clone()),
-                            });
+                            if obj.contains_key("data") {
+                                let data = ValueMap(match obj.get("data") {
+                                    Some(Value::Object(o)) => o.clone(),
+                                    _ => unreachable!(),
+                                });
+                                let where_ = ValueMap(match obj.get("where") {
+                                    Some(Value::Object(o)) => o.clone(),
+                                    _ => unreachable!(),
+                                });
+
+                                vec.push(NestedValue::Block {
+                                    name: name.clone(),
+                                    kind: action.clone(),
+                                    data,
+                                    where_,
+                                });
+                            } else {
+                                vec.push(NestedValue::Simple {
+                                    name: name.clone(),
+                                    kind: action.clone(),
+                                    map: ValueMap(obj.clone()),
+                                });
+                            }
                         }
                         Value::List(list) => {
                             let mut buf = vec![];
