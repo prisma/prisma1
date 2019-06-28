@@ -229,8 +229,8 @@ fn parse_model_action(name: &str, query_schema: QuerySchemaRef) -> CoreResult<Mo
 }
 
 /// Build nested writes for a given field/model (called recursively)
-pub(crate) fn build_nested_root<'f>(
-    args: &'f ValueMap,
+pub(crate) fn build_nested_root(
+    args: &ValueMap,
     model: ModelRef,
     top_level: OperationTag,
 ) -> CoreResult<NestedWriteQueries> {

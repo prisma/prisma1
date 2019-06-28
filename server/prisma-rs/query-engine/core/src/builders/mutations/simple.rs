@@ -15,7 +15,7 @@ pub struct SimpleNestedBuilder;
 impl SimpleNestedBuilder {
     /// Build a set of nested value map writes and attach them to an existing write level
     pub fn build(
-        name: String,
+        relation_field_name: String,
         kind: String,
         map: ValueMap,
         nested_write_queries: &mut NestedWriteQueries,
@@ -30,7 +30,7 @@ impl SimpleNestedBuilder {
             .and_then(|m| m.to_record_finder(Arc::clone(&model)));
 
         let ValueSplit { values, lists, nested } = map.split();
-        let f = model.fields().find_from_all(&name);
+        let f = model.fields().find_from_all(&relation_field_name);
         let (relation_field, related_model) = match &f {
             Ok(ModelField::Relation(f)) => (Arc::clone(&f), f.related_model()),
             wat => panic!("Invalid state: `{:#?}`", wat),

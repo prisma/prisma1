@@ -15,16 +15,15 @@ pub struct ManyNestedBuilder;
 impl ManyNestedBuilder {
     /// Build a set of nested value map writes and attach them to an existing write level
     pub fn build(
-        name: String,
+        relation_field_name: String,
         kind: String,
         many: impl Iterator<Item = ValueMap>,
         write_queries: &mut NestedWriteQueries,
         model: ModelRef,
         top_level: OperationTag,
     ) -> CoreResult<()> {
-        let name = name.as_str();
         let kind = kind.as_str();
-        let rel_field = model.fields().find_from_relation_fields(&name).unwrap();
+        let rel_field = model.fields().find_from_relation_fields(&relation_field_name).unwrap();
 
         for map in many.into_iter() {
             match kind {
