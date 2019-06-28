@@ -23,7 +23,6 @@ impl SimpleNestedBuilder {
         where_map: Option<ValueMap>,
         top_level: OperationTag,
     ) -> CoreResult<()> {
-        let name = name.as_str();
         let kind = kind.as_str();
         let where_ = where_map
             .as_ref()
@@ -41,10 +40,10 @@ impl SimpleNestedBuilder {
 
         let mut non_list_args = values.clone().to_prisma_values();
         let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        let nested_writes = build_nested_root( &nested, Arc::clone(&related_model), top_level)?;
 
         match kind {
             "create" => {
+                let nested_writes = build_nested_root( &nested, Arc::clone(&related_model), top_level)?;
                 extend_defaults(&model, &mut non_list_args);
 
                 let mut non_list_args: PrismaArgs = non_list_args.into();
@@ -87,6 +86,7 @@ impl SimpleNestedBuilder {
                     .push(NestedDisconnect { relation_field, where_ });
             }
             "update" => {
+                let nested_writes = build_nested_root( &nested, Arc::clone(&related_model), top_level)?;
                 nested_write_queries.updates.push(NestedUpdateRecord {
                     relation_field,
                     non_list_args: non_list_args.into(),
