@@ -177,6 +177,7 @@ pub enum NestedValue {
 impl ValueMap {
     /// Extract mutation arguments from a value map
     pub fn eval_tree(&self, self_name: &str) -> Vec<NestedValue> {
+        println!("eval_tree");
         let mut vec = Vec::new();
 
         // Go through all the objects on this level
@@ -217,11 +218,29 @@ impl ValueMap {
                 } else {
                     match nested {
                         Value::Object(obj) => {
-                            vec.push(NestedValue::Simple {
-                                name: name.clone(),
-                                kind: action.clone(),
-                                map: ValueMap(obj.clone()),
-                            });
+                            if obj.contains_key("data") {
+                                let data = ValueMap(match obj.get("data") {
+                                    Some(Value::Object(o)) => o.clone(),
+                                    _ => unreachable!(),
+                                });
+                                let where_ = ValueMap(match obj.get("where") {
+                                    Some(Value::Object(o)) => o.clone(),
+                                    _ => unreachable!(),
+                                });
+
+                                vec.push(NestedValue::Block {
+                                    name: name.clone(),
+                                    kind: action.clone(),
+                                    data,
+                                    where_,
+                                });
+                            } else {
+                                vec.push(NestedValue::Simple {
+                                    name: name.clone(),
+                                    kind: action.clone(),
+                                    map: ValueMap(obj.clone()),
+                                });
+                            }
                         }
                         Value::List(list) => {
                             let mut buf = vec![];
@@ -264,15 +283,6 @@ impl ValueMap {
                                 name: name.clone(),
                                 kind: action.clone(),
                                 map: ValueMap::from(&vec![]),
-                            });
-                        }
-                        // FIXME: The problem here is that we don't have information about what mutation "kind" we are dealing with
-                        //        anymore. That's why we just make some assumptions and call it "update" here
-                        Value::String(s) => {
-                            vec.push(NestedValue::Simple {
-                                name: self_name.to_owned(),
-                                kind: "update".into(),
-                                map: ValueMap::from(&vec![(action.clone(), Value::String(s.clone()))]),
                             });
                         }
                         value => panic!("Unreachable structure: {:?}", value),

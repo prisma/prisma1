@@ -14,31 +14,25 @@ pub struct ManyNestedBuilder;
 impl ManyNestedBuilder {
     /// Build a set of nested value map writes and attach them to an existing write level
     pub fn build(
-        name: String,
+        relation_field_name: String,
         kind: String,
         many: impl Iterator<Item = ValueMap>,
         write_queries: &mut NestedWriteQueries,
         model: ModelRef,
         top_level: OperationTag,
     ) -> CoreResult<()> {
-        let name = name.as_str();
         let kind = kind.as_str();
-
-        let field = model.fields().find_from_all(&name).unwrap();
-        let (rel_field, rel_model) = match &field {
-            Field::Relation(f) => (Arc::clone(&f), f.related_model()),
-            _ => unimplemented!(),
-        };
+        let rel_field = model.fields().find_from_relation_fields(&relation_field_name).unwrap();
 
         for map in many.into_iter() {
             match kind {
-                "create" => attach_create(name, map, write_queries, &rel_field, &rel_model, top_level)?,
-                "connect" => attach_connect(map, write_queries, &rel_field, &rel_model, top_level)?,
-                "disconnect" => attach_disconnect(map, write_queries, &model, &rel_field)?,
-                "update" => attach_update(name, map, write_queries, &model, &rel_field, &rel_model, top_level)?,
-                "updateMany" => attach_update_many(map, write_queries, &rel_field, &rel_model)?,
+                "create" => attach_create(map, write_queries, &rel_field, top_level)?,
+                "connect" => attach_connect(map, write_queries, &rel_field, top_level)?,
+                "disconnect" => attach_disconnect(map, write_queries, &rel_field)?,
+                "update" => attach_update(map, write_queries, &rel_field, top_level)?,
+                "updateMany" => attach_update_many(map, write_queries, &rel_field)?,
                 "delete" => attach_delete(map, write_queries, &model, &rel_field)?,
-                "deleteMany" => attach_delete_many(map, write_queries, &rel_field, &rel_model)?,
+                "deleteMany" => attach_delete_many(map, write_queries, &rel_field)?,
                 verb => panic!("Invalid verb {:?}", verb),
             };
         }
@@ -48,13 +42,12 @@ impl ManyNestedBuilder {
 }
 
 fn attach_create(
-    name: &str,
     map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
     rel_field: &RelationFieldRef,
-    rel_model: &ModelRef,
     top_level: OperationTag,
 ) -> CoreResult<()> {
+    let rel_model = rel_field.related_model();
     let ValueSplit { values, lists, nested } = map.split();
     let mut non_list_args = values.to_prisma_values();
     extend_defaults(&rel_model, &mut non_list_args);
@@ -63,7 +56,7 @@ fn attach_create(
     non_list_args.add_datetimes(Arc::clone(&rel_model));
 
     let list_args = lists.into_iter().map(|la| la.convert()).collect();
-    let nested_writes = build_nested_root(&name, &nested, Arc::clone(&rel_model), top_level)?;
+    let nested_writes = build_nested_root(&nested, Arc::clone(&rel_model), top_level)?;
 
     nested_write_queries.creates.push(NestedCreateRecord {
         non_list_args,
@@ -83,12 +76,11 @@ fn attach_connect(
     map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
     rel_field: &RelationFieldRef,
-    rel_model: &ModelRef,
     top_level: OperationTag,
 ) -> CoreResult<()> {
     nested_write_queries.connects.push(NestedConnect {
         relation_field: Arc::clone(&rel_field),
-        where_: map.to_record_finder(Arc::clone(&rel_model)).unwrap(),
+        where_: map.to_record_finder(Arc::clone(&rel_field.related_model())).unwrap(),
         top_is_create: match top_level {
             OperationTag::CreateOne => true,
             _ => false,
@@ -101,32 +93,29 @@ fn attach_connect(
 fn attach_disconnect(
     map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
-    model: &ModelRef,
     rel_field: &RelationFieldRef,
 ) -> CoreResult<()> {
     nested_write_queries.disconnects.push(NestedDisconnect {
         relation_field: Arc::clone(&rel_field),
-        where_: map.to_record_finder(Arc::clone(&model)),
+        where_: map.to_record_finder(Arc::clone(&rel_field.related_model())),
     });
 
     Ok(())
 }
 
 fn attach_update(
-    name: &str,
     map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
-    model: &ModelRef,
     rel_field: &RelationFieldRef,
-    rel_model: &ModelRef,
     top_level: OperationTag,
 ) -> CoreResult<()> {
-    let where_ = map.to_record_finder(Arc::clone(&model));
+    let rel_model = rel_field.related_model();
+    let where_ = map.to_record_finder(Arc::clone(&rel_model));
     let ValueSplit { values, lists, nested } = map.split();
 
     let non_list_args = values.to_prisma_values().into();
     let list_args = lists.into_iter().map(|la| la.convert()).collect();
-    let nested_writes = build_nested_root(&name, &nested, Arc::clone(&rel_model), top_level)?;
+    let nested_writes = build_nested_root(&nested, Arc::clone(&rel_model), top_level)?;
 
     nested_write_queries.updates.push(NestedUpdateRecord {
         relation_field: Arc::clone(&rel_field),
@@ -143,8 +132,8 @@ fn attach_update_many(
     mut map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
     rel_field: &RelationFieldRef,
-    rel_model: &ModelRef,
 ) -> CoreResult<()> {
+    let rel_model = rel_field.related_model();
     let data = map.0.remove("data").map(|s| Ok(s)).unwrap_or_else(|| {
         Err(CoreError::LegacyQueryValidationError(
             "Malformed mutation: `data` section not found!".into(),
@@ -195,22 +184,15 @@ fn attach_delete_many(
     mut map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
     rel_field: &RelationFieldRef,
-    rel_model: &ModelRef,
 ) -> CoreResult<()> {
-    let _ = map.0.remove("data").map(|s| Ok(s)).unwrap_or_else(|| {
-        Err(CoreError::LegacyQueryValidationError(
-            "Malformed mutation: `data` section not found!".into(),
-        ))
-    })?;
+    use graphql_parser::query::Value;
+    use std::collections::BTreeMap;
 
-    let filter = utils::extract_query_args_inner(
-        map.0
-            .iter()
-            .filter(|(arg, _)| arg.as_str() != "data")
-            .map(|(a, b)| (a, b)),
-        Arc::clone(&rel_model),
-    )?
-    .filter;
+    let rel_model = rel_field.related_model();
+    let mut wheree: BTreeMap<String, Value> = BTreeMap::new();
+    wheree.insert("where".into(), Value::Object(map.0));
+
+    let filter = utils::extract_query_args_inner(wheree.iter().map(|(a, b)| (a, b)), Arc::clone(&rel_model))?.filter;
 
     nested_write_queries.delete_manys.push(NestedDeleteManyRecords {
         relation_field: Arc::clone(&rel_field),

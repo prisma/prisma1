@@ -14,7 +14,7 @@ pub struct SimpleNestedBuilder;
 impl SimpleNestedBuilder {
     /// Build a set of nested value map writes and attach them to an existing write level
     pub fn build(
-        name: String,
+        relation_field_name: String,
         kind: String,
         map: ValueMap,
         nested_write_queries: &mut NestedWriteQueries,
@@ -22,26 +22,27 @@ impl SimpleNestedBuilder {
         where_map: Option<ValueMap>,
         top_level: OperationTag,
     ) -> CoreResult<()> {
-        let name = name.as_str();
         let kind = kind.as_str();
         let where_ = where_map
             .as_ref()
             .or(Some(&map))
             .and_then(|m| m.to_record_finder(Arc::clone(&model)));
 
-        let ValueSplit { values, lists, nested } = map.split();
-        let f = model.fields().find_from_all(&name);
-        let (relation_field, relation_model) = match &f {
+        let ValueSplit { values, lists, nested } = map.clone().split();
+        let f = model.fields().find_from_all(&relation_field_name);
+        let (relation_field, related_model) = match &f {
             Ok(ModelField::Relation(f)) => (Arc::clone(&f), f.related_model()),
             wat => panic!("Invalid state: `{:#?}`", wat),
         };
 
+        println!("FOOBAR {:?} {:?} {:?}", f, relation_field, related_model);
+
         let mut non_list_args = values.clone().to_prisma_values();
         let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        let nested_writes = build_nested_root(&name, &nested, Arc::clone(&relation_model), top_level)?;
 
         match kind {
             "create" => {
+                let nested_writes = build_nested_root(&nested, Arc::clone(&related_model), top_level)?;
                 extend_defaults(&model, &mut non_list_args);
 
                 let mut non_list_args: PrismaArgs = non_list_args.into();
@@ -64,7 +65,7 @@ impl SimpleNestedBuilder {
                     .push(NestedDeleteRecord { relation_field, where_ });
             }
             "connect" => {
-                let where_ = values.to_record_finder(Arc::clone(&relation_model)).map_or(
+                let where_ = values.to_record_finder(Arc::clone(&related_model)).map_or(
                     Err(CoreError::LegacyQueryValidationError("No `where` on connect".into())),
                     |w| Ok(w),
                 )?;
@@ -78,12 +79,13 @@ impl SimpleNestedBuilder {
                 });
             }
             "disconnect" => {
-                let where_ = values.to_record_finder(Arc::clone(&relation_model));
+                let where_ = values.to_record_finder(Arc::clone(&related_model));
                 nested_write_queries
                     .disconnects
                     .push(NestedDisconnect { relation_field, where_ });
             }
             "update" => {
+                let nested_writes = build_nested_root(&nested, Arc::clone(&related_model), top_level)?;
                 nested_write_queries.updates.push(NestedUpdateRecord {
                     relation_field,
                     non_list_args: non_list_args.into(),
@@ -111,7 +113,7 @@ impl SimpleNestedBuilder {
                 );
 
                 let filter =
-                    utils::extract_query_args_inner(wheree.iter().map(|(a, b)| (a, b)), Arc::clone(&relation_model))?
+                    utils::extract_query_args_inner(wheree.iter().map(|(a, b)| (a, b)), Arc::clone(&related_model))?
                         .filter;
 
                 nested_write_queries.update_manys.push(NestedUpdateManyRecords {
@@ -120,6 +122,18 @@ impl SimpleNestedBuilder {
                     non_list_args: non_list_args.into(),
                     list_args,
                 });
+            }
+            "deleteMany" => {
+                use graphql_parser::query::Value;
+                use std::collections::BTreeMap;
+                let mut wheree: BTreeMap<String, Value> = BTreeMap::new();
+                wheree.insert("where".into(), Value::Object(map.0));
+                let filter =
+                    utils::extract_query_args_inner(wheree.iter().map(|(a, b)| (a, b)), Arc::clone(&related_model))?
+                        .filter;
+                nested_write_queries
+                    .delete_manys
+                    .push(NestedDeleteManyRecords { relation_field, filter });
             }
             _ => unimplemented!(),
         };
@@ -157,7 +171,7 @@ impl UpsertNestedBuilder {
             non_list_args.add_datetimes(Arc::clone(&model));
 
             let list_args = lists.into_iter().map(|la| la.convert()).collect();
-            let nested_writes = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), top_level)?;
+            let nested_writes = build_nested_root(&nested, Arc::clone(&model), top_level)?;
             let relation_field = Arc::clone(&relation_field);
 
             NestedCreateRecord {
@@ -176,7 +190,7 @@ impl UpsertNestedBuilder {
             let ValueSplit { values, lists, nested } = update.split();
             let non_list_args = values.to_prisma_values().into();
             let list_args = lists.into_iter().map(|la| la.convert()).collect();
-            let nested_writes = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), top_level)?;
+            let nested_writes = build_nested_root(&nested, Arc::clone(&model), top_level)?;
             let relation_field = Arc::clone(&relation_field);
             let where_ = where_.clone();
 

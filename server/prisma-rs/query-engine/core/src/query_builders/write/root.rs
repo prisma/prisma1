@@ -9,7 +9,10 @@ use crate::{
     schema::{ModelOperation, OperationTag},
     CoreError, CoreResult, QuerySchemaRef,
 };
-use connector::{filter::RecordFinder, write_ast::*};
+use connector::{
+    filter::{Filter, RecordFinder},
+    write_ast::*,
+};
 use graphql_parser::query::{Field, Value};
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue, Project};
 use std::{collections::BTreeMap, sync::Arc};
@@ -49,12 +52,7 @@ impl<'field> RootWriteQueryBuilder<'field> {
                 non_list_args.add_datetimes(Arc::clone(&model));
 
                 let list_args = lists.into_iter().map(|la| la.convert()).collect();
-                let nested_writes = build_nested_root(
-                    model.name.as_str(),
-                    &nested,
-                    Arc::clone(&model),
-                    model_operation.operation,
-                )?;
+                let nested_writes = build_nested_root(&nested, Arc::clone(&model), model_operation.operation)?;
 
                 RootWriteQuery::CreateRecord(CreateRecord {
                     model: Arc::clone(&model),
@@ -67,12 +65,7 @@ impl<'field> RootWriteQueryBuilder<'field> {
                 let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
                 let non_list_args = values.to_prisma_values().into();
                 let list_args = lists.into_iter().map(|la| la.convert()).collect();
-                let nested_writes = build_nested_root(
-                    model.name.as_str(),
-                    &nested,
-                    Arc::clone(&model),
-                    model_operation.operation,
-                )?;
+                let nested_writes = build_nested_root(&nested, Arc::clone(&model), model_operation.operation)?;
 
                 let where_ = ValueMap(shift_data(&args, "where")?)
                     .to_record_finder(Arc::clone(&model))
@@ -92,19 +85,10 @@ impl<'field> RootWriteQueryBuilder<'field> {
                 let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
                 let non_list_args = values.to_prisma_values().into();
                 let list_args = lists.into_iter().map(|la| la.convert()).collect();
-                let nested_writes = build_nested_root(
-                    model.name.as_str(),
-                    &nested,
-                    Arc::clone(&model),
-                    model_operation.operation,
-                )?;
+                let nested_writes = build_nested_root(&nested, Arc::clone(&model), model_operation.operation)?;
 
                 let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
-                let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
-                    Err(CoreError::LegacyQueryValidationError(
-                        "Required filters not found!".into(),
-                    ))
-                })?;
+                let filter = query_args.filter.unwrap_or(Filter::empty());
 
                 RootWriteQuery::UpdateManyRecords(UpdateManyRecords {
                     model: Arc::clone(&model),
@@ -125,11 +109,7 @@ impl<'field> RootWriteQueryBuilder<'field> {
             }
             OperationTag::DeleteMany => {
                 let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
-                let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
-                    Err(CoreError::LegacyQueryValidationError(
-                        "Required filters not found!".into(),
-                    ))
-                })?;
+                let filter = query_args.filter.unwrap_or(Filter::empty());
 
                 RootWriteQuery::DeleteManyRecords(DeleteManyRecords { model, filter })
             }
@@ -145,12 +125,7 @@ impl<'field> RootWriteQueryBuilder<'field> {
                     non_list_args.add_datetimes(Arc::clone(&model));
 
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
-                    let nested_writes = build_nested_root(
-                        model.name.as_str(),
-                        &nested,
-                        Arc::clone(&model),
-                        model_operation.operation,
-                    )?;
+                    let nested_writes = build_nested_root(&nested, Arc::clone(&model), model_operation.operation)?;
                     let model = Arc::clone(&model);
 
                     CreateRecord {
@@ -165,12 +140,7 @@ impl<'field> RootWriteQueryBuilder<'field> {
                     let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "update")?).split();
                     let non_list_args = values.to_prisma_values().into();
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
-                    let nested_writes = build_nested_root(
-                        model.name.as_str(),
-                        &nested,
-                        Arc::clone(&model),
-                        model_operation.operation,
-                    )?;
+                    let nested_writes = build_nested_root(&nested, Arc::clone(&model), model_operation.operation)?;
                     let where_ = where_.clone();
 
                     UpdateRecord {
@@ -242,9 +212,8 @@ fn parse_model_action(name: &str, query_schema: QuerySchemaRef) -> CoreResult<Mo
 }
 
 /// Build nested writes for a given field/model (called recursively)
-pub(crate) fn build_nested_root<'f>(
-    name: &'f str,
-    args: &'f ValueMap,
+pub(crate) fn build_nested_root(
+    args: &ValueMap,
     model: ModelRef,
     top_level: OperationTag,
 ) -> CoreResult<NestedWriteQueries> {
