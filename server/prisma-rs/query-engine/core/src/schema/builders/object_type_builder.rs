@@ -143,11 +143,11 @@ impl<'a> ObjectTypeBuilder<'a> {
         vec![
             self.where_argument(&model),
             self.order_by_argument(&model),
-            argument("skip", InputType::opt(InputType::int())),
-            argument("after", InputType::opt(InputType::string())),
-            argument("before", InputType::opt(InputType::string())),
-            argument("first", InputType::opt(InputType::int())),
-            argument("last", InputType::opt(InputType::int())),
+            argument("skip", InputType::opt(InputType::int()), None),
+            argument("after", InputType::opt(InputType::string()), None),
+            argument("before", InputType::opt(InputType::string()), None),
+            argument("first", InputType::opt(InputType::int()), None),
+            argument("last", InputType::opt(InputType::int()), None),
         ]
     }
 
@@ -158,7 +158,7 @@ impl<'a> ObjectTypeBuilder<'a> {
             .into_arc()
             .filter_object_type(Arc::clone(model));
 
-        argument("where", InputType::opt(InputType::object(where_object)))
+        argument("where", InputType::opt(InputType::object(where_object)), None)
     }
 
     // Builds "orderBy" argument.
@@ -187,7 +187,7 @@ impl<'a> ObjectTypeBuilder<'a> {
         let enum_name = format!("{}OrderByInput", model.name);
         let enum_type = enum_type(enum_name, enum_values);
 
-        argument("orderBy", InputType::opt(enum_type.into()))
+        argument("orderBy", InputType::opt(enum_type.into()), None)
     }
 
     pub fn map_enum_field(scalar_field: &Arc<ScalarField>) -> EnumType {

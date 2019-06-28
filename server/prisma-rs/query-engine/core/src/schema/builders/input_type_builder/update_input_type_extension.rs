@@ -41,9 +41,13 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
             .filter(|f| f.is_writable())
             .collect();
 
-        self.scalar_input_fields(model.name.clone(), "Update", scalar_fields, |f: ScalarFieldRef| {
-            self.map_optional_input_type(f)
-        })
+        self.scalar_input_fields(
+            model.name.clone(),
+            "Update",
+            scalar_fields,
+            |f: ScalarFieldRef| self.map_optional_input_type(f),
+            false,
+        )
     }
 
     /// For update input types only. Compute input fields for relational fields.
@@ -117,6 +121,7 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
                     Some(input_field(
                         rf.name.clone(),
                         InputType::opt(InputType::object(input_object)),
+                        None,
                     ))
                 }
             })
@@ -127,7 +132,7 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
     fn nested_upsert_field(&self, field: RelationFieldRef) -> Option<InputField> {
         self.nested_upsert_input_object(Arc::clone(&field)).map(|input_object| {
             let input_type = Self::wrap_list_input_object_type(input_object, field.is_list);
-            input_field("upsert", input_type)
+            input_field("upsert", input_type, None)
         })
     }
 
@@ -171,9 +176,9 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
                 self.cache(type_name, Arc::clone(&input_object));
 
                 let fields = vec![
-                    input_field("where", InputType::object(where_object)),
-                    input_field("update", InputType::object(update_object)),
-                    input_field("create", InputType::object(create_object)),
+                    input_field("where", InputType::object(where_object), None),
+                    input_field("update", InputType::object(update_object), None),
+                    input_field("create", InputType::object(create_object), None),
                 ];
 
                 input_object.set_fields(fields);
@@ -212,8 +217,8 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
                 self.cache(type_name, Arc::clone(&input_object));
 
                 let fields = vec![
-                    input_field("update", InputType::object(update_object)),
-                    input_field("create", InputType::object(create_object)),
+                    input_field("update", InputType::object(update_object), None),
+                    input_field("create", InputType::object(create_object), None),
                 ];
 
                 input_object.set_fields(fields);
@@ -231,7 +236,7 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
                 .scalar_filter_object_type(field.related_model());
             let input_type = InputType::opt(InputType::list(InputType::object(input_object)));
 
-            Some(input_field("deleteMany", input_type))
+            Some(input_field("deleteMany", input_type, None))
         } else {
             None
         }
@@ -241,7 +246,7 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
     fn nested_update_many_field(&self, field: RelationFieldRef) -> Option<InputField> {
         self.nested_update_many_input_object(field).map(|input_object| {
             let input_type = InputType::opt(InputType::list(InputType::object(input_object)));
-            input_field("updateMany", input_type)
+            input_field("updateMany", input_type, None)
         })
     }
 
@@ -262,8 +267,8 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
                         .scalar_filter_object_type(related_model);
 
                     input_object.set_fields(vec![
-                        input_field("where", InputType::object(where_input_object)),
-                        input_field("data", InputType::object(data_input_object)),
+                        input_field("where", InputType::object(where_input_object), None),
+                        input_field("data", InputType::object(data_input_object), None),
                     ]);
 
                     Some(Arc::downgrade(&input_object))
@@ -289,7 +294,7 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
         match (field.related_model().is_embedded, field.is_list, field.is_required) {
             (true, _, _) => None,
             (false, true, _) => Some(self.where_input_field("disconnect", field)),
-            (false, false, false) => Some(input_field("disconnect", InputType::opt(InputType::boolean()))),
+            (false, false, false) => Some(input_field("disconnect", InputType::opt(InputType::boolean()), None)),
             (false, false, true) => None,
         }
     }
@@ -298,7 +303,7 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
     fn nested_delete_input_field(&self, field: RelationFieldRef) -> Option<InputField> {
         match (field.is_list, field.is_required) {
             (true, _) => Some(self.where_input_field("delete", field)),
-            (false, false) => Some(input_field("delete", InputType::opt(InputType::boolean()))),
+            (false, false) => Some(input_field("delete", InputType::opt(InputType::boolean()), None)),
             (false, true) => None,
         }
     }
@@ -307,7 +312,7 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
         let input_object = self.input_object_type_nested_update(Arc::clone(&field));
         let input_object = Self::wrap_list_input_object_type(input_object, field.is_list);
 
-        input_field("update", input_object)
+        input_field("update", input_object, None)
     }
 
     /// Builds "<x>UpdateWithWhereUniqueNestedInput" / "<x>UpdateWithWhereUniqueWithout<y>Input" input object types.
@@ -332,8 +337,8 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
             self.cache(type_name, Arc::clone(&input_object));
 
             let fields = vec![
-                input_field("where", InputType::object(where_input_object)),
-                input_field("data", InputType::object(nested_input_object)),
+                input_field("where", InputType::object(where_input_object), None),
+                input_field("data", InputType::object(nested_input_object), None),
             ];
 
             input_object.set_fields(fields);

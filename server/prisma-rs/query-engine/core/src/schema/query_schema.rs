@@ -1,6 +1,6 @@
 use super::*;
 use once_cell::sync::OnceCell;
-use prisma_models::{InternalDataModelRef, ModelRef, OrderBy, ScalarField, SortOrder};
+use prisma_models::{InternalDataModelRef, ModelRef, OrderBy, PrismaValue, ScalarField, SortOrder};
 use std::{
     boxed::Box,
     sync::{Arc, Weak},
@@ -192,8 +192,7 @@ pub enum OperationTag {
 pub struct Argument {
     pub name: String,
     pub argument_type: InputType,
-    // pub default_value: Option<>... todo: Do we need that?
-    // FromInput conversion -> Take a look at that.
+    pub default_value: Option<PrismaValue>,
 }
 
 #[derive(DebugStub)]
@@ -223,8 +222,7 @@ impl InputObjectType {
 pub struct InputField {
     pub name: String,
     pub field_type: InputType,
-    // pub default_value: Option<>... todo: Do we need that?
-    // FromInput conversion -> Take a look at that.
+    pub default_value: Option<PrismaValue>,
 }
 
 #[derive(Debug, Clone)]

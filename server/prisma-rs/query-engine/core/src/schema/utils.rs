@@ -1,6 +1,6 @@
 use super::*;
 use once_cell::sync::OnceCell;
-use prisma_models::InternalEnum;
+use prisma_models::{InternalEnum, PrismaValue};
 
 /// Object type initializer for cases where only the name is known, and fields are computed later.
 pub fn init_object_type<T>(name: T) -> ObjectType
@@ -61,13 +61,14 @@ where
 }
 
 /// Argument convenience wrapper function.
-pub fn argument<T>(name: T, arg_type: InputType) -> Argument
+pub fn argument<T>(name: T, arg_type: InputType, default_value: Option<PrismaValue>) -> Argument
 where
     T: Into<String>,
 {
     Argument {
         name: name.into(),
         argument_type: arg_type,
+        default_value,
     }
 }
 
@@ -85,13 +86,14 @@ where
 }
 
 /// Field convenience wrapper function.
-pub fn input_field<T>(name: T, field_type: InputType) -> InputField
+pub fn input_field<T>(name: T, field_type: InputType, default_value: Option<PrismaValue>) -> InputField
 where
     T: Into<String>,
 {
     InputField {
         name: name.into(),
         field_type,
+        default_value,
     }
 }
 

@@ -25,7 +25,7 @@ impl<'a> ArgumentBuilder<'a> {
         if input_object_type.into_arc().is_empty() {
             None
         } else {
-            Some(argument("where", InputType::object(input_object_type)))
+            Some(argument("where", InputType::object(input_object_type), None))
         }
     }
 
@@ -36,7 +36,7 @@ impl<'a> ArgumentBuilder<'a> {
         if input_object_type.into_arc().is_empty() {
             None
         } else {
-            Some(vec![argument("data", InputType::object(input_object_type))])
+            Some(vec![argument("data", InputType::object(input_object_type), None)])
         }
     }
 
@@ -51,7 +51,7 @@ impl<'a> ArgumentBuilder<'a> {
             let input_object = self.input_type_builder.into_arc().update_input_type(model);
             let input_object_type = InputType::object(input_object);
 
-            vec![argument("data", input_object_type), unique_arg]
+            vec![argument("data", input_object_type, None), unique_arg]
         })
     }
 
@@ -70,8 +70,8 @@ impl<'a> ArgumentBuilder<'a> {
                 } else {
                     Some(vec![
                         where_unique_arg,
-                        argument("create", InputType::object(create_type)),
-                        argument("update", InputType::object(update_type)),
+                        argument("create", InputType::object(create_type), None),
+                        argument("update", InputType::object(update_type), None),
                     ])
                 }
             })
@@ -86,7 +86,7 @@ impl<'a> ArgumentBuilder<'a> {
 
         let where_arg = self.object_type_builder.into_arc().where_argument(&model);
 
-        vec![argument("data", InputType::object(update_object)), where_arg]
+        vec![argument("data", InputType::object(update_object), None), where_arg]
     }
 
     /// Builds "where" argument intended for the delete many field.
