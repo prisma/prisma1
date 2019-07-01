@@ -46,7 +46,7 @@ impl QueryBuilder {
                                 // If argument is not present but is not optional -> error
                                 // If argument is present but not in the list -> error
 
-                                // Might be an fn on the field
+                                // Might be a fn on the field
                                 let selection_arg: Option<&(String, QueryValue)> = selection
                                     .arguments
                                     .iter()
@@ -90,7 +90,6 @@ impl QueryBuilder {
         unimplemented!()
     }
 
-    /// Todo: Handle defaults!
     /// Parses and validates a QueryValue against an InputType, recursively.
     /// Some(value) indicates that a value is present in the query, None indicates that no value was provided.
     /// Special case is Some(Null). In that case an explicit null was provided, which is, however, treated
