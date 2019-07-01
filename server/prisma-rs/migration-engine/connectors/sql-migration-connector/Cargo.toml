@@ -11,7 +11,7 @@ prisma-models = { path = "../../../prisma-models" }
 chrono = { version = "0.4" }
 serde_json = "1.0"
 serde = "1.0"
-rusqlite = { git = "https://github.com/pimeys/rusqlite", features = ["chrono", "bundled"] }
+rusqlite = { version = "0.19", features = ["chrono", "bundled"] }
 prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 barrel = { version = "0.6.2", features = ["sqlite3", "mysql", "pg"] }
 itertools = "0.8"
