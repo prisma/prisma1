@@ -1802,7 +1802,7 @@ dependencies = [
 [[package]]
 name = "prisma-query"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-query.git#e34b0162c17d21286b86c7fc1b654048afe6a66a"
+source = "git+https://github.com/prisma/prisma-query.git#2e4adf03f516ced55496dbfebbfc810ea0db1aa4"
 dependencies = [
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
