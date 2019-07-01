@@ -18,13 +18,6 @@ case class QueryEngineResponse(status: Int, body: String) {
 case class ApiTestServer() extends PlayJsonExtensions {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val prismaBinaryPath: String = sys.env.getOrElse("PRISMA_BINARY_PATH", sys.error("Required PRISMA_BINARY_PATH env var not found"))
-  // TODO: adapt this
-  val server_root = sys.env
-    .get("SERVER_ROOT")
-    .orElse(sys.env.get("BUILDKITE_BUILD_CHECKOUT_PATH").map(path => s"$path/server"))
-    .getOrElse(sys.error("Unable to resolve server root path"))
-
   def query(
       query: String,
       project: Project,
@@ -85,11 +78,13 @@ case class ApiTestServer() extends PlayJsonExtensions {
   private def startPrismaProcess(project: Project): java.lang.Process = {
     import java.lang.ProcessBuilder.Redirect
 
-    val pb         = new java.lang.ProcessBuilder(prismaBinaryPath, "--legacy")
+    // TODO: discuss with Dom whether we want to keep the legacy mode
+    val pb         = new java.lang.ProcessBuilder(EnvVars.prismaBinaryPath, "--legacy")
     val workingDir = new java.io.File(".")
 
+    val fullDataModel = project.dataModelWithDataSourceConfig
     // Important: Rust requires UTF-8 encoding (encodeToString uses Latin-1)
-    val encoded = Base64.getEncoder.encode(Json.toJson(project.dataModel).toString().getBytes(StandardCharsets.UTF_8))
+    val encoded = Base64.getEncoder.encode(fullDataModel.getBytes(StandardCharsets.UTF_8))
     val envVar  = new String(encoded, StandardCharsets.UTF_8)
 
     pb.environment.put("PRISMA_DML", envVar)
@@ -133,22 +128,6 @@ case class ApiTestServer() extends PlayJsonExtensions {
     } finally {
       con.disconnect()
     }
-  }
-
-  // TODO: this must render the v2 config. Then we can use it.
-  private def renderConfig(dbName: String): String = {
-    """
-      |port: 4466
-      |prototype: true
-      |databases:
-      |  default:
-      |    connector: sqlite-native
-      |    databaseFile: $DB_FILE
-      |    migrations: true
-      |    active: true
-      |    rawAccess: true
-      |    testMode: true
-    """.stripMargin.replaceAllLiterally("$DB_FILE", s"$server_root/db/${dbName}_DB.db")
   }
 
   private def awaitInfinitely[T](awaitable: Awaitable[T]): T = Await.result(awaitable, Duration.Inf)

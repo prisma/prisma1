@@ -1,6 +1,5 @@
 package util
 
-import com.prisma.config.PrismaConfig
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString
 
@@ -16,12 +15,6 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
 //    testDependencies.apiConnector.capabilities
     ConnectorCapabilities.empty
   }
-//  def dataResolver(project: Project): DataResolver = testDependencies.dataResolver(project)
-  override def prismaConfig: PrismaConfig = {
-    // TODO: implement config loading
-    // testDependencies.config
-    ???
-  }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
@@ -34,7 +27,7 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
   def escapeString(str: String) = JsString(str).toString()
 
   implicit def testDataModelsWrapper(testDataModel: TestDataModels): TestDataModelsWrapper = {
-    TestDataModelsWrapper(testDataModel, connectorTag, connector.connector, database)
+    TestDataModelsWrapper(testDataModel, connectorTag, connector, database)
   }
 
 //  val listInlineDirective = if (capabilities.has(RelationLinkListCapability)) {

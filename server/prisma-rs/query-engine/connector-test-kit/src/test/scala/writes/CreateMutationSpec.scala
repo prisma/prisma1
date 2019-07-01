@@ -6,20 +6,22 @@ import util._
 
 class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
+  // FIXME: change optJson field to Json type once we support it again
   val schema =
-    """type ScalarModel{
-    |   id: ID! @id
-    |   optString: String
-    |   optInt: Int
-    |   optFloat: Float
-    |   optBoolean: Boolean
-    |   optEnum: MyEnum
-    |   optDateTime: DateTime
-    |   optJson: Json
-    |   optUnique: String @unique
+    """
+    |model ScalarModel {
+    |   id          String @id @default(cuid())
+    |   optString   String
+    |   optInt      Int
+    |   optFloat    Float
+    |   optBoolean  Boolean
+    |   optEnum     MyEnum
+    |   optDateTime DateTime
+    |   optJson     String
+    |   optUnique   String @unique
     |}
     |
-    |enum MyEnum{
+    |enum MyEnum {
     |   A
     |   B
     |}""".stripMargin

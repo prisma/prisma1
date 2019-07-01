@@ -1,6 +1,5 @@
 package util
 
-import com.prisma.config.{DatabaseConfig, PrismaConfig}
 import enumeratum.{Enum, EnumEntry}
 import org.scalatest.{Suite, SuiteMixin, Tag}
 
@@ -41,30 +40,28 @@ object ConnectorTag extends Enum[ConnectorTag] {
 
 trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   import IgnoreSet._
-  def prismaConfig: PrismaConfig
 
-  lazy val connector = prismaConfig.databases.head
-  lazy val connectorTag = connector.connector match {
+  // FIXME: load current connector actually from somewhere
+  lazy val connector = "sqlite"
+  lazy val connectorTag = connector match {
     case "mongo"                                                 => ConnectorTag.MongoConnectorTag
     case "mysql" | "mysql-native"                                => ConnectorTag.MySqlConnectorTag
     case "postgres" | "postgres-native"                          => ConnectorTag.PostgresConnectorTag
     case "sqlite" | "sqlite-native" | "native-integration-tests" => ConnectorTag.SQLiteConnectorTag
   }
-  private lazy val isPrototype: Boolean = prismaConfig.isPrototype
 
   def capabilities: ConnectorCapabilities
   def runOnlyForConnectors: Set[ConnectorTag]           = ConnectorTag.values.toSet
   def doNotRunForConnectors: Set[ConnectorTag]          = Set.empty
   def runOnlyForCapabilities: Set[ConnectorCapability]  = Set.empty
   def doNotRunForCapabilities: Set[ConnectorCapability] = Set.empty
-  def doNotRunForPrototypes: Boolean                    = false
   def doNotRun: Boolean                                 = false
 
   abstract override def tags: Map[String, Set[String]] = { // this must NOT be a val. Otherwise ScalaTest does not behave correctly.
     if (shouldSuiteBeIgnored || doNotRun) {
       ignoreAllTests
     } else {
-      ignoredTestsBasedOnIndividualTagging(connector)
+      ignoredTestsBasedOnIndividualTagging
     }
   }
 
@@ -78,13 +75,6 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
         s"""the suite ${self.getClass.getSimpleName} will be ignored because the current connector is not right
            | allowed connectors: ${runOnlyForConnectors.mkString(",")}
            | disallowed connectors: ${doNotRunForConnectors.mkString(",")}
-           | current connector: $connectorTag
-         """.stripMargin
-      )
-      true
-    } else if (isPrototype && doNotRunForPrototypes) {
-      println(
-        s"""the suite ${self.getClass.getSimpleName} will be ignored because it should not run for prototypes and the current connector is a prototype
            | current connector: $connectorTag
          """.stripMargin
       )
@@ -118,13 +108,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
 //    if (connector.active && connectorTag != ConnectorTag.MongoConnectorTag) assertion
   }
 
-  def ifIsNotPrisma2[T](assertion: => T): Unit = {
-    if (connector.connector != "native-integration-tests") {
-      assertion
-    }
-  }
-
-  private def ignoredTestsBasedOnIndividualTagging(connector: DatabaseConfig) = {
+  private def ignoredTestsBasedOnIndividualTagging = {
     super.tags.mapValues { tagNames =>
       val connectorTagsToIgnore: Set[ConnectorTag] = for {
         tagName   <- tagNames

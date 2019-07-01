@@ -24,14 +24,6 @@ case class TestDataModelsWrapper(
   def test[T](indexToTest: Int)(fn: String => T) = internal(Some(indexToTest))(fn)
   def test[T](fn: String => T)                   = internal(None)(fn)
 
-  private def internalV11[T](indexToTest: Option[Int])(fn: Project => T) = {
-    internal(indexToTest) { dm =>
-      val project = ProjectDsl.fromString(dm)
-      database.setup(project)
-      fn(project)
-    }
-  }
-
   private def internal[T](indexToTest: Option[Int])(fn: String => T) = {
     val dataModelsToTest = connectorTag match {
       case MongoConnectorTag         => dataModel.mongo
