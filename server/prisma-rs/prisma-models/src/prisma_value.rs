@@ -88,13 +88,24 @@ impl PrismaValue {
             (GraphqlValue::Int(i), TypeIdentifier::Int) => PrismaValue::Int(i.as_i64().unwrap()),
             (GraphqlValue::Null, _) => PrismaValue::Null,
             (GraphqlValue::String(s), TypeIdentifier::String) => PrismaValue::String(s.clone()),
-            (GraphqlValue::String(s), TypeIdentifier::GraphQLID) => PrismaValue::GraphqlId(GraphqlId::String(s.clone())),
-//            (GraphqlValue::Int(s), TypeIdentifier::GraphQLID) => PrismaValue::GraphqlId(GraphqlId::Int(s)),
+            (GraphqlValue::String(s), TypeIdentifier::GraphQLID) => {
+                PrismaValue::GraphqlId(GraphqlId::String(s.clone()))
+            }
+            //            (GraphqlValue::Int(s), TypeIdentifier::GraphQLID) => PrismaValue::GraphqlId(GraphqlId::Int(s)),
             (GraphqlValue::String(s), TypeIdentifier::Json) => Self::str_as_json(s).expect("received invalid json"),
-            (GraphqlValue::String(s), TypeIdentifier::DateTime) => Self::str_as_datetime(s).expect("received invalid datetime"),
-            (GraphqlValue::List(l), _) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i, &field)).collect())),
-            (GraphqlValue::Object(obj), _) if obj.contains_key("set") => Self::from_value_broken(obj.get("set").unwrap()),
-            (value, _) => panic!(format!("Unable to make {:?} to PrismaValue. Field was {} with type identifier {:?}", value, field.name, field.type_identifier)),
+            (GraphqlValue::String(s), TypeIdentifier::DateTime) => {
+                Self::str_as_datetime(s).expect("received invalid datetime")
+            }
+            (GraphqlValue::List(l), _) => {
+                PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i, &field)).collect()))
+            }
+            (GraphqlValue::Object(obj), _) if obj.contains_key("set") => {
+                Self::from_value_broken(obj.get("set").unwrap())
+            }
+            (value, _) => panic!(format!(
+                "Unable to make {:?} to PrismaValue. Field was {} with type identifier {:?}",
+                value, field.name, field.type_identifier
+            )),
         }
     }
 
@@ -255,8 +266,8 @@ impl TryFrom<PrismaValue> for i64 {
 }
 
 #[cfg(feature = "sql")]
-impl From<GraphqlId> for DatabaseValue {
-    fn from(id: GraphqlId) -> DatabaseValue {
+impl<'a> From<GraphqlId> for DatabaseValue<'a> {
+    fn from(id: GraphqlId) -> Self {
         match id {
             GraphqlId::String(s) => s.into(),
             GraphqlId::Int(i) => (i as i64).into(),
@@ -266,15 +277,15 @@ impl From<GraphqlId> for DatabaseValue {
 }
 
 #[cfg(feature = "sql")]
-impl From<&GraphqlId> for DatabaseValue {
-    fn from(id: &GraphqlId) -> DatabaseValue {
+impl<'a> From<&GraphqlId> for DatabaseValue<'a> {
+    fn from(id: &GraphqlId) -> Self {
         id.clone().into()
     }
 }
 
 #[cfg(feature = "sql")]
-impl From<PrismaValue> for DatabaseValue {
-    fn from(pv: PrismaValue) -> DatabaseValue {
+impl<'a> From<PrismaValue> for DatabaseValue<'a> {
+    fn from(pv: PrismaValue) -> Self {
         match pv {
             PrismaValue::String(s) => s.into(),
             PrismaValue::Float(f) => (f as f64).into(),

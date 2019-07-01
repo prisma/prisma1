@@ -41,8 +41,8 @@ impl From<SqlId> for GraphqlId {
     }
 }
 
-impl From<SqlId> for DatabaseValue {
-    fn from(id: SqlId) -> DatabaseValue {
+impl From<SqlId> for DatabaseValue<'static> {
+    fn from(id: SqlId) -> Self {
         match id {
             SqlId::String(s) => s.into(),
             SqlId::Int(i) => (i as i64).into(),
@@ -51,8 +51,8 @@ impl From<SqlId> for DatabaseValue {
     }
 }
 
-impl From<&SqlId> for DatabaseValue {
-    fn from(id: &SqlId) -> DatabaseValue {
+impl From<&SqlId> for DatabaseValue<'static> {
+    fn from(id: &SqlId) -> Self {
         id.clone().into()
     }
 }

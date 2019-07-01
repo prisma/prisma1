@@ -12,7 +12,7 @@ enum CursorType {
 pub struct CursorCondition;
 
 impl CursorCondition {
-    pub fn build(query_arguments: &QueryArguments, model: ModelRef) -> ConditionTree {
+    pub fn build(query_arguments: &QueryArguments, model: ModelRef) -> ConditionTree<'static> {
         match (
             query_arguments.before.as_ref(),
             query_arguments.after.as_ref(),

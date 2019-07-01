@@ -7,7 +7,7 @@ pub struct WriteQueryBuilder;
 impl WriteQueryBuilder {
     const PARAMETER_LIMIT: usize = 10000;
 
-    pub fn create_record(model: ModelRef, mut args: PrismaArgs) -> (Insert, Option<GraphqlId>) {
+    pub fn create_record(model: ModelRef, mut args: PrismaArgs) -> (Insert<'static>, Option<GraphqlId>) {
         let model_id = model.fields().id();
 
         let return_id = match args.get_field_value(&model_id.name) {
@@ -41,12 +41,12 @@ impl WriteQueryBuilder {
         (Insert::from(insert).returning(vec![model_id.as_column()]), return_id)
     }
 
-    pub fn create_relation(field: RelationFieldRef, parent_id: &GraphqlId, child_id: &GraphqlId) -> Query {
+    pub fn create_relation(field: RelationFieldRef, parent_id: &GraphqlId, child_id: &GraphqlId) -> Query<'static> {
         let relation = field.relation();
 
         match relation.inline_relation_column() {
             Some(column) => {
-                let referencing_column = column.name.as_ref();
+                let referencing_column = column.name.to_string();
 
                 let (update_id, link_id) = match field.relation_is_inlined_in_parent() {
                     true => (parent_id, child_id),
@@ -69,8 +69,8 @@ impl WriteQueryBuilder {
                 let child_column = field.opposite_column();
 
                 let insert = Insert::single_into(relation.relation_table())
-                    .value(parent_column.name, parent_id.clone())
-                    .value(child_column.name, child_id.clone());
+                    .value(parent_column.name.to_string(), parent_id.clone())
+                    .value(child_column.name.to_string(), child_id.clone());
 
                 let insert: Insert = match relation.id_column() {
                     Some(id_column) => insert.value(id_column, cuid::cuid().unwrap()).into(),
@@ -83,10 +83,10 @@ impl WriteQueryBuilder {
     }
 
     pub fn create_scalar_list_value(
-        scalar_list_table: Table,
+        scalar_list_table: Table<'static>,
         list_value: &PrismaListValue,
         id: &GraphqlId,
-    ) -> Option<Insert> {
+    ) -> Option<Insert<'static>> {
         let list_value = match list_value {
             Some(l) if l.is_empty() => return None,
             None => return None,
@@ -113,11 +113,11 @@ impl WriteQueryBuilder {
         Some(result)
     }
 
-    pub fn update_one(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> SqlResult<Option<Update>> {
+    pub fn update_one(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> SqlResult<Option<Update<'static>>> {
         Self::update_many(model, &[id; 1], args).map(|updates| updates.into_iter().next())
     }
 
-    pub fn update_many(model: ModelRef, ids: &[&GraphqlId], args: &PrismaArgs) -> SqlResult<Vec<Update>> {
+    pub fn update_many(model: ModelRef, ids: &[&GraphqlId], args: &PrismaArgs) -> SqlResult<Vec<Update<'static>>> {
         if args.args.is_empty() || ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -134,7 +134,7 @@ impl WriteQueryBuilder {
                 });
             }
 
-            query = query.set(field.db_name(), value.clone());
+            query = query.set(field.db_name().to_string(), value.clone());
         }
 
         let result: Vec<Update> = ids
@@ -150,7 +150,7 @@ impl WriteQueryBuilder {
         Ok(result)
     }
 
-    pub fn delete_many(model: ModelRef, ids: &[&GraphqlId]) -> Vec<Delete> {
+    pub fn delete_many(model: ModelRef, ids: &[&GraphqlId]) -> Vec<Delete<'static>> {
         let mut deletes = Vec::new();
 
         for chunk in ids.chunks(Self::PARAMETER_LIMIT).into_iter() {
@@ -171,7 +171,7 @@ impl WriteQueryBuilder {
         scalar_list_table: &ScalarListTable,
         list_value: &PrismaListValue,
         ids: Vec<GraphqlId>,
-    ) -> (Vec<Delete>, Vec<Insert>) {
+    ) -> (Vec<Delete<'static>>, Vec<Insert<'static>>) {
         if ids.is_empty() {
             return (Vec::new(), Vec::new());
         }
@@ -192,13 +192,13 @@ impl WriteQueryBuilder {
         (deletes, inserts)
     }
 
-    pub fn delete_scalar_list_values(scalar_list_table: &ScalarListTable, ids: &[&GraphqlId]) -> Vec<Delete> {
+    pub fn delete_scalar_list_values(scalar_list_table: &ScalarListTable, ids: &[&GraphqlId]) -> Vec<Delete<'static>> {
         Self::delete_in_chunks(scalar_list_table.table(), ids, |chunk| {
             ScalarListTable::NODE_ID_FIELD_NAME.in_selection(chunk.to_vec())
         })
     }
 
-    pub fn truncate_tables(internal_data_model: InternalDataModelRef) -> Vec<Delete> {
+    pub fn truncate_tables(internal_data_model: InternalDataModelRef) -> Vec<Delete<'static>> {
         let models = internal_data_model.models();
         let mut deletes = Vec::new();
 
@@ -236,9 +236,9 @@ impl WriteQueryBuilder {
         deletes
     }
 
-    fn delete_in_chunks<F>(table: Table, ids: &[&GraphqlId], conditions: F) -> Vec<Delete>
+    fn delete_in_chunks<F>(table: Table<'static>, ids: &[&GraphqlId], conditions: F) -> Vec<Delete<'static>>
     where
-        F: Fn(&[&GraphqlId]) -> Compare,
+        F: Fn(&[&GraphqlId]) -> Compare<'static>,
     {
         ids.chunks(Self::PARAMETER_LIMIT)
             .into_iter()

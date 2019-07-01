@@ -14,7 +14,7 @@ pub struct SelectedFields {
 
     /// FIXME: naming
     pub from_field: Option<Arc<RelationField>>,
-    columns: OnceCell<Vec<Column>>,
+    columns: OnceCell<Vec<Column<'static>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -112,10 +112,10 @@ impl SelectedFields {
         self.scalar.push(SelectedScalarField { field, implicit });
     }
 
-    pub fn columns(&self) -> &[Column] {
+    pub fn columns(&self) -> &[Column<'static>] {
         self.columns
             .get_or_init(|| {
-                let mut result: Vec<Column> = self.scalar_non_list().iter().map(|f| f.as_column()).collect();
+                let mut result: Vec<Column<'static>> = self.scalar_non_list().iter().map(|f| f.as_column()).collect();
 
                 for rf in self.relation_inlined().iter() {
                     result.push(rf.as_column());

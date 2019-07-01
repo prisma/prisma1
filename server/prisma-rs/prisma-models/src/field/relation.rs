@@ -163,27 +163,27 @@ impl RelationField {
         }
     }
 
-    pub fn opposite_column(&self) -> Column {
+    pub fn opposite_column(&self) -> Column<'static> {
         match self.relation_side {
             RelationSide::A => self.relation().model_b_column(),
             RelationSide::B => self.relation().model_a_column(),
         }
     }
 
-    pub fn relation_column(&self) -> Column {
+    pub fn relation_column(&self) -> Column<'static> {
         match self.relation_side {
             RelationSide::A => self.relation().model_a_column(),
             RelationSide::B => self.relation().model_b_column(),
         }
     }
 
-    pub fn as_column(&self) -> Column {
+    pub fn as_column(&self) -> Column<'static> {
         let model = self.model();
         let internal_data_model = model.internal_data_model();
         let db_name = self.db_name();
         let parts = (
-            (internal_data_model.db_name.as_ref(), model.db_name()),
-            db_name.as_ref(),
+            (internal_data_model.db_name.clone(), model.db_name().to_string()),
+            db_name.clone(),
         );
 
         parts.into()

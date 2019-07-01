@@ -1,13 +1,13 @@
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
-pub type OrderVec = Vec<(DatabaseValue, Option<Order>)>;
+pub type OrderVec<'a> = Vec<(DatabaseValue<'a>, Option<Order>)>;
 
 pub struct Ordering;
 
 /// Tooling for generating orderings for different query types.
 impl Ordering {
-    pub fn for_model(model: ModelRef, order_by: Option<&OrderBy>, reverse: bool) -> OrderVec {
+    pub fn for_model(model: ModelRef, order_by: Option<&OrderBy>, reverse: bool) -> OrderVec<'static> {
         Self::by_fields(
             order_by.map(|oby| oby.field.as_column()),
             model.fields().id().as_column(),
@@ -16,9 +16,9 @@ impl Ordering {
         )
     }
 
-    pub fn internal<C>(second_field: C, order_by: Option<&OrderBy>, reverse: bool) -> OrderVec
+    pub fn internal<C>(second_field: C, order_by: Option<&OrderBy>, reverse: bool) -> OrderVec<'static>
     where
-        C: Into<Column>,
+        C: Into<Column<'static>>,
     {
         Self::by_fields(
             order_by.map(|oby| oby.field.as_column()),
@@ -34,21 +34,21 @@ impl Ordering {
         secondary_field: &str,
         order_by: Option<&OrderBy>,
         reverse: bool,
-    ) -> OrderVec {
+    ) -> OrderVec<'static> {
         Self::by_fields(
-            order_by.map(|oby| (alias, oby.field.db_name()).into()),
-            (secondary_alias, secondary_field).into(),
+            order_by.map(|oby| (alias.to_string(), oby.field.db_name().to_string()).into()),
+            (secondary_alias.to_string(), secondary_field.to_string()).into(),
             order_by,
             reverse,
         )
     }
 
     fn by_fields(
-        first_column: Option<Column>,
-        second_column: Column,
+        first_column: Option<Column<'static>>,
+        second_column: Column<'static>,
         order_by: Option<&OrderBy>,
         reverse: bool,
-    ) -> OrderVec {
+    ) -> OrderVec<'static> {
         let default_order = order_by
             .as_ref()
             .map(|order| order.sort_order)
