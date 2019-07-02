@@ -84,6 +84,9 @@ pub enum ValidationError {
     #[fail(display = "{}", message)]
     FunctionalEvaluationError { message: String, span: Span },
 
+    #[fail(display = "Environment variable not found: {}.", var_name)]
+    EnvironmentFunctionalEvaluationError { var_name: String, span: Span },
+
     #[fail(display = "Expected a {} value, but received {} value \"{}\".", expected_type, received_type, raw)]
     TypeMismatchError { expected_type: String, received_type: String, raw: String, span: Span },
 
@@ -249,6 +252,9 @@ impl ValidationError {
     pub fn new_functional_evaluation_error(message: &str, span: &Span) -> ValidationError {
         return ValidationError::FunctionalEvaluationError { message: String::from(message), span: span.clone() };
     }
+    pub fn new_environment_functional_evaluation_error(var_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::EnvironmentFunctionalEvaluationError { var_name: String::from(var_name), span: span.clone() };
+    }
     pub fn new_type_not_found_error(type_name: &str, span: &Span) -> ValidationError {
         return ValidationError::TypeNotFoundError { type_name: String::from(type_name), span: span.clone() };
     }
@@ -301,6 +307,7 @@ impl ValidationError {
             ValidationError::ScalarTypeNotFoundError { type_name: _, span } => span,
             ValidationError::ParserError { expected: _, expected_str: _, span } => span,
             ValidationError::FunctionalEvaluationError { message: _, span } => span,
+            ValidationError::EnvironmentFunctionalEvaluationError { var_name: _, span } => span,
             ValidationError::TypeMismatchError { expected_type: _, received_type: _, raw: _, span } => span,
             ValidationError::ValueParserError { expected_type: _, parser_error: _, raw: _, span } => span,
             ValidationError::ValidationError { message: _, span } => span,
