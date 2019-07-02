@@ -29,7 +29,7 @@ object ProjectDsl {
   }
 
   def fromString(sdlString: String)(implicit suite: Suite): Project = {
-    Project(id = projectId(suite), dataModel = sdlString)
+    Project(id = projectId(suite), dataModel = sdlString.stripMargin)
   }
 
   private def projectId(suite: Suite): String = {

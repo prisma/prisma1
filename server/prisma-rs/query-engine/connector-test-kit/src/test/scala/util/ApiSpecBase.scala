@@ -3,9 +3,12 @@ package util
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString
 
+import scala.concurrent.ExecutionContext
+
 trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with BeforeAndAfterAll with PlayJsonExtensions with StringMatchers {
   self: Suite =>
 
+  implicit val ec                 = ExecutionContext.global
   implicit lazy val implicitSuite = self
   val server                      = TestServer()
   val database                    = TestDatabase()

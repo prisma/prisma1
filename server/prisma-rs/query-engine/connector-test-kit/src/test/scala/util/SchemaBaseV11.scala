@@ -9,11 +9,11 @@ trait SchemaBaseV11 {
     model Parent {
         id       String @id @default(cuid())
         p        String @unique
-        childReq Child  @relation(link: INLINE)
+        childReq Child  @relation(references: [id])
     }
 
     model Child {
-        id        ID     @id
+        id        String @id @default(cuid())
         c         String @unique
         parentReq Parent
     }"""
@@ -28,7 +28,7 @@ trait SchemaBaseV11 {
     model Child {
         id        String @id @default(cuid())
         c         String @unique
-        parentReq Parent @relation(link: INLINE)
+        parentReq Parent @relation(references: [id])
     }"""
 
     TestDataModels(mongo = Vector(s1, s2), sql = Vector(s1, s2))
@@ -39,7 +39,7 @@ trait SchemaBaseV11 {
     model Parent {
         id       String @id @default(cuid())
         p        String @unique
-        childOpt Child? @relation(link: INLINE)
+        childOpt Child? @relation(references: [id])
     }
 
     model Child {
@@ -58,7 +58,7 @@ trait SchemaBaseV11 {
     model Child {
         id        String @id @default(cuid())
         c         String @unique
-        parentReq Parent @relation(link: INLINE)
+        parentReq Parent @relation(references: [id])
     }"""
 
     TestDataModels(mongo = Vector(s1, s2), sql = Vector(s1, s2))
@@ -100,7 +100,7 @@ trait SchemaBaseV11 {
       model Parent {
           id       String @id @default(cuid())
           p        String @unique
-          childReq Child  @relation(link: INLINE)
+          childReq Child  @relation(references: [id])
       }
       
       model Child {
@@ -119,7 +119,7 @@ trait SchemaBaseV11 {
       model Child {
           id        String  @id @default(cuid())
           c         String  @unique
-          parentOpt Parent? @relation(link: INLINE)
+          parentOpt Parent? @relation(references: [id])
       }"""
 
     TestDataModels(mongo = Vector(s1, s2), sql = Vector(s1, s2))
@@ -130,7 +130,7 @@ trait SchemaBaseV11 {
     model Parent {
         id          String  @id @default(cuid())
         p           String? @unique
-        childrenOpt [Child] @relation(link: INLINE)
+        childrenOpt [Child] @relation(references: [id])
     }
 
     model Child {
@@ -150,7 +150,7 @@ trait SchemaBaseV11 {
     model Child {
         id        String @id @default(cuid())
         c         String @unique
-        parentReq Parent @relation(link: INLINE)
+        parentReq Parent @relation(references: [id])
         test      String
     }"""
 
@@ -176,7 +176,7 @@ trait SchemaBaseV11 {
     model Parent {
         id          String  @id @default(cuid())
         p           String? @unique
-        childrenOpt [Child] @relation(link: INLINE)
+        childrenOpt [Child] @relation(references: [id])
     }
 
     model Child {
@@ -196,7 +196,7 @@ trait SchemaBaseV11 {
     model Child {
         id        String  @id @default(cuid())
         c         String  @unique
-        parentOpt Parent? @relation(link: INLINE)
+        parentOpt Parent? @relation(references: [id])
         test      String
     }"""
 
@@ -222,7 +222,7 @@ trait SchemaBaseV11 {
     model Parent {
         id       String  @id @default(cuid())
         p        String? @unique
-        childReq Child   @relation(link: INLINE)
+        childReq Child   @relation(references: [id])
     }
     
     model Child {
@@ -241,7 +241,7 @@ trait SchemaBaseV11 {
     model Child {
         id         String   @id @default(cuid())
         c          String   @unique
-        parentsOpt [Parent] @relation(link: INLINE)
+        parentsOpt [Parent] @relation(references: [id])
     }"""
 
     val s3 = """
@@ -265,7 +265,7 @@ trait SchemaBaseV11 {
     model Parent {
         id       String  @id @default(cuid())
         p        String? @unique
-        childOpt Child?  @relation(link: INLINE)
+        childOpt Child?  @relation(references: [id])
     }
 
     model Child {
@@ -284,7 +284,7 @@ trait SchemaBaseV11 {
     model Child {
         id         String   @id @default(cuid())
         c          String   @unique
-        parentsOpt [Parent] @relation(link: INLINE)
+        parentsOpt [Parent] @relation(references: [id])
     }"""
 
     val s3 = """
@@ -308,7 +308,7 @@ trait SchemaBaseV11 {
     model Parent {
         id          String  @id @default(cuid())
         p           String? @unique
-        childrenOpt [Child] @relation(link: INLINE)
+        childrenOpt [Child] @relation(references: [id])
     }
 
     model Child {
@@ -328,7 +328,7 @@ trait SchemaBaseV11 {
     model Child {
         id         String   @id @default(cuid())
         c          String   @unique
-        parentsOpt [Parent] @relation(link: INLINE)
+        parentsOpt [Parent] @relation(references: [id])
         test       String
     }"""
 
