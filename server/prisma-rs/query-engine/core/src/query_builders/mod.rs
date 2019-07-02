@@ -1,6 +1,10 @@
 //! Query builders module
 
+/// New query building
 mod query_builder;
+mod read_new;
+
+/// Legacy query buildin
 mod read;
 mod write;
 
@@ -46,6 +50,7 @@ impl RootBuilder {
                     directives: _,
                     selection_set,
                 })) => self.build_mutation(&selection_set.items),
+
                 _ => unimplemented!(),
             })
             .collect::<CoreResult<Vec<Vec<PrismaQuery>>>>() // Collect all the "query trees"

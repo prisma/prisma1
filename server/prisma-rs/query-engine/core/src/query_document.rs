@@ -1,8 +1,9 @@
 ///! Intermediate representation of the input document that is used by the query engine to build
 ///! query ASTs and validate the incoming data.
 ///!
-///! Helps decoupling the incoming protocol layer from the query engine, making the query engine
-///! agnostic to whatever protocol is implemented on upper layers.
+///! Helps decoupling the incoming protocol layer from the query engine, i.e. allows the query engine
+///! to be agnostic to the actual protocol that is used on upper layers, as long as they translate
+///! to this simple intermediate representation.
 use std::collections::BTreeMap;
 
 #[derive(Debug)]

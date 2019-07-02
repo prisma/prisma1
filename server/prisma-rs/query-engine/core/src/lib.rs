@@ -14,7 +14,7 @@ mod error;
 
 pub mod executor;
 pub mod query_builders;
-pub mod query_ir;
+pub mod query_document;
 pub mod result_ir;
 pub mod schema;
 

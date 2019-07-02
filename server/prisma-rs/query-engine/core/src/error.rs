@@ -1,4 +1,4 @@
-use crate::{query_ir::QueryValue, InputType};
+use crate::{query_document::QueryValue, InputType};
 use connector::error::ConnectorError;
 use failure::Fail;
 use prisma_models::DomainError;

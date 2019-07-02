@@ -79,14 +79,14 @@ impl QuerySchema {
         self.query().get_fields().into_iter().find(|f| f.name == name).cloned()
     }
 
-    fn mutation(&self) -> ObjectTypeStrongRef {
+    pub fn mutation(&self) -> ObjectTypeStrongRef {
         match self.mutation {
             OutputType::Object(ref o) => o.into_arc(),
             _ => unreachable!(),
         }
     }
 
-    fn query(&self) -> ObjectTypeStrongRef {
+    pub fn query(&self) -> ObjectTypeStrongRef {
         match self.query {
             OutputType::Object(ref o) => o.into_arc(),
             _ => unreachable!(),

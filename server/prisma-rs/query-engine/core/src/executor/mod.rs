@@ -6,7 +6,7 @@ pub use read::ReadQueryExecutor;
 pub use write::WriteQueryExecutor;
 
 use self::pipeline::*;
-use crate::{query_ir::QueryDocument, CoreResult, QuerySchemaRef};
+use crate::{query_document::QueryDocument, CoreResult, QuerySchemaRef};
 use connector::{Query, ReadQueryResult};
 
 /// Central query executor and main entry point into the query core.

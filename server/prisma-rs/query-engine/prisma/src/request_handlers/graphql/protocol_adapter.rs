@@ -2,13 +2,27 @@ use crate::{
     error::{PrismaError, PrismaError::QueryParsingError},
     PrismaResult,
 };
-use core::query_ir::*;
+use core::query_document::*;
 use graphql_parser::query::{
     Definition, Document, OperationDefinition, Selection as GqlSelection, SelectionSet, Value,
 };
 use std::collections::BTreeMap;
 
-/// Protocol adapter for GraphQL -> Query Document
+/// Protocol adapter for GraphQL -> Query Document.
+///
+/// GraphQL is mapped as following:
+/// - A single `query { ... }` or single selection block `{ ... }` is mapped to a `ReadOperation`.
+/// - A single `mutation { ... }` is mapped to a `WriteOperation`.
+/// - The above implies that multiple queries in one GraphQL document are mapped to multiple `Operation`s.
+/// - If the JSON payload specifies an operation name, only that specific operation is picked and the rest ignored.
+/// - Fields on the queries are mapped to `Selection`s, including arguments.
+/// - Concrete values (e.g. in arguments) are mapped to `QueryValue`s.
+///
+/// Currently unsupported features:
+/// - Fragments in any form.
+/// - Variables.
+/// - Subscription queries.
+///
 pub struct GraphQLProtocolAdapter;
 
 impl GraphQLProtocolAdapter {
