@@ -18,9 +18,9 @@ struct MiniError {
 
 fn main() {
     let matches = App::new("Prisma Datamodel v2 formatter")
-        .version("0.1")
+        .version("0.2")
         .author("Emanuel Jöbstl <emanuel.joebstl@gmail.com>")
-        .about("Formats a datamodel v2 file and prints the result to standard output.")
+        .about("Formats or lints a datamodel v2 file and prints the result to standard output.")
         .arg(
             Arg::with_name("input")
                 .short("i")
