@@ -14,7 +14,7 @@ pub fn load_connector(
     })?;
     let sql_family = match source.connector_type().as_ref() {
         "sqlite" => SqlFamily::Sqlite,
-        "postgres" => SqlFamily::Postgres,
+        "postgresql" => SqlFamily::Postgres,
         "mysql" => SqlFamily::Mysql,
         x => unimplemented!("Connector {} is not supported yet", x),
     };
