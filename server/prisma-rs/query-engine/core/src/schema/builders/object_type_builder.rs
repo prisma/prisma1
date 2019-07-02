@@ -51,7 +51,7 @@ impl<'a> ObjectTypeBuilder<'a> {
         self.internal_data_model
             .models()
             .iter()
-            .for_each(|m| self.cache(m.name.clone(), Arc::new(init_object_type(m.name.clone()))));
+            .for_each(|m| self.cache(m.name.clone(), Arc::new(init_object_type(m.name.clone(), Some(Arc::clone(&m))))));
 
         // Compute fields on all cached object types.
         self.internal_data_model.models().iter().for_each(|m| {
@@ -209,6 +209,7 @@ impl<'a> ObjectTypeBuilder<'a> {
         let object_type = Arc::new(object_type(
             "BatchPayload",
             vec![field("count", vec![], OutputType::int(), None)],
+            None,
         ));
 
         self.cache("BatchPayload".into(), Arc::clone(&object_type));

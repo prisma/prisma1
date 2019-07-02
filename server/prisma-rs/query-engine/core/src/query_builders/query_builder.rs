@@ -1,14 +1,15 @@
-use crate::query_ir::QueryValue;
-use crate::{
-    query_ir::{Operation, QueryDocument, ReadOperation},
-    Argument, CoreError, CoreResult, EnumType, Field, InputObjectTypeStrongRef, InputType, IntoArc, QuerySchemaRef,
-    QueryValidationError, ScalarType,
-};
+use crate::{query_ir::{
+    QueryValue,
+    Operation,
+    QueryDocument,
+    ReadOperation
+}, Argument, CoreError, CoreResult, EnumType, Field, InputObjectTypeStrongRef, InputType, IntoArc, QuerySchemaRef, QueryValidationError, ScalarType, OperationTag, OutputType};
 use chrono::prelude::*;
 use connector::Query;
 use prisma_models::{GraphqlId, PrismaValue};
 use std::{collections::BTreeMap, result::Result};
 use uuid::Uuid;
+use crate::query_ir::Selection;
 
 type QueryBuilderResult<T> = Result<T, QueryValidationError>;
 
@@ -39,39 +40,68 @@ impl QueryBuilder {
             .map(
                 |selection| match self.query_schema.find_query_field(selection.name.as_ref()) {
                     Some(field) => {
-                        let parsed_args = field
+                        // Parse and validate all provided arguments
+                        let parsed_args: Vec<(String, ParsedValue)> = field
                             .arguments
                             .iter()
                             .map(|schema_arg| {
                                 // If argument is not present but is not optional -> error
                                 // If argument is present but not in the list -> error
 
-                                // Might be a fn on the field
+                                // Match schema field to a field in the incoming document
                                 let selection_arg: Option<&(String, QueryValue)> = selection
                                     .arguments
                                     .iter()
                                     .find(|selection_arg| selection_arg.0 == schema_arg.name);
 
-                                let parsed_value = self
+                                // Parse the query value into a list / object / PrismaValue.
+                                // If the field was not found previously, None will be handed into the
+                                // parsing, which also checks if this is valid in context of the schema
+                                // (field is optional or not).
+                                self
                                     .parse_value(selection_arg.map(|x| &x.1), &schema_arg.argument_type)
                                     .map(|val| (schema_arg.name.clone(), val))
                                     .map_err(|err| QueryValidationError::ArgumentValidationError {
                                         argument: schema_arg.name.clone(),
                                         inner: Box::new(err),
-                                    })?;
-
-                                //                                {
-                                //                                    None => self
-                                //                                        .parse_value(None, &schema_arg.argument_type)
-                                //                                        .map(|val| (schema_arg.name.clone(), val)),
-                                //
-                                //                                    Some(selection_arg) => self
-                                //                                        .parse_value(Some(&selection_arg.1), &schema_arg.argument_type)
-                                //                                        .map(|val| (selection_arg.0.clone(), val)),
-                                //                                }
-                                unimplemented!()
+                                    })
                             })
-                            .collect::<Vec<CoreResult<(String, PrismaValue)>>>();
+                            .collect::<Vec<QueryBuilderResult<(String, ParsedValue)>>>().into_iter().collect::<QueryBuilderResult<_>>().map_err(|err| {
+                                QueryValidationError::FieldValidationError {
+                                    field_name: field.name.clone(),
+                                    reason: Box::new(err),
+                                    on_object: "Query".into(),
+                                }
+                            })?;
+
+                        // Based on the operation that is present on the root read field, build the query.
+                        let field_operation = field.operation.as_ref().expect("Expect Query and Mutation object fields to always have an associated ");
+
+                        // Validate that sub selection set is only selecting fields that are allowed.
+                        // Todo empty selection set: Does that fail at the parser level already?
+                        Self::validate_selection_set(&field.field_type, &selection.sub_selections)?;
+
+                        // - Parse RecordFinder for read-one operation
+                        // - Parse QueryArguments for read-many operation
+                        // - Output fields are the actual reads
+
+//                        match field_operation.operation {
+//                            OperationTag::FindOne => Ok(ReadQueryBuilder::One(
+//                                OneBuilder::new().setup(Arc::clone(&model), field),
+//                            )),
+//                            OperationTag::FindMany => Ok(ReadQueryBuilder::Many(
+//                                ManyBuilder::new().setup(Arc::clone(&model), field),
+//                            )),
+//                            _ => Err(CoreError::LegacyQueryValidationError(format!(
+//                                "Invalid root operation on Query: {:?}",
+//                                operation
+//                            ))),
+//                        }
+
+                        // the builders get:
+                        // - the parsed args
+                        // - the selections
+                        // - whatever input needed, for example the model it needs to operate on
 
                         unimplemented!()
                     }
@@ -91,7 +121,7 @@ impl QueryBuilder {
     }
 
     /// Parses and validates a QueryValue against an InputType, recursively.
-    /// Some(value) indicates that a value is present in the query, None indicates that no value was provided.
+    /// Some(value) indicates that a value is present in the query doc, None indicates that no value was provided.
     /// Special case is Some(Null). In that case an explicit null was provided, which is, however, treated
     /// the same as None during validation.
     #[rustfmt::skip]
@@ -191,6 +221,7 @@ impl QueryBuilder {
                     Some((k, v)) => self
                         .parse_value(Some(v), &field.field_type)
                         .map(|parsed| (k.clone(), parsed)),
+
                     None => {
                         // Find default value and use that one if the field can't be found.
                         match field.default_value.clone().map(|def| (&field.name, def)) {
@@ -202,6 +233,12 @@ impl QueryBuilder {
             })
             .collect::<QueryBuilderResult<Vec<(String, ParsedValue)>>>()
             .map(|tuples| tuples.into_iter().collect())
+    }
+
+    // Validate (sub) selection set
+    // - Object types require at least one subselection
+    fn validate_selection_set(expected_type: &OutputType, given_selection: &Vec<Selection>) -> QueryBuilderResult<()> {
+        unimplemented!()
     }
 }
 

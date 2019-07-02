@@ -138,7 +138,7 @@ impl<'a> QuerySchemaBuilder<'a> {
             .flatten()
             .collect();
 
-        let strong_ref = Arc::new(object_type("Query", fields));
+        let strong_ref = Arc::new(object_type("Query", fields, None));
 
         (OutputType::Object(Arc::downgrade(&strong_ref)), strong_ref)
     }
@@ -163,7 +163,7 @@ impl<'a> QuerySchemaBuilder<'a> {
             .flatten()
             .collect();
 
-        let strong_ref = Arc::new(object_type("Mutation", fields));
+        let strong_ref = Arc::new(object_type("Mutation", fields, None));
 
         (OutputType::Object(Arc::downgrade(&strong_ref)), strong_ref)
     }

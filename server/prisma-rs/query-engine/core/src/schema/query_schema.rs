@@ -135,6 +135,9 @@ pub struct ObjectType {
 
     #[debug_stub = "#Fields Cell#"]
     pub fields: OnceCell<Vec<FieldRef>>,
+
+    // Object types can directly map to models.
+    pub model: Option<ModelRef>,
 }
 
 impl ObjectType {

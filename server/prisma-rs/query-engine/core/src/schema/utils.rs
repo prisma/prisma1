@@ -1,24 +1,25 @@
 use super::*;
 use once_cell::sync::OnceCell;
-use prisma_models::{InternalEnum, PrismaValue};
+use prisma_models::{InternalEnum, PrismaValue, ModelRef};
 
 /// Object type initializer for cases where only the name is known, and fields are computed later.
-pub fn init_object_type<T>(name: T) -> ObjectType
+pub fn init_object_type<T>(name: T, model: Option<ModelRef>) -> ObjectType
 where
     T: Into<String>,
 {
     ObjectType {
         name: name.into(),
         fields: OnceCell::new(),
+        model,
     }
 }
 
 /// Object type convenience wrapper function.
-pub fn object_type<T>(name: T, fields: Vec<Field>) -> ObjectType
+pub fn object_type<T>(name: T, fields: Vec<Field>, model: Option<ModelRef>) -> ObjectType
 where
     T: Into<String>,
 {
-    let object_type = init_object_type(name.into());
+    let object_type = init_object_type(name.into(), model);
 
     object_type.set_fields(fields);
     object_type

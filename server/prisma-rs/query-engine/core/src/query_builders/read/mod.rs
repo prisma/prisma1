@@ -104,7 +104,7 @@ impl<'a> ReadQueryBuilder<'a> {
 pub trait BuilderExt {
     type Output;
 
-    /// A common cosntructor for all query builders
+    /// A common constructor for all query builders
     fn new() -> Self;
 
     /// Last step that invokes query building
