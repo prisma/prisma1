@@ -136,10 +136,7 @@ fn resolve_argument_errors_correctly() {
 
     errors.assert_is_at(
         0,
-        ValidationError::new_functional_evaluation_error(
-            "Environment variable not found: \"UNKNOWN_FOR_SURE\".",
-            &Span::new(83, 101),
-        ),
+        ValidationError::new_environment_functional_evaluation_error("UNKNOWN_FOR_SURE", &Span::new(83, 101)),
     );
 }
 

@@ -52,7 +52,7 @@ pub enum SqlFamily {
 impl SqlFamily {
     fn connector_type_string(&self) -> &'static str {
         match self {
-            SqlFamily::Postgres => "postgres",
+            SqlFamily::Postgres => "postgresql",
             SqlFamily::Mysql => "mysql",
             SqlFamily::Sqlite => "sqlite",
         }

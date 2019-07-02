@@ -70,7 +70,7 @@ pub fn test_engine(config: &str) -> Box<MigrationEngine> {
 
 pub fn introspect_database(engine: &MigrationEngine) -> DatabaseSchema {
     let inspector: Box<DatabaseInspector> = match engine.connector().connector_type() {
-        "postgres" => Box::new(DatabaseInspector::postgres(postgres_url())),
+        "postgresql" => Box::new(DatabaseInspector::postgres(postgres_url())),
         "sqlite" => Box::new(DatabaseInspector::sqlite(sqlite_test_file())),
         "mysql" => Box::new(DatabaseInspector::mysql(mysql_url())),
         _ => unimplemented!(),
@@ -128,7 +128,7 @@ pub fn postgres_test_config() -> String {
     format!(
         r#"
         datasource my_db {{
-            provider = "postgres"
+            provider = "postgresql"
             url = "{}"
             default = true
         }}

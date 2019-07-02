@@ -3,12 +3,12 @@ use datamodel::errors::ValidationError;
 
 const DATAMODEL: &str = r#"
 datasource pg1 {
-    provider = "postgres"
+    provider = "postgresql"
     url = "https://localhost/postgres1"
 }
 
 datasource pg2 {
-    provider = "postgres"
+    provider = "postgresql"
     url = "https://localhost/postgres2"
 }
 
@@ -31,13 +31,13 @@ fn serialize_builtin_sources_to_dmmf() {
     let expected = r#"[
   {
     "name": "pg1",
-    "connectorType": "postgres",
+    "connectorType": "postgresql",
     "url": "https://localhost/postgres1",
     "config": {}
   },
   {
     "name": "pg2",
-    "connectorType": "postgres",
+    "connectorType": "postgresql",
     "url": "https://localhost/postgres2",
     "config": {}
   },

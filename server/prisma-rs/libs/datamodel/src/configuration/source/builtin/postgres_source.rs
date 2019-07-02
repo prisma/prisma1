@@ -1,5 +1,5 @@
 use crate::{configuration::*, dml, dml::validator::directive::DirectiveValidator};
-pub const POSTGRES_SOURCE_NAME: &str = "postgres";
+pub const POSTGRES_SOURCE_NAME: &str = "postgresql";
 
 pub struct PostgresSource {
     pub(super) name: String,
