@@ -128,7 +128,7 @@ pub fn postgres_test_config() -> String {
     format!(
         r#"
         datasource my_db {{
-            provider = "postgres"
+            provider = "postgresql"
             url = "{}"
             default = true
         }}
