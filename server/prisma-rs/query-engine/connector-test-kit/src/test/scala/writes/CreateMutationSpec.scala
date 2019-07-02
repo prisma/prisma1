@@ -6,19 +6,17 @@ import util._
 
 class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  // FIXME: change optJson field to Json type once we support it again
   val schema =
     """
     |model ScalarModel {
     |   id          String @id @default(cuid())
-    |   optString   String
-    |   optInt      Int
-    |   optFloat    Float
-    |   optBoolean  Boolean
-    |   optEnum     MyEnum
-    |   optDateTime DateTime
-    |   optJson     String
-    |   optUnique   String @unique
+    |   optString   String?
+    |   optInt      Int?
+    |   optFloat    Float?
+    |   optBoolean  Boolean?
+    |   optEnum     MyEnum?
+    |   optDateTime DateTime?
+    |   optUnique   String? @unique
     |}
     |
     |enum MyEnum {
@@ -40,20 +38,20 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     val res = server.query(
       s"""mutation {
          |  createScalarModel(data: {
-         |    optString: "lala${TroubleCharacters.value}", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[1,2,3]"
-         |  }){id, optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}
+         |    optString: "lala${TroubleCharacters.value}", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z"
+         |  }){id, optString, optInt, optFloat, optBoolean, optEnum, optDateTime }
          |}""".stripMargin,
       project = project
     )
     val id = res.pathAsString("data.createScalarModel.id")
 
     res should be(
-      s"""{"data":{"createScalarModel":{"id":"$id","optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}}}""".parseJson)
+      s"""{"data":{"createScalarModel":{"id":"$id","optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}}}""".parseJson)
 
-    val queryRes = server.query("""{ scalarModels{optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""", project = project)
+    val queryRes = server.query("""{ scalarModels{optString, optInt, optFloat, optBoolean, optEnum, optDateTime }}""", project = project)
 
     queryRes should be(
-      s"""{"data":{"scalarModels":[{"optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}]}}""".parseJson)
+      s"""{"data":{"scalarModels":[{"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}]}}""".parseJson)
   }
 
   "A Create Mutation" should "create and return item with empty string" in {
@@ -61,11 +59,11 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
       """mutation {
         |  createScalarModel(data: {
         |    optString: ""
-        |  }){optString, optInt, optFloat, optBoolean, optEnum, optJson}}""".stripMargin,
+        |  }){optString, optInt, optFloat, optBoolean, optEnum }}""".stripMargin,
       project = project
     )
 
-    res should be("""{"data":{"createScalarModel":{"optJson":null,"optInt":null,"optBoolean":null,"optString":"","optEnum":null,"optFloat":null}}}""".parseJson)
+    res should be("""{"data":{"createScalarModel":{"optInt":null,"optBoolean":null,"optString":"","optEnum":null,"optFloat":null}}}""".parseJson)
   }
 
   "A Create Mutation" should "create and return item with explicit null attributes" in {
@@ -73,70 +71,49 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     val res = server.query(
       """mutation {
         |  createScalarModel(data: {
-        |    optString: null, optInt: null, optBoolean: null, optJson: null, optEnum: null, optFloat: null
-        |  }){optString, optInt, optFloat, optBoolean, optEnum, optJson}}""".stripMargin,
+        |    optString: null, optInt: null, optBoolean: null, optEnum: null, optFloat: null
+        |  }){optString, optInt, optFloat, optBoolean, optEnum}}""".stripMargin,
       project
     )
 
-    res should be(
-      """{"data":{"createScalarModel":{"optJson":null,"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}}}""".parseJson)
+    res should be("""{"data":{"createScalarModel":{"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}}}""".parseJson)
   }
 
   "A Create Mutation" should "create and return item with explicit null attributes when other mutation has explicit non-null values" in {
 
     val res = server.query(
       """mutation {
-        | a: createScalarModel(data: {optString: "lala", optInt: 123, optBoolean: true, optJson: "[1,2,3]", optEnum: A, optFloat: 1.23}){optString, optInt, optFloat, optBoolean, optEnum, optJson}
-        | b: createScalarModel(data: {optString: null, optInt: null, optBoolean: null, optJson: null, optEnum: null, optFloat: null}){optString, optInt, optFloat, optBoolean, optEnum, optJson}
+        | a: createScalarModel(data: {optString: "lala", optInt: 123, optBoolean: true, optEnum: A, optFloat: 1.23}){optString, optInt, optFloat, optBoolean, optEnum }
+        | b: createScalarModel(data: {optString: null, optInt: null, optBoolean: null, optEnum: null, optFloat: null}){optString, optInt, optFloat, optBoolean, optEnum }
         |}""".stripMargin,
       project = project
     )
 
-    res.pathAs[JsValue]("data.a") should be("""{"optJson":[1,2,3],"optInt":123,"optBoolean":true,"optString":"lala","optEnum":"A","optFloat":1.23}""".parseJson)
-    res.pathAs[JsValue]("data.b") should be("""{"optJson":null,"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}""".parseJson)
+    res.pathAs[JsValue]("data.a") should be("""{"optInt":123,"optBoolean":true,"optString":"lala","optEnum":"A","optFloat":1.23}""".parseJson)
+    res.pathAs[JsValue]("data.b") should be("""{"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}""".parseJson)
   }
 
   "A Create Mutation" should "create and return item with implicit null attributes" in {
-    val res = server.query("""mutation {createScalarModel(data:{}){optString, optInt, optFloat, optBoolean, optEnum, optJson}}""", project)
+    val res = server.query("""mutation {createScalarModel(data:{}){ optString, optInt, optFloat, optBoolean, optEnum }}""", project)
 
-    res should be(
-      """{"data":{"createScalarModel":{"optJson":null,"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}}}""".parseJson)
+    res should be("""{"data":{"createScalarModel":{"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}}}""".parseJson)
   }
 
   "A Create Mutation" should "fail when text is over 256k long" in {
     val reallyLongString = "1234567890" * 40000
 
     server.queryThatMustFail(
-      s"""mutation {createScalarModel(data: {optString: "$reallyLongString", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[1,2,3]"}){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""",
+      s"""mutation {createScalarModel(data: {optString: "$reallyLongString", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", }){optString, optInt, optFloat, optBoolean, optEnum, optDateTime }}""",
       project = project,
       errorCode = 3007
     )
-  }
-
-  "A Create Mutation" should "fail when a Json is over 256k long" in {
-    val reallyLongString = "1234567890" * 40000
-
-    server.queryThatMustFail(
-      s"""mutation {createScalarModel(data: {optString: "test", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[\\\"$reallyLongString\\\",\\\"is\\\",\\\"json\\\"]"}){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""",
-      project = project,
-      errorCode = 3007
-    )
-  }
-
-  "A Create Mutation" should "fail when a Json is invalid" in {
-    val result = server.queryThatMustFail(
-      s"""mutation {createScalarModel(data: {optString: "test", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[{'a':2}]"}){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""",
-      project = project,
-      errorCode = 0
-    )
-    result.toString should include("Not valid JSON")
   }
 
   "A Create Mutation" should "fail when a DateTime is invalid" in {
     val result = server.queryThatMustFail(
       s"""mutation { createScalarModel(data:
-         |  { optString: "test", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-0B-31T23:59:01.000Z", optJson: "[]"}
-         |  ){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""".stripMargin,
+         |  { optString: "test", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-0B-31T23:59:01.000Z" }
+         |  ){optString, optInt, optFloat, optBoolean, optEnum, optDateTime}}""".stripMargin,
       project = project,
       0
     )
@@ -145,16 +122,16 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A Create Mutation" should "support simplified DateTime" in {
     val result = server.query(
-      s"""mutation {createScalarModel(data: {optString: "test", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016", optJson: "[]"}){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""",
+      s"""mutation {createScalarModel(data: {optString: "test", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016" }){optString, optInt, optFloat, optBoolean, optEnum, optDateTime }}""",
       project = project
     )
     result.toString should be(
-      """{"data":{"createScalarModel":{"optJson":[],"optInt":1337,"optBoolean":true,"optDateTime":"2016-01-01T00:00:00.000Z","optString":"test","optEnum":"A","optFloat":1.234}}}""")
+      """{"data":{"createScalarModel":{"optInt":1337,"optBoolean":true,"optDateTime":"2016-01-01T00:00:00.000Z","optString":"test","optEnum":"A","optFloat":1.234}}}""")
   }
 
   "A Create Mutation" should "fail when an Int is invalid" in {
     val result = server.queryThatMustFail(
-      s"""mutation {createScalarModel(data: {optString: "test", optInt: B, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[]"}){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""",
+      s"""mutation {createScalarModel(data: {optString: "test", optInt: B, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z" }){optString, optInt, optFloat, optBoolean, optEnum, optDateTime }}""",
       project = project,
       0
     )
