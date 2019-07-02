@@ -245,6 +245,7 @@ impl FieldExtensions for Field {
 fn is_scalar(field: &Field) -> bool {
     match field.field_type {
         FieldType::Base(_) => true,
+        FieldType::Enum(_) => true,
         _ => false,
     }
 }
