@@ -2176,6 +2176,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "root"
+version = "0.1.0"
+dependencies = [
+ "rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "rusqlite"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
