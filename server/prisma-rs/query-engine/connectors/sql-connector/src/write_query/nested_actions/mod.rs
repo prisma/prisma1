@@ -16,30 +16,13 @@ use connector::{error::RecordFinderInfo, filter::RecordFinder};
 use prisma_models::*;
 use prisma_query::ast::*;
 
-// TODO: Replace me with FnBox from std when it's stabilized in 1.35.
-// https://doc.rust-lang.org/std/boxed/trait.FnBox.html
-pub trait FnBox {
-    fn call_box(self: Box<Self>, exists: bool) -> SqlResult<()>;
-}
-
-// TODO: Replace me with FnBox from std when it's stabilized in 1.35.
-// https://doc.rust-lang.org/std/boxed/trait.FnBox.html
-impl<F> FnBox for F
-where
-    F: FnOnce(bool) -> SqlResult<()>,
-{
-    fn call_box(self: Box<F>, exists: bool) -> SqlResult<()> {
-        (*self)(exists)
-    }
-}
-
-pub type ResultCheck = Box<FnBox + Send + Sync + 'static>;
+pub type ResultCheck = Box<FnOnce(bool) -> SqlResult<()> + Send + Sync + 'static>;
 
 pub trait NestedActions {
-    fn required_check(&self, parent_id: &GraphqlId) -> SqlResult<Option<(Select, ResultCheck)>>;
+    fn required_check(&self, parent_id: &GraphqlId) -> SqlResult<Option<(Select<'static>, ResultCheck)>>;
 
-    fn parent_removal(&self, parent_id: &GraphqlId) -> Option<Query>;
-    fn child_removal(&self, child_id: &GraphqlId) -> Option<Query>;
+    fn parent_removal(&self, parent_id: &GraphqlId) -> Option<Query<'static>>;
+    fn child_removal(&self, child_id: &GraphqlId) -> Option<Query<'static>>;
 
     fn relation_field(&self) -> RelationFieldRef;
     fn relation(&self) -> RelationRef;
@@ -69,7 +52,7 @@ pub trait NestedActions {
         }
     }
 
-    fn removal_by_parent(&self, id: &GraphqlId) -> Query {
+    fn removal_by_parent(&self, id: &GraphqlId) -> Query<'static> {
         let rf = self.relation_field();
         let relation = self.relation();
         let relation_column = relation.column_for_relation_side(rf.relation_side);
@@ -78,14 +61,14 @@ pub trait NestedActions {
 
         match relation.inline_relation_column() {
             Some(column) => Update::table(relation.relation_table())
-                .set(column.name.as_ref(), PrismaValue::Null)
+                .set(column.name.to_string(), PrismaValue::Null)
                 .so_that(condition)
                 .into(),
             None => Delete::from_table(relation.relation_table()).so_that(condition).into(),
         }
     }
 
-    fn removal_by_child(&self, id: &GraphqlId) -> Query {
+    fn removal_by_child(&self, id: &GraphqlId) -> Query<'static> {
         let rf = self.relation_field();
         assert!(!rf.related_field().is_list);
 
@@ -97,14 +80,14 @@ pub trait NestedActions {
 
         match relation.inline_relation_column() {
             Some(column) => Update::table(relation.relation_table())
-                .set(column.name.as_ref(), PrismaValue::Null)
+                .set(column.name.to_string(), PrismaValue::Null)
                 .so_that(condition)
                 .into(),
             None => Delete::from_table(relation.relation_table()).so_that(condition).into(),
         }
     }
 
-    fn removal_by_parent_and_child(&self, parent_id: &GraphqlId, child_id: &GraphqlId) -> Query {
+    fn removal_by_parent_and_child(&self, parent_id: &GraphqlId, child_id: &GraphqlId) -> Query<'static> {
         let relation = self.relation();
         let rf = self.relation_field();
 
@@ -115,14 +98,14 @@ pub trait NestedActions {
 
         match relation.inline_relation_column() {
             Some(column) => Update::table(table)
-                .set(column.name.as_ref(), PrismaValue::Null)
+                .set(column.name.to_string(), PrismaValue::Null)
                 .so_that(is_child.and(is_parent))
                 .into(),
             None => Delete::from_table(table).so_that(is_child.and(is_parent)).into(),
         }
     }
 
-    fn check_for_old_child(&self, id: &GraphqlId) -> (Select, ResultCheck) {
+    fn check_for_old_child(&self, id: &GraphqlId) -> (Select<'static>, ResultCheck) {
         let relation = self.relation();
         let rf = self.relation_field().related_field();
 
@@ -146,7 +129,7 @@ pub trait NestedActions {
         (query, Box::new(check))
     }
 
-    fn check_for_old_parent_by_child(&self, record_finder: &RecordFinder) -> (Select, ResultCheck) {
+    fn check_for_old_parent_by_child(&self, record_finder: &RecordFinder) -> (Select<'static>, ResultCheck) {
         let relation = self.relation();
         let rf = self.relation_field().related_field();
 
@@ -181,7 +164,7 @@ pub trait NestedActions {
         (query, Box::new(check))
     }
 
-    fn ensure_parent_is_connected(&self, parent_id: &GraphqlId) -> (Select, ResultCheck) {
+    fn ensure_parent_is_connected(&self, parent_id: &GraphqlId) -> (Select<'static>, ResultCheck) {
         let relation = self.relation();
         let rf = self.relation_field();
 
@@ -205,7 +188,7 @@ pub trait NestedActions {
         (query, Box::new(check))
     }
 
-    fn ensure_connected(&self, child_id: &GraphqlId, parent_id: &GraphqlId) -> (Select, ResultCheck) {
+    fn ensure_connected(&self, child_id: &GraphqlId, parent_id: &GraphqlId) -> (Select<'static>, ResultCheck) {
         let relation = self.relation();
         let rf = self.relation_field();
 

@@ -34,7 +34,7 @@ pub fn connect(
 ) -> SqlResult<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
         let ids = conn.select_ids(select)?;
-        check.call_box(ids.into_iter().next().is_some())?
+        check(ids.into_iter().next().is_some())?
     }
 
     let child_id = conn.find_id(record_finder)?;
@@ -72,7 +72,7 @@ pub fn disconnect(
 ) -> SqlResult<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
         let ids = conn.select_ids(select)?;
-        check.call_box(ids.into_iter().next().is_some())?
+        check(ids.into_iter().next().is_some())?
     }
 
     match record_finder {
@@ -80,7 +80,7 @@ pub fn disconnect(
             let (select, check) = actions.ensure_parent_is_connected(parent_id);
 
             let ids = conn.select_ids(select)?;
-            check.call_box(ids.into_iter().next().is_some())?;
+            check(ids.into_iter().next().is_some())?;
 
             conn.write(actions.removal_by_parent(parent_id))?;
         }
@@ -89,7 +89,7 @@ pub fn disconnect(
             let (select, check) = actions.ensure_connected(parent_id, &child_id);
 
             let ids = conn.select_ids(select)?;
-            check.call_box(ids.into_iter().next().is_some())?;
+            check(ids.into_iter().next().is_some())?;
 
             conn.write(actions.removal_by_parent_and_child(parent_id, &child_id))?;
         }
@@ -109,7 +109,7 @@ pub fn set(
 ) -> SqlResult<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
         let ids = conn.select_ids(select)?;
-        check.call_box(ids.into_iter().next().is_some())?
+        check(ids.into_iter().next().is_some())?
     }
 
     conn.write(actions.removal_by_parent(parent_id))?;

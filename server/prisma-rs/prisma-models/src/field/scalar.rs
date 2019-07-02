@@ -176,10 +176,13 @@ impl ScalarField {
         self.manifestation.as_ref().map(|mf| mf.db_name.as_ref())
     }
 
-    pub fn as_column(&self) -> Column {
+    pub fn as_column(&self) -> Column<'static> {
         (
-            (self.internal_data_model().db_name.as_str(), self.model().db_name()),
-            self.db_name(),
+            (
+                self.internal_data_model().db_name.clone(),
+                self.model().db_name().to_string(),
+            ),
+            self.db_name().to_string(),
         )
             .into()
     }

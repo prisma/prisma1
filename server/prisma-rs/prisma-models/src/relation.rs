@@ -38,10 +38,8 @@ pub struct InlineRelation {
 }
 
 impl InlineRelation {
-    fn referencing_column(&self, table: Table) -> Column {
-        let column_name: &str = self.referencing_column.as_ref();
-        let column = Column::from(column_name);
-
+    fn referencing_column(&self, table: Table<'static>) -> Column<'static> {
+        let column = Column::from(self.referencing_column.clone());
         column.table(table)
     }
 }
@@ -151,9 +149,9 @@ impl Relation {
     /// A helper function to decide actions based on the `Relation` type. Inline
     /// relation will return a column for updates, a relation table gives back
     /// `None`.
-    pub fn inline_relation_column(&self) -> Option<Column> {
+    pub fn inline_relation_column(&self) -> Option<Column<'static>> {
         if let Some(mani) = self.inline_manifestation() {
-            Some(Column::from(mani.referencing_column.as_ref()).table(self.relation_table()))
+            Some(Column::from(mani.referencing_column.clone()).table(self.relation_table()))
         } else {
             None
         }
@@ -213,7 +211,7 @@ impl Relation {
             .expect("Field B deleted without deleting the relations in internal_data_model.")
     }
 
-    pub fn model_a_column(&self) -> Column {
+    pub fn model_a_column(&self) -> Column<'static> {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
@@ -238,7 +236,7 @@ impl Relation {
         }
     }
 
-    pub fn model_b_column(&self) -> Column {
+    pub fn model_b_column(&self) -> Column<'static> {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
@@ -268,7 +266,7 @@ impl Relation {
     /// - One of the model tables for one-to-many or one-to-one relations.
     /// - A separate relation table for all relations, if using the deprecated
     ///   data model syntax.
-    pub fn relation_table(&self) -> Table {
+    pub fn relation_table(&self) -> Table<'static> {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
@@ -292,13 +290,13 @@ impl Relation {
         self.field_a().is_list && self.field_b().is_list
     }
 
-    pub fn id_column(&self) -> Option<Column> {
+    pub fn id_column(&self) -> Option<Column<'static>> {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
             None => Some("id".into()),
             Some(RelationTable(ref m)) => m.id_column.as_ref().map(|s| {
-                let st: &str = s.as_ref();
+                let st: String = s.clone();
                 st.into()
             }),
             _ => None,
@@ -309,7 +307,7 @@ impl Relation {
         self.id_column().is_some()
     }
 
-    pub fn column_for_relation_side(&self, side: RelationSide) -> Column {
+    pub fn column_for_relation_side(&self, side: RelationSide) -> Column<'static> {
         match side {
             RelationSide::A => self.model_a_column(),
             RelationSide::B => self.model_b_column(),

@@ -77,7 +77,7 @@ where
 {
     if let Some((select, check)) = actions.required_check(parent_id)? {
         let ids = conn.select_ids(select)?;
-        check.call_box(ids.into_iter().next().is_some())?
+        check(ids.into_iter().next().is_some())?
     };
 
     if let Some(query) = actions.parent_removal(parent_id) {
