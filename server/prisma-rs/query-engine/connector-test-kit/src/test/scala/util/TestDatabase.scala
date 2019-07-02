@@ -2,25 +2,18 @@ package util
 
 import java.io.ByteArrayInputStream
 
-import play.api.libs.json.{JsObject, JsValue, Json, OWrites, Reads, Writes}
+import play.api.libs.json._
 
 case class TestDatabase() {
   def setup(project: Project): Unit = {
-    // TODO: delegate to migration-engine
-//    deleteProjectDatabase(project)
-//    createProjectDatabase(project)
     val engine = MigrationEngine(project)
+    engine.reset()
     engine.inferAndApply()
   }
 
   def truncateProjectTables(project: Project): Unit = {
-    // FIXME: implement
-  }
-  private def deleteProjectDatabase(project: Project): Unit = {
-    // FIXME: implement
-  }
-  private def createProjectDatabase(project: Project) = {
-    // FIXME: implement
+    // FIXME: implement truncation instead of this stupid approach
+    setup(project)
   }
 }
 
@@ -52,16 +45,24 @@ case class MigrationEngine(project: Project) {
     ()
   }
 
+  def reset(): Unit = {
+    sendRpcCallInternal[JsValue]("reset", Json.obj())
+  }
+
   private def sendRpcCall[A, B](method: String, params: A)(implicit writes: OWrites[A], reads: Reads[B]): B = {
-    val rpcCall = envelope(method, Json.toJsObject(params))
-    println(s"MigrationEngine sending rpc call: $rpcCall")
+    sendRpcCallInternal[B](method, Json.toJsObject(params))
+  }
+
+  private def sendRpcCallInternal[B](method: String, params: JsObject)(implicit reads: Reads[B]): B = {
+    val rpcCall = envelope(method, params)
+    println(s"sending to MigrationEngine: $rpcCall")
     val cmd         = List(EnvVars.migrationEngineBinaryPath)
     val inputStream = new ByteArrayInputStream(rpcCall.toString.getBytes("UTF-8"))
     val output: String = {
       import scala.sys.process._
       (cmd #< inputStream).!!
     }
-    println(s"MigrationEngine received: $output")
+    println(s"MigrationEngine responded: $output")
     val lastLine  = output.lines.foldLeft("")((_, line) => line)
     val rpcResult = Json.parse(lastLine).as[RpcResult]
     rpcResult.result.as[B]
