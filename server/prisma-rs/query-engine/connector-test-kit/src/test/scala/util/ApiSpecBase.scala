@@ -40,6 +40,8 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
 //    ""
 //  }
 //
+
+  val scalarListDirective = ""
 //  val scalarListDirective = if (capabilities.hasNot(EmbeddedScalarListsCapability)) {
 //    "@scalarList(strategy: RELATION)"
 //  } else {

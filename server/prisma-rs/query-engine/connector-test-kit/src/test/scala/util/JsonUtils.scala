@@ -33,7 +33,7 @@ object JsonUtils extends JsonUtils
 trait JsonUtils {
   implicit class JsonStringExtension(val str: String) {
     def tryParseJson(): Try[JsValue] = Try { Json.parse(str) }
-    def parseJson(): JsValue         = Json.parse(str)
+    def parseJson: JsValue           = Json.parse(str)
 
   }
 

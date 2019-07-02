@@ -67,7 +67,9 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   }
 
   private lazy val shouldSuiteBeIgnored: Boolean = { // this must be a val. Otherwise printing would happen many times.
-    val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(capabilities.has) || runOnlyForCapabilities.isEmpty
+    // TODO: bring back capabilities
+//    val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(capabilities.has) || runOnlyForCapabilities.isEmpty
+    val connectorHasTheRightCapabilities = true
     val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(capabilities.has)
     val isTheRightConnector              = runOnlyForConnectors.contains(connectorTag) && !doNotRunForConnectors.contains(connectorTag)
 
