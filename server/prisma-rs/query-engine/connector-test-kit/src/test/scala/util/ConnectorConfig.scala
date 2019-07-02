@@ -6,7 +6,7 @@ case class ConnectorConfig(
 )
 
 object ConnectorConfig {
-  def load: ConnectorConfig = {
+  def load(): ConnectorConfig = {
     ConnectorConfig("sqlite", "file://$DB_FILE")
   }
 }

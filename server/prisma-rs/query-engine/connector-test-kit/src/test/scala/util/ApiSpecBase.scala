@@ -7,8 +7,8 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
   self: Suite =>
 
   implicit lazy val implicitSuite = self
-  val server                      = loadTestServer()
-  val database                    = ApiTestDatabase()
+  val server                      = TestServer()
+  val database                    = TestDatabase()
 
   def capabilities = {
     // TODO: implement Capabilities resolution
@@ -21,8 +21,6 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
     // TODO: does the migration-engine need to perform an initialize before the tests?
 //    testDependencies.deployConnector.initialize().await()
   }
-
-  def loadTestServer(): ApiTestServer = ApiTestServer()
 
   def escapeString(str: String) = JsString(str).toString()
 

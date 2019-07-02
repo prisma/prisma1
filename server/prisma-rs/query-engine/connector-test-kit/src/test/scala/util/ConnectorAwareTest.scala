@@ -41,8 +41,9 @@ object ConnectorTag extends Enum[ConnectorTag] {
 trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   import IgnoreSet._
 
-  // FIXME: load current connector actually from somewhere
-  lazy val connector = "sqlite"
+  lazy val connectorConfig = ConnectorConfig.load()
+  lazy val connector       = connectorConfig.provider
+  // TODO: cleanup those providers once we have moved everything
   lazy val connectorTag = connector match {
     case "mongo"                                                 => ConnectorTag.MongoConnectorTag
     case "mysql" | "mysql-native"                                => ConnectorTag.MySqlConnectorTag

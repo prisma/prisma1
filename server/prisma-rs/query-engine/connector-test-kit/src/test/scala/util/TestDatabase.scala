@@ -4,7 +4,7 @@ import java.io.ByteArrayInputStream
 
 import play.api.libs.json.{JsObject, JsValue, Json, OWrites, Reads, Writes}
 
-case class ApiTestDatabase() {
+case class TestDatabase() {
   def setup(project: Project): Unit = {
     // TODO: delegate to migration-engine
 //    deleteProjectDatabase(project)

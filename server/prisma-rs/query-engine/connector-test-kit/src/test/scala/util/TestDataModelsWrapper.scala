@@ -17,7 +17,7 @@ case class TestDataModelsWrapper(
     dataModel: TestDataModels,
     connectorTag: ConnectorTag,
     connectorName: String,
-    database: ApiTestDatabase
+    database: TestDatabase
 )(implicit suite: Suite)
     extends WordSpecLike {
 

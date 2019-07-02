@@ -15,7 +15,7 @@ case class QueryEngineResponse(status: Int, body: String) {
   lazy val jsonBody: Try[JsValue] = Try(Json.parse(body))
 }
 
-case class ApiTestServer() extends PlayJsonExtensions {
+case class TestServer() extends PlayJsonExtensions {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def query(
