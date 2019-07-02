@@ -72,6 +72,7 @@ pub fn get_builtin_sources() -> Vec<Box<SourceDefinition>> {
 }
 
 /// Parses and validates a datamodel string, using core attributes and the given plugins.
+/// If plugin loading failes, validation continues, but an error is returned.
 pub fn parse_with_plugins(
     datamodel_string: &str,
     source_definitions: Vec<Box<configuration::SourceDefinition>>,
@@ -84,9 +85,25 @@ pub fn parse_with_plugins(
     for source in source_definitions {
         source_loader.add_source_definition(source);
     }
-    let sources = source_loader.load(&ast)?;
+
+    let mut errors = errors::ErrorCollection::new();
+
+    let sources = match source_loader.load(&ast) {
+        Ok(src) => src,
+        Err(mut err) => {
+            errors.append(&mut err);
+            Vec::new()
+        }
+    };
     let validator = ValidationPipeline::with_sources(&sources);
-    validator.validate(&ast)
+
+    match validator.validate(&ast) {
+        Ok(src) => Ok(src),
+        Err(mut err) => {
+            errors.append(&mut err);
+            Err(errors)
+        }
+    }
 }
 
 /// Loads all source configuration blocks from a datamodel using the given source definitions.
