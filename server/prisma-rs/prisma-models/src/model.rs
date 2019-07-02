@@ -85,8 +85,8 @@ impl Model {
         }
     }
 
-    pub fn table(&self) -> Table {
-        (self.internal_data_model().db_name.as_str(), self.db_name()).into()
+    pub fn table(&self) -> Table<'static> {
+        (self.internal_data_model().db_name.clone(), self.db_name().to_string()).into()
     }
 
     pub fn fields(&self) -> &Fields {
@@ -114,7 +114,7 @@ impl Model {
             .expect("InternalDataModel does not exist anymore. Parent internal_data_model is deleted without deleting the child internal_data_model.")
     }
 
-    pub fn id_column(&self) -> Column {
+    pub fn id_column(&self) -> Column<'static> {
         self.fields().id().as_column()
     }
 }

@@ -22,22 +22,22 @@ impl<'a> ScalarListTable<'a> {
         }
     }
 
-    pub fn table(&self) -> Table {
+    pub fn table(&self) -> Table<'static> {
         let internal_data_model = self.parent_field.internal_data_model();
-        let database_name = internal_data_model.db_name.as_ref();
+        let database_name = internal_data_model.db_name.clone();
 
-        Table::from((database_name, self.table_name.as_ref()))
+        Table::from((database_name, self.table_name.clone()))
     }
 
-    pub fn node_id_column(&self) -> Column {
+    pub fn node_id_column(&self) -> Column<'static> {
         Column::from(Self::NODE_ID_FIELD_NAME).table(self.table())
     }
 
-    pub fn position_column(&self) -> Column {
+    pub fn position_column(&self) -> Column<'static> {
         Column::from(Self::POSITION_FIELD_NAME).table(self.table())
     }
 
-    pub fn value_column(&self) -> Column {
+    pub fn value_column(&self) -> Column<'static> {
         Column::from(Self::VALUE_FIELD_NAME).table(self.table())
     }
 }

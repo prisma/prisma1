@@ -70,7 +70,7 @@ pub trait AliasedCondition {
     ///
     /// Alias should be used only when nesting, making the top level queries
     /// more explicit.
-    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree;
+    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree<'static>;
 }
 
 trait AliasedSelect {
@@ -79,12 +79,12 @@ trait AliasedSelect {
     ///
     /// Alias should be used only when nesting, making the top level queries
     /// more explicit.
-    fn aliased_sel(self, alias: Option<Alias>) -> Select;
+    fn aliased_sel(self, alias: Option<Alias>) -> Select<'static>;
 }
 
 impl AliasedCondition for Filter {
     /// Conversion from a `Filter` to a query condition tree. Aliased when in a nested `SELECT`.
-    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
+    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree<'static> {
         match self {
             Filter::And(mut filters) => match filters.pop() {
                 None => ConditionTree::NoCondition,
@@ -136,7 +136,7 @@ impl AliasedCondition for Filter {
 
 impl AliasedCondition for ScalarFilter {
     /// Conversion from a `ScalarFilter` to a query condition tree. Aliased when in a nested `SELECT`.
-    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
+    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree<'static> {
         let column = match alias {
             Some(ref alias) => self.field.as_column().table(alias.to_string(None)),
             None => self.field.as_column(),
@@ -177,7 +177,7 @@ impl AliasedCondition for ScalarFilter {
 
 impl AliasedCondition for RelationFilter {
     /// Conversion from a `RelationFilter` to a query condition tree. Aliased when in a nested `SELECT`.
-    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
+    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree<'static> {
         let id = self.field.model().id_column();
 
         let column = match alias {
@@ -201,7 +201,7 @@ impl AliasedCondition for RelationFilter {
 
 impl AliasedSelect for RelationFilter {
     /// The subselect part of the `RelationFilter` `ConditionTree`.
-    fn aliased_sel(self, alias: Option<Alias>) -> Select {
+    fn aliased_sel(self, alias: Option<Alias>) -> Select<'static> {
         let alias = alias.unwrap_or(Alias::default());
         let condition = self.condition.clone();
         let relation = self.field.relation();
@@ -233,7 +233,7 @@ impl AliasedSelect for RelationFilter {
                 let sub_condition = filter.condition.clone();
                 let sub_select = filter.aliased_sel(Some(alias.inc(AliasMode::Table)));
 
-                let tree: ConditionTree = match sub_condition {
+                let tree: ConditionTree<'static> = match sub_condition {
                     RelationCondition::EveryRelatedRecord => other_column.not_in_selection(sub_select),
                     RelationCondition::NoRelatedRecord => other_column.not_in_selection(sub_select),
                     RelationCondition::AtLeastOneRelatedRecord => other_column.in_selection(sub_select),
@@ -276,7 +276,7 @@ impl AliasedSelect for RelationFilter {
 
 impl AliasedCondition for OneRelationIsNullFilter {
     /// Conversion from a `OneRelationIsNullFilter` to a query condition tree. Aliased when in a nested `SELECT`.
-    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
+    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree<'static> {
         let alias = alias.map(|a| a.to_string(None));
 
         let condition = if self.field.relation_is_inlined_in_parent() {

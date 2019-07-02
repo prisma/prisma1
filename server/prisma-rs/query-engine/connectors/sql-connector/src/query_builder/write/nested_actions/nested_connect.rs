@@ -14,7 +14,7 @@ impl NestedActions for NestedConnect {
         self.relation_field().relation()
     }
 
-    fn required_check(&self, parent_id: &GraphqlId) -> SqlResult<Option<(Select, ResultCheck)>> {
+    fn required_check(&self, parent_id: &GraphqlId) -> SqlResult<Option<(Select<'static>, ResultCheck)>> {
         let p = Arc::clone(&self.relation_field);
         let c = p.related_field();
 
@@ -47,7 +47,7 @@ impl NestedActions for NestedConnect {
         }
     }
 
-    fn parent_removal(&self, parent_id: &GraphqlId) -> Option<Query> {
+    fn parent_removal(&self, parent_id: &GraphqlId) -> Option<Query<'static>> {
         let p = self.relation_field.clone();
         let c = p.related_field();
 
@@ -68,7 +68,7 @@ impl NestedActions for NestedConnect {
         }
     }
 
-    fn child_removal(&self, child_id: &GraphqlId) -> Option<Query> {
+    fn child_removal(&self, child_id: &GraphqlId) -> Option<Query<'static>> {
         let p = self.relation_field.clone();
         let c = p.related_field();
 

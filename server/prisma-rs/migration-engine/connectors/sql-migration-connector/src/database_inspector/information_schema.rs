@@ -52,7 +52,7 @@ impl InformationSchema {
             .into_iter()
             .map(|row| {
                 let default_value = match row.get("column_default") {
-                    Ok(ParameterizedValue::Text(v)) => Some(v.clone()),
+                    Ok(ParameterizedValue::Text(v)) => Some(v.to_string()),
                     Ok(ParameterizedValue::Null) => None,
                     Ok(p) => panic!(format!("expectd a string value but got {:?}", p)),
                     Err(err) => panic!(format!("{}", err)),

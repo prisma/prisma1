@@ -74,7 +74,7 @@ pub fn execute_nested(
     {
         let (select, check) = actions.ensure_connected(parent_id, &child_id);
         let ids = conn.select_ids(select)?;
-        check.call_box(ids.into_iter().next().is_some())?;
+        check(ids.into_iter().next().is_some())?;
     }
 
     let related_model = relation_field.related_model();

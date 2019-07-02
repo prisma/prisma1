@@ -276,8 +276,8 @@ impl TryFrom<PrismaValue> for i64 {
 }
 
 #[cfg(feature = "sql")]
-impl From<GraphqlId> for DatabaseValue {
-    fn from(id: GraphqlId) -> DatabaseValue {
+impl<'a> From<GraphqlId> for DatabaseValue<'a> {
+    fn from(id: GraphqlId) -> Self {
         match id {
             GraphqlId::String(s) => s.into(),
             GraphqlId::Int(i) => (i as i64).into(),
@@ -287,15 +287,15 @@ impl From<GraphqlId> for DatabaseValue {
 }
 
 #[cfg(feature = "sql")]
-impl From<&GraphqlId> for DatabaseValue {
-    fn from(id: &GraphqlId) -> DatabaseValue {
+impl<'a> From<&GraphqlId> for DatabaseValue<'a> {
+    fn from(id: &GraphqlId) -> Self {
         id.clone().into()
     }
 }
 
 #[cfg(feature = "sql")]
-impl From<PrismaValue> for DatabaseValue {
-    fn from(pv: PrismaValue) -> DatabaseValue {
+impl<'a> From<PrismaValue> for DatabaseValue<'a> {
+    fn from(pv: PrismaValue) -> Self {
         match pv {
             PrismaValue::String(s) => s.into(),
             PrismaValue::Float(f) => (f as f64).into(),

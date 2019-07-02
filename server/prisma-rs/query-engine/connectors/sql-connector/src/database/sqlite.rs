@@ -198,7 +198,7 @@ impl<'a> ToSqlRow for SqliteRow<'a> {
 
             match result {
                 Ok(pv) => Ok(pv),
-                Err(rusqlite::Error::InvalidColumnType(_, rusqlite::types::Type::Null)) => Ok(PrismaValue::Null),
+                Err(rusqlite::Error::InvalidColumnType(_, _, rusqlite::types::Type::Null)) => Ok(PrismaValue::Null),
                 Err(e) => Err(e.into()),
             }
         }

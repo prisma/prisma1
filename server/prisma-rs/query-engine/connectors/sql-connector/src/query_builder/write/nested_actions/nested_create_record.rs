@@ -14,7 +14,7 @@ impl NestedActions for NestedCreateRecord {
         self.relation_field().relation()
     }
 
-    fn required_check(&self, parent_id: &GraphqlId) -> SqlResult<Option<(Select, ResultCheck)>> {
+    fn required_check(&self, parent_id: &GraphqlId) -> SqlResult<Option<(Select<'static>, ResultCheck)>> {
         if self.top_is_create {
             return Ok(None);
         }
@@ -36,7 +36,7 @@ impl NestedActions for NestedCreateRecord {
         }
     }
 
-    fn parent_removal(&self, parent_id: &GraphqlId) -> Option<Query> {
+    fn parent_removal(&self, parent_id: &GraphqlId) -> Option<Query<'static>> {
         if self.top_is_create {
             return None;
         }
@@ -52,7 +52,7 @@ impl NestedActions for NestedCreateRecord {
         }
     }
 
-    fn child_removal(&self, _: &GraphqlId) -> Option<Query> {
+    fn child_removal(&self, _: &GraphqlId) -> Option<Query<'static>> {
         None
     }
 }

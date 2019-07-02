@@ -182,7 +182,12 @@ pub trait Transaction {
             .column(child_id_field)
             .so_that(parent_id_field.in_selection(parent_ids));
 
-        let conditions = related_model.fields().id().db_name().in_selection(subselect);
+        let conditions = related_model
+            .fields()
+            .id()
+            .db_name()
+            .to_string()
+            .in_selection(subselect);
 
         let conditions = match selector {
             Some(into_cond) => {

@@ -13,15 +13,15 @@ impl NestedActions for NestedDeleteRecord {
         self.relation_field().relation()
     }
 
-    fn required_check(&self, _: &GraphqlId) -> SqlResult<Option<(Select, ResultCheck)>> {
+    fn required_check(&self, _: &GraphqlId) -> SqlResult<Option<(Select<'static>, ResultCheck)>> {
         Ok(None)
     }
 
-    fn parent_removal(&self, _: &GraphqlId) -> Option<Query> {
+    fn parent_removal(&self, _: &GraphqlId) -> Option<Query<'static>> {
         None
     }
 
-    fn child_removal(&self, _: &GraphqlId) -> Option<Query> {
+    fn child_removal(&self, _: &GraphqlId) -> Option<Query<'static>> {
         None
     }
 }
