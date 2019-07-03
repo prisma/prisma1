@@ -37,22 +37,26 @@ impl From<DomainError> for CoreError {
 #[derive(Debug)]
 pub enum QueryValidationError {
     RequiredValueNotSetError,
+    FieldNotFoundError,
+    AtLeastOneSelectionError,
+    ValueParseError(String),
+    InputFieldValidationError,
     ValueTypeMismatchError {
         have: QueryValue,
         want: InputType,
     },
-    ValueParseError(String),
-    FieldNotFoundError,
     ArgumentValidationError {
         argument: String,
         inner: Box<QueryValidationError>,
     },
     FieldValidationError {
         field_name: String,
-        reason: Box<QueryValidationError>,
-        on_object: String,
+        inner: Box<QueryValidationError>,
     },
-    InputFieldValidationError,
+    ObjectValidationError {
+        object_name: String,
+        inner: Box<QueryValidationError>,
+    },
 }
 
 impl fmt::Display for QueryValidationError {

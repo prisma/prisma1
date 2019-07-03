@@ -151,6 +151,14 @@ impl ObjectType {
             .unwrap();
     }
 
+    pub fn find_field<T>(&self, name: T) -> Option<FieldRef>
+    where
+        T: Into<String>,
+    {
+        let name = name.into();
+        self.get_fields().into_iter().find(|f| f.name == name).cloned()
+    }
+
     /// True if fields are empty, false otherwise.
     pub fn is_empty(&self) -> bool {
         self.get_fields().is_empty()
@@ -339,6 +347,18 @@ impl OutputType {
 
     pub fn id() -> OutputType {
         OutputType::Scalar(ScalarType::ID)
+    }
+
+    /// Attempts to recurse through the type until an object type is found.
+    /// Returns Some(ObjectTypeStrongRef) if ab object type is found, None otherwise.
+    pub fn as_object_type(&self) -> Option<ObjectTypeStrongRef> {
+        match self {
+            OutputType::Enum(EnumType) => None,
+            OutputType::List(inner) => inner.as_object_type(),
+            OutputType::Object(obj) => Some(obj.into_arc()),
+            OutputType::Opt(inner) => inner.as_object_type(),
+            OutputType::Scalar(ScalarType) => None,
+        }
     }
 }
 

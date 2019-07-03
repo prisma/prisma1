@@ -1,22 +1,69 @@
-use crate::{query_document::{
-    QueryValue,
-    Operation,
-    QueryDocument,
-    ReadOperation
-}, Argument, CoreError, CoreResult, EnumType, Field, InputObjectTypeStrongRef, InputType, IntoArc, QuerySchemaRef, QueryValidationError, ScalarType, OperationTag, OutputType, FieldRef, ObjectTypeStrongRef};
 use chrono::prelude::*;
 use connector::Query;
 use prisma_models::{GraphqlId, PrismaValue, ModelRef};
-use std::{collections::BTreeMap, result::Result};
+use std::{
+    collections::BTreeMap,
+    result::Result,
+    sync::Arc
+};
 use uuid::Uuid;
-use crate::query_document::Selection;
+use crate::{
+    query_document::Selection,
+    query_document::{
+        QueryValue,
+        Operation,
+        QueryDocument,
+        ReadOperation
+    },
+    Argument,
+    CoreError,
+    CoreResult,
+    EnumType,
+    Field,
+    InputObjectTypeStrongRef,
+    InputType,
+    IntoArc,
+    QuerySchemaRef,
+    QueryValidationError,
+    ScalarType,
+    OperationTag,
+    OutputType,
+    FieldRef,
+    ObjectTypeStrongRef,
+    query_builders::read_new::FindOneQueryBuilder
+};
 
-type QueryBuilderResult<T> = Result<T, QueryValidationError>;
+pub type QueryBuilderResult<T> = Result<T, QueryValidationError>;
+
+pub struct ParsedObject {
+    pub fields: Vec<ParsedField>
+}
+
+pub struct ParsedField {
+    pub name: String,
+    pub arguments: Vec<ParsedArgument>,
+    pub sub_selections: Option<ParsedObject>,
+}
+
+pub struct ParsedArgument {
+    pub name: String,
+    pub value: ParsedInputValue,
+}
+
+pub enum ParsedInputValue {
+    Single(PrismaValue),
+    Map(BTreeMap<String, ParsedInputValue>),
+}
 
 pub struct QueryBuilder {
     pub query_schema: QuerySchemaRef,
 }
 
+// Todo:
+// - Use error collections instead of letting first error win.
+// - Check if empty selection set already fails at the parser level
+// - UUID ids are not encoded in any useful way in the schema.
+// - Should the required field injection be done here?
 impl QueryBuilder {
     /// Builds queries from a query document.
     pub fn build(self, query_doc: QueryDocument) -> CoreResult<Vec<Query>> {
@@ -24,11 +71,13 @@ impl QueryBuilder {
             .operations
             .into_iter()
             .map(|op| self.map_operation(op).map_err(|err| err.into()))
-            .collect()
+            .collect::<Vec<QueryBuilderResult<Vec<Query>>>>()
+            .into_iter().collect::<QueryBuilderResult<Vec<Vec<Query>>>>()
+            .map(|vec| vec.into_iter().flatten().collect()).map_err(|err| err.into())
     }
 
     /// Maps an operation to a query
-    fn map_operation(&self, operation: Operation) -> QueryBuilderResult<Query> {
+    fn map_operation(&self, operation: Operation) -> QueryBuilderResult<Vec<Query>> {
         match operation {
             Operation::Read(read_op) => self.map_read(read_op),
             Operation::Write(write_op) => unimplemented!(),
@@ -36,83 +85,84 @@ impl QueryBuilder {
     }
 
     /// Maps a read operation to a query.
-    fn map_read(&self, read_op: ReadOperation) -> QueryBuilderResult<Query> {
-        // Parse and validate the incoming read operation against the query object.
-        let parsed = self.parse_object(&read_op.selections, self.query_schema.query())?;
-
+    fn map_read(&self, read_op: ReadOperation) -> QueryBuilderResult<Vec<Query>> {
+        let query_object = self.query_schema.query();
+        let parsed = self.parse_object(&read_op.selections, &query_object)?;
 
         // Special treatment on read root: all fields map to a model operation.
-        // This means: Find matching schema field (which is a bit redundant here) for each operation build a query.
+        // This means: Find matching schema field (which is a bit redundant here,
+        // because it was done during object parsing already).
+        // Then, for each field on the query object: build a query.
+        parsed.fields.into_iter().map(|parsed_field| {
+            let field = query_object.find_field(parsed_field.name.clone()).expect("Expected validation to guarantee existing field on Query object.");
+            let field_operation = field.operation.as_ref().expect("Expected Query object fields to always have an associated operation.");
 
+            // - Parse RecordFinder for read-one operation
+            // - Parse QueryArguments for read-many operation
+            // - Output fields are the actual reads
 
-        // every read op maps to one root read query.
-
-        unimplemented!()
+            match field_operation.operation {
+                OperationTag::FindOne => FindOneQueryBuilder::build(parsed_field, Arc::clone(&field_operation.model)).map(|query| Query::Read(query)),
+                OperationTag::FindMany => unimplemented!(),
+                _ => unreachable!(), // Only read one / many is possible on the root.
+            }
+        }).collect()
     }
 
     /// Parses and validates a set of selections against a schema (output) object.
-    // Todo empty selection set: Does that fail at the parser level already?
-    fn parse_object(&self, selections: &Vec<Selection>, object: ObjectTypeStrongRef) -> QueryBuilderResult<ParsedObject> {
-        // Todo WIP
+    fn parse_object(&self, selections: &Vec<Selection>, object: &ObjectTypeStrongRef) -> QueryBuilderResult<ParsedObject> {
+        if selections.len() == 0 {
+            return Err(QueryValidationError::ObjectValidationError {
+                object_name: object.name.clone(),
+                inner: Box::new(QueryValidationError::AtLeastOneSelectionError)
+            })
+        }
+
         selections
             .into_iter()
-            .map(
-                |selection| match self.query_schema.find_query_field(selection.name.as_ref()) {
-                    Some(ref field) => {
-                        // Parse and validate all provided arguments
-                        let parsed_arguments = self.parse_arguments(field, &selection.arguments).map_err(|err| {
-                            QueryValidationError::FieldValidationError {
-                                field_name: field.name.clone(),
-                                reason: Box::new(err),
-                                on_object: "Query".into(),
-                            }})?;
-
-
-                        // Based on the operation that is present on the root read field, build the query.
-                        let field_operation = field.operation.as_ref().expect("Expect Query and Mutation object fields to always have an associated ");
-
-                        // Validate that sub selection set is only selecting fields that are allowed.
-
-
-                        // - Parse RecordFinder for read-one operation
-                        // - Parse QueryArguments for read-many operation
-                        // - Output fields are the actual reads
-
-//                        match field_operation.operation {
-//                            OperationTag::FindOne => Ok(ReadQueryBuilder::One(
-//                                OneBuilder::new().setup(Arc::clone(&model), field),
-//                            )),
-//                            OperationTag::FindMany => Ok(ReadQueryBuilder::Many(
-//                                ManyBuilder::new().setup(Arc::clone(&model), field),
-//                            )),
-//                            _ => Err(CoreError::LegacyQueryValidationError(format!(
-//                                "Invalid root operation on Query: {:?}",
-//                                operation
-//                            ))),
-//                        }
-
-                        // the builders get:
-                        // - the parsed args
-                        // - the selections
-                        // - whatever input needed, for example the model it needs to operate on
-
-                        unimplemented!()
-                    }
-
+            .map(|selection| {
+                let parsed_field = match object.find_field(selection.name.as_ref()) {
+                    Some(ref field) => self.parse_field(selection, field),
                     None => Err(QueryValidationError::FieldValidationError {
-                        field_name: selection.name,
-                        reason: Box::new(QueryValidationError::FieldNotFoundError),
-                        on_object: "Query".into(),
+                        field_name: selection.name.clone(),
+                        inner: Box::new(QueryValidationError::FieldNotFoundError),
                     }),
-                },
-            )
-            .collect::<QueryBuilderResult<Vec<Query>>>()?;
+                };
 
-        unimplemented!()
+                parsed_field.map_err(|err| QueryValidationError::ObjectValidationError {
+                    object_name: object.name.clone(),
+                    inner: Box::new(err),
+                })
+            })
+            .collect::<QueryBuilderResult<Vec<ParsedField>>>().map(|fields| { ParsedObject { fields } })
+    }
+
+    /// Parses and validates a selection against a schema (output) field.
+    fn parse_field(&self, selection: &Selection, schema_field: &FieldRef) -> QueryBuilderResult<ParsedField> {
+        // Parse and validate all provided arguments for the field
+        self.parse_arguments(schema_field, &selection.arguments).and_then(|arguments| {
+            // If the output type of the field is an object type of any form, validate the sub selection as well.
+            let sub_selections = schema_field.field_type.as_object_type().map(|obj| self.parse_object(&selection.sub_selections, &obj));
+            let sub_selections = match sub_selections {
+                Some(sub) => Some(sub?),
+                None => None
+            };
+
+            Ok(ParsedField {
+                name: selection.name.clone(),
+                arguments,
+                sub_selections,
+            })
+        }).map_err(|err| {
+            QueryValidationError::FieldValidationError {
+                field_name: schema_field.name.clone(),
+                inner: Box::new(err),
+            }
+        })
     }
 
     /// Parses and validates selection arguments against a schema defined field.
-    fn parse_arguments(&self, schema_field: &FieldRef, given_arguments: &Vec<(String, QueryValue)>) -> QueryBuilderResult<Vec<(String, ParsedInputValue)>> {
+    fn parse_arguments(&self, schema_field: &FieldRef, given_arguments: &Vec<(String, QueryValue)>) -> QueryBuilderResult<Vec<ParsedArgument>> {
         schema_field
             .arguments
             .iter()
@@ -128,13 +178,13 @@ impl QueryBuilder {
                 // (field is optional or not).
                 self
                     .parse_input_value(selection_arg.map(|x| &x.1), &schema_arg.argument_type)
-                    .map(|val| (schema_arg.name.clone(), val))
+                    .map(|value| ParsedArgument { name: schema_arg.name.clone(), value } )
                     .map_err(|err| QueryValidationError::ArgumentValidationError {
                         argument: schema_arg.name.clone(),
                         inner: Box::new(err),
                     })
             })
-            .collect::<Vec<QueryBuilderResult<(String, ParsedInputValue)>>>().into_iter().collect()
+            .collect::<Vec<QueryBuilderResult<ParsedArgument>>>().into_iter().collect()
     }
 
     /// Parses and validates a QueryValue against an InputType, recursively.
@@ -252,19 +302,4 @@ impl QueryBuilder {
             .collect::<QueryBuilderResult<Vec<(String, ParsedInputValue)>>>()
             .map(|tuples| tuples.into_iter().collect())
     }
-}
-
-// Todo: Naming sucks
-struct ParsedObject {
-    pub fields: BTreeMap<String, Vec<ParsedArgument>>
-}
-
-struct ParsedArgument {
-    pub name: String,
-    pub value: ParsedValue,
-}
-
-enum ParsedInputValue {
-    Single(PrismaValue),
-    Map(BTreeMap<String, ParsedInputValue>),
 }

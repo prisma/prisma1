@@ -29,6 +29,9 @@ impl QueryExecutor {
         }
     }
 
+    /// Executes a query document, which involves parsing & validating the document,
+    /// building queries and a query execution plan, and finally calling the connector APIs to
+    /// resolve the queries.
     pub fn execute(query_doc: QueryDocument) -> CoreResult<()> {
         // 1. Parse and validate query document (building)
         // 2. Build query plan
