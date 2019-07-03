@@ -1,7 +1,7 @@
 use crate::{
     error::SqlError,
     write_query::{NestedActions, WriteQueryBuilder},
-    SqlResult, Transaction,
+    Transaction,
 };
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
 use std::sync::Arc;
@@ -12,7 +12,7 @@ pub fn execute<S>(
     model: ModelRef,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
-) -> SqlResult<GraphqlId>
+) -> crate::Result<GraphqlId>
 where
     S: AsRef<str>,
 {
@@ -71,7 +71,7 @@ pub fn execute_nested<S>(
     relation_field: RelationFieldRef,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
-) -> SqlResult<GraphqlId>
+) -> crate::Result<GraphqlId>
 where
     S: AsRef<str>,
 {

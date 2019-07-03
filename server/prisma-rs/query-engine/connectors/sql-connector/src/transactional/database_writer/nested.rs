@@ -1,5 +1,5 @@
 use super::{create, delete, delete_many, relation, update, update_many};
-use crate::{error::SqlError, SqlResult, Transaction};
+use crate::{error::SqlError, Transaction};
 use connector::write_query::*;
 use prisma_models::GraphqlId;
 use std::sync::Arc;
@@ -8,8 +8,8 @@ pub fn execute(
     conn: &mut Transaction,
     nested_write_writes: &NestedWriteQueries,
     parent_id: &GraphqlId,
-) -> SqlResult<()> {
-    fn create(conn: &mut Transaction, parent_id: &GraphqlId, cn: &NestedCreateRecord) -> SqlResult<()> {
+) -> crate::Result<()> {
+    fn create(conn: &mut Transaction, parent_id: &GraphqlId, cn: &NestedCreateRecord) -> crate::Result<()> {
         let parent_id = create::execute_nested(
             conn,
             parent_id,
@@ -24,7 +24,7 @@ pub fn execute(
         Ok(())
     }
 
-    fn update(conn: &mut Transaction, parent_id: &GraphqlId, un: &NestedUpdateRecord) -> SqlResult<()> {
+    fn update(conn: &mut Transaction, parent_id: &GraphqlId, un: &NestedUpdateRecord) -> crate::Result<()> {
         let parent_id = update::execute_nested(
             conn,
             parent_id,

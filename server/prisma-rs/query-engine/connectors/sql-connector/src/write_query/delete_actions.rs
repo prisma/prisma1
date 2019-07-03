@@ -1,4 +1,4 @@
-use crate::{error::SqlError, SqlResult};
+use crate::error::SqlError;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
@@ -14,9 +14,9 @@ impl DeleteActions {
     /// connector, giving the connector the possibility to return an optional
     /// `GraphqlID` from the database, such as trying to read a row from the
     /// `SELECT`.
-    pub fn check_relation_violations<F>(model: ModelRef, ids: &[&GraphqlId], mut f: F) -> SqlResult<()>
+    pub fn check_relation_violations<F>(model: ModelRef, ids: &[&GraphqlId], mut f: F) -> crate::Result<()>
     where
-        F: FnMut(Select) -> SqlResult<Option<GraphqlId>>,
+        F: FnMut(Select) -> crate::Result<Option<GraphqlId>>,
     {
         for rf in model.internal_data_model().fields_requiring_model(model) {
             let relation = rf.relation();

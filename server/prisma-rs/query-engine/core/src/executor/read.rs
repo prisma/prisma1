@@ -1,5 +1,5 @@
 use crate::{query_ast, query_results::*, CoreResult};
-use connector::{ConnectorResult, DatabaseReader, ScalarListValues};
+use connector::{self, DatabaseReader, ScalarListValues};
 use prisma_models::{GraphqlId, ScalarField, SelectedFields, SingleRecord};
 use query_ast::*;
 use std::{convert::TryFrom, sync::Arc};
@@ -168,7 +168,7 @@ impl ReadQueryExecutor {
         &self,
         record_ids: Vec<GraphqlId>,
         list_fields: Vec<Arc<ScalarField>>,
-    ) -> ConnectorResult<Vec<(String, Vec<ScalarListValues>)>> {
+    ) -> connector::Result<Vec<(String, Vec<ScalarListValues>)>> {
         if !list_fields.is_empty() {
             list_fields
                 .into_iter()
@@ -178,7 +178,7 @@ impl ReadQueryExecutor {
                         .get_scalar_list_values_by_record_ids(list_field, record_ids.clone())
                         .map(|r| (name, r))
                 })
-                .collect::<ConnectorResult<Vec<(String, Vec<_>)>>>()
+                .collect::<connector::Result<Vec<(String, Vec<_>)>>>()
         } else {
             Ok(vec![])
         }

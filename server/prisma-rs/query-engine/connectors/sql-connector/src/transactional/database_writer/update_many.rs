@@ -1,5 +1,5 @@
 use super::update;
-use crate::{write_query::WriteQueryBuilder, SqlResult, Transaction};
+use crate::{write_query::WriteQueryBuilder, Transaction};
 use connector::filter::Filter;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
 use std::sync::Arc;
@@ -14,7 +14,7 @@ pub fn execute<S>(
     filter: &Filter,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
-) -> SqlResult<usize>
+) -> crate::Result<usize>
 where
     S: AsRef<str>,
 {
@@ -48,7 +48,7 @@ pub fn execute_nested<S>(
     relation_field: RelationFieldRef,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
-) -> SqlResult<usize>
+) -> crate::Result<usize>
 where
     S: AsRef<str>,
 {

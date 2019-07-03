@@ -1,6 +1,6 @@
 use crate::{
     write_query::{NestedActions, WriteQueryBuilder},
-    SqlResult, Transaction,
+    Transaction,
 };
 use connector::filter::RecordFinder;
 use prisma_models::{GraphqlId, RelationFieldRef};
@@ -31,7 +31,7 @@ pub fn connect(
     actions: &NestedActions,
     record_finder: &RecordFinder,
     relation_field: RelationFieldRef,
-) -> SqlResult<()> {
+) -> crate::Result<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
         let ids = conn.select_ids(select)?;
         check(ids.into_iter().next().is_some())?
@@ -69,7 +69,7 @@ pub fn disconnect(
     parent_id: &GraphqlId,
     actions: &NestedActions,
     record_finder: &Option<RecordFinder>,
-) -> SqlResult<()> {
+) -> crate::Result<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
         let ids = conn.select_ids(select)?;
         check(ids.into_iter().next().is_some())?
@@ -106,7 +106,7 @@ pub fn set(
     actions: &NestedActions,
     record_finders: &Vec<RecordFinder>,
     relation_field: RelationFieldRef,
-) -> SqlResult<()> {
+) -> crate::Result<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
         let ids = conn.select_ids(select)?;
         check(ids.into_iter().next().is_some())?

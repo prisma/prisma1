@@ -1,9 +1,9 @@
 use crate::{
-    error::SqlError, query_builder::ManyRelatedRecordsWithRowNumber, RawQuery, SqlId, SqlResult, SqlRow, ToSqlRow,
-    Transaction, Transactional, WriteQueryBuilder,
+    error::SqlError, query_builder::ManyRelatedRecordsWithRowNumber, RawQuery, SqlId, SqlRow, ToSqlRow, Transaction,
+    Transactional, WriteQueryBuilder,
 };
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use connector::{error::*, ConnectorResult};
+use connector::{self, error::*};
 use datamodel::configuration::Source;
 use native_tls::TlsConnector;
 use postgres::{
@@ -36,7 +36,7 @@ impl TryFrom<&Box<dyn Source>> for PostgreSql {
     type Error = SqlError;
 
     /// Todo connection limit configuration
-    fn try_from(source: &Box<dyn Source>) -> SqlResult<PostgreSql> {
+    fn try_from(source: &Box<dyn Source>) -> crate::Result<PostgreSql> {
         let mut url: url::Url = url::Url::parse(source.url())?;
 
         // Supported official connection url parameters (empty = strip all)
@@ -90,7 +90,7 @@ impl TryFrom<&Box<dyn Source>> for PostgreSql {
 impl TryFrom<&PrismaDatabase> for PostgreSql {
     type Error = ConnectorError;
 
-    fn try_from(db: &PrismaDatabase) -> ConnectorResult<Self> {
+    fn try_from(db: &PrismaDatabase) -> connector::Result<Self> {
         match db {
             PrismaDatabase::ConnectionString(ref config) => Ok(PostgreSql::try_from(config)?),
             PrismaDatabase::Explicit(ref config) => Ok(PostgreSql::try_from(config)?),
@@ -105,7 +105,7 @@ impl TryFrom<&PrismaDatabase> for PostgreSql {
 impl TryFrom<&ExplicitConfig> for PostgreSql {
     type Error = SqlError;
 
-    fn try_from(e: &ExplicitConfig) -> SqlResult<Self> {
+    fn try_from(e: &ExplicitConfig) -> crate::Result<Self> {
         let db_name = e.database.as_ref().map(|x| x.as_str()).unwrap_or("postgres");
         let mut config = Config::new();
 
@@ -131,7 +131,7 @@ impl TryFrom<&ExplicitConfig> for PostgreSql {
 impl TryFrom<&ConnectionStringConfig> for PostgreSql {
     type Error = SqlError;
 
-    fn try_from(s: &ConnectionStringConfig) -> SqlResult<Self> {
+    fn try_from(s: &ConnectionStringConfig) -> crate::Result<Self> {
         let db_name = s.database.as_ref().map(|x| x.as_str()).unwrap_or("postgres");
         let mut config = Config::from_str(s.uri.as_str())?;
 
@@ -149,9 +149,9 @@ impl TryFrom<&ConnectionStringConfig> for PostgreSql {
 impl Transactional for PostgreSql {
     type ManyRelatedRecordsBuilder = ManyRelatedRecordsWithRowNumber;
 
-    fn with_transaction<F, T>(&self, _: &str, f: F) -> SqlResult<T>
+    fn with_transaction<F, T>(&self, _: &str, f: F) -> crate::Result<T>
     where
-        F: FnOnce(&mut Transaction) -> SqlResult<T>,
+        F: FnOnce(&mut Transaction) -> crate::Result<T>,
     {
         self.with_client(|client| {
             let mut tx = client.transaction()?;
@@ -189,7 +189,7 @@ impl<'a> FromSql<'a> for SqlId {
 }
 
 impl<'a> Transaction for PostgresTransaction<'a> {
-    fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>> {
+    fn write(&mut self, q: Query) -> crate::Result<Option<GraphqlId>> {
         let id = match q {
             insert @ Query::Insert(_) => {
                 let (sql, params) = visitor::Postgres::build(insert);
@@ -220,7 +220,7 @@ impl<'a> Transaction for PostgresTransaction<'a> {
         Ok(id)
     }
 
-    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
+    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> crate::Result<Vec<SqlRow>> {
         let (sql, params) = visitor::Postgres::build(q);
         debug!("{}\n{:?}", sql, params);
 
@@ -237,7 +237,7 @@ impl<'a> Transaction for PostgresTransaction<'a> {
         Ok(result)
     }
 
-    fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> SqlResult<()> {
+    fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> crate::Result<()> {
         self.write(Query::from("SET CONSTRAINTS ALL DEFERRED"))?;
 
         for delete in WriteQueryBuilder::truncate_tables(internal_data_model) {
@@ -247,7 +247,7 @@ impl<'a> Transaction for PostgresTransaction<'a> {
         Ok(())
     }
 
-    fn raw(&mut self, q: RawQuery) -> SqlResult<Value> {
+    fn raw(&mut self, q: RawQuery) -> crate::Result<Value> {
         let stmt = self.prepare(&q.0)?;
 
         if q.is_select() {
@@ -454,11 +454,11 @@ impl<'a> Transaction for PostgresTransaction<'a> {
 }
 
 impl ToSqlRow for PostgresRow {
-    fn to_sql_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
+    fn to_sql_row<'b, T>(&'b self, idents: T) -> crate::Result<SqlRow>
     where
         T: IntoIterator<Item = &'b TypeIdentifier>,
     {
-        fn convert(row: &PostgresRow, i: usize, typid: &TypeIdentifier) -> SqlResult<PrismaValue> {
+        fn convert(row: &PostgresRow, i: usize, typid: &TypeIdentifier) -> crate::Result<PrismaValue> {
             let result = match typid {
                 TypeIdentifier::String => match row.try_get(i)? {
                     Some(val) => PrismaValue::String(val),
@@ -554,7 +554,7 @@ impl ToSqlRow for PostgresRow {
 }
 
 impl PostgreSql {
-    fn new(config: Config, schema_name: String, connections: u32) -> SqlResult<PostgreSql> {
+    fn new(config: Config, schema_name: String, connections: u32) -> crate::Result<PostgreSql> {
         let mut tls_builder = TlsConnector::builder();
         tls_builder.danger_accept_invalid_certs(true); // For Heroku
 
@@ -565,9 +565,9 @@ impl PostgreSql {
         Ok(PostgreSql { schema_name, pool })
     }
 
-    fn with_client<F, T>(&self, f: F) -> SqlResult<T>
+    fn with_client<F, T>(&self, f: F) -> crate::Result<T>
     where
-        F: FnOnce(&mut Client) -> SqlResult<T>,
+        F: FnOnce(&mut Client) -> crate::Result<T>,
     {
         let mut client = self.pool.get()?;
         let result = f(&mut client);

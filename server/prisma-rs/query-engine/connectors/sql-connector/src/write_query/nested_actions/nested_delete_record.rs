@@ -1,5 +1,4 @@
 use super::*;
-use crate::SqlResult;
 use connector::write_query::NestedDeleteRecord;
 use prisma_models::*;
 use prisma_query::ast::*;
@@ -13,7 +12,7 @@ impl NestedActions for NestedDeleteRecord {
         self.relation_field().relation()
     }
 
-    fn required_check(&self, _: &GraphqlId) -> SqlResult<Option<(Select<'static>, ResultCheck)>> {
+    fn required_check(&self, _: &GraphqlId) -> crate::Result<Option<(Select<'static>, ResultCheck)>> {
         Ok(None)
     }
 

@@ -10,16 +10,16 @@ pub use nested_delete_record::*;
 pub use nested_disconnect::*;
 pub use nested_set::*;
 
+use crate::error::*;
 use crate::query_builder::QueryBuilder;
-use crate::{error::*, SqlResult};
 use connector::{error::RecordFinderInfo, filter::RecordFinder};
 use prisma_models::*;
 use prisma_query::ast::*;
 
-pub type ResultCheck = Box<FnOnce(bool) -> SqlResult<()> + Send + Sync + 'static>;
+pub type ResultCheck = Box<FnOnce(bool) -> crate::Result<()> + Send + Sync + 'static>;
 
 pub trait NestedActions {
-    fn required_check(&self, parent_id: &GraphqlId) -> SqlResult<Option<(Select<'static>, ResultCheck)>>;
+    fn required_check(&self, parent_id: &GraphqlId) -> crate::Result<Option<(Select<'static>, ResultCheck)>>;
 
     fn parent_removal(&self, parent_id: &GraphqlId) -> Option<Query<'static>>;
     fn child_removal(&self, child_id: &GraphqlId) -> Option<Query<'static>>;

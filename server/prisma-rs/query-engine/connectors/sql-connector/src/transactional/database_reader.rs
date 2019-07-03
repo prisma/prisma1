@@ -4,7 +4,7 @@ use crate::{
     query_builder::{ManyRelatedRecordsBaseQuery, ManyRelatedRecordsQueryBuilder, QueryBuilder},
     Transactional,
 };
-use connector::{error::ConnectorError, filter::RecordFinder, *};
+use connector::{self, error::ConnectorError, filter::RecordFinder, *};
 use itertools::Itertools;
 use prisma_models::*;
 use std::convert::TryFrom;
@@ -22,7 +22,7 @@ where
         &self,
         record_finder: &RecordFinder,
         selected_fields: &SelectedFields,
-    ) -> ConnectorResult<Option<SingleRecord>> {
+    ) -> connector::Result<Option<SingleRecord>> {
         let db_name = &record_finder.field.model().internal_data_model().db_name;
         let query = QueryBuilder::get_records(record_finder.field.model(), selected_fields, record_finder);
         let field_names = selected_fields.names();
@@ -49,7 +49,7 @@ where
         model: ModelRef,
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> ConnectorResult<ManyRecords> {
+    ) -> connector::Result<ManyRecords> {
         let db_name = &model.internal_data_model().db_name;
         let field_names = selected_fields.names();
         let idents = selected_fields.type_identifiers();
@@ -71,7 +71,7 @@ where
         from_record_ids: &[GraphqlId],
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> ConnectorResult<ManyRecords> {
+    ) -> connector::Result<ManyRecords> {
         let db_name = &from_field.model().internal_data_model().db_name;
         let idents = selected_fields.type_identifiers();
         let field_names = selected_fields.names();
@@ -87,7 +87,7 @@ where
             }
         };
 
-        let records: ConnectorResult<Vec<Record>> = self
+        let records: connector::Result<Vec<Record>> = self
             .executor
             .with_transaction(db_name, |conn| conn.filter(query, idents.as_slice()))?
             .into_iter()
@@ -111,7 +111,7 @@ where
         })
     }
 
-    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> ConnectorResult<usize> {
+    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> connector::Result<usize> {
         let db_name = &model.internal_data_model().db_name;
         let query = QueryBuilder::count_by_model(model, query_arguments);
 
@@ -123,7 +123,7 @@ where
         Ok(result)
     }
 
-    fn count_by_table(&self, database: &str, table: &str) -> ConnectorResult<usize> {
+    fn count_by_table(&self, database: &str, table: &str) -> connector::Result<usize> {
         let query = QueryBuilder::count_by_table(database, table);
 
         let result = self
@@ -138,7 +138,7 @@ where
         &self,
         list_field: ScalarFieldRef,
         record_ids: Vec<GraphqlId>,
-    ) -> ConnectorResult<Vec<ScalarListValues>> {
+    ) -> connector::Result<Vec<ScalarListValues>> {
         let db_name = &list_field.model().internal_data_model().db_name;
         let type_identifier = list_field.type_identifier;
         let query = QueryBuilder::get_scalar_list_values_by_record_ids(list_field, record_ids);

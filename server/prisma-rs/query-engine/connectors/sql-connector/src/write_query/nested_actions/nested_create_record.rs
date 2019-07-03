@@ -1,5 +1,4 @@
 use super::*;
-use crate::SqlResult;
 use connector::write_query::NestedCreateRecord;
 use prisma_models::*;
 use prisma_query::ast::*;
@@ -14,7 +13,7 @@ impl NestedActions for NestedCreateRecord {
         self.relation_field().relation()
     }
 
-    fn required_check(&self, parent_id: &GraphqlId) -> SqlResult<Option<(Select<'static>, ResultCheck)>> {
+    fn required_check(&self, parent_id: &GraphqlId) -> crate::Result<Option<(Select<'static>, ResultCheck)>> {
         if self.top_is_create {
             return Ok(None);
         }

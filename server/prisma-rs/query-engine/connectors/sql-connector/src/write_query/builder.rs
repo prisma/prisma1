@@ -1,4 +1,4 @@
-use crate::{error::SqlError, SqlResult};
+use crate::error::SqlError;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
@@ -113,11 +113,11 @@ impl WriteQueryBuilder {
         Some(result)
     }
 
-    pub fn update_one(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> SqlResult<Option<Update<'static>>> {
+    pub fn update_one(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> crate::Result<Option<Update<'static>>> {
         Self::update_many(model, &[id; 1], args).map(|updates| updates.into_iter().next())
     }
 
-    pub fn update_many(model: ModelRef, ids: &[&GraphqlId], args: &PrismaArgs) -> SqlResult<Vec<Update<'static>>> {
+    pub fn update_many(model: ModelRef, ids: &[&GraphqlId], args: &PrismaArgs) -> crate::Result<Vec<Update<'static>>> {
         if args.args.is_empty() || ids.is_empty() {
             return Ok(Vec::new());
         }

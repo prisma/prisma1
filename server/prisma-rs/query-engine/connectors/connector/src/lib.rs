@@ -16,4 +16,4 @@ pub use database_reader::*;
 pub use database_writer::*;
 pub use query_arguments::*;
 
-pub type ConnectorResult<T> = Result<T, error::ConnectorError>;
+pub type Result<T> = std::result::Result<T, error::ConnectorError>;

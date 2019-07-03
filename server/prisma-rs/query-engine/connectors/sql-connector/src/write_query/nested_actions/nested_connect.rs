@@ -1,5 +1,4 @@
 use super::*;
-use crate::SqlResult;
 use connector::write_query::NestedConnect;
 use prisma_models::*;
 use prisma_query::ast::*;
@@ -14,7 +13,7 @@ impl NestedActions for NestedConnect {
         self.relation_field().relation()
     }
 
-    fn required_check(&self, parent_id: &GraphqlId) -> SqlResult<Option<(Select<'static>, ResultCheck)>> {
+    fn required_check(&self, parent_id: &GraphqlId) -> crate::Result<Option<(Select<'static>, ResultCheck)>> {
         let p = Arc::clone(&self.relation_field);
         let c = p.related_field();
 
