@@ -319,4 +319,4 @@ Prisma 2 splits up Prisma's core functionality into 2 standalone tools:
 - [Photon](https://photonjs.prisma.io/): Type-safe database access
 - [Lift](https://lift.prisma.io/): Declarative data modeling and migrations
 
-Photon and Lift are currently in Preview! [Limitations](https://github.com/prisma/prisma2-docs/blob/master/limitations.md) include missing features, limited performance and stability issues. You can learn more about Prisma 2 in the [announcement](https://www.prisma.io/blog/announcing-prisma-2-zq1s745db8i5) or the [docs](https://github.com/prisma/prisma2-docs/). 
+Photon and Lift are currently in Preview! [Limitations](https://github.com/prisma/prisma2-docs/blob/master/limitations.md) include missing features, limited performance and stability issues. You can learn more about Prisma 2 in the [announcement](https://www.prisma.io/blog/announcing-prisma-2-zq1s745db8i5) or the [docs](https://github.com/prisma/prisma2/tree/master/docs). 
