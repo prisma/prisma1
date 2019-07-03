@@ -30,30 +30,16 @@ use crate::{
     OutputType,
     FieldRef,
     ObjectTypeStrongRef,
-    query_builders::read_new::FindOneQueryBuilder
+    query_builders::{
+        QueryBuilderResult,
+        read_new::FindOneQueryBuilder,
+        ParsedObject,
+        ParsedField,
+        ParsedArgument,
+        ParsedInputValue
+    }
 };
 
-pub type QueryBuilderResult<T> = Result<T, QueryValidationError>;
-
-pub struct ParsedObject {
-    pub fields: Vec<ParsedField>
-}
-
-pub struct ParsedField {
-    pub name: String,
-    pub arguments: Vec<ParsedArgument>,
-    pub sub_selections: Option<ParsedObject>,
-}
-
-pub struct ParsedArgument {
-    pub name: String,
-    pub value: ParsedInputValue,
-}
-
-pub enum ParsedInputValue {
-    Single(PrismaValue),
-    Map(BTreeMap<String, ParsedInputValue>),
-}
 
 pub struct QueryBuilder {
     pub query_schema: QuerySchemaRef,
@@ -64,7 +50,12 @@ pub struct QueryBuilder {
 // - Check if empty selection set already fails at the parser level
 // - UUID ids are not encoded in any useful way in the schema.
 // - Should the required field injection be done here?
+// - Selection order might be changed at the moment.
 impl QueryBuilder {
+    pub fn new(query_schema: QuerySchemaRef) -> Self {
+        QueryBuilder { query_schema }
+    }
+
     /// Builds queries from a query document.
     pub fn build(self, query_doc: QueryDocument) -> CoreResult<Vec<Query>> {
         query_doc
@@ -96,10 +87,6 @@ impl QueryBuilder {
         parsed.fields.into_iter().map(|parsed_field| {
             let field = query_object.find_field(parsed_field.name.clone()).expect("Expected validation to guarantee existing field on Query object.");
             let field_operation = field.operation.as_ref().expect("Expected Query object fields to always have an associated operation.");
-
-            // - Parse RecordFinder for read-one operation
-            // - Parse QueryArguments for read-many operation
-            // - Output fields are the actual reads
 
             match field_operation.operation {
                 OperationTag::FindOne => FindOneQueryBuilder::build(parsed_field, Arc::clone(&field_operation.model)).map(|query| Query::Read(query)),

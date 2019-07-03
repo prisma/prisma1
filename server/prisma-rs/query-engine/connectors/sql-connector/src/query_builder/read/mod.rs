@@ -110,7 +110,7 @@ impl ReadQueryBuilder {
         let id_field = model.fields().id();
 
         let mut selected_fields = SelectedFields::default();
-        selected_fields.add_scalar(id_field.clone(), false);
+        selected_fields.add_scalar(id_field.clone());
 
         let base_query = Self::get_records(model, &selected_fields, query_arguments);
 

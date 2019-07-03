@@ -19,8 +19,7 @@ pub mod result_ir;
 pub mod schema;
 
 pub use error::*;
-pub use executor::QueryExecutor;
-pub use query_builders::RootBuilder;
 pub use schema::*;
+pub use executor::QueryExecutor;
 
 pub type CoreResult<T> = Result<T, CoreError>;

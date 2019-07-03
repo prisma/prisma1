@@ -143,7 +143,6 @@ pub(crate) fn collect_selected_fields<I: Into<Option<RelationFieldRef>>>(
                 match field {
                     Ok(ModelField::Scalar(field)) => Some(Ok(SelectedField::Scalar(SelectedScalarField {
                         field: Arc::clone(&field),
-                        implicit: false,
                     }))),
                     // Relation fields are not handled here, but in nested queries
                     Ok(ModelField::Relation(field)) => Some(Ok(SelectedField::Relation(SelectedRelationField {

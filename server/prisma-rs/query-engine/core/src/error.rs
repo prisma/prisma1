@@ -36,6 +36,7 @@ impl From<DomainError> for CoreError {
 
 #[derive(Debug)]
 pub enum QueryValidationError {
+    AssertionError(String), // Naming is WIP. Denotes a generic validation error.
     RequiredValueNotSetError,
     FieldNotFoundError,
     AtLeastOneSelectionError,

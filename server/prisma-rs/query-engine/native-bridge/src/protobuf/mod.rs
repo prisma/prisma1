@@ -247,7 +247,7 @@ impl IntoSelectedFields for prisma::SelectedFields {
             match sf.field.unwrap() {
                 prisma::selected_field::Field::Scalar(field_name) => {
                     let field = model.fields().find_from_scalar(&field_name).unwrap();
-                    acc.push(SelectedField::Scalar(SelectedScalarField { field, implicit: false }));
+                    acc.push(SelectedField::Scalar(SelectedScalarField { field }));
                 }
                 prisma::selected_field::Field::Relational(rf) => {
                     let field = model.fields().find_from_relation_fields(&rf.field).unwrap();

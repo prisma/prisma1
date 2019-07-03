@@ -1,5 +1,5 @@
 use crate::{QueryArguments, ScalarListValues};
-use prisma_models::{GraphqlId, ManyRecords, PrismaValue, SelectedFields, SelectedScalarField, SingleRecord};
+use prisma_models::{GraphqlId, ManyRecords, PrismaValue, SelectedFields, SingleRecord};
 
 #[derive(Debug)]
 pub enum ReadQueryResult {
@@ -103,13 +103,6 @@ impl ManyReadQueryResults {
 
         // result.remove_excess_records();
         result
-    }
-
-    /// Returns the implicitly added fields
-    #[deprecated]
-    #[allow(warnings)]
-    pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
-        self.selected_fields.get_implicit_fields()
     }
 
     /// Get all IDs from a query result
