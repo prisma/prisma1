@@ -79,16 +79,11 @@ where
     let read_exec: ReadQueryExecutor = ReadQueryExecutor {
         data_resolver: arc.clone(),
     };
+
     let write_exec: WriteQueryExecutor = WriteQueryExecutor {
         db_name,
         write_executor: arc,
     };
 
-    //    QueryExecutor {
-    //        read_executor: read_exec,
-    //        write_executor: write_exec,
-    //    }
-
-    // TODO
-    unimplemented!()
+    QueryExecutor::new(read_exec, write_exec)
 }

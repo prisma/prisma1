@@ -1,5 +1,5 @@
 use crate::{
-    error::{PrismaError, PrismaError::QueryParsingError},
+    error::{PrismaError},
     PrismaResult,
 };
 use core::query_document::*;
@@ -7,6 +7,7 @@ use graphql_parser::query::{
     Definition, Document, OperationDefinition, Selection as GqlSelection, SelectionSet, Value,
 };
 use std::collections::BTreeMap;
+use crate::error::PrismaError::QueryValidationError;
 
 /// Protocol adapter for GraphQL -> Query Document.
 ///
@@ -32,7 +33,7 @@ impl GraphQLProtocolAdapter {
                 .definitions
                 .into_iter()
                 .find(|def| Self::matches_operation(def, op))
-                .ok_or(QueryParsingError(format!(
+                .ok_or(QueryValidationError(format!(
                     "Operation '{}' does not match any query.",
                     op
                 )))

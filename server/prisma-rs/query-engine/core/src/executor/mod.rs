@@ -6,24 +6,26 @@ pub use read::ReadQueryExecutor;
 pub use write::WriteQueryExecutor;
 
 use self::pipeline::*;
-use crate::{query_document::QueryDocument, CoreResult, QuerySchemaRef};
+use crate::{
+    query_document::QueryDocument,
+    CoreResult,
+    QuerySchemaRef,
+    result_ir::Response
+};
 use connector::{Query, ReadQueryResult};
 
 /// Central query executor and main entry point into the query core.
 pub struct QueryExecutor {
-    query_schema: QuerySchemaRef,
     read_executor: ReadQueryExecutor,
     write_executor: WriteQueryExecutor,
 }
 
 impl QueryExecutor {
     pub fn new(
-        query_schema: QuerySchemaRef,
         read_executor: ReadQueryExecutor,
         write_executor: WriteQueryExecutor,
     ) -> Self {
         QueryExecutor {
-            query_schema,
             read_executor,
             write_executor,
         }
@@ -32,7 +34,7 @@ impl QueryExecutor {
     /// Executes a query document, which involves parsing & validating the document,
     /// building queries and a query execution plan, and finally calling the connector APIs to
     /// resolve the queries.
-    pub fn execute(query_doc: QueryDocument) -> CoreResult<()> {
+    pub fn execute(&self, query_doc: QueryDocument, query_schema: QuerySchemaRef) -> CoreResult<Vec<Response>> {
         // 1. Parse and validate query document (building)
         // 2. Build query plan
         // 3. Execute query plan
