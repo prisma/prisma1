@@ -111,10 +111,10 @@ impl GraphQLProtocolAdapter {
     fn matches_operation(def: &Definition, operation: &str) -> bool {
         let check = |n: Option<&String>| n.filter(|name| name.as_str() == operation).is_some();
         match def {
-            Definition::Fragment(f) => false,
+            Definition::Fragment(_) => false,
             Definition::Operation(op) => match op {
                 OperationDefinition::Subscription(s) => check(s.name.as_ref()),
-                OperationDefinition::SelectionSet(s) => false,
+                OperationDefinition::SelectionSet(_) => false,
                 OperationDefinition::Query(q) => check(q.name.as_ref()),
                 OperationDefinition::Mutation(m) => check(m.name.as_ref()),
             },
