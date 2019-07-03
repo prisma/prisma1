@@ -62,7 +62,7 @@ impl GraphQLProtocolAdapter {
                 )),
                 OperationDefinition::SelectionSet(s) => Self::convert_query(None, s),
                 OperationDefinition::Query(q) => Self::convert_query(q.name, q.selection_set),
-                OperationDefinition::Mutation(m) => unimplemented!(),
+                OperationDefinition::Mutation(m) => Self::convert_mutation(m.name, m.selection_set),
             },
         }
     }
