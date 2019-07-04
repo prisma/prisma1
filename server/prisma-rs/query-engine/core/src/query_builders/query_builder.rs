@@ -156,74 +156,90 @@ impl QueryBuilder {
         schema_field
             .arguments
             .iter()
-            .map(|schema_arg| {
+            .filter_map(|schema_arg| {
                 // Match schema field to a field in the incoming document
-                let selection_arg: Option<&(String, QueryValue)> = given_arguments
+                let selection_arg: Option<(String, QueryValue)> = given_arguments
                     .iter()
-                    .find(|given_argument| given_argument.0 == schema_arg.name);
+                    .find(|given_argument| given_argument.0 == schema_arg.name)
+                    .cloned();
 
-                // Parse the query value into a list / object / PrismaValue.
-                // If the field was not found previously, None will be handed into the
-                // parsing, which also checks if this is valid in context of the schema
-                // (field is optional or not).
-                self
-                    .parse_input_value(selection_arg.map(|x| &x.1), &schema_arg.argument_type)
+                // If the arg can be found, parse the provided query value into a list / object / PrismaValue.
+                //
+                // If the arg can _not_ be found, pretend the arg was provided with a Null.
+                // Run the validation against the Null value to check if it needs to be provided, but disregard the result if it succeeded.
+                let (selection_arg, retain) = match selection_arg {
+                    Some(arg) => (arg, true),
+                    None => ((schema_arg.name.clone(), QueryValue::Null), false),
+                };
+
+                let result = self
+                    .parse_input_value(selection_arg.1, &schema_arg.argument_type)
                     .map(|value| ParsedArgument { name: schema_arg.name.clone(), value } )
                     .map_err(|err| QueryValidationError::ArgumentValidationError {
                         argument: schema_arg.name.clone(),
                         inner: Box::new(err),
-                    })
+                    });
+
+                if result.is_err() || retain {
+                    Some(result)
+                } else {
+                    None
+                }
             })
             .collect::<Vec<QueryBuilderResult<ParsedArgument>>>().into_iter().collect()
     }
 
     /// Parses and validates a QueryValue against an InputType, recursively.
-    /// Some(value) indicates that a value is present in the query doc, None indicates that no value was provided.
-    /// Special case is Some(Null). In that case an explicit null was provided, which is, however, treated
-    /// the same as None during validation.
     #[rustfmt::skip]
-    fn parse_input_value(&self, value: Option<&QueryValue>, input_type: &InputType) -> QueryBuilderResult<ParsedInputValue> {
-        match (value, input_type) {
-            (None, InputType::Opt(inner))                         => self.parse_input_value(value, inner),
-            (Some(QueryValue::Null), InputType::Opt(inner))       => self.parse_input_value(value, inner),
-            (None, _)                                             => Err(QueryValidationError::RequiredValueNotSetError),
-            (Some(val), InputType::Scalar(scalar))                => self.parse_scalar(val, scalar).map(|pv| ParsedInputValue::Single(pv)),
-//            (Some(val), InputType::Enum(et))                      => self.parse_scalar(val, scalar),
+    fn parse_input_value(&self, value: QueryValue, input_type: &InputType) -> QueryBuilderResult<ParsedInputValue> {
+        dbg!(&value);
+        dbg!(input_type); // todo figure out what is up with enums
 
-            (Some(QueryValue::Object(_)), InputType::List(_))     => Err(QueryValidationError::ValueTypeMismatchError { have: value.unwrap().clone(), want: input_type.clone() }),
-            (Some(QueryValue::List(values)), InputType::List(l))  => self.parse_list(values.iter().collect(), l).map(|pv| ParsedInputValue::Single(pv)),
-            (Some(val), InputType::List(l))                       => self.parse_list(vec![val], l).map(|pv| ParsedInputValue::Single(pv)),
+        match (&value, input_type) {
+            // Handle null inputs
+            (QueryValue::Null, InputType::Opt(_))       => Ok(ParsedInputValue::Single(PrismaValue::Null)),
+            (_, InputType::Opt(ref inner))                    => self.parse_input_value(value, inner),
 
-            (Some(QueryValue::Object(o)), InputType::Object(obj)) => self.parse_input_object(o, obj.into_arc()).map(|btree| ParsedInputValue::Map(btree)),
-            (Some(qv), InputType::Object(obj))                    => Err(QueryValidationError::ValueTypeMismatchError { have: qv.clone(), want: input_type.clone() }),
-            _                                                     => unreachable!(),
+            // The optional handling above guarantees that if we hit a Null here, a required value is missing.
+            (QueryValue::Null, _)                           => Err(QueryValidationError::RequiredValueNotSetError),
+
+            // Scalar and enum handling.
+            (_, InputType::Scalar(scalar))                => self.parse_scalar(value, &scalar).map(|pv| ParsedInputValue::Single(pv)),
+//            (QueryValue::Enum(_), InputType::Enum(et))      => self.parse_scalar(val, &ScalarType::Enum(Arc::clone(et))).map(|pv| ParsedInputValue::Single(pv)), // todo
+
+            // List and object handling.
+            // This is the only mismatch special case we need to handle separately (objects in scalar lists), because of 1-element coercion that is done below.
+            (QueryValue::Object(_), InputType::List(_))     => Err(QueryValidationError::ValueTypeMismatchError { have: value, want: input_type.clone() }),
+            (QueryValue::List(values), InputType::List(l))  => self.parse_list(*values, &l).map(|pv| ParsedInputValue::Single(pv)),
+            (_, InputType::List(l))                       => self.parse_list(vec![value], &l).map(|pv| ParsedInputValue::Single(pv)),
+            (QueryValue::Object(o), InputType::Object(obj)) => self.parse_input_object(*o, obj.into_arc()).map(|btree| ParsedInputValue::Map(btree)),
+            (val, input_type)                                       => Err(QueryValidationError::ValueTypeMismatchError { have: value, want: input_type.clone() }),
         }
     }
 
-    /// Attempts to convert given query value into a concrete PrismaValue based on given scalar type.
-    /// Only callable for non-null scalar values.
+    /// Attempts to parse given query value into a concrete PrismaValue based on given scalar type.
     #[rustfmt::skip]
-    fn parse_scalar(&self, value: &QueryValue, scalar_type: &ScalarType) -> QueryBuilderResult<PrismaValue> {
-        match (value, scalar_type) {
+    fn parse_scalar(&self, value: QueryValue, scalar_type: &ScalarType) -> QueryBuilderResult<PrismaValue> {
+        match (value, scalar_type.clone()) {
             (QueryValue::Null, _)                         => Ok(PrismaValue::Null),
-            (QueryValue::String(s), ScalarType::String)   => Ok(PrismaValue::String(s.clone())),
-            (QueryValue::String(s), ScalarType::DateTime) => Self::parse_datetime(s).map(|dt| PrismaValue::DateTime(dt)),
-            (QueryValue::String(s), ScalarType::Json)     => Self::parse_json(s).map(|j| PrismaValue::Json(j)),
-            (QueryValue::String(s), ScalarType::UUID)     => Self::parse_uuid(s).map(|u| PrismaValue::Uuid(u)),
-            (QueryValue::Int(i), ScalarType::Int)         => Ok(PrismaValue::Int(*i)),
-            (QueryValue::Float(f), ScalarType::Float)     => Ok(PrismaValue::Float(*f)),
-            (QueryValue::Boolean(b), ScalarType::Boolean) => Ok(PrismaValue::Boolean(*b)),
-            (QueryValue::Enum(e), ScalarType::Enum(et))   => match et.value_for(e).and_then(|val| val.as_string()) {
+            (QueryValue::String(s), ScalarType::String)   => Ok(PrismaValue::String(s)),
+            (QueryValue::String(s), ScalarType::DateTime) => Self::parse_datetime(s.as_str()).map(|dt| PrismaValue::DateTime(dt)),
+            (QueryValue::String(s), ScalarType::Json)     => Self::parse_json(s.as_str()).map(|j| PrismaValue::Json(j)),
+            (QueryValue::String(s), ScalarType::UUID)     => Self::parse_uuid(s.as_str()).map(|u| PrismaValue::Uuid(u)),
+            (QueryValue::Int(i), ScalarType::Int)         => Ok(PrismaValue::Int(i)),
+            (QueryValue::Float(f), ScalarType::Float)     => Ok(PrismaValue::Float(f)),
+            (QueryValue::Boolean(b), ScalarType::Boolean) => Ok(PrismaValue::Boolean(b)),
+            (QueryValue::Enum(e), ScalarType::Enum(et))   => match et.value_for(e.as_str()).and_then(|val| val.as_string()) {
                                                                 Some(val) => Ok(PrismaValue::Enum(val)),
                                                                 None => Err(QueryValidationError::ValueParseError(format!("Enum value '{}' is invalid for enum type {}.", e, et.name)))
                                                              },
 
             // Possible ID combinations TODO UUID ids are not encoded in any useful way in the schema.
-            (QueryValue::String(s), ScalarType::ID)       => Self::parse_uuid(s).map(|u| PrismaValue::Uuid(u)).or_else(|_| Ok(PrismaValue::String(s.clone()))),
-            (QueryValue::Int(i), ScalarType::ID)          => Ok(PrismaValue::GraphqlId(GraphqlId::Int(*i as usize))),
+            (QueryValue::String(s), ScalarType::ID)       => Self::parse_uuid(s.as_str()).map(|u| PrismaValue::Uuid(u)).or_else(|_| Ok(PrismaValue::String(s))),
+            (QueryValue::Int(i), ScalarType::ID)          => Ok(PrismaValue::GraphqlId(GraphqlId::Int(i as usize))),
 
             // Remainder of combinations is invalid
-            (qv, st)                                      => Err(QueryValidationError::ValueTypeMismatchError { have: qv.clone(), want: InputType::Scalar(scalar_type.clone()) }),
+            (qv, st)                                      => Err(QueryValidationError::ValueTypeMismatchError { have: qv, want: InputType::Scalar(scalar_type.clone()) }),
         }
     }
 
@@ -247,10 +263,10 @@ impl QueryBuilder {
         Uuid::parse_str(s).map_err(|err| QueryValidationError::ValueParseError(format!("Invalid UUID: {}", err)))
     }
 
-    fn parse_list(&self, values: Vec<&QueryValue>, value_type: &InputType) -> QueryBuilderResult<PrismaValue> {
+    fn parse_list(&self, values: Vec<QueryValue>, value_type: &InputType) -> QueryBuilderResult<PrismaValue> {
         let values: Vec<ParsedInputValue> = values
             .into_iter()
-            .map(|val| self.parse_input_value(Some(val), value_type))
+            .map(|val| self.parse_input_value(val, value_type))
             .collect::<QueryBuilderResult<Vec<ParsedInputValue>>>()?;
 
         let values: Vec<PrismaValue> = values
@@ -267,18 +283,22 @@ impl QueryBuilder {
     /// Parses and validates an input object recursively.
     fn parse_input_object(
         &self,
-        object: &BTreeMap<String, QueryValue>,
+        mut object: BTreeMap<String, QueryValue>,
         schema_object: InputObjectTypeStrongRef,
     ) -> QueryBuilderResult<BTreeMap<String, ParsedInputValue>> {
         schema_object
             .get_fields()
             .iter()
             .map(|field| {
+                // todo this doesn't work
                 // Find field in the passed object
-                match object.iter().find(|(k, v)| *k == &field.name) {
-                    Some((k, v)) => self
-                        .parse_input_value(Some(v), &field.field_type)
-                        .map(|parsed| (k.clone(), parsed)),
+
+                match object.remove(&field.name) {
+
+//                match object.iter().find(|(k, v)| *k == &field.name) {
+                    Some(v) => self
+                        .parse_input_value(v, &field.field_type)
+                        .map(|parsed| (field.name.clone(), parsed)),
 
                     None => {
                         // Find default value and use that one if the field can't be found.

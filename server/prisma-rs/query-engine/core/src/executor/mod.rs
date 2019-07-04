@@ -13,6 +13,7 @@ use crate::{
     query_builders::QueryBuilder
 };
 use connector::{Query, ReadQueryResult};
+use crate::result_ir::ResultIrBuilder;
 
 /// Central query executor and main entry point into the query core.
 pub struct QueryExecutor {
@@ -23,6 +24,7 @@ pub struct QueryExecutor {
 // Todo:
 // - Partial execution semantics?
 // - Do we need a clearer separation of queries coming from different query blocks? (e.g. 2 query { ... } in GQL)
+// - ReadQueryResult should probably just be QueryResult
 impl QueryExecutor {
     pub fn new(
         read_executor: ReadQueryExecutor,
@@ -45,7 +47,19 @@ impl QueryExecutor {
         // 3. Execute query plan
         // 4. Build IR response
 
-        unimplemented!()
+        // WIP
+        let results: Vec<ReadQueryResult> = queries.into_iter().map(|query| match query {
+            Query::Read(read) => self.read_executor.execute(&vec![read]), // Interface is weird
+            Query::Write(write) => unimplemented!(),
+        }).collect::<Vec<CoreResult<Vec<_>>>>()
+            .into_iter()
+            .collect::<CoreResult<Vec<Vec<_>>>>()
+            .map(|v| v.into_iter().flatten().collect())?; // ...
+
+        Ok(results
+            .into_iter()
+            .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
+            .build())
     }
 
 //    /// Legacy path

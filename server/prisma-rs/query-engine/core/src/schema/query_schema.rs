@@ -14,6 +14,7 @@ pub type InputObjectTypeRef = Weak<InputObjectType>;
 
 pub type QuerySchemaRef = Arc<QuerySchema>;
 pub type FieldRef = Arc<Field>;
+pub type EnumTypeRef = Arc<EnumType>;
 
 /// The query schema.
 /// Defines which operations (query/mutations) are possible on a database, based on the (internal) data model.
@@ -238,7 +239,7 @@ pub struct InputField {
 
 #[derive(Debug, Clone)]
 pub enum InputType {
-    Enum(EnumType),
+    Enum(EnumTypeRef),
     List(Box<InputType>),
     Object(InputObjectTypeRef),
     Opt(Box<InputType>),
@@ -275,7 +276,7 @@ impl InputType {
     }
 
     pub fn scalar_enum(referencing: EnumType) -> InputType {
-        InputType::Scalar(ScalarType::Enum(referencing))
+        InputType::Scalar(ScalarType::Enum(Arc::new(referencing)))
     }
 
     pub fn date_time() -> InputType {
@@ -297,7 +298,7 @@ impl InputType {
 
 #[derive(Debug)]
 pub enum OutputType {
-    Enum(EnumType),
+    Enum(EnumTypeRef),
     List(Box<OutputType>),
     Object(ObjectTypeRef),
     Opt(Box<OutputType>),
@@ -353,11 +354,11 @@ impl OutputType {
     /// Returns Some(ObjectTypeStrongRef) if ab object type is found, None otherwise.
     pub fn as_object_type(&self) -> Option<ObjectTypeStrongRef> {
         match self {
-            OutputType::Enum(EnumType) => None,
+            OutputType::Enum(_) => None,
             OutputType::List(inner) => inner.as_object_type(),
             OutputType::Object(obj) => Some(obj.into_arc()),
             OutputType::Opt(inner) => inner.as_object_type(),
-            OutputType::Scalar(ScalarType) => None,
+            OutputType::Scalar(_) => None,
         }
     }
 }
@@ -368,7 +369,7 @@ pub enum ScalarType {
     Int,
     Float,
     Boolean,
-    Enum(EnumType),
+    Enum(EnumTypeRef),
     DateTime,
     Json,
     UUID,
@@ -434,12 +435,12 @@ pub enum EnumValueWrapper {
 
 impl From<EnumType> for OutputType {
     fn from(e: EnumType) -> Self {
-        OutputType::Enum(e)
+        OutputType::Enum(Arc::new(e))
     }
 }
 
 impl From<EnumType> for InputType {
     fn from(e: EnumType) -> Self {
-        InputType::Enum(e)
+        InputType::Enum(Arc::new(e))
     }
 }

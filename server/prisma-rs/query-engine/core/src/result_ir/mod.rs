@@ -42,9 +42,9 @@ pub enum Item {
 
 /// A serialization IR builder utility
 #[derive(Debug)]
-pub struct Builder(Vec<ReadQueryResult>);
+pub struct ResultIrBuilder(Vec<ReadQueryResult>);
 
-impl Builder {
+impl ResultIrBuilder {
     pub fn new() -> Self {
         Self(vec![])
     }

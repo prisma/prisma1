@@ -62,7 +62,7 @@ pub enum QueryValidationError {
 
 impl fmt::Display for QueryValidationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Query validation error")
+        write!(f, "Query validation error: {:?}", self)
     }
 }
 
