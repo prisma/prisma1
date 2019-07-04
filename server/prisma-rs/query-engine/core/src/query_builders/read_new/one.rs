@@ -2,38 +2,68 @@ use connector::{
     read_ast::ReadQuery,
     filter::RecordFinder
 };
-use crate::query_builders::{QueryBuilderResult, ParsedField};
-use prisma_models::ModelRef;
+use crate::query_builders::{QueryBuilderResult, ParsedField, utils};
+use prisma_models::{ModelRef, Field, SelectedScalarField, SelectedRelationField};
 use std::convert::TryInto;
+use super::*;
+use std::sync::Arc;
+use connector::read_ast::RecordQuery;
 
-pub struct FindOneQueryBuilder;
+pub struct ReadOneRecordBuilder {
+    field: ParsedField,
+    model: ModelRef,
+}
 
-impl FindOneQueryBuilder {
-    /// Builds a read query tree from a parsed top-level field of a query
-    /// Unwraps are safe because of query validation that ensures conformity to the query schema.
-    pub fn build(parsed_field: ParsedField, model: ModelRef) -> QueryBuilderResult<ReadQuery> {
-        let record_finder = parsed_field.extract_record_finder(&model)?;
-
-
-//        let nested_builders = utils::collect_nested_queries(Arc::clone(&model), field, model.internal_data_model())?;
-//        let nested = utils::build_nested_queries(nested_builders)?;
-//
-//        let selected_fields = utils::collect_selected_fields(Arc::clone(&model), field, None)?;
-//        let selector = utils::extract_record_finder(&field, Arc::clone(&model))?;
-//        let name = field.alias.as_ref().unwrap_or(&field.name).clone();
-//        let fields = utils::collect_selection_order(&field);
-//
-//        Ok(RecordQuery {
-//            name,
-//            selector,
-//            selected_fields,
-//            nested,
-//            fields,
-//        })
-
-        unimplemented!()
+impl ReadOneRecordBuilder {
+    pub fn new(field: ParsedField, model: ModelRef) -> Self {
+        Self { field, model }
     }
 }
+
+impl ReadQueryBuilder for ReadOneRecordBuilder {
+    /// Builds a read query tree from a parsed top-level field of a query
+    /// Unwraps are safe because of query validation that ensures conformity to the query schema.
+    fn build(self) -> QueryBuilderResult<ReadQuery> {
+        let arguments = self.field.arguments;
+        let record_finder = utils::extract_record_finder(arguments, &self.model)?;
+
+        // WIP nested queries
+//        let nested_builders = utils::collect_nested_queries(Arc::clone(&model), field, model.internal_data_model())?;
+//        let nested = utils::build_nested_queries(nested_builders)?;
+
+        // Read query requires a selection set.
+        let sub_selections = self.field.sub_selections.unwrap().fields;
+        let selection_order: Vec<String> = sub_selections
+            .iter()
+            .map(|selected_field| selected_field.alias.clone().unwrap_or_else(|| selected_field.name.clone())).collect();
+
+        let model_fields = self.model.fields();
+        let selected_fields = sub_selections.into_iter().map(|selected_field| {
+            let model_field = model_fields.find_from_all(&selected_field.name).unwrap();
+            match model_field {
+                Field::Scalar(ref sf) => SelectedField::Scalar(SelectedScalarField {
+                    field: Arc::clone(sf),
+                }),
+                Field::Relation(ref rf) => SelectedField::Relation(SelectedRelationField {
+                    field: Arc::clone(rf),
+                    selected_fields: SelectedFields::new(vec![], None),
+                })
+            }
+        }).collect::<Vec<SelectedField>>();
+
+        let selected_fields = SelectedFields::new(selected_fields, None);
+        let name = self.field.alias.unwrap_or(self.field.name);
+
+        Ok(ReadQuery::RecordQuery(RecordQuery {
+            name,
+            record_finder,
+            selected_fields,
+            nested: vec![],
+            selection_order,
+        }))
+    }
+}
+
 //
 //pub(crate) fn collect_nested_queries<'field>(
 //    model: ModelRef,

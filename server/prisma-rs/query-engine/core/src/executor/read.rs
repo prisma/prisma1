@@ -25,11 +25,11 @@ impl ReadQueryExecutor {
 
                     let scalars = self
                         .data_resolver
-                        .get_single_record(&query.selector, &selected_fields)?;
+                        .get_single_record(&query.record_finder, &selected_fields)?;
 
                     match scalars {
                         Some(ref record) => {
-                            let model = Arc::clone(&query.selector.field.model());
+                            let model = Arc::clone(&query.record_finder.field.model());
                             let ids = vec![record.get_id_value(model)?.clone()];
                             let list_fields = selected_fields.scalar_lists();
                             let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
@@ -37,7 +37,7 @@ impl ReadQueryExecutor {
 
                             let result = SingleReadQueryResult {
                                 name: query.name.clone(),
-                                fields: query.fields.clone(),
+                                fields: query.selection_order.clone(),
                                 scalars,
                                 nested,
                                 selected_fields,

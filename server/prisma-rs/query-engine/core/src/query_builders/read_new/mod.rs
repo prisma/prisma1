@@ -1,8 +1,18 @@
-mod find_one;
+mod one;
 
-pub use find_one::*;
+pub use one::*;
+
 use prisma_models::{SelectedFields, RelationFieldRef, ModelRef, SelectedField};
 use crate::query_builders::QueryBuilderResult;
+use connector::read_ast::ReadQuery;
+
+pub enum ReadQueryBuilders {
+    ReadOneRecordBuilder(ReadOneRecordBuilder)
+}
+
+pub trait ReadQueryBuilder {
+    fn build(self) -> QueryBuilderResult<ReadQuery>;
+}
 
 ///// Get all selected fields from a model
 //pub fn collect_selected_fields<I: Into<Option<RelationFieldRef>>>(

@@ -32,14 +32,14 @@ use crate::{
     ObjectTypeStrongRef,
     query_builders::{
         QueryBuilderResult,
-        read_new::FindOneQueryBuilder,
+        read_new::ReadOneRecordBuilder,
+        ReadQueryBuilder,
         ParsedObject,
         ParsedField,
         ParsedArgument,
         ParsedInputValue
     }
 };
-
 
 pub struct QueryBuilder {
     pub query_schema: QuerySchemaRef,
@@ -50,7 +50,7 @@ pub struct QueryBuilder {
 // - Check if empty selection set already fails at the parser level
 // - UUID ids are not encoded in any useful way in the schema.
 // - Should the required field injection be done here?
-// - Selection order might be changed at the moment.
+// - Alias handling in query names
 impl QueryBuilder {
     pub fn new(query_schema: QuerySchemaRef) -> Self {
         QueryBuilder { query_schema }
@@ -67,7 +67,7 @@ impl QueryBuilder {
             .map(|vec| vec.into_iter().flatten().collect()).map_err(|err| err.into())
     }
 
-    /// Maps an operation to a query
+    /// Maps an operation to a query.
     fn map_operation(&self, operation: Operation) -> QueryBuilderResult<Vec<Query>> {
         match operation {
             Operation::Read(read_op) => self.map_read(read_op),
@@ -88,11 +88,13 @@ impl QueryBuilder {
             let field = query_object.find_field(parsed_field.name.clone()).expect("Expected validation to guarantee existing field on Query object.");
             let field_operation = field.operation.as_ref().expect("Expected Query object fields to always have an associated operation.");
 
-            match field_operation.operation {
-                OperationTag::FindOne => FindOneQueryBuilder::build(parsed_field, Arc::clone(&field_operation.model)).map(|query| Query::Read(query)),
+            let builder = match field_operation.operation {
+                OperationTag::FindOne => ReadOneRecordBuilder::new(parsed_field, Arc::clone(&field_operation.model)),
                 OperationTag::FindMany => unimplemented!(),
                 _ => unreachable!(), // Only read one / many is possible on the root.
-            }
+            };
+
+            builder.build().map(|query| Query::Read(query))
         }).collect()
     }
 
@@ -137,6 +139,7 @@ impl QueryBuilder {
 
             Ok(ParsedField {
                 name: selection.name.clone(),
+                alias: selection.alias.clone(),
                 arguments,
                 sub_selections,
             })
