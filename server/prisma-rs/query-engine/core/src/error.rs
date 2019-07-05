@@ -39,6 +39,7 @@ pub enum QueryValidationError {
     AssertionError(String), // Naming is WIP. Denotes a generic validation error.
     RequiredValueNotSetError,
     FieldNotFoundError,
+    ArgumentNotFoundError,
     AtLeastOneSelectionError,
     ValueParseError(String),
     InputFieldValidationError,

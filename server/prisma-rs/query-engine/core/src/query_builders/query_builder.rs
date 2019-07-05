@@ -9,11 +9,11 @@ use crate::{
 };
 use chrono::prelude::*;
 use connector::Query;
+use prisma_models::{GraphqlId, PrismaValue};
 use std::{
     collections::{BTreeMap, HashSet},
     sync::Arc,
 };
-use prisma_models::{PrismaValue, GraphqlId};
 use uuid::Uuid;
 
 pub struct QueryBuilder {
@@ -156,12 +156,28 @@ impl QueryBuilder {
     }
 
     /// Parses and validates selection arguments against a schema defined field.
+    // Todo if needed at some point, argument default handling can be added here.
     fn parse_arguments(
         &self,
         schema_field: &FieldRef,
         given_arguments: &Vec<(String, QueryValue)>,
     ) -> QueryBuilderResult<Vec<ParsedArgument>> {
-        // todo diffing here, check for extra fields
+        let left: HashSet<&str> = schema_field.arguments.iter().map(|arg| arg.name.as_str()).collect();
+        let right: HashSet<&str> = given_arguments.iter().map(|arg| arg.0.as_str()).collect();
+        let diff = Diff::new(&left, &right);
+
+        // All arguments that are not in the schema cause an error.
+        diff.right
+            .into_iter()
+            .map(|extra_arg| {
+                Err(QueryValidationError::ArgumentValidationError {
+                    argument: (*extra_arg).to_owned(),
+                    inner: Box::new(QueryValidationError::ArgumentNotFoundError),
+                })
+            })
+            .collect::<QueryBuilderResult<Vec<()>>>()?;
+
+        // Check remaining arguments
         schema_field
             .arguments
             .iter()
@@ -310,15 +326,14 @@ impl QueryBuilder {
         // First, check that all fields not provided in the query (left diff) are optional,
         // i.e. run the validation but disregard the result, or have defaults, in which case the
         // value pair gets added to the result.
-        diff
-            .left
+        diff.left
             .into_iter()
             .filter_map(|unset_field_name| {
                 let field = schema_object.find_field(*unset_field_name).unwrap();
 
                 match field.default_value.clone().map(|def| (&field.name, def)) {
                     // If the input field has a default, add the default to the result.
-                    Some((k, v)) => Some(Ok((field.name.clone(), ParsedInputValue::Single(v)))),
+                    Some((k, v)) => Some(Ok((k.clone(), ParsedInputValue::Single(v)))),
 
                     // Finally, if nothing is found, parse the input value with Null but disregard the result,
                     // except errors, which are propagated.
@@ -333,17 +348,13 @@ impl QueryBuilder {
                 // Checks all fields on the provided input object. This will catch extra, unknown fields and parsing errors.
                 object
                     .into_iter()
-                    .map(|(k, v)| {
-                        match schema_object.find_field(k.as_str()) {
-                            Some(field) => self
-                                .parse_input_field(v, &field)
-                                .map(|parsed| (k, parsed)),
+                    .map(|(k, v)| match schema_object.find_field(k.as_str()) {
+                        Some(field) => self.parse_input_field(v, &field).map(|parsed| (k, parsed)),
 
-                            None => Err(QueryValidationError::FieldValidationError {
-                                field_name: k.clone(),
-                                inner: Box::new(QueryValidationError::FieldNotFoundError),
-                            }),
-                        }
+                        None => Err(QueryValidationError::FieldValidationError {
+                            field_name: k.clone(),
+                            inner: Box::new(QueryValidationError::FieldNotFoundError),
+                        }),
                     })
                     .collect::<QueryBuilderResult<Vec<_>>>()
                     .map(|mut tuples| {
@@ -363,11 +374,12 @@ impl QueryBuilder {
         value: QueryValue,
         schema_field: &InputFieldRef,
     ) -> QueryBuilderResult<ParsedInputValue> {
-        self.parse_input_value(value, &schema_field.field_type)
-            .map_err(|err| QueryValidationError::FieldValidationError {
+        self.parse_input_value(value, &schema_field.field_type).map_err(|err| {
+            QueryValidationError::FieldValidationError {
                 field_name: schema_field.name.clone(),
                 inner: Box::new(err),
-            })
+            }
+        })
     }
 }
 
