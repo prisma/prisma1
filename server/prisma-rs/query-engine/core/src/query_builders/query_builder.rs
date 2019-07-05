@@ -86,7 +86,7 @@ impl QueryBuilder {
             .collect()
     }
 
-    /// Maps a read operation to a query.
+    /// Maps a write operation to a query.
     fn map_write(&self, write_op: WriteOperation) -> QueryBuilderResult<Vec<Query>> {
         let mutation_object = self.query_schema.mutation();
         let parsed = self.parse_object(&write_op.selections, &mutation_object)?;

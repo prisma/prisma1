@@ -41,5 +41,8 @@ fn handle_graphql_query(
 
     ctx.executor
         .execute(query_doc, Arc::clone(&ctx.query_schema))
-        .map_err(|err| err.into())
+        .map_err(|err| {
+            debug!("{}", err);
+            err.into()
+        })
 }
