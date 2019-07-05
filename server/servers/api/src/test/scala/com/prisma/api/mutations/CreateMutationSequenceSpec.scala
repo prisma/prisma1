@@ -8,28 +8,21 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class CreateMutationSequenceSpec extends FlatSpec with Matchers with ApiSpecBase {
-
-  override def runOnlyForCapabilities = Set(ScalarListsCapability)
-
   override def doNotRunForConnectors: Set[ConnectorTag] = Set(SQLiteConnectorTag, MongoConnectorTag)
 
-  val project = SchemaDsl.fromStringV11() {
-    s"""
+  //This was producing invalid SQL due to no field values being inserted into the table. I special cased this in NodeActions -> Create
+  "A Create Mutation for a Type with only an autoincrementing Id" should "work" in {
+    val project = SchemaDsl.fromStringV11() {
+      s"""
       type AtomicRefNumber {
        |  id: Int!
        |    @id(strategy: SEQUENCE)
        |    @sequence(name: "AtomicRefNumberSequence", initialValue: 10000, allocationSize: 1)
        |}
     """.stripMargin
-  }
+    }
 
-  override protected def beforeAll(): Unit = {
-    super.beforeAll()
     database.setup(project)
-  }
-
-  //This was producing invalid SQL due to no field values being inserted into the table. I special cased this in NodeActions -> Create
-  "A Create Mutation for a Type with only an autoincrementing Id" should "work" in {
 
     val res = server.query(
       s"""
