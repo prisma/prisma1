@@ -233,8 +233,8 @@ impl InputObjectType {
     }
 
     pub fn find_field<T>(&self, name: T) -> Option<InputFieldRef>
-        where
-            T: Into<String>,
+    where
+        T: Into<String>,
     {
         let name = name.into();
         self.get_fields().into_iter().find(|f| f.name == name).cloned()

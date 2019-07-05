@@ -1,11 +1,11 @@
+use super::*;
 use crate::{
-    query_builders::{ParsedArgument, QueryBuilderResult, ParsedInputValue},
-    QueryValidationError
+    query_builders::{ParsedArgument, ParsedInputValue, QueryBuilderResult},
+    QueryValidationError,
 };
 use connector::filter::RecordFinder;
-use prisma_models::ModelRef;
 use connector::QueryArguments;
-use super::*;
+use prisma_models::ModelRef;
 
 /// Expects the caller to know that it is structurally guaranteed that a record finder can be extracted
 /// from the given set of arguments, e.g. that the query schema guarantees that the necessary fields are present.
@@ -16,17 +16,18 @@ pub fn extract_record_finder(arguments: Vec<ParsedArgument>, model: &ModelRef) -
     let values: BTreeMap<String, ParsedInputValue> = where_arg.value.try_into().unwrap();
 
     if values.len() != 1 {
-        Err(QueryValidationError::AssertionError(
-            format!(
-                "Expected exactly one value for 'where' argument, got: {}",
-                values.iter().map(|v| v.0.as_str()).collect::<Vec<&str>>().join(", ")
-            )
-        ))
+        Err(QueryValidationError::AssertionError(format!(
+            "Expected exactly one value for 'where' argument, got: {}",
+            values.iter().map(|v| v.0.as_str()).collect::<Vec<&str>>().join(", ")
+        )))
     } else {
         let field_selector: (String, ParsedInputValue) = values.into_iter().next().unwrap();
         let model_field = model.fields().find_from_scalar(&field_selector.0).unwrap();
 
-        Ok(RecordFinder { field: model_field, value: field_selector.1.try_into().unwrap() })
+        Ok(RecordFinder {
+            field: model_field,
+            value: field_selector.1.try_into().unwrap(),
+        })
     }
 }
 

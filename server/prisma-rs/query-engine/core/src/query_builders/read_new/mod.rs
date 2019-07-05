@@ -2,12 +2,12 @@ mod one;
 
 pub use one::*;
 
-use prisma_models::{SelectedFields, SelectedField};
 use crate::query_builders::QueryBuilderResult;
 use connector::read_ast::ReadQuery;
+use prisma_models::{SelectedField, SelectedFields};
 
 pub enum ReadQueryBuilders {
-    ReadOneRecordBuilder(ReadOneRecordBuilder)
+    ReadOneRecordBuilder(ReadOneRecordBuilder),
 }
 
 pub trait ReadQueryBuilder {

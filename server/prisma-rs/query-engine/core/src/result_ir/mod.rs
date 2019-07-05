@@ -15,7 +15,6 @@ use connector::{QueryArguments, ReadQueryResult};
 use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
 
-
 /// A response can either be some `key-value` data representation
 /// or an error that occured.
 #[derive(Debug)]

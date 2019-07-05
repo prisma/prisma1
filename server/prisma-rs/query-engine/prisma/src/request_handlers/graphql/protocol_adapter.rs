@@ -1,13 +1,10 @@
-use crate::{
-    error::{PrismaError},
-    PrismaResult,
-};
+use crate::error::PrismaError::QueryValidationError;
+use crate::{error::PrismaError, PrismaResult};
 use core::query_document::*;
 use graphql_parser::query::{
     Definition, Document, OperationDefinition, Selection as GqlSelection, SelectionSet, Value,
 };
 use std::collections::BTreeMap;
-use crate::error::PrismaError::QueryValidationError;
 
 /// Protocol adapter for GraphQL -> Query Document.
 ///

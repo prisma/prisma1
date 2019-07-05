@@ -48,10 +48,12 @@ impl<'a> ObjectTypeBuilder<'a> {
     /// Initializes model object type cache on the query schema builder.
     fn compute_model_object_types(self) -> Self {
         // Compute initial cache.
-        self.internal_data_model
-            .models()
-            .iter()
-            .for_each(|m| self.cache(m.name.clone(), Arc::new(init_object_type(m.name.clone(), Some(Arc::clone(&m))))));
+        self.internal_data_model.models().iter().for_each(|m| {
+            self.cache(
+                m.name.clone(),
+                Arc::new(init_object_type(m.name.clone(), Some(Arc::clone(&m)))),
+            )
+        });
 
         // Compute fields on all cached object types.
         self.internal_data_model.models().iter().for_each(|m| {

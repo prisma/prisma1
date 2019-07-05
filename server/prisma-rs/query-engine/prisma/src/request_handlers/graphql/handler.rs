@@ -1,7 +1,5 @@
 use super::protocol_adapter::GraphQLProtocolAdapter;
-use crate::{
-    context::PrismaContext, serializers::json, PrismaRequest, PrismaResult, RequestHandler,
-};
+use crate::{context::PrismaContext, serializers::json, PrismaRequest, PrismaResult, RequestHandler};
 use core::result_ir;
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
@@ -32,11 +30,16 @@ impl RequestHandler for GraphQlRequestHandler {
     }
 }
 
-fn handle_graphql_query(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> PrismaResult<Vec<result_ir::Response>> {
+fn handle_graphql_query(
+    req: PrismaRequest<GraphQlBody>,
+    ctx: &PrismaContext,
+) -> PrismaResult<Vec<result_ir::Response>> {
     debug!("Incoming GQL query: {:?}", &req.body.query);
 
     let gql_doc = gql::parse_query(&req.body.query)?;
     let query_doc = GraphQLProtocolAdapter::convert(gql_doc, req.body.operation_name)?;
 
-    ctx.executor.execute(query_doc, Arc::clone(&ctx.query_schema)).map_err(|err| err.into())
+    ctx.executor
+        .execute(query_doc, Arc::clone(&ctx.query_schema))
+        .map_err(|err| err.into())
 }

@@ -1,9 +1,9 @@
-use core::{CoreError, result_ir};
+use core::{result_ir, CoreError};
 use datamodel::errors::ErrorCollection;
 use failure::{Error, Fail};
+use graphql_parser::query::ParseError as GqlParseError;
 use prisma_common::error::CommonError;
 use serde_json;
-use graphql_parser::query::ParseError as GqlParseError;
 
 #[cfg(feature = "sql")]
 use sql_connector::SqlError;
