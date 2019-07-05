@@ -123,7 +123,7 @@ trait NodeActions extends NodeSingleQueries {
       case (_, _)                            => NodeAddress.forId(mutaction.model, id)
     }
 
-    val nonListArgsWithId                  = nonListValues :+ ("_id", id)
+    val nonListArgsWithId                  = nonListValues.filter(p => p._1 != mutaction.model.idField_!.dbName) :+ ("_id", id)
     val (nestedCreateFields, childResults) = embeddedNestedCreateDocsAndResults(mutaction, currentParent)
     val doc                                = Document(nonListArgsWithId ++ listValues ++ inlineRelations) ++ nestedCreateFields
 
