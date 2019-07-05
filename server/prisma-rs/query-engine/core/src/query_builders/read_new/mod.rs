@@ -2,7 +2,7 @@ mod one;
 
 pub use one::*;
 
-use prisma_models::{SelectedFields, RelationFieldRef, ModelRef, SelectedField};
+use prisma_models::{SelectedFields, SelectedField};
 use crate::query_builders::QueryBuilderResult;
 use connector::read_ast::ReadQuery;
 

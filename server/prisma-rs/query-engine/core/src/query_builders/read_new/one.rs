@@ -1,10 +1,8 @@
 use connector::{
-    read_ast::ReadQuery,
-    filter::RecordFinder
+    read_ast::ReadQuery
 };
 use crate::query_builders::{QueryBuilderResult, ParsedField, utils};
 use prisma_models::{ModelRef, Field, SelectedScalarField, SelectedRelationField};
-use std::convert::TryInto;
 use super::*;
 use std::sync::Arc;
 use connector::read_ast::RecordQuery;

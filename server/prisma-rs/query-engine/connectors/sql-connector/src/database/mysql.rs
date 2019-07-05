@@ -74,9 +74,9 @@ impl TryFrom<&ExplicitConfig> for Mysql {
         let db_name = e.database.as_ref().map(|x| x.as_str()).unwrap_or("mysql");
         let mut builder = my::OptsBuilder::new();
 
-        builder.ip_or_hostname(Some(e.host.as_ref()));
+        builder.ip_or_hostname(Some(e.host.as_str()));
         builder.tcp_port(e.port);
-        builder.user(Some(e.user.as_ref()));
+        builder.user(Some(e.user.as_str()));
         builder.db_name(Some(db_name));
         builder.pass(e.password.as_ref().map(|p| p.as_str()));
         builder.verify_peer(false);

@@ -116,7 +116,7 @@ impl<'a> Transaction for SqliteTransaction<'a> {
                         ValueRef::Blob(b) => Value::String(String::from_utf8(b.to_vec())?),
                     };
 
-                    object.insert(String::from(column.as_ref()), value);
+                    object.insert(String::from(column.as_str()), value);
                 }
 
                 result.push(Value::Object(object));
