@@ -87,7 +87,7 @@ enum GqlRenderer<'a> {
     Schema(GqlSchemaRenderer),
     Object(GqlObjectRenderer),
     Type(GqlTypeRenderer<'a>),
-    Field(GqlFieldRenderer<'a>),
+    Field(GqlFieldRenderer),
     Enum(GqlEnumRenderer<'a>),
 }
 
@@ -125,9 +125,9 @@ impl<'a> IntoRenderer<'a> for OutputType {
     }
 }
 
-impl<'a> IntoRenderer<'a> for &'a InputField {
+impl<'a> IntoRenderer<'a> for InputFieldRef {
     fn into_renderer(&self) -> GqlRenderer<'a> {
-        GqlRenderer::Field(GqlFieldRenderer::Input(self))
+        GqlRenderer::Field(GqlFieldRenderer::Input(Arc::clone(self)))
     }
 }
 

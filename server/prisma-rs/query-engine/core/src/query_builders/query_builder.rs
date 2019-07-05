@@ -40,6 +40,8 @@ use crate::{
         ParsedInputValue
     }
 };
+use std::collections::HashSet;
+use crate::query_document::WriteOperation;
 
 pub struct QueryBuilder {
     pub query_schema: QuerySchemaRef,
@@ -71,7 +73,7 @@ impl QueryBuilder {
     fn map_operation(&self, operation: Operation) -> QueryBuilderResult<Vec<Query>> {
         match operation {
             Operation::Read(read_op) => self.map_read(read_op),
-            Operation::Write(write_op) => unimplemented!(),
+            Operation::Write(write_op) => self.map_write(write_op),
         }
     }
 
@@ -98,11 +100,19 @@ impl QueryBuilder {
         }).collect()
     }
 
+    /// Maps a read operation to a query.
+    fn map_write(&self, write_op: WriteOperation) -> QueryBuilderResult<Vec<Query>> {
+        let mutation_object = self.query_schema.mutation();
+        let parsed = self.parse_object(&write_op.selections, &mutation_object)?;
+
+        unimplemented!()
+    }
+
     /// Parses and validates a set of selections against a schema (output) object.
-    fn parse_object(&self, selections: &Vec<Selection>, object: &ObjectTypeStrongRef) -> QueryBuilderResult<ParsedObject> {
+    fn parse_object(&self, selections: &Vec<Selection>, schema_object: &ObjectTypeStrongRef) -> QueryBuilderResult<ParsedObject> {
         if selections.len() == 0 {
             return Err(QueryValidationError::ObjectValidationError {
-                object_name: object.name.clone(),
+                object_name: schema_object.name.clone(),
                 inner: Box::new(QueryValidationError::AtLeastOneSelectionError)
             })
         }
@@ -110,7 +120,7 @@ impl QueryBuilder {
         selections
             .into_iter()
             .map(|selection| {
-                let parsed_field = match object.find_field(selection.name.as_ref()) {
+                let parsed_field = match schema_object.find_field(selection.name.as_ref()) {
                     Some(ref field) => self.parse_field(selection, field),
                     None => Err(QueryValidationError::FieldValidationError {
                         field_name: selection.name.clone(),
@@ -119,7 +129,7 @@ impl QueryBuilder {
                 };
 
                 parsed_field.map_err(|err| QueryValidationError::ObjectValidationError {
-                    object_name: object.name.clone(),
+                    object_name: schema_object.name.clone(),
                     inner: Box::new(err),
                 })
             })
@@ -153,6 +163,7 @@ impl QueryBuilder {
 
     /// Parses and validates selection arguments against a schema defined field.
     fn parse_arguments(&self, schema_field: &FieldRef, given_arguments: &Vec<(String, QueryValue)>) -> QueryBuilderResult<Vec<ParsedArgument>> {
+        // todo diffing here, check for extra fields
         schema_field
             .arguments
             .iter()
@@ -192,27 +203,25 @@ impl QueryBuilder {
     /// Parses and validates a QueryValue against an InputType, recursively.
     #[rustfmt::skip]
     fn parse_input_value(&self, value: QueryValue, input_type: &InputType) -> QueryBuilderResult<ParsedInputValue> {
-        dbg!(&value);
-        dbg!(input_type); // todo figure out what is up with enums
-
+        // todo figure out what is up with enums
         match (&value, input_type) {
             // Handle null inputs
-            (QueryValue::Null, InputType::Opt(_))       => Ok(ParsedInputValue::Single(PrismaValue::Null)),
-            (_, InputType::Opt(ref inner))                    => self.parse_input_value(value, inner),
+            (QueryValue::Null, InputType::Opt(_))           => Ok(ParsedInputValue::Single(PrismaValue::Null)),
+            (_, InputType::Opt(ref inner))                  => self.parse_input_value(value, inner),
 
             // The optional handling above guarantees that if we hit a Null here, a required value is missing.
             (QueryValue::Null, _)                           => Err(QueryValidationError::RequiredValueNotSetError),
 
             // Scalar and enum handling.
-            (_, InputType::Scalar(scalar))                => self.parse_scalar(value, &scalar).map(|pv| ParsedInputValue::Single(pv)),
-//            (QueryValue::Enum(_), InputType::Enum(et))      => self.parse_scalar(val, &ScalarType::Enum(Arc::clone(et))).map(|pv| ParsedInputValue::Single(pv)), // todo
+            (_, InputType::Scalar(scalar))                  => self.parse_scalar(value, &scalar).map(|pv| ParsedInputValue::Single(pv)),
+            (QueryValue::Enum(_), InputType::Enum(et))      => self.parse_scalar(value, &ScalarType::Enum(Arc::clone(et))).map(|pv| ParsedInputValue::Single(pv)), // todo
 
             // List and object handling.
             // This is the only mismatch special case we need to handle separately (objects in scalar lists), because of 1-element coercion that is done below.
             (QueryValue::Object(_), InputType::List(_))     => Err(QueryValidationError::ValueTypeMismatchError { have: value, want: input_type.clone() }),
-            (QueryValue::List(values), InputType::List(l))  => self.parse_list(*values, &l).map(|pv| ParsedInputValue::Single(pv)),
-            (_, InputType::List(l))                       => self.parse_list(vec![value], &l).map(|pv| ParsedInputValue::Single(pv)),
-            (QueryValue::Object(o), InputType::Object(obj)) => self.parse_input_object(*o, obj.into_arc()).map(|btree| ParsedInputValue::Map(btree)),
+            (QueryValue::List(values), InputType::List(l))  => self.parse_list(values.clone(), &l).map(|pv| ParsedInputValue::Single(pv)),
+            (_, InputType::List(l))                         => self.parse_list(vec![value], &l).map(|pv| ParsedInputValue::Single(pv)),
+            (QueryValue::Object(o), InputType::Object(obj)) => self.parse_input_object(o.clone(), obj.into_arc()).map(|btree| ParsedInputValue::Map(btree)),
             (val, input_type)                                       => Err(QueryValidationError::ValueTypeMismatchError { have: value, want: input_type.clone() }),
         }
     }
@@ -273,7 +282,7 @@ impl QueryBuilder {
             .into_iter()
             .map(|val| match val {
                 ParsedInputValue::Single(inner) => inner,
-                _ => unreachable!(), // Objects represent relations, which are handled separately and can't occur for scalar lists.
+                _ => unreachable!(), // Objects in lists represent relations, which are handled separately and can't occur for scalar lists.
             })
             .collect();
 
@@ -286,30 +295,77 @@ impl QueryBuilder {
         mut object: BTreeMap<String, QueryValue>,
         schema_object: InputObjectTypeStrongRef,
     ) -> QueryBuilderResult<BTreeMap<String, ParsedInputValue>> {
-        schema_object
-            .get_fields()
-            .iter()
-            .map(|field| {
-                // todo this doesn't work
-                // Find field in the passed object
+        let left: HashSet<&str> = schema_object.get_fields().iter().map(|field| field.name.as_str()).collect();
+        let right: HashSet<&str> = object.keys().into_iter().map(|k| k.as_str()).collect();
+        let diff = Diff::new(&left, &right);
 
-                match object.remove(&field.name) {
+        // Check that all fields not provided in the query (left diff) are optional,
+        // i.e. run the validation but disregard the result, or have defaults, in which case the
+        // value pair gets added to the result.
+        let defaults = diff.left.into_iter().filter_map(|unset_field_name| {
+            let field = schema_object.find_field(*unset_field_name).unwrap();
+            match field.default_value.clone().map(|def| (&field.name, def)) {
+                // If the input field has a default, add the default to the result.
+                Some((k, v)) => Some(Ok((field.name.clone(), ParsedInputValue::Single(v)))),
 
-//                match object.iter().find(|(k, v)| *k == &field.name) {
-                    Some(v) => self
-                        .parse_input_value(v, &field.field_type)
-                        .map(|parsed| (field.name.clone(), parsed)),
+                // Finally, if nothing is found, parse the input value with Null but disregard the result,
+                // Except errors, which are propagated.
+                None => match self.parse_input_value(QueryValue::Null, &field.field_type) {
+                    Ok(_) => None,
+                    Err(err) => Some(Err(QueryValidationError::FieldValidationError {
+                        field_name: field.name.clone(),
+                        inner: Box::new(err),
+                    }))
+                }
+            }
+        }).collect::<QueryBuilderResult<Vec<_>>>().map_err(|err| QueryValidationError::ObjectValidationError {
+            object_name: schema_object.name.clone(),
+            inner: Box::new(err),
+        })?;
 
-                    None => {
-                        // Find default value and use that one if the field can't be found.
-                        match field.default_value.clone().map(|def| (&field.name, def)) {
-                            Some((k, v)) => Ok((k.clone(), ParsedInputValue::Single(v))),
-                            None => Err(QueryValidationError::FieldNotFoundError),
-                        }
-                    }
+        // Checks all fields on the provided input object. This will catch extra, unknown fields and parsing errors.
+        let fields = object.into_iter().map(|(k, v)| {
+            match schema_object.find_field(k.as_str()) {
+                Some(field) => self
+                    .parse_input_value(v, &field.field_type)
+                    .map(|parsed| (k, parsed)).map_err(|err| QueryValidationError::FieldValidationError {
+                        field_name: field.name.clone(),
+                        inner: Box::new(err),
+                    }),
+
+                None => Err(QueryValidationError::FieldNotFoundError)
+            }.map_err(|err| {
+                QueryValidationError::ObjectValidationError {
+                    object_name: schema_object.name.clone(),
+                    inner: Box::new(err),
                 }
             })
-            .collect::<QueryBuilderResult<Vec<(String, ParsedInputValue)>>>()
-            .map(|tuples| tuples.into_iter().collect())
+        }).collect::<QueryBuilderResult<Vec<_>>>();
+
+        fields.map(|mut tuples| {
+            tuples.extend(defaults.into_iter());
+            tuples.into_iter().collect()
+        })
+    }
+}
+
+#[derive(Debug)]
+struct Diff<'a, T: std::cmp::Eq + std::hash::Hash> {
+    pub left: Vec<&'a T>,
+    pub right: Vec<&'a T>,
+    pub equal: Vec<&'a T>,
+}
+
+impl<'a, T: std::cmp::Eq + std::hash::Hash> Diff<'a, T> {
+    fn new(left_side: &'a HashSet<T>, right_side: &'a HashSet<T>) -> Diff<'a, T> {
+        let left: Vec<&T> = left_side.difference(right_side).into_iter().collect();
+        let right: Vec<&T> = right_side.difference(left_side).into_iter().collect();
+        let equal: Vec<&T> = left_side.intersection(right_side).into_iter().collect();
+
+        Diff {
+            left,
+            right,
+            equal,
+        }
     }
 }

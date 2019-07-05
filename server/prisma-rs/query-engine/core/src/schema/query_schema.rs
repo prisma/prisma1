@@ -14,6 +14,7 @@ pub type InputObjectTypeRef = Weak<InputObjectType>;
 
 pub type QuerySchemaRef = Arc<QuerySchema>;
 pub type FieldRef = Arc<Field>;
+pub type InputFieldRef = Arc<InputField>;
 pub type EnumTypeRef = Arc<EnumType>;
 
 /// The query schema.
@@ -212,21 +213,31 @@ pub struct InputObjectType {
     pub name: String,
 
     #[debug_stub = "#Input Fields Cell#"]
-    pub fields: OnceCell<Vec<InputField>>,
+    pub fields: OnceCell<Vec<InputFieldRef>>,
 }
 
 impl InputObjectType {
-    pub fn get_fields(&self) -> &Vec<InputField> {
+    pub fn get_fields(&self) -> &Vec<InputFieldRef> {
         self.fields.get().unwrap()
     }
 
     pub fn set_fields(&self, fields: Vec<InputField>) {
-        self.fields.set(fields).unwrap();
+        self.fields
+            .set(fields.into_iter().map(|f| Arc::new(f)).collect())
+            .unwrap();
     }
 
     /// True if fields are empty, false otherwise.
     pub fn is_empty(&self) -> bool {
         self.get_fields().is_empty()
+    }
+
+    pub fn find_field<T>(&self, name: T) -> Option<InputFieldRef>
+        where
+            T: Into<String>,
+    {
+        let name = name.into();
+        self.get_fields().into_iter().find(|f| f.name == name).cloned()
     }
 }
 

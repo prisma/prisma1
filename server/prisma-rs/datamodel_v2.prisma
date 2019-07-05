@@ -5,7 +5,7 @@ datasource chinook {
 
 model Album {
   id Int @id @map(name:"AlbumId")
-  Title String
+  Title String @default("WURST")
   Artist Artist @map(name:"ArtistId")
   Tracks Track[]
 }

@@ -30,13 +30,10 @@ pub fn input_object_type<T>(name: T, fields: Vec<InputField>) -> InputObjectType
 where
     T: Into<String>,
 {
-    let f = OnceCell::new();
-    f.set(fields).unwrap();
+    let object_type = init_input_object_type(name.into());
 
-    InputObjectType {
-        name: name.into(),
-        fields: f,
-    }
+    object_type.set_fields(fields);
+    object_type
 }
 
 /// Input object type initializer for cases where only the name is known, and fields are computed later.

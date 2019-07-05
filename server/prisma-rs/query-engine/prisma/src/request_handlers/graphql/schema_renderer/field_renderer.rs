@@ -1,22 +1,22 @@
 use super::*;
 
 #[derive(Debug)]
-pub enum GqlFieldRenderer<'a> {
-    Input(&'a InputField),
+pub enum GqlFieldRenderer {
+    Input(InputFieldRef),
     Output(FieldRef),
 }
 
-impl<'a> Renderer for GqlFieldRenderer<'a> {
+impl Renderer for GqlFieldRenderer {
     fn render(&self, ctx: RenderContext) -> (String, RenderContext) {
-        match &self {
-            GqlFieldRenderer::Input(input) => self.render_input_field(input, ctx),
+        match self {
+            GqlFieldRenderer::Input(input) => self.render_input_field(Arc::clone(input), ctx),
             GqlFieldRenderer::Output(output) => self.render_output_field(Arc::clone(output), ctx),
         }
     }
 }
 
-impl<'a> GqlFieldRenderer<'a> {
-    fn render_input_field(&self, input_field: &InputField, ctx: RenderContext) -> (String, RenderContext) {
+impl GqlFieldRenderer {
+    fn render_input_field(&self, input_field: InputFieldRef, ctx: RenderContext) -> (String, RenderContext) {
         let (rendered_type, ctx) = (&input_field.field_type).into_renderer().render(ctx);
 
         (format!("{}: {}", input_field.name, rendered_type), ctx)
