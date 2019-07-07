@@ -34,7 +34,7 @@ Here are the big features that are currently being specced out:
 
 The "implementation phase" reflects the larger features that we are currently working on. These features typically require multiple weeks/months to be implemented:
 
-- [Enabling usage of the Prisma client without running an extra server](https://github.com/prisma/prisma/issues/2992)
+- [Enabling usage of the Prisma client without running an extra server](https://github.com/prisma/prisma/issues/2992) (i.e. rewriting the Prisma core in Rust)
 - [A more powerful API for the Prisma client (JS/TS)](https://github.com/prisma/rfcs/blob/new-ts-client-rfc/text/0000-new-ts-client.md)
 
 ## Upcoming
