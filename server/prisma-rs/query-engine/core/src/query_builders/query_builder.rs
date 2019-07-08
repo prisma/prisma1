@@ -68,6 +68,7 @@ impl QueryBuilder {
                 let field = query_object
                     .find_field(parsed_field.name.clone())
                     .expect("Expected validation to guarantee existing field on Query object.");
+
                 let field_operation = field
                     .operation
                     .as_ref()

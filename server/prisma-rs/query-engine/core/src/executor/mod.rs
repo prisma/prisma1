@@ -37,9 +37,9 @@ impl QueryExecutor {
         let queries = QueryBuilder::new(query_schema).build(query_doc)?;
 
         // 2. Build query plan
-        // 3. Execute query plan
-        // 4. Build IR response
+        // ...
 
+        // 3. Execute query plan
         // WIP
         let results: Vec<ReadQueryResult> = queries
             .into_iter()
@@ -52,6 +52,7 @@ impl QueryExecutor {
             .collect::<CoreResult<Vec<Vec<_>>>>()
             .map(|v| v.into_iter().flatten().collect())?; // ...
 
+        // 4. Build IR response
         Ok(results
             .into_iter()
             .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
