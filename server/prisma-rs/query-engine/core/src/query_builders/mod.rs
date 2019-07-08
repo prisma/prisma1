@@ -3,6 +3,7 @@
 mod query_builder;
 mod read_new;
 mod utils;
+mod write_new;
 
 // --- to be removed / moved
 //mod write;
@@ -13,6 +14,7 @@ mod utils;
 
 pub use query_builder::*;
 pub use read_new::*;
+pub use write_new::*;
 pub use utils::*;
 
 use crate::QueryValidationError;
@@ -46,6 +48,12 @@ pub struct ParsedArgument {
 pub enum ParsedInputValue {
     Single(PrismaValue),
     Map(BTreeMap<String, ParsedInputValue>),
+}
+
+impl ParsedInputValue {
+    pub fn to_map(self) -> Result<BTreeMap<String, ParsedInputValue>, QueryValidationError> {
+        self.try_into()
+    }
 }
 
 impl TryInto<PrismaValue> for ParsedInputValue {

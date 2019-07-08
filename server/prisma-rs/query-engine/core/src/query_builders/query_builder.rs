@@ -92,7 +92,28 @@ impl QueryBuilder {
         let mutation_object = self.query_schema.mutation();
         let parsed = self.parse_object(&write_op.selections, &mutation_object)?;
 
-        unimplemented!()
+        parsed
+            .fields
+            .into_iter()
+            .map(|parsed_field| {
+                let field = mutation_object
+                    .find_field(parsed_field.name.clone())
+                    .expect("Expected validation to guarantee existing field on Mutation object.");
+                let field_operation = field
+                    .operation
+                    .as_ref()
+                    .expect("Expected Mutation object fields to always have an associated operation.");
+
+                let builder = match field_operation.operation {
+                    OperationTag::CreateOne => {
+                        ReadOneRecordBuilder::new(parsed_field, Arc::clone(&field_operation.model))
+                    }
+                    _ => unreachable!(), // Only read one / many is possible on the root.
+                };
+
+                builder.build().map(|query| Query::Read(query))
+            })
+            .collect()
     }
 
     /// Parses and validates a set of selections against a schema (output) object.
