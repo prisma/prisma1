@@ -59,8 +59,10 @@ impl TryFrom<&Box<dyn Source>> for PostgreSql {
 
         let mut config = Config::from_str(&url.to_string())?;
         let mut schema = String::from("public"); // temp workaround
+        let mut connection_limit: u32 = 1;
 
-        unsupported.into_iter().for_each(|(k, v)| {
+
+        for (k,v) in unsupported.into_iter() {
             match k.as_ref() {
                 "schema" => {
                     debug!("Using postgres schema: {}", v);
@@ -77,12 +79,16 @@ impl TryFrom<&Box<dyn Source>> for PostgreSql {
                         }
                     };
                 }
+                "connection_limit" => {
+                    let as_int: u32 =  v.parse().map_err(|_|SqlError::InvalidConnectionArguments)?;
+                    connection_limit = as_int;
+                }
                 _ => trace!("Discarding connection string param: {}", k),
             };
-        });
+        };
 
         trace!("{:?}", &config);
-        Ok(Self::new(config, schema, 10)?)
+        Ok(Self::new(config, schema, connection_limit)?)
     }
 }
 
