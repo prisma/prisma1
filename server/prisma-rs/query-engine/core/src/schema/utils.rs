@@ -1,6 +1,6 @@
 use super::*;
 use once_cell::sync::OnceCell;
-use prisma_models::{InternalEnum, ModelRef, PrismaValue};
+use prisma_models::{InternalEnum, ModelRef, PrismaValue, EnumType, EnumValue};
 
 /// Object type initializer for cases where only the name is known, and fields are computed later.
 pub fn init_object_type<T>(name: T, model: Option<ModelRef>) -> ObjectType
@@ -136,16 +136,4 @@ where
 /// Appends an option of type T to a vector over T if the option is Some.
 pub fn append_opt<T>(vec: &mut Vec<T>, opt: Option<T>) {
     opt.into_iter().for_each(|t| vec.push(t));
-}
-
-impl From<&InternalEnum> for EnumType {
-    fn from(internal_enum: &InternalEnum) -> EnumType {
-        let values = internal_enum
-            .values
-            .iter()
-            .map(|v| EnumValue::string(v.clone(), v.clone()))
-            .collect();
-
-        enum_type(internal_enum.name.clone(), values)
-    }
 }

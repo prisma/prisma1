@@ -1,5 +1,5 @@
 use super::*;
-use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, ScalarField, SortOrder, TypeIdentifier};
+use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, ScalarField, SortOrder, TypeIdentifier, EnumValue, EnumType};
 use std::sync::Arc;
 
 #[derive(Debug)]

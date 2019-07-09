@@ -13,7 +13,7 @@ pub struct ManyRelatedRecordsBaseQuery<'a> {
     pub is_reverse_order: bool,
     pub condition: ConditionTree<'static>,
     pub cursor: ConditionTree<'static>,
-    pub window_limits: (u32, u32),
+    pub window_limits: (i64, i64),
     pub skip_and_limit: SkipAndLimit,
 }
 

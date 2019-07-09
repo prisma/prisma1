@@ -1,4 +1,5 @@
 use super::*;
+use prisma_models::{EnumType, EnumValue, EnumValueWrapper};
 
 pub struct DMMFEnumRenderer<'a> {
     enum_type: &'a EnumType,

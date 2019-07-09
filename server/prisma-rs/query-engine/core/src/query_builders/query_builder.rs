@@ -1,7 +1,7 @@
 use crate::{
     query_builders::{
-        read_new::ReadOneRecordBuilder, ParsedArgument, ParsedField, ParsedInputValue, ParsedObject,
-        QueryBuilderResult, ReadQueryBuilder,
+        read_new::ReadOneRecordBuilder, Builder, ParsedArgument, ParsedField, ParsedInputValue, ParsedObject,
+        QueryBuilderResult,
     },
     query_document::*,
     CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType, IntoArc, ObjectTypeStrongRef,
@@ -260,7 +260,7 @@ impl QueryBuilder {
             (QueryValue::Boolean(b), ScalarType::Boolean) => Ok(PrismaValue::Boolean(b)),
             (QueryValue::Enum(e), ScalarType::Enum(et))   => match et.value_for(e.as_str()).and_then(|val| val.as_string()) {
                                                                 Some(val) => Ok(PrismaValue::Enum(val)),
-                                                                None => Err(QueryValidationError::ValueParseError(format!("Enum value '{}' is invalid for enum type {}.", e, et.name)))
+                                                                None => Err(QueryValidationError::ValueParseError(format!("Enum value '{}' is invalid for enum type {}", e, et.name)))
                                                              },
 
             // Possible ID combinations TODO UUID ids are not encoded in any useful way in the schema.

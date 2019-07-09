@@ -26,10 +26,12 @@ pub type QueryBuilderResult<T> = Result<T, QueryValidationError>;
 
 /// Structures to represent parsed and validated parts of the query document,
 /// used by the query builders.
+#[derive(Debug)]
 pub struct ParsedObject {
     pub fields: Vec<ParsedField>,
 }
 
+#[derive(Debug)]
 pub struct ParsedField {
     pub name: String,
     pub alias: Option<String>,
@@ -37,12 +39,13 @@ pub struct ParsedField {
     pub sub_selections: Option<ParsedObject>,
 }
 
+#[derive(Debug)]
 pub struct ParsedArgument {
     pub name: String,
     pub value: ParsedInputValue,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ParsedInputValue {
     Single(PrismaValue),
     Map(BTreeMap<String, ParsedInputValue>),
@@ -86,9 +89,10 @@ impl TryInto<Option<String>> for ParsedInputValue {
             PrismaValue::String(s) => Ok(Some(s)),
             PrismaValue::Enum(s) => Ok(Some(s)),
             PrismaValue::Null => Ok(None),
-            _ => Err(QueryValidationError::AssertionError(
-                "Attempted conversion of non-String Prisma value type into String failed.".into(),
-            )),
+            v => Err(QueryValidationError::AssertionError(format!(
+                "Attempted conversion of non-String Prisma value type ({:?}) into String failed.",
+                v
+            ))),
         }
     }
 }
@@ -102,9 +106,10 @@ impl TryInto<Option<f64>> for ParsedInputValue {
         match prisma_value {
             PrismaValue::Float(f) => Ok(Some(f)),
             PrismaValue::Null => Ok(None),
-            _ => Err(QueryValidationError::AssertionError(
-                "Attempted conversion of non-float Prisma value type into float failed.".into(),
-            )),
+            v => Err(QueryValidationError::AssertionError(format!(
+                "Attempted conversion of non-float Prisma value type ({:?}) into float failed.",
+                v
+            ))),
         }
     }
 }
@@ -118,9 +123,10 @@ impl TryInto<Option<bool>> for ParsedInputValue {
         match prisma_value {
             PrismaValue::Boolean(b) => Ok(Some(b)),
             PrismaValue::Null => Ok(None),
-            _ => Err(QueryValidationError::AssertionError(
-                "Attempted conversion of non-bool Prisma value type into bool failed.".into(),
-            )),
+            v => Err(QueryValidationError::AssertionError(format!(
+                "Attempted conversion of non-bool Prisma value type ({:?}) into bool failed.",
+                v
+            ))),
         }
     }
 }
@@ -134,9 +140,10 @@ impl TryInto<Option<DateTime<Utc>>> for ParsedInputValue {
         match prisma_value {
             PrismaValue::DateTime(dt) => Ok(Some(dt)),
             PrismaValue::Null => Ok(None),
-            _ => Err(QueryValidationError::AssertionError(
-                "Attempted conversion of non-DateTime Prisma value type into DateTime failed.".into(),
-            )),
+            v => Err(QueryValidationError::AssertionError(format!(
+                "Attempted conversion of non-DateTime Prisma value type ({:?}) into DateTime failed.",
+                v
+            ))),
         }
     }
 }
@@ -150,9 +157,10 @@ impl TryInto<Option<Value>> for ParsedInputValue {
         match prisma_value {
             PrismaValue::Json(j) => Ok(Some(j)),
             PrismaValue::Null => Ok(None),
-            _ => Err(QueryValidationError::AssertionError(
-                "Attempted conversion of non-JSON Prisma value type into JSON failed.".into(),
-            )),
+            v => Err(QueryValidationError::AssertionError(format!(
+                "Attempted conversion of non-JSON Prisma value type ({:?}) into JSON failed.",
+                v
+            ))),
         }
     }
 }
@@ -166,9 +174,10 @@ impl TryInto<Option<i64>> for ParsedInputValue {
         match prisma_value {
             PrismaValue::Int(i) => Ok(Some(i)),
             PrismaValue::Null => Ok(None),
-            _ => Err(QueryValidationError::AssertionError(
-                "Attempted conversion of non-int Prisma value type into int failed.".into(),
-            )),
+            v => Err(QueryValidationError::AssertionError(format!(
+                "Attempted conversion of non-int Prisma value type ({:?}) into int failed.",
+                v
+            ))),
         }
     }
 }
@@ -181,10 +190,13 @@ impl TryInto<Option<GraphqlId>> for ParsedInputValue {
 
         match prisma_value {
             PrismaValue::GraphqlId(id) => Ok(Some(id)),
+            PrismaValue::String(s) => Ok(Some(GraphqlId::String(s))),
+            PrismaValue::Int(i) => Ok(Some(GraphqlId::Int(i as usize))),
             PrismaValue::Null => Ok(None),
-            _ => Err(QueryValidationError::AssertionError(
-                "Attempted conversion of non-id Prisma value type into id failed.".into(),
-            )),
+            v => Err(QueryValidationError::AssertionError(format!(
+                "Attempted conversion of non-id Prisma value type ({:?}) into id failed.",
+                v
+            ))),
         }
     }
 }

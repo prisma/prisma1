@@ -34,40 +34,70 @@ pub fn extract_record_finder(arguments: Vec<ParsedArgument>, model: &ModelRef) -
 /// Expects the caller to know that it is structurally guaranteed that query arguments can be extracted,
 /// e.g. that the query schema guarantees that required fields are present.
 /// Errors occur if ...
-pub fn extract_query_args(arguments: Vec<ParsedArgument>, model: &ModelRef) -> QueryBuilderResult<QueryArguments> {
-    // arguments.into_iter()
-    //     .fold(Ok(QueryArguments::default()), |result, arg| {
-    //         if let Ok(res) = result {
-    //             match arg.name.as_str() {
-    //                 "skip" => Ok(QueryArguments { skip: Some(arg.value u32), ..res }),
-    //                 // ("first", Value::Int(num)) => match num.as_i64() {
-    //                 //     Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
-    //                 //     None => Err(CoreError::LegacyQueryValidationError("Invalid number provided".into())),
-    //                 // },
-    //                 // ("last", Value::Int(num)) => match num.as_i64() {
-    //                 //     Some(num) => Ok(QueryArguments { last: Some(num as u32), ..res }),
-    //                 //     None => Err(CoreError::LegacyQueryValidationError("Invalid number provided".into())),
-    //                 // },
-    //                 // ("after", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { after: Some(GraphqlId::UUID(s.as_uuid())), ..res }),
-    //                 // ("after", Value::String(s)) => Ok(QueryArguments { after: Some(s.clone().into()), ..res }),
-    //                 // ("after", Value::Int(num)) => match num.as_i64() {
-    //                 //     Some(num) => Ok(QueryArguments { after: Some((num as usize).into()), ..res }),
-    //                 //     None => Err(CoreError::LegacyQueryValidationError("Invalid number provided".into())),
-    //                 // },
-    //                 // ("before", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { before: Some(GraphqlId::UUID(s.as_uuid())), ..res }),
-    //                 // ("before", Value::String(s)) => Ok(QueryArguments { before: Some(s.clone().into()), ..res }),
-    //                 // ("before", Value::Int(num)) => match num.as_i64() {
-    //                 //     Some(num) => Ok(QueryArguments { after: Some((num as usize).into()), ..res }),
-    //                 //     None => Err(CoreError::LegacyQueryValidationError("Invalid number provided".into())),
-    //                 // },
-    //                 // ("orderby", Value::Enum(order_arg)) => extract_order_by(res, order_arg, Arc::clone(&model)),
-    //                 // ("where", Value::Object(o)) => extract_filter(res, o, Arc::clone(&model)),
-    //                 _ => result,
-    //             }
-    //         } else {
-    //             result
-    //         }
-    //     })
+/// Umwraps are safe because the schema validation guarantees type conformity.
+pub fn extract_query_args(arguments: Vec<ParsedArgument>) -> QueryBuilderResult<QueryArguments> {
+    arguments
+        .into_iter()
+        .fold(Ok(QueryArguments::default()), |result, arg| {
+            if let Ok(res) = result {
+                dbg!(&res);
+                dbg!(&arg);
+                match arg.name.as_str() {
+                    "skip" => Ok(QueryArguments {
+                        skip: arg.value.try_into().unwrap(),
+                        ..res
+                    }),
+                    "first" => Ok(QueryArguments {
+                        first: arg.value.try_into().unwrap(),
+                        ..res
+                    }),
+                    "last" => Ok(QueryArguments {
+                        last: arg.value.try_into().unwrap(),
+                        ..res
+                    }),
+                    "after" => Ok(QueryArguments {
+                        after: arg.value.try_into().unwrap(),
+                        ..res
+                    }),
+                    "before" => Ok(QueryArguments {
+                        before: arg.value.try_into().unwrap(),
+                        ..res
+                    }),
+                    // "orderby" => extract_order_by(res, order_arg, Arc::clone(&model)),
+                    // ("where", Value::Object(o)) => extract_filter(res, o, Arc::clone(&model)),
+                    _ => Ok(res),
+                }
+            } else {
+                result
+            }
+        })
 
-    unimplemented!()
+    // unimplemented!()
 }
+
+// pub(crate) fn extract_order_by(
+//     aggregator: QueryArguments,
+//     order_arg: &str,
+//     model: ModelRef,
+// ) -> CoreResult<QueryArguments> {
+//     let vec = order_arg.split("_").collect::<Vec<&str>>();
+//     if vec.len() == 2 {
+//         model
+//             .fields()
+//             .find_from_scalar(vec[0])
+//             .map(|val| QueryArguments {
+//                 order_by: Some(OrderBy {
+//                     field: Arc::clone(&val),
+//                     sort_order: match vec[1] {
+//                         "ASC" => SortOrder::Ascending,
+//                         "DESC" => SortOrder::Descending,
+//                         _ => unreachable!(),
+//                     },
+//                 }),
+//                 ..aggregator
+//             })
+//             .map_err(|_| CoreError::LegacyQueryValidationError(format!("Unknown field `{}`", vec[0])))
+//     } else {
+//         Err(CoreError::LegacyQueryValidationError("...".into()))
+//     }
+// }

@@ -15,6 +15,7 @@ use std::{
     sync::{Arc, Weak},
 };
 use type_renderer::*;
+use prisma_models::EnumType;
 
 #[allow(dead_code)]
 pub struct GraphQLSchemaRenderer;

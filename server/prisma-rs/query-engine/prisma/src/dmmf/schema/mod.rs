@@ -11,6 +11,7 @@ use core::schema::*;
 use enum_renderer::*;
 use field_renderer::*;
 use object_renderer::*;
+use prisma_models::EnumType;
 use schema_renderer::*;
 use std::{
     cell::RefCell,
