@@ -136,9 +136,8 @@ impl SqlMigrationConnector {
             .query_pairs()
             .into_iter()
             .find(|qp| qp.0 == Cow::Borrowed("schema"))
-            .expect("schema param is missing")
-            .1
-            .to_string();
+            .map(|pair|pair.1.to_string())
+            .unwrap_or("public".to_string());
 
         config.dbname(&db_name);
         let db_connection = Arc::new(PostgreSql::new(config, connection_limit).expect("Connecting to Postgres failed"));
