@@ -17,7 +17,7 @@ pub use utils::*;
 
 use crate::QueryValidationError;
 use chrono::prelude::*;
-use prisma_models::{GraphqlId, PrismaValue, EnumValue};
+use prisma_models::{EnumValue, EnumValueWrapper, GraphqlId, OrderBy, PrismaValue};
 use serde_json::Value;
 use std::{collections::BTreeMap, convert::TryInto};
 
@@ -48,6 +48,7 @@ pub struct ParsedArgument {
 #[derive(Clone, Debug)]
 pub enum ParsedInputValue {
     Single(PrismaValue),
+    List(Vec<ParsedInputValue>),
     Map(BTreeMap<String, ParsedInputValue>),
 }
 
@@ -58,7 +59,7 @@ impl TryInto<PrismaValue> for ParsedInputValue {
         match self {
             ParsedInputValue::Single(val) => Ok(val),
             _ => Err(QueryValidationError::AssertionError(
-                "Attempted conversion of non-single (map) ParsedInputValue into PrismaValue.".into(),
+                "Attempted conversion of non-single ParsedInputValue into single PrismaValue failed.".into(),
             )),
         }
     }
@@ -71,7 +72,20 @@ impl TryInto<BTreeMap<String, ParsedInputValue>> for ParsedInputValue {
         match self {
             ParsedInputValue::Map(val) => Ok(val),
             _ => Err(QueryValidationError::AssertionError(
-                "Attempted conversion of single ParsedInputValue into map.".into(),
+                "Attempted conversion of non-map ParsedInputValue into map failed.".into(),
+            )),
+        }
+    }
+}
+
+impl TryInto<Vec<ParsedInputValue>> for ParsedInputValue {
+    type Error = QueryValidationError;
+
+    fn try_into(self) -> QueryBuilderResult<Vec<ParsedInputValue>> {
+        match self {
+            ParsedInputValue::List(vals) => Ok(vals),
+            _ => Err(QueryValidationError::AssertionError(
+                "Attempted conversion of non-list ParsedInputValue into list failed.".into(),
             )),
         }
     }
@@ -108,6 +122,26 @@ impl TryInto<Option<EnumValue>> for ParsedInputValue {
             PrismaValue::Null => Ok(None),
             v => Err(QueryValidationError::AssertionError(format!(
                 "Attempted conversion of non-Enum Prisma value type ({:?}) into enum value failed.",
+                v
+            ))),
+        }
+    }
+}
+
+impl TryInto<Option<OrderBy>> for ParsedInputValue {
+    type Error = QueryValidationError;
+
+    fn try_into(self) -> QueryBuilderResult<Option<OrderBy>> {
+        let enum_val: Option<EnumValue> = self.try_into()?;
+
+        match enum_val {
+            Some(EnumValue {
+                name: _,
+                value: EnumValueWrapper::OrderBy(ob),
+            }) => Ok(Some(ob)),
+            None => Ok(None),
+            v => Err(QueryValidationError::AssertionError(format!(
+                "Attempted conversion of non-order-by enum Prisma value type ({:?}) into order by enum value failed.",
                 v
             ))),
         }

@@ -63,41 +63,18 @@ pub fn extract_query_args(arguments: Vec<ParsedArgument>) -> QueryBuilderResult<
                         before: arg.value.try_into().unwrap(),
                         ..res
                     }),
-                    // "orderby" => extract_order_by(res, order_arg, Arc::clone(&model)),
-                    // ("where", Value::Object(o)) => extract_filter(res, o, Arc::clone(&model)),
+                    "orderby" => Ok(QueryArguments {
+                        order_by: arg.value.try_into().unwrap(),
+                        ..res
+                    }),
+                    "where" => Ok(QueryArguments {
+                        order_by: arg.value.try_into().unwrap(),
+                        ..res
+                    }),
                     _ => Ok(res),
                 }
             } else {
                 result
             }
         })
-
-    // unimplemented!()
 }
-
-// pub(crate) fn extract_order_by(
-//     aggregator: QueryArguments,
-//     order_arg: &str,
-//     model: ModelRef,
-// ) -> CoreResult<QueryArguments> {
-//     let vec = order_arg.split("_").collect::<Vec<&str>>();
-//     if vec.len() == 2 {
-//         model
-//             .fields()
-//             .find_from_scalar(vec[0])
-//             .map(|val| QueryArguments {
-//                 order_by: Some(OrderBy {
-//                     field: Arc::clone(&val),
-//                     sort_order: match vec[1] {
-//                         "ASC" => SortOrder::Ascending,
-//                         "DESC" => SortOrder::Descending,
-//                         _ => unreachable!(),
-//                     },
-//                 }),
-//                 ..aggregator
-//             })
-//             .map_err(|_| CoreError::LegacyQueryValidationError(format!("Unknown field `{}`", vec[0])))
-//     } else {
-//         Err(CoreError::LegacyQueryValidationError("...".into()))
-//     }
-// }
