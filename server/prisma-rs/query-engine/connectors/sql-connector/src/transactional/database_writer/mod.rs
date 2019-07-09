@@ -6,14 +6,18 @@ mod relation;
 mod update;
 mod update_many;
 
-use crate::{database::SqlDatabase, error::SqlError, RawQuery, Transaction, Transactional};
+use crate::{
+    database::{SqlCapabilities, SqlDatabase},
+    error::SqlError,
+    RawQuery, Transaction, Transactional,
+};
 use connector::{self, write_query::*, DatabaseWriter};
 use serde_json::Value;
 use std::sync::Arc;
 
 impl<T> DatabaseWriter for SqlDatabase<T>
 where
-    T: Transactional,
+    T: Transactional + SqlCapabilities,
 {
     fn execute(&self, db_name: String, write_query: RootWriteQuery) -> connector::Result<WriteQueryResult> {
         let result = self.executor.with_transaction(&db_name, |conn: &mut Transaction| {

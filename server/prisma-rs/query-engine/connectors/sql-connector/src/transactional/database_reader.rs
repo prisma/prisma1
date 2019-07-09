@@ -1,5 +1,5 @@
 use crate::{
-    database::SqlDatabase,
+    database::{SqlCapabilities, SqlDatabase},
     error::SqlError,
     query_builder::{ManyRelatedRecordsBaseQuery, ManyRelatedRecordsQueryBuilder, QueryBuilder},
     Transactional,
@@ -16,7 +16,7 @@ struct ScalarListElement {
 
 impl<T> DatabaseReader for SqlDatabase<T>
 where
-    T: Transactional,
+    T: Transactional + SqlCapabilities,
 {
     fn get_single_record(
         &self,

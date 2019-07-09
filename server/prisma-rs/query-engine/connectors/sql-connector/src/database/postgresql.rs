@@ -1,6 +1,6 @@
 use crate::{
-    error::SqlError, query_builder::ManyRelatedRecordsWithRowNumber, RawQuery, SqlId, SqlRow, ToSqlRow, Transaction,
-    Transactional, WriteQueryBuilder,
+    database::SqlCapabilities, error::SqlError, query_builder::ManyRelatedRecordsWithRowNumber, RawQuery, SqlId,
+    SqlRow, ToSqlRow, Transaction, Transactional, WriteQueryBuilder,
 };
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use connector::{self, error::*};
@@ -61,8 +61,7 @@ impl TryFrom<&Box<dyn Source>> for PostgreSql {
         let mut schema = String::from("public"); // temp workaround
         let mut connection_limit: u32 = 1;
 
-
-        for (k,v) in unsupported.into_iter() {
+        for (k, v) in unsupported.into_iter() {
             match k.as_ref() {
                 "schema" => {
                     debug!("Using postgres schema: {}", v);
@@ -80,12 +79,12 @@ impl TryFrom<&Box<dyn Source>> for PostgreSql {
                     };
                 }
                 "connection_limit" => {
-                    let as_int: u32 =  v.parse().map_err(|_|SqlError::InvalidConnectionArguments)?;
+                    let as_int: u32 = v.parse().map_err(|_| SqlError::InvalidConnectionArguments)?;
                     connection_limit = as_int;
                 }
                 _ => trace!("Discarding connection string param: {}", k),
             };
-        };
+        }
 
         trace!("{:?}", &config);
         Ok(Self::new(config, schema, connection_limit)?)
@@ -152,9 +151,11 @@ impl TryFrom<&ConnectionStringConfig> for PostgreSql {
     }
 }
 
-impl Transactional for PostgreSql {
+impl SqlCapabilities for PostgreSql {
     type ManyRelatedRecordsBuilder = ManyRelatedRecordsWithRowNumber;
+}
 
+impl Transactional for PostgreSql {
     fn with_transaction<F, T>(&self, _: &str, f: F) -> crate::Result<T>
     where
         F: FnOnce(&mut Transaction) -> crate::Result<T>,

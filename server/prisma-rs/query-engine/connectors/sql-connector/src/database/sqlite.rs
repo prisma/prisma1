@@ -1,6 +1,6 @@
 use crate::{
-    error::SqlError, query_builder::ManyRelatedRecordsWithRowNumber, RawQuery, SqlId, SqlRow, ToSqlRow, Transaction,
-    Transactional, WriteQueryBuilder,
+    database::SqlCapabilities, error::SqlError, query_builder::ManyRelatedRecordsWithRowNumber, RawQuery, SqlId,
+    SqlRow, ToSqlRow, Transaction, Transactional, WriteQueryBuilder,
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use datamodel::configuration::Source;
@@ -28,9 +28,11 @@ pub struct Sqlite {
     test_mode: bool,
 }
 
-impl Transactional for Sqlite {
+impl SqlCapabilities for Sqlite {
     type ManyRelatedRecordsBuilder = ManyRelatedRecordsWithRowNumber;
+}
 
+impl Transactional for Sqlite {
     fn with_transaction<F, T>(&self, db: &str, f: F) -> crate::Result<T>
     where
         F: FnOnce(&mut Transaction) -> crate::Result<T>,

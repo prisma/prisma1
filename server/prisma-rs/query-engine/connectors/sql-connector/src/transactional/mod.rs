@@ -4,11 +4,7 @@ mod database_writer;
 pub use database_reader::*;
 pub use database_writer::*;
 
-use crate::{
-    error::*,
-    query_builder::{ManyRelatedRecordsQueryBuilder, QueryBuilder},
-    AliasedCondition, RawQuery, SqlRow,
-};
+use crate::{error::*, query_builder::QueryBuilder, AliasedCondition, RawQuery, SqlRow};
 use connector::{
     error::RecordFinderInfo,
     filter::{Filter, RecordFinder},
@@ -22,10 +18,6 @@ use std::{convert::TryFrom, sync::Arc};
 /// queries in the transaction and commit the results to the database or do a
 /// rollback in case of an error.
 pub trait Transactional {
-    /// This we use to differentiate between databases with or without
-    /// `ROW_NUMBER` function for related records pagination.
-    type ManyRelatedRecordsBuilder: ManyRelatedRecordsQueryBuilder;
-
     /// Wrap a closure into a transaction. All actions done through the
     /// `Transaction` are commited automatically, or rolled back in case of any
     /// error.
