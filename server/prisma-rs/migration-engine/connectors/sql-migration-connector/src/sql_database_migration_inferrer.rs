@@ -1,4 +1,4 @@
-use crate::database_schema_calculator::DatabaseSchemaCalculator;
+use crate::database_schema_calculator::{DatabaseSchemaCalculator, FieldExtensions, ModelExtensions };
 use crate::database_schema_differ::{DatabaseSchemaDiff, DatabaseSchemaDiffer};
 use crate::*;
 use crate::database_inspector::{DatabaseInspector, DatabaseSchema, Table};
@@ -16,9 +16,9 @@ pub struct SqlDatabaseMigrationInferrer {
 impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
     fn infer(
         &self,
-        _previous: &Datamodel,
+        previous: &Datamodel,
         next: &Datamodel,
-        _steps: &Vec<MigrationStep>,
+        steps: &Vec<MigrationStep>,
     ) -> ConnectorResult<SqlMigration> {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
@@ -27,6 +27,9 @@ impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
             &expected_database_schema,
             &self.schema_name,
             self.sql_family,
+            previous,
+            next,
+            steps,
         )
     }
 }
@@ -40,7 +43,7 @@ impl DatabaseMigrationInferrer<SqlMigration> for VirtualSqlDatabaseMigrationInfe
         &self,
         previous: &Datamodel,
         next: &Datamodel,
-        _steps: &Vec<MigrationStep>,
+        steps: &Vec<MigrationStep>,
     ) -> ConnectorResult<SqlMigration> {
         let current_database_schema = DatabaseSchemaCalculator::calculate(previous)?;
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
@@ -49,11 +52,82 @@ impl DatabaseMigrationInferrer<SqlMigration> for VirtualSqlDatabaseMigrationInfe
             &expected_database_schema,
             &self.schema_name,
             self.sql_family,
+            previous,
+            next,
+            steps,
         )
     }
 }
 
 fn infer(
+    current_database_schema: &DatabaseSchema,
+    expected_database_schema: &DatabaseSchema,
+    schema_name: &str,
+    sql_family: SqlFamily,
+    previous: &Datamodel,
+    next: &Datamodel,
+    model_steps: &Vec<MigrationStep>,
+) -> ConnectorResult<SqlMigration> {
+    let mut db_schema_diff_based = infer_based_on_db_schema_diff(
+        &current_database_schema,
+        &expected_database_schema,
+        schema_name,
+        sql_family,
+    )?;
+    let mut datamodel_diff_based = infer_based_on_datamodel_diff(
+        previous,
+        next,
+        model_steps
+    )?;
+    let mut combined_steps = Vec::new();
+    let mut combined_rollback = Vec::new();
+    combined_steps.append(&mut db_schema_diff_based.steps);
+    combined_steps.append(&mut datamodel_diff_based.steps);
+    combined_rollback.append(&mut db_schema_diff_based.rollback);
+    combined_rollback.append(&mut datamodel_diff_based.rollback);
+    Ok(SqlMigration {
+        steps: combined_steps,
+        rollback: combined_rollback
+    })
+}
+
+// TODO: here we infer the migration based on the datamodel diff because the introspection is not fully featured yet. We will switch once introspection is in a good shape.
+fn infer_based_on_datamodel_diff(
+    previous: &Datamodel,
+    next: &Datamodel,
+    model_steps: &Vec<MigrationStep>,
+) -> ConnectorResult<SqlMigration> {
+    let mut steps = Vec::new();
+    let mut rollback = Vec::new();
+    for step in model_steps {
+        match step {
+            MigrationStep::CreateField(create_field) => {
+                let model = next.models().find(|m|m.name == create_field.model).expect("Model for MigrationStep not found");
+                let field = model.fields().find(|f|f.name == create_field.name).expect("Field for MigrationStep not found");
+                let index_name = format!("{}.{}._UNIQUE", model.db_name(), field.db_name());
+                if create_field.is_unique {
+                    steps.push(SqlMigrationStep::CreateIndex(CreateIndex{
+                        table: model.db_name(),
+                        name: index_name.clone(),
+                        tpe: IndexType::Unique,
+                        columns: vec![field.db_name()],
+                    }));
+                    rollback.push(SqlMigrationStep::DropIndex(DropIndex{
+                        table: model.db_name(),
+                        name: index_name,
+                    }));
+                }
+            }
+            _ => {}
+        }
+    }
+    Ok(SqlMigration{
+        steps,
+        rollback
+    })
+}
+
+fn infer_based_on_db_schema_diff(
     current: &DatabaseSchema,
     next: &DatabaseSchema,
     schema_name: &str,

@@ -170,7 +170,7 @@ struct ModelTable {
     model: Model,
 }
 
-trait ModelExtensions {
+pub trait ModelExtensions {
     fn id_field(&self) -> Result<&Field, String>;
 
     fn db_name(&self) -> String;
@@ -189,7 +189,7 @@ impl ModelExtensions for Model {
     }
 }
 
-trait FieldExtensions {
+pub trait FieldExtensions {
     fn is_id(&self) -> bool;
 
     fn is_list(&self) -> bool;

@@ -31,6 +31,8 @@ pub enum SqlMigrationStep {
     DropTables(DropTables),
     RenameTable { name: String, new_name: String },
     RawSql { raw: String },
+    CreateIndex(CreateIndex),
+    DropIndex(DropIndex),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -102,3 +104,26 @@ pub enum ColumnType {
     String,
     DateTime,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct CreateIndex {
+    pub table: String,
+    pub name: String,
+    pub tpe: IndexType,
+    pub columns: Vec<String>
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct DropIndex {
+    pub table: String,
+    pub name: String,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+pub enum IndexType {
+    // can later add fulltext or custom ones
+    Unique,
+    Normal
+}
+
+
