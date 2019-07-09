@@ -96,7 +96,7 @@ fn test_dmmf_roundtrip_with_functions() {
 }
 
 const DATAMODEL_WITH_SOURCE: &str = r#"datasource pg1 {
-  provider = "postgres"
+  provider = "postgresql"
   url      = "https://localhost/postgres1"
 }
 
@@ -115,7 +115,7 @@ fn test_dmmf_roundtrip_with_sources() {
 
 const DATAMODEL_WITH_SOURCE_AND_COMMENTS: &str = r#"/// Super cool postgres source.
 datasource pg1 {
-  provider = "postgres"
+  provider = "postgresql"
   url      = "https://localhost/postgres1"
 }
 

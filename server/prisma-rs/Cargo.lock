@@ -1735,6 +1735,7 @@ dependencies = [
  "prisma-inflector 0.1.0",
  "prisma-models 0.0.0",
  "rust-embed 4.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.94 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.40 (registry+https://github.com/rust-lang/crates.io-index)",
  "sql-connector 0.1.0",
