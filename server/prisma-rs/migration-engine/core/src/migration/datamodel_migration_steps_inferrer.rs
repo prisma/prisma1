@@ -168,6 +168,7 @@ impl<'a> DataModelMigrationStepsInferrerImpl<'a> {
                         db_name: Self::diff(&p.database_name, &n.database_name),
                         is_created_at: None,
                         is_updated_at: None,
+                        is_unique: Self::diff(&p.is_unique, &n.is_unique),
                         id_info: None,
                         default: Self::diff(&p.default_value, &n.default_value),
                         scalar_list: Self::diff(&p.scalar_list_strategy, &n.scalar_list_strategy),

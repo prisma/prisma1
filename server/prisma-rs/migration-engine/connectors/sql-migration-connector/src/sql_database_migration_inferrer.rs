@@ -118,6 +118,23 @@ fn infer_based_on_datamodel_diff(
                     }));
                 }
             }
+            MigrationStep::UpdateField(update_field) => {
+                let model = previous.models().find(|m|m.name == update_field.model).expect("Model for MigrationStep not found");
+                let field = model.fields().find(|f|f.name == update_field.name).expect("Field for MigrationStep not found");
+                let index_name = format!("{}.{}._UNIQUE", model.db_name(), field.db_name());
+                if field.is_unique {
+                    steps.push(SqlMigrationStep::DropIndex(DropIndex{
+                        table: model.db_name(),
+                        name: index_name.clone(),
+                    }));
+                    rollback.push(SqlMigrationStep::CreateIndex(CreateIndex{
+                        table: model.db_name(),
+                        name: index_name,
+                        tpe: IndexType::Unique,
+                        columns: vec![field.db_name()],
+                    }));
+                }
+            }
             _ => {}
         }
     }

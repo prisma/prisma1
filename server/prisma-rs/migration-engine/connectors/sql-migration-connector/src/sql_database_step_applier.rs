@@ -182,7 +182,21 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
             )
         }
         SqlMigrationStep::DropIndex(DropIndex{table, name}) => {
-            format!("DROP INDEX {}", quote(&name, sql_family))
+            match sql_family {
+                SqlFamily::Mysql =>
+                    format!(
+                        "DROP INDEX {} ON {}.{}",
+                        quote(&name, sql_family),
+                        quote(&schema_name, sql_family),
+                        quote(&table, sql_family)
+                    ),
+                SqlFamily::Postgres | SqlFamily::Sqlite =>
+                    format!(
+                        "DROP INDEX {}.{}",
+                        quote(&schema_name, sql_family),
+                        quote(&name, sql_family)
+                    ),
+            }
         }
         SqlMigrationStep::RawSql { raw } => raw.to_string(),
     }

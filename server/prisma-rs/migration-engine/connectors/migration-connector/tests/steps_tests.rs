@@ -123,6 +123,7 @@ fn minimal_UpdateField_must_work() {
         db_name: None,
         is_created_at: None,
         is_updated_at: None,
+        is_unique: None,
         id_info: None,
         default: None,
         scalar_list: None,
@@ -132,7 +133,7 @@ fn minimal_UpdateField_must_work() {
 
 #[test]
 fn full_UpdateField_must_work() {
-    let json = r#"{"stepType":"UpdateField","model":"Blog","name":"title","newName":"MyBlog","type":{"Base":"String"},"arity":"optional","dbName":"blog","isCreatedAt":true,"isUpdatedAt":true,"default":{"String":"default"},"scalarList":"Embedded"}"#;
+    let json = r#"{"stepType":"UpdateField","model":"Blog","name":"title","newName":"MyBlog","type":{"Base":"String"},"arity":"optional","dbName":"blog","isCreatedAt":true,"isUpdatedAt":true,"isUnique":true,"default":{"String":"default"},"scalarList":"Embedded"}"#;
     let expected_struct = MigrationStep::UpdateField(UpdateField {
         model: "Blog".to_string(),
         name: "title".to_string(),
@@ -142,6 +143,7 @@ fn full_UpdateField_must_work() {
         db_name: Some(Some("blog".to_string())),
         is_created_at: Some(true),
         is_updated_at: Some(true),
+        is_unique: Some(true),
         id_info: None,
         default: Some(Some(Value::String("default".to_string()))),
         scalar_list: Some(Some(ScalarListStrategy::Embedded)),
