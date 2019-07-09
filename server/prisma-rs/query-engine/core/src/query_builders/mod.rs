@@ -17,7 +17,7 @@ pub use utils::*;
 
 use crate::QueryValidationError;
 use chrono::prelude::*;
-use prisma_models::{GraphqlId, PrismaValue};
+use prisma_models::{GraphqlId, PrismaValue, EnumValue};
 use serde_json::Value;
 use std::{collections::BTreeMap, convert::TryInto};
 
@@ -87,10 +87,27 @@ impl TryInto<Option<String>> for ParsedInputValue {
 
         match prisma_value {
             PrismaValue::String(s) => Ok(Some(s)),
-            PrismaValue::Enum(s) => Ok(Some(s)),
+            PrismaValue::Enum(s) => Ok(Some(s.as_string())),
             PrismaValue::Null => Ok(None),
             v => Err(QueryValidationError::AssertionError(format!(
                 "Attempted conversion of non-String Prisma value type ({:?}) into String failed.",
+                v
+            ))),
+        }
+    }
+}
+
+impl TryInto<Option<EnumValue>> for ParsedInputValue {
+    type Error = QueryValidationError;
+
+    fn try_into(self) -> QueryBuilderResult<Option<EnumValue>> {
+        let prisma_value: PrismaValue = self.try_into()?;
+
+        match prisma_value {
+            PrismaValue::Enum(s) => Ok(Some(s)),
+            PrismaValue::Null => Ok(None),
+            v => Err(QueryValidationError::AssertionError(format!(
+                "Attempted conversion of non-Enum Prisma value type ({:?}) into enum value failed.",
                 v
             ))),
         }

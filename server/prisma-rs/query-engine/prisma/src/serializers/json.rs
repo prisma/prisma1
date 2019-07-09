@@ -64,7 +64,7 @@ fn serialize_prisma_value(value: PrismaValue) -> PrismaResult<Value> {
         }),
         PrismaValue::Boolean(x) => Value::Bool(x),
         PrismaValue::DateTime(date) => Value::String(format!("{}", date.format("%Y-%m-%dT%H:%M:%S%.3fZ"))),
-        PrismaValue::Enum(x) => Value::String(x.clone()),
+        PrismaValue::Enum(x) => Value::String(x.as_string()),
         PrismaValue::Json(x) => x,
         PrismaValue::Int(x) => Value::Number(match Number::from_f64(x as f64) {
             Some(num) => num,

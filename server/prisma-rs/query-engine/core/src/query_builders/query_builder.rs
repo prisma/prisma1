@@ -258,8 +258,8 @@ impl QueryBuilder {
             (QueryValue::Int(i), ScalarType::Int)         => Ok(PrismaValue::Int(i)),
             (QueryValue::Float(f), ScalarType::Float)     => Ok(PrismaValue::Float(f)),
             (QueryValue::Boolean(b), ScalarType::Boolean) => Ok(PrismaValue::Boolean(b)),
-            (QueryValue::Enum(e), ScalarType::Enum(et))   => match et.value_for(e.as_str()).and_then(|val| val.as_string()) {
-                                                                Some(val) => Ok(PrismaValue::Enum(val)),
+            (QueryValue::Enum(e), ScalarType::Enum(et))   => match et.value_for(e.as_str()) {
+                                                                Some(val) => Ok(PrismaValue::Enum(val.clone())),
                                                                 None => Err(QueryValidationError::ValueParseError(format!("Enum value '{}' is invalid for enum type {}", e, et.name)))
                                                              },
 

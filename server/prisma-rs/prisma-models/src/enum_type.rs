@@ -1,5 +1,6 @@
 use super::{InternalEnum, OrderBy, ScalarField, SortOrder};
 use std::sync::Arc;
+use serde::{Serialize, Serializer, Deserialize, Deserializer, de::{self, Visitor}};
 
 #[derive(Debug, Clone)]
 pub struct EnumType {
@@ -16,18 +17,18 @@ impl EnumType {
 
 /// Values in enums are solved with an enum rather than a trait or generic
 /// to avoid cluttering all type defs in this file, essentially.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct EnumValue {
     pub name: String,
     pub value: EnumValueWrapper,
 }
 
 impl EnumValue {
-    /// Attempts to represent this enum value as string.
-    pub fn as_string(&self) -> Option<String> {
-        match self.value {
-            EnumValueWrapper::String(ref s) => Some(s.clone()),
-            EnumValueWrapper::OrderBy(_) => None,
+    /// Represents this enum value as string.
+    pub fn as_string(&self) -> String {
+        match &self.value {
+            EnumValueWrapper::String(s) => s.clone(),
+            EnumValueWrapper::OrderBy(ob) => format!("{}_{}", ob.field.name, ob.sort_order.abbreviated()),
         }
     }
 
@@ -52,11 +53,54 @@ impl EnumValue {
     }
 }
 
+impl Serialize for EnumValue {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(self.as_string().as_str())
+    }
+}
+
+impl<'de> Deserialize<'de> for EnumValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de> {
+            deserializer.deserialize_any(EnumValueVisitor)
+        }
+}
+
+/// Custom deserialization
+struct EnumValueVisitor;
+
+impl<'de> Visitor<'de> for EnumValueVisitor {
+    type Value = EnumValue;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("A string.")
+    }
+
+    fn visit_str<E>(self, value: &str) -> Result<EnumValue, E>
+    where
+        E: de::Error,
+    {
+        Ok(EnumValue::string(value.to_owned(), value.to_owned()))
+    }
+}
+
+
 #[derive(Debug, Clone)]
 pub enum EnumValueWrapper {
     OrderBy(OrderBy),
     String(String),
 }
+
+impl PartialEq for EnumValueWrapper {
+    fn eq(&self, _other: &Self) -> bool {
+        false // WIP
+    }
+}
+
 
 impl From<&InternalEnum> for EnumType {
     fn from(internal_enum: &InternalEnum) -> EnumType {

@@ -31,15 +31,6 @@ impl<'a> GqlEnumRenderer<'a> {
     }
 
     fn format_enum_value(&self, value: &EnumValue) -> String {
-        self.format_enum_value_wrapper(&value.value)
-    }
-
-    fn format_enum_value_wrapper(&self, value: &EnumValueWrapper) -> String {
-        match value {
-            EnumValueWrapper::OrderBy(order_by) => {
-                format!("{}_{}", order_by.field.name, order_by.sort_order.abbreviated())
-            }
-            EnumValueWrapper::String(s) => s.clone(),
-        }
+        value.as_string()
     }
 }

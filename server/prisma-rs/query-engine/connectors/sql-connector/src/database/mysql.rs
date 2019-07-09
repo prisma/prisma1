@@ -8,7 +8,7 @@ use connector::{error::*, ConnectorResult};
 use datamodel::configuration::Source;
 use mysql_client as my;
 use prisma_common::config::{ConnectionLimit, ConnectionStringConfig, ExplicitConfig, PrismaDatabase};
-use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, TypeIdentifier};
+use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, TypeIdentifier, EnumValue};
 use prisma_query::{
     ast::*,
     visitor::{self, Visitor},
@@ -279,7 +279,7 @@ impl ToSqlRow for my::Row {
                     None => PrismaValue::Null,
                 },
                 TypeIdentifier::Enum => match row.get_opt(i) {
-                    Some(val) => val.map(|val| PrismaValue::Enum(val)).unwrap_or(PrismaValue::Null),
+                    Some(val) => val.map(|val: String| PrismaValue::Enum(EnumValue::string(val.clone(), val))).unwrap_or(PrismaValue::Null),
                     None => PrismaValue::Null,
                 },
                 TypeIdentifier::Json => match row.get_opt(i) {

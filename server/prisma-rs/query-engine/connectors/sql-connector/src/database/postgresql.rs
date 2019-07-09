@@ -12,7 +12,7 @@ use postgres::{
     Client, Config, Row as PostgresRow, Transaction as PostgresTransaction,
 };
 use prisma_common::config::{ConnectionLimit, ConnectionStringConfig, ExplicitConfig, PrismaDatabase};
-use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, TypeIdentifier};
+use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, TypeIdentifier, EnumValue};
 use prisma_query::{
     ast::Query,
     visitor::{self, Visitor},
@@ -508,7 +508,10 @@ impl ToSqlRow for PostgresRow {
                     None => PrismaValue::Null,
                 },
                 TypeIdentifier::Enum => match row.try_get(i)? {
-                    Some(val) => PrismaValue::Enum(val),
+                    Some(val) => {
+                        let val: String = val;
+                        PrismaValue::Enum(EnumValue::string(val.clone(), val))
+                    },
                     None => PrismaValue::Null,
                 },
                 TypeIdentifier::Json => match row.try_get(i)? {

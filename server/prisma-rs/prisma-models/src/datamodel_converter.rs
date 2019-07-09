@@ -436,7 +436,7 @@ impl DatamodelFieldExtensions for dml::Field {
             datamodel::common::PrismaValue::String(x) => Some(PrismaValue::String(x.clone())),
             datamodel::common::PrismaValue::DateTime(x) => Some(PrismaValue::DateTime(*x)),
             datamodel::common::PrismaValue::Decimal(x) => Some(PrismaValue::Float(*x as f64)), // TODO: not sure if this mapping is correct
-            datamodel::common::PrismaValue::ConstantLiteral(x) => Some(PrismaValue::Enum(x.clone())),
+            datamodel::common::PrismaValue::ConstantLiteral(x) => Some(PrismaValue::Enum(EnumValue::string(x.clone(), x.clone()))),
             datamodel::common::PrismaValue::Expression(_, _, _) => None, // expressions are handled in the behaviour function right now
         })
     }

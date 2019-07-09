@@ -5,7 +5,7 @@ use crate::{
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use datamodel::configuration::Source;
-use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, TypeIdentifier};
+use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, TypeIdentifier, EnumValue};
 use prisma_query::{
     ast::Query,
     visitor::{self, Visitor},
@@ -163,7 +163,7 @@ impl<'a> ToSqlRow for SqliteRow<'a> {
                 TypeIdentifier::Float => row.get(i).map(|val| PrismaValue::Float(val)),
                 TypeIdentifier::Int => row.get(i).map(|val| PrismaValue::Int(val)),
                 TypeIdentifier::Boolean => row.get(i).map(|val| PrismaValue::Boolean(val)),
-                TypeIdentifier::Enum => row.get(i).map(|val| PrismaValue::Enum(val)),
+                TypeIdentifier::Enum => row.get(i).map(|val: String| PrismaValue::Enum(EnumValue::string(val.clone(), val))),
                 TypeIdentifier::Json => row.get(i).and_then(|val| {
                     let val: String = val;
                     serde_json::from_str(&val).map(|r| PrismaValue::Json(r)).map_err(|err| {
