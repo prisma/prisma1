@@ -1,8 +1,7 @@
 use super::QueryValidationError;
 use crate::{
     query_builders::{
-        read_new::ReadOneRecordBuilder, Builder, ParsedArgument, ParsedField, ParsedInputValue, ParsedObject,
-        QueryBuilderResult,
+        read_new::*, Builder, ParsedArgument, ParsedField, ParsedInputValue, ParsedObject, QueryBuilderResult,
     },
     query_document::*,
     CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType, IntoArc, ObjectTypeStrongRef,
@@ -76,10 +75,14 @@ impl QueryBuilder {
                     .expect("Expected Query object fields to always have an associated operation.");
 
                 let builder = match field_operation.operation {
-                    OperationTag::FindOne => {
-                        ReadOneRecordBuilder::new(parsed_field, Arc::clone(&field_operation.model))
-                    }
-                    OperationTag::FindMany => unimplemented!(),
+                    OperationTag::FindOne => ReadQueryBuilder::ReadOneRecordBuilder(ReadOneRecordBuilder::new(
+                        parsed_field,
+                        Arc::clone(&field_operation.model),
+                    )),
+                    OperationTag::FindMany => ReadQueryBuilder::ReadManyRecordsBuilder(ReadManyRecordsBuilder::new(
+                        parsed_field,
+                        Arc::clone(&field_operation.model),
+                    )),
                     _ => unreachable!(), // Only read one / many is possible on the root.
                 };
 
@@ -91,7 +94,7 @@ impl QueryBuilder {
     /// Maps a write operation to a query.
     fn map_write(&self, write_op: WriteOperation) -> QueryBuilderResult<Vec<Query>> {
         let mutation_object = self.query_schema.mutation();
-        let parsed = self.parse_object(&write_op.selections, &mutation_object)?;
+        let _parsed = self.parse_object(&write_op.selections, &mutation_object)?;
 
         unimplemented!()
     }

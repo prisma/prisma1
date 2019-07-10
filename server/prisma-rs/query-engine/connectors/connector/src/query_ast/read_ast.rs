@@ -27,7 +27,7 @@ pub struct ManyRecordsQuery {
     pub args: QueryArguments,
     pub selected_fields: SelectedFields,
     pub nested: Vec<ReadQuery>,
-    pub fields: Vec<String>,
+    pub selection_order: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -37,7 +37,7 @@ pub struct RelatedRecordQuery {
     pub args: QueryArguments,
     pub selected_fields: SelectedFields,
     pub nested: Vec<ReadQuery>,
-    pub fields: Vec<String>,
+    pub selection_order: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -47,5 +47,5 @@ pub struct ManyRelatedRecordsQuery {
     pub args: QueryArguments,
     pub selected_fields: SelectedFields,
     pub nested: Vec<ReadQuery>,
-    pub fields: Vec<String>,
+    pub selection_order: Vec<String>,
 }

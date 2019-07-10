@@ -63,7 +63,7 @@ impl ReadQueryExecutor {
 
                     results.push(ReadQueryResult::Many(ManyReadQueryResults::new(
                         query.name.clone(),
-                        query.fields.clone(),
+                        query.selection_order.clone(),
                         scalars,
                         nested,
                         lists,
@@ -97,7 +97,7 @@ impl ReadQueryExecutor {
 
                             let result = SingleReadQueryResult {
                                 name: query.name.clone(),
-                                fields: query.fields.clone(),
+                                fields: query.selection_order.clone(),
                                 scalars: Some(single),
                                 nested,
                                 selected_fields: selected_fields.clone(),
@@ -115,7 +115,7 @@ impl ReadQueryExecutor {
                         let nested = self.execute_internal(&query.nested, ids)?;
                         let result = SingleReadQueryResult {
                             name: query.name.clone(),
-                            fields: query.fields.clone(),
+                            fields: query.selection_order.clone(),
                             scalars: Some(record),
                             nested,
                             selected_fields,
@@ -125,7 +125,7 @@ impl ReadQueryExecutor {
                     } else {
                         results.push(ReadQueryResult::Single(SingleReadQueryResult {
                             name: query.name.clone(),
-                            fields: query.fields.clone(),
+                            fields: query.selection_order.clone(),
                             scalars: None,
                             nested: vec![],
                             selected_fields,
@@ -151,7 +151,7 @@ impl ReadQueryExecutor {
 
                     results.push(ReadQueryResult::Many(ManyReadQueryResults::new(
                         query.name.clone(),
-                        query.fields.clone(),
+                        query.selection_order.clone(),
                         scalars,
                         nested,
                         lists,

@@ -45,7 +45,7 @@ impl QueryExecutor {
             .into_iter()
             .map(|query| match query {
                 Query::Read(read) => self.read_executor.execute(&vec![read]), // Interface is weird
-                Query::Write(write) => unimplemented!(),
+                Query::Write(_) => unimplemented!(),
             })
             .collect::<Vec<CoreResult<Vec<_>>>>()
             .into_iter()

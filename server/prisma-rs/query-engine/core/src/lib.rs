@@ -1,8 +1,7 @@
-#![warn(warnings)]
-///! WIP cleanup crate interface
+#![warn(warnings)] // todo deny warnings once done
 
-#[macro_use]
-extern crate log;
+// #[macro_use]
+// extern crate log;
 
 #[macro_use]
 extern crate debug_stub_derive;

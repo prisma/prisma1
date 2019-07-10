@@ -30,15 +30,12 @@ pub fn extract_record_finder(arguments: Vec<ParsedArgument>, model: &ModelRef) -
 
 /// Expects the caller to know that it is structurally guaranteed that query arguments can be extracted,
 /// e.g. that the query schema guarantees that required fields are present.
-/// Errors occur if ...
-/// Unwraps are safe because the schema validation guarantees type conformity.
+/// Errors occur if conversions fail unexpectedly.
 pub fn extract_query_args(arguments: Vec<ParsedArgument>, model: &ModelRef) -> QueryBuilderResult<QueryArguments> {
     arguments
         .into_iter()
         .fold(Ok(QueryArguments::default()), |result, arg| {
             if let Ok(res) = result {
-                dbg!(&res);
-                dbg!(&arg);
                 match arg.name.as_str() {
                     "skip" => Ok(QueryArguments {
                         skip: arg.value.try_into()?,
