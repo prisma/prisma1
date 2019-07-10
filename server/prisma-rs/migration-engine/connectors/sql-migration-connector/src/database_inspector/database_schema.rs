@@ -143,5 +143,12 @@ pub struct Sequence {
 pub struct Index {
     pub name: String,
     pub columns: Vec<String>,
-    pub unique: bool,
+    pub tpe: IndexType,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum IndexType {
+    // can later add fulltext or custom ones
+    Unique,
+    Normal
 }

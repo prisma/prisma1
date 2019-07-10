@@ -131,6 +131,7 @@ fn apply_update_field(data_model: &mut Datamodel, step: &UpdateField) {
     set!(field, step, id_info, id_info);
     set!(field, step, default_value, default);
     set!(field, step, scalar_list_strategy, scalar_list);
+    set!(field, step, is_unique, is_unique);
 }
 
 fn apply_create_field(data_model: &mut Datamodel, step: &CreateField) {

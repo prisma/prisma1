@@ -159,6 +159,45 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
             }
             format!("ALTER TABLE {}.{} {};", quote(&schema_name, sql_family), quote(table, sql_family), lines.join(","))
         }
+        SqlMigrationStep::CreateIndex(CreateIndex{table, name, tpe, columns}) => {
+            let index_type = match tpe {
+                IndexType::Unique => "UNIQUE",
+                IndexType::Normal => "",
+            };
+            let index_name = match sql_family {
+                SqlFamily::Sqlite => format!("{}.{}", quote(&schema_name, sql_family), quote(&name, sql_family)),
+                _ => quote(&name, sql_family),
+            };
+            let table_reference = match sql_family {
+                SqlFamily::Sqlite => quote(&table, sql_family),
+                _ => format!("{}.{}", quote(&schema_name, sql_family), quote(&table, sql_family)),
+            };
+            let columns: Vec<String> = columns.iter().map(|c| quote(c, sql_family)).collect();
+            format!(
+                "CREATE {} INDEX {} ON {}({})",
+                index_type,
+                index_name,
+                table_reference,
+                columns.join(",")
+            )
+        }
+        SqlMigrationStep::DropIndex(DropIndex{table, name}) => {
+            match sql_family {
+                SqlFamily::Mysql =>
+                    format!(
+                        "DROP INDEX {} ON {}.{}",
+                        quote(&name, sql_family),
+                        quote(&schema_name, sql_family),
+                        quote(&table, sql_family)
+                    ),
+                SqlFamily::Postgres | SqlFamily::Sqlite =>
+                    format!(
+                        "DROP INDEX {}.{}",
+                        quote(&schema_name, sql_family),
+                        quote(&name, sql_family)
+                    ),
+            }
+        }
         SqlMigrationStep::RawSql { raw } => raw.to_string(),
     }
 }
