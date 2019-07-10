@@ -237,8 +237,6 @@ impl QueryBuilder {
             (QueryValue::Enum(_), InputType::Enum(et))      => self.parse_scalar(value, &ScalarType::Enum(Arc::clone(et))).map(|pv| ParsedInputValue::Single(pv)), // todo
 
             // List and object handling.
-            // This is the only mismatch special case we need to handle separately (objects in scalar lists), because of 1-element coercion that is done below.
-            (QueryValue::Object(_), InputType::List(_))     => Err(QueryValidationError::ValueTypeMismatchError { have: value, want: input_type.clone() }),
             (QueryValue::List(values), InputType::List(l))  => self.parse_list(values.clone(), &l).map(|vals| ParsedInputValue::List(vals)),
             (_, InputType::List(l))                         => self.parse_list(vec![value], &l).map(|vals| ParsedInputValue::List(vals)),
             (QueryValue::Object(o), InputType::Object(obj)) => self.parse_input_object(o.clone(), obj.into_arc()).map(|btree| ParsedInputValue::Map(btree)),
@@ -299,16 +297,6 @@ impl QueryBuilder {
             .into_iter()
             .map(|val| self.parse_input_value(val, value_type))
             .collect::<QueryBuilderResult<Vec<ParsedInputValue>>>()
-
-        // let values: Vec<PrismaValue> = values
-        //     .into_iter()
-        //     .map(|val| match val {
-        //         ParsedInputValue::Single(inner) => inner,
-        //         _ => unreachable!(), // Objects in lists represent relations, which are handled separately and can't occur for scalar lists.
-        //     })
-        //     .collect();
-
-        // Ok(ParsedInputValue::List(values))
     }
 
     /// Parses and validates an input object recursively.
