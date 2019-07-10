@@ -1,4 +1,4 @@
-//! Parsed query document tree.
+//! Parsed query document tree. Naming is WIP.
 //! Structures represent parsed and validated parts of the query document, used by the query builders.
 
 mod transformers;

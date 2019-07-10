@@ -1,3 +1,9 @@
+///! Transformations for the parsed query document tree.
+///! As the schema validation guarantees the presence, type conformity, etc. of incoming documents,
+///! consumers of the parsed query document want to directly unwrap and access the incoming data,
+///! but would need to clutter their code with tons of matches and unwraps.
+///! The transformers in this file helps consumers to directly access the data in the shape they
+///! assume the data has to be because of the structural guarantees of the query schema validation.
 use super::*;
 
 impl TryInto<PrismaValue> for ParsedInputValue {
@@ -19,21 +25,6 @@ impl TryInto<PrismaValue> for ParsedInputValue {
         }
     }
 }
-
-// impl TryInto<Option<Vec<PrismaValue>>> for ParsedInputValue {
-//     type Error = QueryValidationError;
-
-//     fn try_into(self) -> QueryBuilderResult<Option<Vec<PrismaValue>>> {
-//         match self {
-//             ParsedInputValue::Single(PrismaValue::Null) => Ok(None),
-//             ParsedInputValue::List(values) => values.into_iter().map(|val| val.try_into()).collect::<QueryBuilderResult<Vec<PrismaValue>>>().map(|vec| Some(vec)),
-//             v => Err(QueryValidationError::AssertionError(format!(
-//                 "Attempted conversion of non-list ParsedInputValue ({:?}) into a list of PrismaValues failed.",
-//                 v
-//             ))),
-//         }
-//     }
-// }
 
 impl TryInto<BTreeMap<String, ParsedInputValue>> for ParsedInputValue {
     type Error = QueryValidationError;
