@@ -119,20 +119,33 @@ fn infer_based_on_datamodel_diff(
                 }
             }
             MigrationStep::UpdateField(update_field) => {
-                let model = previous.models().find(|m|m.name == update_field.model).expect("Model for MigrationStep not found");
-                let field = model.fields().find(|f|f.name == update_field.name).expect("Field for MigrationStep not found");
-                let index_name = format!("{}.{}._UNIQUE", model.db_name(), field.db_name());
-                if field.is_unique {
-                    steps.push(SqlMigrationStep::DropIndex(DropIndex{
-                        table: model.db_name(),
-                        name: index_name.clone(),
-                    }));
-                    rollback.push(SqlMigrationStep::CreateIndex(CreateIndex{
-                        table: model.db_name(),
-                        name: index_name,
-                        tpe: IndexType::Unique,
-                        columns: vec![field.db_name()],
-                    }));
+                let old_model = previous.models().find(|m|m.name == update_field.model).expect("old Model for MigrationStep not found");
+                let old_field = old_model.fields().find(|f|f.name == update_field.name).expect("old Field for MigrationStep not found");
+                let new_model = next.models().find(|m|m.name == update_field.model).expect("new Model for MigrationStep not found");
+                let new_field = new_model.fields().find(|f|f.name == update_field.name).expect("new Field for MigrationStep not found");
+                let index_name = format!("{}.{}._UNIQUE", old_model.db_name(), old_field.db_name());
+
+                let drop_index = SqlMigrationStep::DropIndex(DropIndex{
+                    table: new_model.db_name(),
+                    name: index_name.clone(),
+                });
+                let create_index = SqlMigrationStep::CreateIndex(CreateIndex{
+                    table: old_model.db_name(),
+                    name: index_name,
+                    tpe: IndexType::Unique,
+                    columns: vec![new_field.db_name()],
+                });
+
+                match (old_field.is_unique, new_field.is_unique) {
+                    (true, false) => {
+                        steps.push(drop_index);
+                        rollback.push(create_index);
+                    }
+                    (false, true) => {
+                        steps.push(create_index);
+                        rollback.push(drop_index);
+                    }
+                    (_,_) => {}
                 }
             }
             _ => {}
