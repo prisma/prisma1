@@ -31,8 +31,8 @@ pub fn extract_record_finder(arguments: Vec<ParsedArgument>, model: &ModelRef) -
 /// Expects the caller to know that it is structurally guaranteed that query arguments can be extracted,
 /// e.g. that the query schema guarantees that required fields are present.
 /// Errors occur if ...
-/// Umwraps are safe because the schema validation guarantees type conformity.
-pub fn extract_query_args(arguments: Vec<ParsedArgument>) -> QueryBuilderResult<QueryArguments> {
+/// Unwraps are safe because the schema validation guarantees type conformity.
+pub fn extract_query_args(arguments: Vec<ParsedArgument>, model: &ModelRef) -> QueryBuilderResult<QueryArguments> {
     arguments
         .into_iter()
         .fold(Ok(QueryArguments::default()), |result, arg| {
@@ -41,33 +41,37 @@ pub fn extract_query_args(arguments: Vec<ParsedArgument>) -> QueryBuilderResult<
                 dbg!(&arg);
                 match arg.name.as_str() {
                     "skip" => Ok(QueryArguments {
-                        skip: arg.value.try_into().unwrap(),
+                        skip: arg.value.try_into()?,
                         ..res
                     }),
                     "first" => Ok(QueryArguments {
-                        first: arg.value.try_into().unwrap(),
+                        first: arg.value.try_into()?,
                         ..res
                     }),
                     "last" => Ok(QueryArguments {
-                        last: arg.value.try_into().unwrap(),
+                        last: arg.value.try_into()?,
                         ..res
                     }),
                     "after" => Ok(QueryArguments {
-                        after: arg.value.try_into().unwrap(),
+                        after: arg.value.try_into()?,
                         ..res
                     }),
                     "before" => Ok(QueryArguments {
-                        before: arg.value.try_into().unwrap(),
+                        before: arg.value.try_into()?,
                         ..res
                     }),
                     "orderby" => Ok(QueryArguments {
-                        order_by: arg.value.try_into().unwrap(),
+                        order_by: arg.value.try_into()?,
                         ..res
                     }),
-                    "where" => Ok(QueryArguments {
-                        order_by: arg.value.try_into().unwrap(),
-                        ..res
-                    }),
+                    "where" => arg
+                        .value
+                        .try_into()
+                        .and_then(|res: Option<BTreeMap<String, ParsedInputValue>>| match res {
+                            Some(m) => Ok(Some(extract_filter(m, model)?)),
+                            None => Ok(None),
+                        })
+                        .map(|filter| QueryArguments { filter, ..res }),
                     _ => Ok(res),
                 }
             } else {

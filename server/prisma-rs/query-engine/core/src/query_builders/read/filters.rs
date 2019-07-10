@@ -55,7 +55,7 @@ impl From<&FilterOp> for &'static str {
     }
 }
 
-pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreResult<Filter> {
+pub fn extract_filter(map: &BTreeMap<String, Value>, model: &ModelRef) -> CoreResult<Filter> {
     let ops = vec![
         FilterOp::NotIn,
         FilterOp::NotContains,

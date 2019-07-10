@@ -23,7 +23,7 @@ impl ReadOneRelationRecordBuilder {
 impl Builder for ReadOneRelationRecordBuilder {
     fn build(self) -> QueryBuilderResult<ReadQuery> {
         // Unwrap: Relation field requires sub selection.
-        let query_args = utils::extract_query_args(self.field.arguments);
+        let query_args = utils::extract_query_args(self.field.arguments, &self.model);
 
         // Ok(RelatedRecordQuery {
         //     name,

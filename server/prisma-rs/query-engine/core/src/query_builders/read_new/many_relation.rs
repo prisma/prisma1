@@ -22,7 +22,7 @@ impl ReadManyRelationRecordsBuilder {
 
 impl Builder for ReadManyRelationRecordsBuilder {
     fn build(self) -> QueryBuilderResult<ReadQuery> {
-        let query_args = utils::extract_query_args(self.field.arguments);
+        let query_args = utils::extract_query_args(self.field.arguments, &self.model);
         dbg!(query_args);
 
         unimplemented!()

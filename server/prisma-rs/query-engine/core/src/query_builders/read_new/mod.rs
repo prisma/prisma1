@@ -2,13 +2,11 @@ mod many;
 mod many_relation;
 mod one;
 mod one_relation;
-mod filters;
 
 pub use many::*;
 pub use many_relation::*;
 pub use one::*;
 pub use one_relation::*;
-pub use filters::*;
 
 use crate::query_builders::QueryBuilderResult;
 use connector::read_ast::ReadQuery;
