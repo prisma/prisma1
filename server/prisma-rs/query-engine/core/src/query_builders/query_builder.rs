@@ -1,3 +1,4 @@
+use super::QueryValidationError;
 use crate::{
     query_builders::{
         read_new::ReadOneRecordBuilder, Builder, ParsedArgument, ParsedField, ParsedInputValue, ParsedObject,
@@ -5,7 +6,7 @@ use crate::{
     },
     query_document::*,
     CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType, IntoArc, ObjectTypeStrongRef,
-    OperationTag, QuerySchemaRef, QueryValidationError, ScalarType,
+    OperationTag, QuerySchemaRef, ScalarType,
 };
 use chrono::prelude::*;
 use connector::Query;

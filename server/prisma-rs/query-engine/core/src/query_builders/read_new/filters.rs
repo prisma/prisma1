@@ -1,7 +1,7 @@
 use crate::query_builders::{ParsedInputValue, QueryBuilderResult};
 use connector::{filter::Filter, RelationCompare, ScalarCompare};
 use prisma_models::{Field, ModelRef, PrismaListValue, PrismaValue};
-use std::{collections::BTreeMap, convert::TryFrom, convert::TryInto, sync::Arc};
+use std::{collections::BTreeMap, convert::TryFrom, convert::TryInto};
 
 lazy_static! {
     /// Filter operations in descending order of how they should be checked.
@@ -58,16 +58,14 @@ impl FilterOp {
         FILTER_OPERATIONS
             .iter()
             .find(|op| {
-                let op_suffix: &'static str = (*op).into();
+                let op_suffix: &'static str = op.suffix();
                 name.ends_with(op_suffix)
             })
             .map(|op| op.clone())
     }
-}
 
-impl From<&FilterOp> for &'static str {
-    fn from(fo: &FilterOp) -> Self {
-        match fo {
+    pub fn suffix(&self) -> &'static str {
+        match self {
             FilterOp::In => "_in",
             FilterOp::NotIn => "_not_in",
             FilterOp::Not => "_not",
@@ -87,7 +85,7 @@ impl From<&FilterOp> for &'static str {
             FilterOp::NestedAnd => "AND",
             FilterOp::NestedOr => "OR",
             FilterOp::NestedNot => "NOT",
-            FilterOp::Field => "", // Needs to be last
+            FilterOp::Field => "",
         }
     }
 }
@@ -101,13 +99,11 @@ pub fn extract_filter(value_map: BTreeMap<String, ParsedInputValue>, model: &Mod
             match op {
                 op if (op == FilterOp::NestedAnd || op == FilterOp::NestedOr || op == FilterOp::NestedNot) => {
                     let value: QueryBuilderResult<Vec<Filter>> = match value {
-                        ParsedInputValue::List(PrismaValue::List(Some(values))) => values
+                        ParsedInputValue::List(values) => values
                             .into_iter()
-                            .map(|val| {
-                                let wtf = val.try_into()?;
-                                extract_filter(wtf, model)
-                            })
-                            .collect::<Vec<QueryBuilderResult<Filter>>>().into_iter().collect(),
+                            .map(|val| extract_filter(val.try_into()?, model))
+                            .collect(),
+
                         ParsedInputValue::Map(map) => extract_filter(map, model).map(|res| vec![res]),
                         _ => unreachable!(),
                     };
@@ -120,59 +116,52 @@ pub fn extract_filter(value_map: BTreeMap<String, ParsedInputValue>, model: &Mod
                     })
                 }
                 op => {
-                    // let op_name: &'static str = op.into();
-                    // let field_name = k.trim_end_matches(op_name);
-                    // let field = model.fields().find_from_all(&field_name).unwrap(); // fixme: unwrap
+                    let op_name: &'static str = op.suffix();
+                    let field_name = key.trim_end_matches(op_name);
+                    let field = model.fields().find_from_all(&field_name).unwrap();
 
-                    // match field {
-                    //     Field::Scalar(s) => {
-                    //         let value = PrismaValue::from_value_broken(v);
-                    //         Ok(match op {
-                    //             FilterOp::In => s.is_in(PrismaListValue::try_from(value)?),
-                    //             FilterOp::NotIn => s.not_in(PrismaListValue::try_from(value)?),
-                    //             FilterOp::Not => s.not_equals(value),
-                    //             FilterOp::Lt => s.less_than(value),
-                    //             FilterOp::Lte => s.less_than_or_equals(value),
-                    //             FilterOp::Gt => s.greater_than(value),
-                    //             FilterOp::Gte => s.greater_than_or_equals(value),
-                    //             FilterOp::Contains => s.contains(value),
-                    //             FilterOp::NotContains => s.not_contains(value),
-                    //             FilterOp::StartsWith => s.starts_with(value),
-                    //             FilterOp::NotStartsWith => s.not_starts_with(value),
-                    //             FilterOp::EndsWith => s.ends_with(value),
-                    //             FilterOp::NotEndsWith => s.not_ends_with(value),
-                    //             FilterOp::Field => s.equals(value),
-                    //             _ => unreachable!(),
-                    //         })
-                    //     }
-                    //     Field::Relation(r) => {
-                    //         let value = match v {
-                    //             Value::Object(o) => Some(o),
-                    //             _ => None, // This handles `Null` values which might be valid!
-                    //         };
+                    match field {
+                        Field::Scalar(s) => {
+                            let value: PrismaValue = value.try_into()?;
+                            Ok(match op {
+                                FilterOp::In => s.is_in(PrismaListValue::try_from(value)?),
+                                FilterOp::NotIn => s.not_in(PrismaListValue::try_from(value)?),
+                                FilterOp::Not => s.not_equals(value),
+                                FilterOp::Lt => s.less_than(value),
+                                FilterOp::Lte => s.less_than_or_equals(value),
+                                FilterOp::Gt => s.greater_than(value),
+                                FilterOp::Gte => s.greater_than_or_equals(value),
+                                FilterOp::Contains => s.contains(value),
+                                FilterOp::NotContains => s.not_contains(value),
+                                FilterOp::StartsWith => s.starts_with(value),
+                                FilterOp::NotStartsWith => s.not_starts_with(value),
+                                FilterOp::EndsWith => s.ends_with(value),
+                                FilterOp::NotEndsWith => s.not_ends_with(value),
+                                FilterOp::Field => s.equals(value),
+                                _ => unreachable!(),
+                            })
+                        }
+                        Field::Relation(r) => {
+                            let value: Option<BTreeMap<String, ParsedInputValue>> = value.try_into()?;
 
-                    //         Ok(match (op, value) {
-                    //             (FilterOp::Some, Some(value)) => {
-                    //                 r.at_least_one_related(extract_filter(value, r.related_model())?)
-                    //             }
-                    //             (FilterOp::None, Some(value)) => {
-                    //                 r.no_related(extract_filter(value, r.related_model())?)
-                    //             }
-                    //             (FilterOp::Every, Some(value)) => {
-                    //                 r.every_related(extract_filter(value, r.related_model())?)
-                    //             }
-                    //             (FilterOp::Field, Some(value)) => {
-                    //                 r.to_one_related(extract_filter(value, r.related_model())?)
-                    //             }
-                    //             (FilterOp::Field, None) => r.one_relation_is_null(),
-                    //             (op, val) => Err(CoreError::LegacyQueryValidationError(format!(
-                    //                 "Invalid filter: Operation {:?} with {:?}",
-                    //                 op, val
-                    //             )))?,
-                    //         })
-                    //     }
-                    // }
-                    unimplemented!()
+                            Ok(match (op, value) {
+                                (FilterOp::Some, Some(value)) => {
+                                    r.at_least_one_related(extract_filter(value, &r.related_model())?)
+                                }
+                                (FilterOp::None, Some(value)) => {
+                                    r.no_related(extract_filter(value, &r.related_model())?)
+                                }
+                                (FilterOp::Every, Some(value)) => {
+                                    r.every_related(extract_filter(value, &r.related_model())?)
+                                }
+                                (FilterOp::Field, Some(value)) => {
+                                    r.to_one_related(extract_filter(value, &r.related_model())?)
+                                }
+                                (FilterOp::Field, None) => r.one_relation_is_null(),
+                                _ => unreachable!(),
+                            })
+                        }
+                    }
                 }
             }
         })

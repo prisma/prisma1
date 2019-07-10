@@ -1,6 +1,6 @@
 use super::*;
 use once_cell::sync::OnceCell;
-use prisma_models::{InternalEnum, ModelRef, PrismaValue, EnumType, EnumValue};
+use prisma_models::{ModelRef, PrismaValue, EnumType, EnumValue};
 
 /// Object type initializer for cases where only the name is known, and fields are computed later.
 pub fn init_object_type<T>(name: T, model: Option<ModelRef>) -> ObjectType
