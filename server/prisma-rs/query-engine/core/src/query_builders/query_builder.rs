@@ -1,9 +1,7 @@
 use super::QueryValidationError;
 use crate::{
-    query_builders::*,
-    query_document::*,
-    CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType, IntoArc, ObjectTypeStrongRef,
-    OperationTag, QuerySchemaRef, ScalarType,
+    query_builders::*, query_document::*, CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType,
+    IntoArc, ObjectTypeStrongRef, OperationTag, QuerySchemaRef, ScalarType,
 };
 use chrono::prelude::*;
 use connector::Query;
@@ -257,8 +255,10 @@ impl QueryBuilder {
             (QueryValue::String(s), ScalarType::DateTime) => Self::parse_datetime(s.as_str()).map(|dt| PrismaValue::DateTime(dt)),
             (QueryValue::String(s), ScalarType::Json)     => Self::parse_json(s.as_str()).map(|j| PrismaValue::Json(j)),
             (QueryValue::String(s), ScalarType::UUID)     => Self::parse_uuid(s.as_str()).map(|u| PrismaValue::Uuid(u)),
+            (QueryValue::Int(i), ScalarType::Float)       => Ok(PrismaValue::Float(i as f64)),
             (QueryValue::Int(i), ScalarType::Int)         => Ok(PrismaValue::Int(i)),
             (QueryValue::Float(f), ScalarType::Float)     => Ok(PrismaValue::Float(f)),
+            (QueryValue::Float(f), ScalarType::Int)       => Ok(PrismaValue::Int(f as i64)),
             (QueryValue::Boolean(b), ScalarType::Boolean) => Ok(PrismaValue::Boolean(b)),
             (QueryValue::Enum(e), ScalarType::Enum(et))   => match et.value_for(e.as_str()) {
                                                                 Some(val) => Ok(PrismaValue::Enum(val.clone())),

@@ -1,5 +1,7 @@
 use super::*;
-use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, ScalarField, SortOrder, TypeIdentifier, EnumValue, EnumType};
+use prisma_models::{
+    EnumType, EnumValue, Field as ModelField, InternalDataModelRef, ModelRef, ScalarField, SortOrder, TypeIdentifier,
+};
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -79,14 +81,14 @@ impl<'a> ObjectTypeBuilder<'a> {
                         ModelField::Relation(_) => self.with_relations,
                     }
             })
-            .map(|f| self.map_field(model, f))
+            .map(|f| self.map_field(f))
             .collect()
     }
 
-    pub fn map_field(&self, model: &ModelRef, model_field: &ModelField) -> Field {
+    pub fn map_field(&self, model_field: &ModelField) -> Field {
         field(
             model_field.name().clone(),
-            self.many_records_field_arguments(&model, &model_field),
+            self.many_records_field_arguments(&model_field),
             self.map_output_type(&model_field),
             None,
         )
@@ -126,13 +128,13 @@ impl<'a> ObjectTypeBuilder<'a> {
         }
     }
 
-    /// Builds "many records where" arguments based on the given model and field.
-    pub fn many_records_field_arguments(&self, model: &ModelRef, field: &ModelField) -> Vec<Argument> {
+    /// Builds "many records where" arguments based on the given field.
+    pub fn many_records_field_arguments(&self, field: &ModelField) -> Vec<Argument> {
         match field {
             f if !f.is_visible() => vec![],
             ModelField::Scalar(_) => vec![],
             ModelField::Relation(rf) if rf.is_list && !rf.related_model().is_embedded => {
-                self.many_records_arguments(model)
+                self.many_records_arguments(&rf.related_model())
             }
             ModelField::Relation(rf) if rf.is_list && rf.related_model().is_embedded => vec![],
             ModelField::Relation(rf) if !rf.is_list => vec![],
