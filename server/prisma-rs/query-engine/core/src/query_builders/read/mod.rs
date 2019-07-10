@@ -1,112 +1,107 @@
-//! Read query builders module
-
-mod filters;
 mod many;
-mod many_rel;
+mod many_relation;
 mod one;
-mod one_rel;
-
-pub(crate) mod utils;
+mod one_relation;
 
 pub use many::*;
-pub use many_rel::*;
+pub use many_relation::*;
 pub use one::*;
-pub use one_rel::*;
+pub use one_relation::*;
 
-use crate::{schema::OperationTag, CoreError, CoreResult, ModelOperation, QuerySchemaRef};
+use crate::query_builders::{ParsedField, QueryBuilderResult};
 use connector::read_ast::ReadQuery;
-use graphql_parser::query::Field;
-use prisma_models::{ModelRef, RelationFieldRef};
+use prisma_models::{
+    Field, ModelRef, RelationFieldRef, SelectedField, SelectedFields, SelectedRelationField, SelectedScalarField,
+};
 use std::sync::Arc;
 
-/// A common query-builder type
-#[derive(Debug)]
-pub enum ReadQueryBuilder<'field> {
-    One(OneBuilder<'field>),
-    Many(ManyBuilder<'field>),
-    OneRelation(OneRelationBuilder<'field>),
-    ManyRelation(ManyRelationBuilder<'field>),
+pub trait Builder {
+    fn build(self) -> QueryBuilderResult<ReadQuery>;
 }
 
-impl<'a> ReadQueryBuilder<'a> {
-    pub fn new(query_schema: QuerySchemaRef, root_field: &'a Field) -> CoreResult<Self> {
-        let query_field = match query_schema.find_query_field(root_field.name.as_ref()) {
-            Some(field) => Ok(field),
-            None => Err(CoreError::LegacyQueryValidationError(format!(
-                "Field not found on type Query: {}",
-                &root_field.name
-            ))),
-        }?;
+pub enum ReadQueryBuilder {
+    ReadOneRecordBuilder(ReadOneRecordBuilder),
+    ReadManyRecordsBuilder(ReadManyRecordsBuilder),
+    ReadOneRelationRecordBuilder(ReadOneRelationRecordBuilder),
+    ReadManyRelationRecordsBuilder(ReadManyRelationRecordsBuilder),
+}
 
-        let model_operation = query_field
-            .operation
-            .clone()
-            .expect("Expected top level field to have an associated model operation.");
-
-        ReadQueryBuilder::infer_root(model_operation, root_field)
-    }
-
-    /// Infer the type of builder that should be created for a root field.
-    fn infer_root(model_operation: ModelOperation, field: &'a Field) -> CoreResult<ReadQueryBuilder<'a>> {
-        let model = model_operation.model;
-        let operation = model_operation.operation;
-
-        match operation {
-            OperationTag::FindOne => Ok(ReadQueryBuilder::One(
-                OneBuilder::new().setup(Arc::clone(&model), field),
-            )),
-            OperationTag::FindMany => Ok(ReadQueryBuilder::Many(
-                ManyBuilder::new().setup(Arc::clone(&model), field),
-            )),
-            _ => Err(CoreError::LegacyQueryValidationError(format!(
-                "Invalid root operation on Query: {:?}",
-                operation
-            ))),
-        }
-    }
-
-    /// Temporary workaround until we have a full query schema integration.
-    fn infer_nested(
-        model: &ModelRef,
-        field: &'a Field,
-        parent: Option<RelationFieldRef>,
-    ) -> Option<ReadQueryBuilder<'a>> {
-        if let Some(ref parent) = parent {
-            if parent.is_list {
-                Some(ReadQueryBuilder::ManyRelation(ManyRelationBuilder::new().setup(
-                    Arc::clone(&model),
-                    field,
-                    Arc::clone(&parent),
-                )))
-            } else {
-                Some(ReadQueryBuilder::OneRelation(OneRelationBuilder::new().setup(
-                    Arc::clone(&model),
-                    field,
-                    Arc::clone(&parent),
-                )))
-            }
-        } else {
-            None
-        }
-    }
-
-    pub fn build(self) -> CoreResult<ReadQuery> {
+impl Builder for ReadQueryBuilder {
+    fn build(self) -> QueryBuilderResult<ReadQuery> {
         match self {
-            ReadQueryBuilder::One(b) => Ok(ReadQuery::RecordQuery(b.build()?)),
-            ReadQueryBuilder::Many(b) => Ok(ReadQuery::ManyRecordsQuery(b.build()?)),
-            ReadQueryBuilder::OneRelation(b) => Ok(ReadQuery::RelatedRecordQuery(b.build()?)),
-            ReadQueryBuilder::ManyRelation(b) => Ok(ReadQuery::ManyRelatedRecordsQuery(b.build()?)),
+            ReadQueryBuilder::ReadOneRecordBuilder(b) => b.build(),
+            ReadQueryBuilder::ReadManyRecordsBuilder(b) => b.build(),
+            ReadQueryBuilder::ReadOneRelationRecordBuilder(b) => b.build(),
+            ReadQueryBuilder::ReadManyRelationRecordsBuilder(b) => b.build(),
         }
     }
 }
 
-/// A trait that describes a query builder
-pub trait BuilderExt {
-    type Output;
+pub fn collect_selection_order(from: &[ParsedField]) -> Vec<String> {
+    from.into_iter()
+        .map(|selected_field| {
+            selected_field
+                .alias
+                .clone()
+                .unwrap_or_else(|| selected_field.name.clone())
+        })
+        .collect()
+}
 
-    /// A common constructor for all query builders
-    fn new() -> Self;
+pub fn collect_selected_fields(
+    from: &[ParsedField],
+    model: &ModelRef,
+    parent: Option<RelationFieldRef>,
+) -> SelectedFields {
+    let selected_fields = from
+        .into_iter()
+        .map(|selected_field| {
+            let model_field = model.fields().find_from_all(&selected_field.name).unwrap();
+            match model_field {
+                Field::Scalar(ref sf) => SelectedField::Scalar(SelectedScalarField { field: Arc::clone(sf) }),
+                Field::Relation(ref rf) => SelectedField::Relation(SelectedRelationField {
+                    field: Arc::clone(rf),
+                    selected_fields: SelectedFields::new(vec![], None), // todo None here correct?
+                }),
+            }
+        })
+        .collect::<Vec<SelectedField>>();
 
-    /// Last step that invokes query building
-    fn build(self) -> CoreResult<Self::Output>;
+    SelectedFields::new(selected_fields, parent)
+}
+
+pub fn collect_nested_queries(from: Vec<ParsedField>, model: &ModelRef) -> QueryBuilderResult<Vec<ReadQuery>> {
+    from.into_iter()
+        .filter_map(|selected_field| {
+            let model_field = model.fields().find_from_all(&selected_field.name).unwrap();
+            match model_field {
+                Field::Scalar(_) => None,
+                Field::Relation(ref rf) => {
+                    let model = rf.related_model();
+                    let parent = Arc::clone(&rf);
+
+                    Some(infer_nested(selected_field, &model, parent))
+                }
+            }
+        })
+        .collect::<Vec<ReadQueryBuilder>>()
+        .into_iter()
+        .map(|builder| builder.build())
+        .collect::<QueryBuilderResult<Vec<ReadQuery>>>()
+}
+
+fn infer_nested(field: ParsedField, model: &ModelRef, parent: RelationFieldRef) -> ReadQueryBuilder {
+    if parent.is_list {
+        ReadQueryBuilder::ReadManyRelationRecordsBuilder(ReadManyRelationRecordsBuilder::new(
+            Arc::clone(model),
+            Arc::clone(&parent),
+            field,
+        ))
+    } else {
+        ReadQueryBuilder::ReadOneRelationRecordBuilder(ReadOneRelationRecordBuilder::new(
+            Arc::clone(model),
+            Arc::clone(&parent),
+            field,
+        ))
+    }
 }

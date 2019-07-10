@@ -1,55 +1,36 @@
-use super::{utils, BuilderExt};
-use crate::CoreResult;
-use connector::read_ast::ManyRecordsQuery;
-use graphql_parser::query::Field;
+use super::*;
+use crate::query_builders::{utils, ParsedField, QueryBuilderResult};
+use connector::read_ast::{ManyRecordsQuery, ReadQuery};
 use prisma_models::ModelRef;
-use std::sync::Arc;
 
-#[derive(Default, Debug)]
-pub struct ManyBuilder<'f> {
-    model: Option<ModelRef>,
-    field: Option<&'f Field>,
+pub struct ReadManyRecordsBuilder {
+    field: ParsedField,
+    model: ModelRef,
 }
 
-impl<'f> ManyBuilder<'f> {
-    pub fn setup(self, model: ModelRef, field: &'f Field) -> Self {
-        Self {
-            model: Some(model),
-            field: Some(field),
-        }
+impl ReadManyRecordsBuilder {
+    pub fn new(field: ParsedField, model: ModelRef) -> Self {
+        Self { field, model }
     }
 }
 
-impl<'f> BuilderExt for ManyBuilder<'f> {
-    type Output = ManyRecordsQuery;
+impl Builder for ReadManyRecordsBuilder {
+    fn build(self) -> QueryBuilderResult<ReadQuery> {
+        let args = utils::extract_query_args(self.field.arguments, &self.model)?;
+        let name = self.field.alias.unwrap_or(self.field.name);
+        let sub_selections = self.field.sub_selections.unwrap().fields;
+        let selection_order: Vec<String> = collect_selection_order(&sub_selections);
+        let selected_fields = collect_selected_fields(&sub_selections, &self.model, None);
+        let nested = collect_nested_queries(sub_selections, &self.model)?;
+        let model = self.model;
 
-    fn new() -> Self {
-        Default::default()
-    }
-
-    fn build(self) -> CoreResult<Self::Output> {
-        let (model, field) = match (&self.model, &self.field) {
-            (Some(m), Some(f)) => Some((m, f)),
-            _ => None,
-        }
-        .expect("`ManyQuery` builder not properly initialised!");
-
-        let nested_builders = utils::collect_nested_queries(Arc::clone(&model), field, model.internal_data_model())?;
-        let nested = utils::build_nested_queries(nested_builders)?;
-
-        let selected_fields = utils::collect_selected_fields(Arc::clone(&model), field, None)?;
-        let args = utils::extract_query_args(field, Arc::clone(&model))?;
-        let name = field.alias.as_ref().unwrap_or(&field.name).clone();
-        let model = Arc::clone(model);
-        let fields = utils::collect_selection_order(&field);
-
-        Ok(ManyRecordsQuery {
+        Ok(ReadQuery::ManyRecordsQuery(ManyRecordsQuery {
             name,
             model,
             args,
             selected_fields,
             nested,
-            fields,
-        })
+            selection_order,
+        }))
     }
 }

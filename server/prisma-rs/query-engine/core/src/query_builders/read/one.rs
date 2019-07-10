@@ -1,53 +1,36 @@
-use super::{utils, BuilderExt};
-use crate::CoreResult;
-use connector::read_ast::RecordQuery;
-use graphql_parser::query::Field;
+use super::*;
+use crate::query_builders::{utils, ParsedField, QueryBuilderResult};
+use connector::read_ast::{ReadQuery, RecordQuery};
 use prisma_models::ModelRef;
-use std::sync::Arc;
 
-#[derive(Debug, Default)]
-pub struct OneBuilder<'f> {
-    model: Option<ModelRef>,
-    field: Option<&'f Field>,
+pub struct ReadOneRecordBuilder {
+    field: ParsedField,
+    model: ModelRef,
 }
 
-impl<'f> OneBuilder<'f> {
-    pub fn setup(self, model: ModelRef, field: &'f Field) -> Self {
-        Self {
-            model: Some(model),
-            field: Some(field),
-        }
+impl ReadOneRecordBuilder {
+    pub fn new(field: ParsedField, model: ModelRef) -> Self {
+        Self { field, model }
     }
 }
 
-impl<'f> BuilderExt for OneBuilder<'f> {
-    type Output = RecordQuery;
+impl Builder for ReadOneRecordBuilder {
+    /// Builds a read query tree from a parsed top-level field of a query
+    /// Unwraps are safe because of query validation that ensures conformity to the query schema.
+    fn build(self) -> QueryBuilderResult<ReadQuery> {
+        let record_finder = utils::extract_record_finder(self.field.arguments, &self.model)?;
+        let name = self.field.alias.unwrap_or(self.field.name);
+        let sub_selections = self.field.sub_selections.unwrap().fields;
+        let selection_order: Vec<String> = collect_selection_order(&sub_selections);
+        let selected_fields = collect_selected_fields(&sub_selections, &self.model, None);
+        let nested = collect_nested_queries(sub_selections, &self.model)?;
 
-    fn new() -> Self {
-        Default::default()
-    }
-
-    fn build(self) -> CoreResult<Self::Output> {
-        let (model, field) = match (&self.model, &self.field) {
-            (Some(m), Some(f)) => Some((m, f)),
-            _ => None,
-        }
-        .expect("`RecordQuery` builder not properly initialised!");
-
-        let nested_builders = utils::collect_nested_queries(Arc::clone(&model), field, model.internal_data_model())?;
-        let nested = utils::build_nested_queries(nested_builders)?;
-
-        let selected_fields = utils::collect_selected_fields(Arc::clone(&model), field, None)?;
-        let selector = utils::extract_record_finder(&field, Arc::clone(&model))?;
-        let name = field.alias.as_ref().unwrap_or(&field.name).clone();
-        let fields = utils::collect_selection_order(&field);
-
-        Ok(RecordQuery {
+        Ok(ReadQuery::RecordQuery(RecordQuery {
             name,
-            selector,
+            record_finder,
             selected_fields,
             nested,
-            fields,
-        })
+            selection_order,
+        }))
     }
 }
