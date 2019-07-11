@@ -3,9 +3,15 @@ use crate::query_builders::{utils, ParsedField, ParsedInputValue, QueryBuilderRe
 use connector::write_ast::{WriteQuery, RootWriteQuery, CreateRecord, NestedWriteQueries};
 use prisma_models::{Field, ModelRef, PrismaArgs, PrismaListValue, PrismaValue};
 
-struct CreateBuilder {
+pub struct CreateBuilder {
     field: ParsedField,
     model: ModelRef,
+}
+
+impl CreateBuilder {
+    pub fn new(field: ParsedField, model: ModelRef) -> Self {
+        Self { field, model }
+    }
 }
 
 impl CreateBuilder {

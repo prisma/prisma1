@@ -1,6 +1,6 @@
-use super::QueryValidationError;
+use super::*;
 use crate::{
-    query_builders::*, query_document::*, CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType,
+    query_document::*, CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType,
     IntoArc, ObjectTypeStrongRef, OperationTag, QuerySchemaRef, ScalarType,
 };
 use chrono::prelude::*;
@@ -18,10 +18,8 @@ pub struct QueryBuilder {
 
 // Todo:
 // - Use error collections instead of letting first error win.
-// - Check if empty selection set already fails at the parser level
 // - UUID ids are not encoded in any useful way in the schema.
-// - Should the required field injection be done here?
-// - Alias handling in query names
+// - Alias handling in query names.
 impl QueryBuilder {
     pub fn new(query_schema: QuerySchemaRef) -> Self {
         QueryBuilder { query_schema }
@@ -70,6 +68,7 @@ impl QueryBuilder {
                     .as_ref()
                     .expect("Expected Query object fields to always have an associated operation.");
 
+                // Only read one / many is possible on the root.
                 let builder = match field_operation.operation {
                     OperationTag::FindOne => ReadQueryBuilder::ReadOneRecordBuilder(ReadOneRecordBuilder::new(
                         parsed_field,
@@ -79,7 +78,7 @@ impl QueryBuilder {
                         parsed_field,
                         Arc::clone(&field_operation.model),
                     )),
-                    _ => unreachable!(), // Only read one / many is possible on the root.
+                    _ => unreachable!(),
                 };
 
                 builder.build().map(|query| Query::Read(query))
@@ -99,6 +98,7 @@ impl QueryBuilder {
                 let field = mutation_object
                     .find_field(parsed_field.name.clone())
                     .expect("Expected validation to guarantee existing field on Mutation object.");
+
                 let field_operation = field
                     .operation
                     .as_ref()
@@ -106,9 +106,9 @@ impl QueryBuilder {
 
                 let builder = match field_operation.operation {
                     OperationTag::CreateOne => {
-                        ReadOneRecordBuilder::new(parsed_field, Arc::clone(&field_operation.model))
+                        WriteQueryBuilder::CreateBuilder(CreateBuilder::new(parsed_field, Arc::clone(&field_operation.model)))
                     }
-                    _ => unreachable!(), // Only read one / many is possible on the root.
+                    _ => unimplemented!(),
                 };
 
                 builder.build().map(|query| Query::Read(query))
