@@ -1,7 +1,8 @@
 use super::{create, delete, delete_many, relation, update, update_many};
-use crate::{error::SqlError, Transaction};
-use connector::write_query::*;
+use crate::{error::SqlError, transaction_ext};
+use connector_interface::write_query::*;
 use prisma_models::GraphqlId;
+use prisma_query::connector::{Transaction};
 use std::sync::Arc;
 
 pub fn execute(
@@ -48,7 +49,8 @@ pub fn execute(
     }
 
     for upsert_record in nested_write_writes.upserts.iter() {
-        let id_opt = conn.find_id_by_parent(
+        let id_opt = transaction_ext::find_id_by_parent(
+            conn,
             Arc::clone(&upsert_record.relation_field),
             parent_id,
             &upsert_record.where_,

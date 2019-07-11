@@ -9,9 +9,12 @@ mod update_many;
 use crate::{
     database::{SqlCapabilities, SqlDatabase},
     error::SqlError,
-    RawQuery, Transaction, Transactional,
+    write_query::WriteQueryBuilder,
+    transaction_ext,
+    RawQuery, Transactional,
 };
-use connector::{self, write_query::*, DatabaseWriter};
+use prisma_query::connector::{Transaction, Queryable};
+use connector_interface::{self, write_query::*, DatabaseWriter};
 use serde_json::Value;
 use std::sync::Arc;
 
@@ -19,8 +22,8 @@ impl<T> DatabaseWriter for SqlDatabase<T>
 where
     T: Transactional + SqlCapabilities,
 {
-    fn execute(&self, db_name: String, write_query: RootWriteQuery) -> connector::Result<WriteQueryResult> {
-        let result = self.executor.with_transaction(&db_name, |conn: &mut Transaction| {
+    fn execute(&self, db_name: String, write_query: RootWriteQuery) -> connector_interface::Result<WriteQueryResult> {
+        let result = self.executor.with_transaction(&db_name, |conn| {
             fn create(conn: &mut Transaction, cn: &CreateRecord) -> crate::Result<WriteQueryResult> {
                 let parent_id = create::execute(conn, Arc::clone(&cn.model), &cn.non_list_args, &cn.list_args)?;
                 nested::execute(conn, &cn.nested_writes, &parent_id)?;
@@ -44,7 +47,7 @@ where
             match write_query {
                 RootWriteQuery::CreateRecord(ref cn) => Ok(create(conn, cn)?),
                 RootWriteQuery::UpdateRecord(ref un) => Ok(update(conn, un)?),
-                RootWriteQuery::UpsertRecord(ref ups) => match conn.find_id(&ups.where_) {
+                RootWriteQuery::UpsertRecord(ref ups) => match transaction_ext::find_id(conn, &ups.where_) {
                     Err(_e @ SqlError::RecordNotFoundForWhere { .. }) => Ok(create(conn, &ups.create)?),
                     Err(e) => return Err(e.into()),
                     Ok(_) => Ok(update(conn, &ups.update)?),
@@ -80,7 +83,8 @@ where
                     })
                 }
                 RootWriteQuery::ResetData(ref rd) => {
-                    conn.truncate(Arc::clone(&rd.internal_data_model))?;
+                    let tables = WriteQueryBuilder::truncate_tables(Arc::clone(&rd.internal_data_model));
+                    conn.empty_tables(tables)?;
 
                     Ok(WriteQueryResult {
                         identifier: Identifier::None,
@@ -93,10 +97,10 @@ where
         Ok(result)
     }
 
-    fn execute_raw(&self, db_name: String, query: String) -> connector::Result<Value> {
+    fn execute_raw(&self, db_name: String, query: String) -> connector_interface::Result<Value> {
         let result = self
             .executor
-            .with_transaction(&db_name, |conn: &mut Transaction| conn.raw(RawQuery::from(query)))?;
+            .with_transaction(&db_name, |conn| transaction_ext::raw_json(conn, RawQuery::from(query)))?;
 
         Ok(result)
     }

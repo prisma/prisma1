@@ -1,17 +1,19 @@
 use crate::{
+    transaction_ext,
     write_query::{DeleteActions, WriteQueryBuilder},
-    Transaction,
 };
-use connector::filter::Filter;
+use connector_interface::filter::Filter;
 use prisma_models::{GraphqlId, ModelRef, RelationFieldRef};
+use prisma_query::connector::{Transaction, Queryable};
 use std::sync::Arc;
 
 /// A top level delete that removes records matching the `Filter`. Violating
 /// any relations will cause an error.
 ///
 /// Will return the number records deleted.
-pub fn execute(conn: &mut Transaction, model: ModelRef, filter: &Filter) -> crate::Result<usize> {
-    let ids = conn.filter_ids(Arc::clone(&model), filter.clone())?;
+pub fn execute(conn: &mut Transaction, model: ModelRef, filter: &Filter) -> crate::Result<usize>
+{
+    let ids = transaction_ext::filter_ids(conn, Arc::clone(&model), filter.clone())?;
     let ids: Vec<&GraphqlId> = ids.iter().map(|id| &*id).collect();
     let count = ids.len();
 
@@ -20,7 +22,7 @@ pub fn execute(conn: &mut Transaction, model: ModelRef, filter: &Filter) -> crat
     }
 
     DeleteActions::check_relation_violations(Arc::clone(&model), ids.as_slice(), |select| {
-        let ids = conn.select_ids(select)?;
+        let ids = transaction_ext::select_ids(conn, select)?;
         Ok(ids.into_iter().next())
     })?;
 
@@ -39,8 +41,11 @@ pub fn execute_nested(
     parent_id: &GraphqlId,
     filter: &Option<Filter>,
     relation_field: RelationFieldRef,
-) -> crate::Result<usize> {
-    let ids = conn.filter_ids_by_parents(Arc::clone(&relation_field), vec![parent_id], filter.clone())?;
+) -> crate::Result<usize>
+{
+    let ids =
+        transaction_ext::filter_ids_by_parents(conn, Arc::clone(&relation_field), vec![parent_id], filter.clone())?;
+
     let count = ids.len();
 
     if count == 0 {
@@ -51,7 +56,7 @@ pub fn execute_nested(
     let model = relation_field.model();
 
     DeleteActions::check_relation_violations(model, ids.as_slice(), |select| {
-        let ids = conn.select_ids(select)?;
+        let ids = transaction_ext::select_ids(conn, select)?;
         Ok(ids.into_iter().next())
     })?;
 

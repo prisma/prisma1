@@ -2,10 +2,25 @@ mod mysql;
 mod postgresql;
 mod sqlite;
 
-use crate::{query_builder::ManyRelatedRecordsQueryBuilder, Transactional};
+use crate::{query_builder::*, Transactional};
+use datamodel::Source;
+use prisma_common::config::PrismaDatabase;
+
 pub use mysql::*;
 pub use postgresql::*;
 pub use sqlite::*;
+
+pub trait FromSource {
+    fn from_source(source: &Box<dyn Source>) -> crate::Result<Self>
+    where
+        Self: Transactional + SqlCapabilities + Sized;
+}
+
+pub trait LegacyDatabase {
+    fn from_prisma_database(db: &PrismaDatabase) -> crate::Result<Self>
+    where
+        Self: Sized;
+}
 
 pub trait SqlCapabilities {
     /// This we use to differentiate between databases with or without

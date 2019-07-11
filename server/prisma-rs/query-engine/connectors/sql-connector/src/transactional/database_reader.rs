@@ -2,9 +2,9 @@ use crate::{
     database::{SqlCapabilities, SqlDatabase},
     error::SqlError,
     query_builder::{ManyRelatedRecordsBaseQuery, ManyRelatedRecordsQueryBuilder, QueryBuilder},
-    Transactional,
+    Transactional, transaction_ext,
 };
-use connector::{self, error::ConnectorError, filter::RecordFinder, *};
+use connector_interface::{self, error::ConnectorError, filter::RecordFinder, *};
 use itertools::Itertools;
 use prisma_models::*;
 use std::convert::TryFrom;
@@ -22,7 +22,7 @@ where
         &self,
         record_finder: &RecordFinder,
         selected_fields: &SelectedFields,
-    ) -> connector::Result<Option<SingleRecord>> {
+    ) -> connector_interface::Result<Option<SingleRecord>> {
         let db_name = &record_finder.field.model().internal_data_model().db_name;
         let query = QueryBuilder::get_records(record_finder.field.model(), selected_fields, record_finder);
         let field_names = selected_fields.names();
@@ -30,7 +30,7 @@ where
 
         let record = self
             .executor
-            .with_transaction(db_name, |conn| match conn.find(query, idents.as_slice()) {
+            .with_transaction(db_name, |conn| match transaction_ext::find(conn, query, idents.as_slice()) {
                 Ok(result) => Ok(Some(result)),
                 Err(_e @ SqlError::RecordNotFoundForWhere(_)) => Ok(None),
                 Err(e) => Err(e),
@@ -49,7 +49,7 @@ where
         model: ModelRef,
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> connector::Result<ManyRecords> {
+    ) -> connector_interface::Result<ManyRecords> {
         let db_name = &model.internal_data_model().db_name;
         let field_names = selected_fields.names();
         let idents = selected_fields.type_identifiers();
@@ -57,7 +57,7 @@ where
 
         let records = self
             .executor
-            .with_transaction(db_name, |conn| conn.filter(query.into(), idents.as_slice()))?
+            .with_transaction(db_name, |conn| transaction_ext::filter(conn, query.into(), idents.as_slice()))?
             .into_iter()
             .map(Record::from)
             .collect();
@@ -71,7 +71,7 @@ where
         from_record_ids: &[GraphqlId],
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> connector::Result<ManyRecords> {
+    ) -> connector_interface::Result<ManyRecords> {
         let db_name = &from_field.model().internal_data_model().db_name;
         let idents = selected_fields.type_identifiers();
         let field_names = selected_fields.names();
@@ -87,9 +87,9 @@ where
             }
         };
 
-        let records: connector::Result<Vec<Record>> = self
+        let records: connector_interface::Result<Vec<Record>> = self
             .executor
-            .with_transaction(db_name, |conn| conn.filter(query, idents.as_slice()))?
+            .with_transaction(db_name, |conn| transaction_ext::filter(conn, query, idents.as_slice()))?
             .into_iter()
             .map(|mut row| {
                 let parent_id = row.values.pop().ok_or(ConnectorError::ColumnDoesNotExist)?;
@@ -111,24 +111,24 @@ where
         })
     }
 
-    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> connector::Result<usize> {
+    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> connector_interface::Result<usize> {
         let db_name = &model.internal_data_model().db_name;
         let query = QueryBuilder::count_by_model(model, query_arguments);
 
         let result = self
             .executor
-            .with_transaction(db_name, |conn| conn.find_int(query))
+            .with_transaction(db_name, |conn| transaction_ext::find_int(conn, query))
             .map(|count| count as usize)?;
 
         Ok(result)
     }
 
-    fn count_by_table(&self, database: &str, table: &str) -> connector::Result<usize> {
+    fn count_by_table(&self, database: &str, table: &str) -> connector_interface::Result<usize> {
         let query = QueryBuilder::count_by_table(database, table);
 
         let result = self
             .executor
-            .with_transaction(database, |conn| conn.find_int(query))
+            .with_transaction(database, |conn| transaction_ext::find_int(conn, query))
             .map(|count| count as usize)?;
 
         Ok(result)
@@ -138,13 +138,13 @@ where
         &self,
         list_field: ScalarFieldRef,
         record_ids: Vec<GraphqlId>,
-    ) -> connector::Result<Vec<ScalarListValues>> {
+    ) -> connector_interface::Result<Vec<ScalarListValues>> {
         let db_name = &list_field.model().internal_data_model().db_name;
         let type_identifier = list_field.type_identifier;
         let query = QueryBuilder::get_scalar_list_values_by_record_ids(list_field, record_ids);
 
         let results: Vec<ScalarListElement> = self.executor.with_transaction(db_name, |conn| {
-            let rows = conn.filter(query.into(), &[TypeIdentifier::GraphQLID, type_identifier])?;
+            let rows = transaction_ext::filter(conn, query.into(), &[TypeIdentifier::GraphQLID, type_identifier])?;
 
             rows.into_iter()
                 .map(|row| {

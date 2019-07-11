@@ -11,7 +11,7 @@ mysql = ["mysql_client", "r2d2_mysql"]
 postgresql = ["postgres", "r2d2_postgres", "tokio-postgres-native-tls", "tokio-postgres", "native-tls", "rust_decimal"]
 
 [dependencies]
-connector = { path = "../connector" }
+connector-interface = { path = "../connector", package = "connector" }
 prisma-models = { path = "../../../prisma-models" }
 itertools = "0.8"
 chrono = { version = "0.4", features = ["serde"] }

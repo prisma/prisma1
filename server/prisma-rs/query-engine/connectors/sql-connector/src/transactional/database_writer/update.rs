@@ -1,7 +1,8 @@
-use crate::{write_query::WriteQueryBuilder, Transaction};
-use connector::filter::RecordFinder;
+use crate::{write_query::WriteQueryBuilder, transaction_ext};
+use connector_interface::filter::RecordFinder;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
 use std::sync::Arc;
+use prisma_query::connector::{Transaction, Queryable};
 
 /// Updates one record and any associated list record in the database.
 pub fn execute<S>(
@@ -14,7 +15,7 @@ where
     S: AsRef<str>,
 {
     let model = record_finder.field.model();
-    let id = conn.find_id(record_finder)?;
+    let id = transaction_ext::find_id(conn, record_finder)?;
 
     if let Some(update) = WriteQueryBuilder::update_one(Arc::clone(&model), &id, non_list_args)? {
         conn.update(update)?;
@@ -39,10 +40,16 @@ where
     S: AsRef<str>,
 {
     if let Some(ref record_finder) = record_finder {
-        conn.find_id(record_finder)?;
+        transaction_ext::find_id(conn, record_finder)?;
     };
 
-    let id = conn.find_id_by_parent(Arc::clone(&relation_field), parent_id, record_finder)?;
+    let id = transaction_ext::find_id_by_parent(
+        conn,
+        Arc::clone(&relation_field),
+        parent_id,
+        record_finder
+    )?;
+
     let record_finder = RecordFinder::from((relation_field.related_model().fields().id(), id));
 
     execute(conn, &record_finder, non_list_args, list_args)

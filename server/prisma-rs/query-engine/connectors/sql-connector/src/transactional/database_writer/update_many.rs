@@ -1,7 +1,8 @@
 use super::update;
-use crate::{write_query::WriteQueryBuilder, Transaction};
-use connector::filter::Filter;
+use crate::{transaction_ext, write_query::WriteQueryBuilder};
+use connector_interface::filter::Filter;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
+use prisma_query::connector::{Transaction, Queryable};
 use std::sync::Arc;
 
 /// Updates every record and any associated list records in the database
@@ -18,7 +19,7 @@ pub fn execute<S>(
 where
     S: AsRef<str>,
 {
-    let ids = conn.filter_ids(Arc::clone(&model), filter.clone())?;
+    let ids = transaction_ext::filter_ids(conn, Arc::clone(&model), filter.clone())?;
     let count = ids.len();
 
     if count == 0 {
@@ -52,7 +53,9 @@ pub fn execute_nested<S>(
 where
     S: AsRef<str>,
 {
-    let ids = conn.filter_ids_by_parents(Arc::clone(&relation_field), vec![parent_id], filter.clone())?;
+    let ids =
+        transaction_ext::filter_ids_by_parents(conn, Arc::clone(&relation_field), vec![parent_id], filter.clone())?;
+
     let count = ids.len();
 
     if count == 0 {

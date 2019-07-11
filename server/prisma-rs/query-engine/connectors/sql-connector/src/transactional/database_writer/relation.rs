@@ -1,8 +1,8 @@
 use crate::{
-    write_query::{NestedActions, WriteQueryBuilder},
-    Transaction,
+    write_query::{NestedActions, WriteQueryBuilder}, transaction_ext,
 };
-use connector::filter::RecordFinder;
+use connector_interface::filter::RecordFinder;
+use prisma_query::connector::{Transaction, Queryable};
 use prisma_models::{GraphqlId, RelationFieldRef};
 use std::sync::Arc;
 
@@ -33,22 +33,22 @@ pub fn connect(
     relation_field: RelationFieldRef,
 ) -> crate::Result<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
-        let ids = conn.select_ids(select)?;
+        let ids = transaction_ext::select_ids(conn, select)?;
         check(ids.into_iter().next().is_some())?
     }
 
-    let child_id = conn.find_id(record_finder)?;
+    let child_id = transaction_ext::find_id(conn, record_finder)?;
 
     if let Some(query) = actions.parent_removal(parent_id) {
-        conn.write(query)?;
+        conn.execute(query)?;
     }
 
     if let Some(query) = actions.child_removal(&child_id) {
-        conn.write(query)?;
+        conn.execute(query)?;
     }
 
     let relation_query = WriteQueryBuilder::create_relation(relation_field, parent_id, &child_id);
-    conn.write(relation_query)?;
+    conn.execute(relation_query)?;
 
     Ok(())
 }
@@ -71,7 +71,7 @@ pub fn disconnect(
     record_finder: &Option<RecordFinder>,
 ) -> crate::Result<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
-        let ids = conn.select_ids(select)?;
+        let ids = transaction_ext::select_ids(conn, select)?;
         check(ids.into_iter().next().is_some())?
     }
 
@@ -79,19 +79,19 @@ pub fn disconnect(
         None => {
             let (select, check) = actions.ensure_parent_is_connected(parent_id);
 
-            let ids = conn.select_ids(select)?;
+            let ids = transaction_ext::select_ids(conn, select)?;
             check(ids.into_iter().next().is_some())?;
 
-            conn.write(actions.removal_by_parent(parent_id))?;
+            conn.execute(actions.removal_by_parent(parent_id))?;
         }
         Some(ref selector) => {
-            let child_id = conn.find_id(selector)?;
+            let child_id = transaction_ext::find_id(conn, selector)?;
             let (select, check) = actions.ensure_connected(parent_id, &child_id);
 
-            let ids = conn.select_ids(select)?;
+            let ids = transaction_ext::select_ids(conn, select)?;
             check(ids.into_iter().next().is_some())?;
 
-            conn.write(actions.removal_by_parent_and_child(parent_id, &child_id))?;
+            conn.execute(actions.removal_by_parent_and_child(parent_id, &child_id))?;
         }
     }
 
@@ -108,21 +108,21 @@ pub fn set(
     relation_field: RelationFieldRef,
 ) -> crate::Result<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
-        let ids = conn.select_ids(select)?;
+        let ids = transaction_ext::select_ids(conn, select)?;
         check(ids.into_iter().next().is_some())?
     }
 
-    conn.write(actions.removal_by_parent(parent_id))?;
+    conn.execute(actions.removal_by_parent(parent_id))?;
 
     for selector in record_finders {
-        let child_id = conn.find_id(selector)?;
+        let child_id = transaction_ext::find_id(conn, selector)?;
 
         if !relation_field.is_list {
-            conn.write(actions.removal_by_child(&child_id))?;
+            conn.execute(actions.removal_by_child(&child_id))?;
         }
 
         let relation_query = WriteQueryBuilder::create_relation(Arc::clone(&relation_field), parent_id, &child_id);
-        conn.write(relation_query)?;
+        conn.execute(relation_query)?;
     }
 
     Ok(())
