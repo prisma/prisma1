@@ -106,10 +106,9 @@ fn flip_create_order(wq: WriteQueryTree) -> CoreResult<WriteQuerySet> {
     match wq.inner {
         RootWriteQuery::CreateRecord(mut cn) => {
             let creates = std::mem::replace(&mut cn.nested_writes.creates, vec![]);
-            let (required, normal) = creates.into_iter().partition(|nc| {
-                nc.relation_field.is_required
-                    && nc.relation_field.relation_is_inlined_in_parent()
-            });
+            let (required, normal) = creates
+                .into_iter()
+                .partition(|nc| nc.relation_field.is_required && nc.relation_field.relation_is_inlined_in_parent());
 
             cn.nested_writes.creates = normal;
 

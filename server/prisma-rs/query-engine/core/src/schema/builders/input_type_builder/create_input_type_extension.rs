@@ -5,7 +5,7 @@ pub trait CreateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> {
     /// Builds the create input type (<x>CreateInput / <x>CreateWithout<y>Input)
     fn create_input_type(&self, model: ModelRef, parent_field: Option<RelationFieldRef>) -> InputObjectTypeRef {
         let name = match parent_field.as_ref().map(|pf| pf.related_field()) {
-            Some(ref f) if !f.is_hidden => format!("{}CreateWithout{}Input", model.name, capitalize(f.name.as_ref())),
+            Some(ref f) if !f.is_hidden => format!("{}CreateWithout{}Input", model.name, capitalize(f.name.as_str())),
             _ => format!("{}CreateInput", model.name),
         };
 

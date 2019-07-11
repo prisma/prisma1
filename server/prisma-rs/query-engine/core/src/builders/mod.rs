@@ -33,7 +33,7 @@ pub enum Builder<'field> {
 
 impl<'a> Builder<'a> {
     fn new(query_schema: QuerySchemaRef, root_field: &'a Field) -> CoreResult<Self> {
-        let query_field = match query_schema.find_query_field(root_field.name.as_ref()) {
+        let query_field = match query_schema.find_query_field(root_field.name.as_str()) {
             Some(field) => Ok(field),
             None => Err(CoreError::QueryValidationError(format!(
                 "Field not found on type Query: {}",

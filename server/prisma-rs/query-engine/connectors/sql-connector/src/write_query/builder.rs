@@ -14,7 +14,7 @@ impl WriteQueryBuilder {
             _ if model_id.is_auto_generated => None,
             Some(PrismaValue::Null) | None => {
                 let id = model.generate_id();
-                args.insert(model_id.name.as_ref(), id.clone());
+                args.insert(model_id.name.as_str(), id.clone());
                 Some(id)
             }
             Some(PrismaValue::GraphqlId(id)) => Some(id.clone()),

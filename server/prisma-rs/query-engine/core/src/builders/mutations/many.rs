@@ -7,7 +7,7 @@ use crate::{
     CoreError, CoreResult,
 };
 use connector::write_query::*;
-use prisma_models::{ ModelRef, PrismaArgs, RelationFieldRef};
+use prisma_models::{ModelRef, PrismaArgs, RelationFieldRef};
 use std::sync::Arc;
 
 pub struct ManyNestedBuilder;
@@ -28,7 +28,7 @@ impl ManyNestedBuilder {
         for map in many.into_iter() {
             match kind {
                 "create" => attach_create(map, write_queries, &rel_field, top_level)?,
-                "connect" => attach_connect(map, write_queries, &rel_field,top_level)?,
+                "connect" => attach_connect(map, write_queries, &rel_field, top_level)?,
                 "disconnect" => attach_disconnect(map, write_queries, &rel_field)?,
                 "update" => attach_update(map, write_queries, &rel_field, top_level)?,
                 "updateMany" => attach_update_many(map, write_queries, &rel_field)?,
@@ -191,16 +191,9 @@ fn attach_delete_many(
 
     let rel_model = rel_field.related_model();
     let mut wheree: BTreeMap<String, Value> = BTreeMap::new();
-    wheree.insert(
-        "where".into(),
-        Value::Object(map.0),
-    );
+    wheree.insert("where".into(), Value::Object(map.0));
 
-    let filter = utils::extract_query_args_inner(
-        wheree.iter().map(|(a, b)| (a, b)),
-        Arc::clone(&rel_model),
-    )?
-    .filter;
+    let filter = utils::extract_query_args_inner(wheree.iter().map(|(a, b)| (a, b)), Arc::clone(&rel_model))?.filter;
 
     nested_write_queries.delete_manys.push(NestedDeleteManyRecords {
         relation_field: Arc::clone(&rel_field),

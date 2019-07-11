@@ -43,7 +43,7 @@ impl SimpleNestedBuilder {
 
         match kind {
             "create" => {
-                let nested_writes = build_nested_root( &nested, Arc::clone(&related_model), top_level)?;
+                let nested_writes = build_nested_root(&nested, Arc::clone(&related_model), top_level)?;
                 extend_defaults(&model, &mut non_list_args);
 
                 let mut non_list_args: PrismaArgs = non_list_args.into();
@@ -86,7 +86,7 @@ impl SimpleNestedBuilder {
                     .push(NestedDisconnect { relation_field, where_ });
             }
             "update" => {
-                let nested_writes = build_nested_root( &nested, Arc::clone(&related_model), top_level)?;
+                let nested_writes = build_nested_root(&nested, Arc::clone(&related_model), top_level)?;
                 nested_write_queries.updates.push(NestedUpdateRecord {
                     relation_field,
                     non_list_args: non_list_args.into(),
@@ -126,17 +126,13 @@ impl SimpleNestedBuilder {
                 use graphql_parser::query::Value;
                 use std::collections::BTreeMap;
                 let mut wheree: BTreeMap<String, Value> = BTreeMap::new();
-                wheree.insert(
-                    "where".into(),
-                    Value::Object(map.0),
-                );
+                wheree.insert("where".into(), Value::Object(map.0));
                 let filter =
                     utils::extract_query_args_inner(wheree.iter().map(|(a, b)| (a, b)), Arc::clone(&related_model))?
                         .filter;
-                nested_write_queries.delete_manys.push(NestedDeleteManyRecords {
-                    relation_field,
-                    filter,
-                });
+                nested_write_queries
+                    .delete_manys
+                    .push(NestedDeleteManyRecords { relation_field, filter });
             }
             _ => unimplemented!(),
         };
