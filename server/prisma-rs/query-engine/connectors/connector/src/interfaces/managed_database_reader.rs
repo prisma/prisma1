@@ -1,4 +1,4 @@
-use crate::{filter::RecordFinder, query_arguments::QueryArguments, ConnectorResult};
+use crate::{filter::RecordFinder, query_arguments::QueryArguments};
 use prisma_models::prelude::*;
 use prisma_models::ScalarFieldRef;
 
@@ -9,7 +9,7 @@ pub trait ManagedDatabaseReader {
         &self,
         record_finder: &RecordFinder,
         selected_fields: &SelectedFields,
-    ) -> ConnectorResult<Option<SingleRecord>>;
+    ) -> crate::Result<Option<SingleRecord>>;
 
     /// Filter many records.
     fn get_many_records(
@@ -17,7 +17,7 @@ pub trait ManagedDatabaseReader {
         model: ModelRef,
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> ConnectorResult<ManyRecords>;
+    ) -> crate::Result<ManyRecords>;
 
     /// Filter records related to the parent.
     fn get_related_records(
@@ -26,20 +26,20 @@ pub trait ManagedDatabaseReader {
         from_record_ids: &[GraphqlId],
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> ConnectorResult<ManyRecords>;
+    ) -> crate::Result<ManyRecords>;
 
     /// Fetch scalar list values for the parent.
     fn get_scalar_list_values_by_record_ids(
         &self,
         list_field: ScalarFieldRef,
         record_ids: Vec<GraphqlId>,
-    ) -> ConnectorResult<Vec<ScalarListValues>>;
+    ) -> crate::Result<Vec<ScalarListValues>>;
 
     /// Count the items in the model with the given arguments.
-    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> ConnectorResult<usize>;
+    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> crate::Result<usize>;
 
     /// Count the items in the table.
-    fn count_by_table(&self, database: &str, table: &str) -> ConnectorResult<usize>;
+    fn count_by_table(&self, database: &str, table: &str) -> crate::Result<usize>;
 }
 
 #[derive(Debug)]

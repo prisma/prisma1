@@ -52,7 +52,7 @@ pub enum SqlFamily {
 impl SqlFamily {
     fn connector_type_string(&self) -> &'static str {
         match self {
-            SqlFamily::Postgres => "postgres",
+            SqlFamily::Postgres => "postgresql",
             SqlFamily::Mysql => "mysql",
             SqlFamily::Sqlite => "sqlite",
         }
@@ -108,7 +108,6 @@ impl SqlMigrationConnector {
     }
 
     pub fn postgres_helper(url: &str) -> DatabaseHelper {
-        let connection_limit = 10;
         let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
         let mut config = PostgresConfig::new();
         if let Some(host) = parsed_url.host_str() {
@@ -136,9 +135,18 @@ impl SqlMigrationConnector {
             .query_pairs()
             .into_iter()
             .find(|qp| qp.0 == Cow::Borrowed("schema"))
-            .expect("schema param is missing")
-            .1
-            .to_string();
+            .map(|pair|pair.1.to_string())
+            .unwrap_or("public".to_string());
+
+        let connection_limit = parsed_url
+            .query_pairs()
+            .into_iter()
+            .find(|qp| qp.0 == Cow::Borrowed("connection_limit"))
+            .map(|pair|{
+                let as_int: u32 =  pair.1.parse().expect("connection_limit parameter was not an int");
+                as_int
+            })
+            .unwrap_or(1);
 
         config.dbname(&db_name);
         let db_connection = Arc::new(PostgreSql::new(config, connection_limit).expect("Connecting to Postgres failed"));

@@ -133,6 +133,9 @@ pub struct UpdateField {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_updated_at: Option<bool>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_unique: Option<bool>,
+
     #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
     pub id_info: Option<Option<IdInfo>>, // fixme: change to behaviour
 
@@ -151,6 +154,7 @@ impl UpdateField {
             || self.db_name.is_some()
             || self.is_created_at.is_some()
             || self.is_updated_at.is_some()
+            || self.is_unique.is_some()
             || self.id_info.is_some()
             || self.default.is_some()
             || self.scalar_list.is_some()

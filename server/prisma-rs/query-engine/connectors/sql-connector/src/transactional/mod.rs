@@ -6,8 +6,8 @@ pub use unmanaged_database_writer::*;
 
 use crate::{
     error::*,
-    query_builder::read::{ManyRelatedRecordsQueryBuilder, ReadQueryBuilder},
-    AliasedCondition, RawQuery, SqlResult, SqlRow,
+    query_builder::{ManyRelatedRecordsQueryBuilder, ReadQueryBuilder},
+    AliasedCondition, RawQuery, SqlRow,
 };
 use connector::{
     error::RecordFinderInfo,
@@ -29,9 +29,9 @@ pub trait Transactional {
     /// Wrap a closure into a transaction. All actions done through the
     /// `Transaction` are commited automatically, or rolled back in case of any
     /// error.
-    fn with_transaction<F, T>(&self, db: &str, f: F) -> SqlResult<T>
+    fn with_transaction<F, T>(&self, db: &str, f: F) -> crate::Result<T>
     where
-        F: FnOnce(&mut Transaction) -> SqlResult<T>;
+        F: FnOnce(&mut Transaction) -> crate::Result<T>;
 }
 
 /// Abstraction of a database transaction. Start, commit and rollback should be
@@ -39,38 +39,38 @@ pub trait Transactional {
 /// different databases.
 pub trait Transaction {
     /// Truncates (clears) the entire database table.
-    fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> SqlResult<()>;
+    fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> crate::Result<()>;
 
     /// Write to the database, returning the change count and last id inserted.
-    fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>>;
+    fn write(&mut self, q: Query) -> crate::Result<Option<GraphqlId>>;
 
     /// Select multiple rows from the database.
-    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>>;
+    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> crate::Result<Vec<SqlRow>>;
 
     /// Executes a raw query string with no parameterization or safety,
     /// resulting a Json value. Do not use internally anywhere in the code.
     /// Provides user an escape hatch for using the database directly.
-    fn raw(&mut self, q: RawQuery) -> SqlResult<Value>;
+    fn raw(&mut self, q: RawQuery) -> crate::Result<Value>;
 
     /// Insert to the database. On success returns the last insert row id.
-    fn insert(&mut self, q: Insert) -> SqlResult<Option<GraphqlId>> {
+    fn insert(&mut self, q: Insert) -> crate::Result<Option<GraphqlId>> {
         Ok(self.write(q.into())?)
     }
 
     /// Update the database. On success returns the number of rows updated.
-    fn update(&mut self, q: Update) -> SqlResult<()> {
+    fn update(&mut self, q: Update) -> crate::Result<()> {
         self.write(q.into())?;
         Ok(())
     }
 
     /// Delete from the database. On success returns the number of rows deleted.
-    fn delete(&mut self, q: Delete) -> SqlResult<()> {
+    fn delete(&mut self, q: Delete) -> crate::Result<()> {
         self.write(q.into())?;
         Ok(())
     }
 
     /// Find one full record selecting all scalar fields.
-    fn find_record(&mut self, record_finder: &RecordFinder) -> SqlResult<SingleRecord> {
+    fn find_record(&mut self, record_finder: &RecordFinder) -> crate::Result<SingleRecord> {
         use SqlError::*;
 
         let model = record_finder.field.model();
@@ -89,7 +89,7 @@ pub trait Transaction {
     }
 
     /// Select one row from the database.
-    fn find(&mut self, q: Select, idents: &[TypeIdentifier]) -> SqlResult<SqlRow> {
+    fn find(&mut self, q: Select, idents: &[TypeIdentifier]) -> crate::Result<SqlRow> {
         self.filter(q.limit(1).into(), idents)?
             .into_iter()
             .next()
@@ -97,7 +97,7 @@ pub trait Transaction {
     }
 
     /// Read the first column from the first row as an integer.
-    fn find_int(&mut self, q: Select) -> SqlResult<i64> {
+    fn find_int(&mut self, q: Select) -> crate::Result<i64> {
         // UNWRAP: A dataset will always have at least one column, even if it contains no data.
         let id = self.find(q, &[TypeIdentifier::Int])?.values.into_iter().next().unwrap();
 
@@ -105,7 +105,7 @@ pub trait Transaction {
     }
 
     /// Read the first column from the first row as an `GraphqlId`.
-    fn find_id(&mut self, record_finder: &RecordFinder) -> SqlResult<GraphqlId> {
+    fn find_id(&mut self, record_finder: &RecordFinder) -> crate::Result<GraphqlId> {
         let model = record_finder.field.model();
         let filter = Filter::from(record_finder.clone());
 
@@ -119,7 +119,7 @@ pub trait Transaction {
     }
 
     /// Read the all columns as an `GraphqlId`
-    fn filter_ids(&mut self, model: ModelRef, filter: Filter) -> SqlResult<Vec<GraphqlId>> {
+    fn filter_ids(&mut self, model: ModelRef, filter: Filter) -> crate::Result<Vec<GraphqlId>> {
         let select = Select::from_table(model.table())
             .column(model.fields().id().as_column())
             .so_that(filter.aliased_cond(None));
@@ -127,7 +127,7 @@ pub trait Transaction {
         self.select_ids(select)
     }
 
-    fn select_ids(&mut self, select: Select) -> SqlResult<Vec<GraphqlId>> {
+    fn select_ids(&mut self, select: Select) -> crate::Result<Vec<GraphqlId>> {
         let mut rows = self.filter(select.into(), &[TypeIdentifier::GraphQLID])?;
         let mut result = Vec::new();
 
@@ -147,7 +147,7 @@ pub trait Transaction {
         parent_field: RelationFieldRef,
         parent_id: &GraphqlId,
         selector: &Option<RecordFinder>,
-    ) -> SqlResult<GraphqlId> {
+    ) -> crate::Result<GraphqlId> {
         let ids = self.filter_ids_by_parents(
             Arc::clone(&parent_field),
             vec![parent_id],
@@ -172,7 +172,7 @@ pub trait Transaction {
         parent_field: RelationFieldRef,
         parent_ids: Vec<&GraphqlId>,
         selector: Option<Filter>,
-    ) -> SqlResult<Vec<GraphqlId>> {
+    ) -> crate::Result<Vec<GraphqlId>> {
         let related_model = parent_field.related_model();
         let relation = parent_field.relation();
         let child_id_field = relation.column_for_relation_side(parent_field.relation_side.opposite());

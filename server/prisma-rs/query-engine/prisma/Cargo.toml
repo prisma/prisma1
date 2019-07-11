@@ -35,3 +35,6 @@ itertools = "0.8"
 url = "1.7"
 clap = "2.33"
 human-panic = "1.0"
+
+[build-dependencies]
+rustc_version = "0.2.3"

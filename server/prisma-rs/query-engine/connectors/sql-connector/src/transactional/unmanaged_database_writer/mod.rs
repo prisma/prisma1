@@ -6,10 +6,8 @@ mod relation;
 mod update;
 mod update_many;
 
-use crate::{database::SqlDatabase, error::SqlError, RawQuery, SqlResult, Transaction, Transactional};
-use connector::{
-    write_ast::*, ConnectorResult, Identifier, UnmanagedDatabaseWriter, WriteQueryResult, WriteQueryResultType,
-};
+use crate::{database::SqlDatabase, error::SqlError, RawQuery, Transaction, Transactional};
+use connector::{self, write_ast::*, result_ast::*, UnmanagedDatabaseWriter};
 use serde_json::Value;
 use std::sync::Arc;
 
@@ -17,9 +15,9 @@ impl<T> UnmanagedDatabaseWriter for SqlDatabase<T>
 where
     T: Transactional,
 {
-    fn execute(&self, db_name: String, write_query: RootWriteQuery) -> ConnectorResult<WriteQueryResult> {
+    fn execute(&self, db_name: String, write_query: RootWriteQuery) -> connector::Result<WriteQueryResult> {
         let result = self.executor.with_transaction(&db_name, |conn: &mut Transaction| {
-            fn create(conn: &mut Transaction, cn: &CreateRecord) -> SqlResult<WriteQueryResult> {
+            fn create(conn: &mut Transaction, cn: &CreateRecord) -> crate::Result<WriteQueryResult> {
                 let parent_id = create::execute(conn, Arc::clone(&cn.model), &cn.non_list_args, &cn.list_args)?;
                 nested::execute(conn, &cn.nested_writes, &parent_id)?;
 
@@ -29,7 +27,7 @@ where
                 })
             }
 
-            fn update(conn: &mut Transaction, un: &UpdateRecord) -> SqlResult<WriteQueryResult> {
+            fn update(conn: &mut Transaction, un: &UpdateRecord) -> crate::Result<WriteQueryResult> {
                 let parent_id = update::execute(conn, &un.where_, &un.non_list_args, &un.list_args)?;
                 nested::execute(conn, &un.nested_writes, &parent_id)?;
 
@@ -91,7 +89,7 @@ where
         Ok(result)
     }
 
-    fn execute_raw(&self, db_name: String, query: String) -> ConnectorResult<Value> {
+    fn execute_raw(&self, db_name: String, query: String) -> connector::Result<Value> {
         let result = self
             .executor
             .with_transaction(&db_name, |conn: &mut Transaction| conn.raw(RawQuery::from(query)))?;

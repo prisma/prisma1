@@ -1,8 +1,8 @@
 pub mod read_ast;
 pub mod write_ast;
 
-use read_ast::*;
-use write_ast::*;
+pub use read_ast::*;
+pub use write_ast::*;
 
 #[derive(Debug, Clone)]
 pub enum Query {

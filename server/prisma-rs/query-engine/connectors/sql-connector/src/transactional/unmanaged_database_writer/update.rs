@@ -1,4 +1,4 @@
-use crate::{query_builder::write::WriteQueryBuilder, SqlResult, Transaction};
+use crate::{query_builder::WriteQueryBuilder, Transaction};
 use connector::filter::RecordFinder;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
 use std::sync::Arc;
@@ -9,7 +9,7 @@ pub fn execute<S>(
     record_finder: &RecordFinder,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
-) -> SqlResult<GraphqlId>
+) -> crate::Result<GraphqlId>
 where
     S: AsRef<str>,
 {
@@ -34,7 +34,7 @@ pub fn execute_nested<S>(
     relation_field: RelationFieldRef,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
-) -> SqlResult<GraphqlId>
+) -> crate::Result<GraphqlId>
 where
     S: AsRef<str>,
 {
@@ -54,7 +54,7 @@ pub fn update_list_args<S>(
     ids: &[GraphqlId],
     model: ModelRef,
     list_args: &[(S, PrismaListValue)],
-) -> SqlResult<()>
+) -> crate::Result<()>
 where
     S: AsRef<str>,
 {

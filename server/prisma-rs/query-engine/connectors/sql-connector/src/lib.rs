@@ -27,4 +27,4 @@ pub use database::*;
 pub use error::SqlError;
 pub use transactional::*;
 
-type SqlResult<T> = Result<T, error::SqlError>;
+type Result<T> = std::result::Result<T, error::SqlError>;

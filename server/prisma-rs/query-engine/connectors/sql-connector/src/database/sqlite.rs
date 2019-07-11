@@ -1,7 +1,6 @@
 use crate::{
-    error::SqlError,
-    query_builder::{read::ManyRelatedRecordsWithRowNumber, write::WriteQueryBuilder},
-    RawQuery, SqlId, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional,
+    error::SqlError, query_builder::{ManyRelatedRecordsWithRowNumber, WriteQueryBuilder}, RawQuery, SqlId, SqlRow, ToSqlRow, Transaction,
+    Transactional,
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use datamodel::configuration::Source;
@@ -32,9 +31,9 @@ pub struct Sqlite {
 impl Transactional for Sqlite {
     type ManyRelatedRecordsBuilder = ManyRelatedRecordsWithRowNumber;
 
-    fn with_transaction<F, T>(&self, db: &str, f: F) -> SqlResult<T>
+    fn with_transaction<F, T>(&self, db: &str, f: F) -> crate::Result<T>
     where
-        F: FnOnce(&mut Transaction) -> SqlResult<T>,
+        F: FnOnce(&mut Transaction) -> crate::Result<T>,
     {
         self.with_connection(db, |ref mut conn| {
             let mut tx = conn.transaction()?;
@@ -52,7 +51,7 @@ impl Transactional for Sqlite {
 }
 
 impl<'a> Transaction for SqliteTransaction<'a> {
-    fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>> {
+    fn write(&mut self, q: Query) -> crate::Result<Option<GraphqlId>> {
         let (sql, params) = visitor::Sqlite::build(q);
         debug!("{}\n{:?}", sql, params);
 
@@ -63,7 +62,7 @@ impl<'a> Transaction for SqliteTransaction<'a> {
         Ok(Some(GraphqlId::Int(self.last_insert_rowid() as usize)))
     }
 
-    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
+    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> crate::Result<Vec<SqlRow>> {
         let (sql, params) = visitor::Sqlite::build(q);
         debug!("{} (params: {:?})", sql, params);
 
@@ -78,7 +77,7 @@ impl<'a> Transaction for SqliteTransaction<'a> {
         Ok(result)
     }
 
-    fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> SqlResult<()> {
+    fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> crate::Result<()> {
         self.write(Query::from("PRAGMA foreign_keys = OFF"))?;
 
         for delete in WriteQueryBuilder::truncate_tables(internal_data_model) {
@@ -90,7 +89,7 @@ impl<'a> Transaction for SqliteTransaction<'a> {
         Ok(())
     }
 
-    fn raw(&mut self, q: RawQuery) -> SqlResult<Value> {
+    fn raw(&mut self, q: RawQuery) -> crate::Result<Value> {
         let columns: Vec<String> = self
             .prepare_cached(&q.0)?
             .column_names()
@@ -147,11 +146,11 @@ impl FromSql for SqlId {
 }
 
 impl<'a> ToSqlRow for SqliteRow<'a> {
-    fn to_sql_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
+    fn to_sql_row<'b, T>(&'b self, idents: T) -> crate::Result<SqlRow>
     where
         T: IntoIterator<Item = &'b TypeIdentifier>,
     {
-        fn convert(row: &SqliteRow, i: usize, typid: &TypeIdentifier) -> SqlResult<PrismaValue> {
+        fn convert(row: &SqliteRow, i: usize, typid: &TypeIdentifier) -> crate::Result<PrismaValue> {
             let column = &row.columns()[i];
 
             let result = match typid {
@@ -217,7 +216,7 @@ impl TryFrom<&Box<dyn Source>> for Sqlite {
     type Error = SqlError;
 
     /// Todo connection limit configuration
-    fn try_from(source: &Box<dyn Source>) -> SqlResult<Sqlite> {
+    fn try_from(source: &Box<dyn Source>) -> crate::Result<Sqlite> {
         // For the moment, we don't support file urls directly.
         let normalized = source.url().trim_start_matches("file:");
         let file_path = PathBuf::from(normalized);
@@ -234,7 +233,7 @@ impl TryFrom<&Box<dyn Source>> for Sqlite {
 
 impl Sqlite {
     /// Creates a new SQLite pool connected into local memory.
-    pub fn new(file_path: String, connection_limit: u32, test_mode: bool) -> SqlResult<Sqlite> {
+    pub fn new(file_path: String, connection_limit: u32, test_mode: bool) -> crate::Result<Sqlite> {
         let pool = r2d2::Pool::builder()
             .max_size(connection_limit)
             .build(SqliteConnectionManager::memory())?;
@@ -250,7 +249,7 @@ impl Sqlite {
     /// or created to the configured database file.
     ///
     /// The database is then attached to the memory with an alias of `{db_name}`.
-    fn attach_database(&self, conn: &mut Connection, db_name: &str) -> SqlResult<()> {
+    fn attach_database(&self, conn: &mut Connection, db_name: &str) -> crate::Result<()> {
         let mut stmt = conn.prepare("PRAGMA database_list")?;
 
         let databases: HashSet<String> = stmt
@@ -272,9 +271,9 @@ impl Sqlite {
         Ok(())
     }
 
-    fn with_connection<F, T>(&self, db: &str, f: F) -> SqlResult<T>
+    fn with_connection<F, T>(&self, db: &str, f: F) -> crate::Result<T>
     where
-        F: FnOnce(&mut Connection) -> SqlResult<T>,
+        F: FnOnce(&mut Connection) -> crate::Result<T>,
     {
         let mut conn = self.pool.get()?;
         self.attach_database(&mut conn, db)?;

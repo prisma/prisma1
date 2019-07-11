@@ -1,4 +1,5 @@
 use datamodel;
+use datamodel::errors::ValidationError;
 use std::{
     fs,
     io::{self, Read},
@@ -17,9 +18,9 @@ struct MiniError {
 
 fn main() {
     let matches = App::new("Prisma Datamodel v2 formatter")
-        .version("0.1")
+        .version("0.2")
         .author("Emanuel Jöbstl <emanuel.joebstl@gmail.com>")
-        .about("Formats a datamodel v2 file and prints the result to standard output.")
+        .about("Formats or lints a datamodel v2 file and prints the result to standard output.")
         .arg(
             Arg::with_name("input")
                 .short("i")
@@ -34,6 +35,12 @@ fn main() {
                 .long("lint")
                 .required(false)
                 .help("Specifies linter mode."),
+        )  
+        .arg(
+            Arg::with_name("no_env_errors")
+                .long("no_env_errors")
+                .required(false)
+                .help("If set, silences all `environment variable not found` errors."),
         )
         .arg(
             Arg::with_name("output")
@@ -55,6 +62,7 @@ fn main() {
 
     if matches.is_present("lint") {
         // Linter
+        let skip_env_errors = matches.is_present("no_env_errors");
         let mut datamodel_string = String::new();
         io::stdin()
             .read_to_string(&mut datamodel_string)
@@ -64,7 +72,11 @@ fn main() {
             let errs: Vec<MiniError> = err
                 .errors
                 .iter()
-                .map(|err: &datamodel::errors::ValidationError| MiniError {
+                .filter(|err: &&ValidationError| match err {
+                    ValidationError::EnvironmentFunctionalEvaluationError { var_name: _, span: _} => !skip_env_errors,
+                    _ => true
+                })
+                .map(|err: &ValidationError| MiniError {
                     start: err.span().start,
                     end: err.span().end,
                     text: format!("{}", err),

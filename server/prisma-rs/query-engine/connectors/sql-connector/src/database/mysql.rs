@@ -1,10 +1,9 @@
 use crate::{
-    error::SqlError,
-    query_builder::{read::ManyRelatedRecordsWithUnionAll, write::WriteQueryBuilder},
-    RawQuery, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional,
+    error::SqlError, query_builder::{WriteQueryBuilder, ManyRelatedRecordsWithUnionAll}, RawQuery, SqlRow, ToSqlRow, Transaction,
+    Transactional,
 };
 use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, Utc};
-use connector::{error::*, ConnectorResult};
+use connector::{self, error::*};
 use datamodel::configuration::Source;
 use mysql_client as my;
 use prisma_common::config::{ConnectionLimit, ConnectionStringConfig, ExplicitConfig, PrismaDatabase};
@@ -30,7 +29,7 @@ impl TryFrom<&Box<dyn Source>> for Mysql {
     type Error = SqlError;
 
     /// Todo connection limit configuration
-    fn try_from(source: &Box<dyn Source>) -> SqlResult<Mysql> {
+    fn try_from(source: &Box<dyn Source>) -> crate::Result<Mysql> {
         let mut builder = my::OptsBuilder::new();
         let url = Url::parse(source.url())?;
         let db_name = match url.path_segments() {
@@ -56,7 +55,7 @@ impl TryFrom<&Box<dyn Source>> for Mysql {
 impl TryFrom<&PrismaDatabase> for Mysql {
     type Error = ConnectorError;
 
-    fn try_from(db: &PrismaDatabase) -> ConnectorResult<Self> {
+    fn try_from(db: &PrismaDatabase) -> connector::Result<Self> {
         match db {
             PrismaDatabase::ConnectionString(ref config) => Ok(Mysql::try_from(config)?),
             PrismaDatabase::Explicit(ref config) => Ok(Mysql::try_from(config)?),
@@ -70,7 +69,7 @@ impl TryFrom<&PrismaDatabase> for Mysql {
 impl TryFrom<&ExplicitConfig> for Mysql {
     type Error = SqlError;
 
-    fn try_from(e: &ExplicitConfig) -> SqlResult<Self> {
+    fn try_from(e: &ExplicitConfig) -> crate::Result<Self> {
         let db_name = e.database.as_ref().map(|x| x.as_str()).unwrap_or("mysql");
         let mut builder = my::OptsBuilder::new();
 
@@ -92,7 +91,7 @@ impl TryFrom<&ExplicitConfig> for Mysql {
 impl TryFrom<&ConnectionStringConfig> for Mysql {
     type Error = SqlError;
 
-    fn try_from(s: &ConnectionStringConfig) -> SqlResult<Self> {
+    fn try_from(s: &ConnectionStringConfig) -> crate::Result<Self> {
         let db_name = s.database.as_ref().map(|x| x.as_str()).unwrap_or("mysql");
         let mut builder = my::OptsBuilder::new();
 
@@ -114,9 +113,9 @@ impl TryFrom<&ConnectionStringConfig> for Mysql {
 impl Transactional for Mysql {
     type ManyRelatedRecordsBuilder = ManyRelatedRecordsWithUnionAll;
 
-    fn with_transaction<F, T>(&self, _: &str, f: F) -> SqlResult<T>
+    fn with_transaction<F, T>(&self, _: &str, f: F) -> crate::Result<T>
     where
-        F: FnOnce(&mut Transaction) -> SqlResult<T>,
+        F: FnOnce(&mut Transaction) -> crate::Result<T>,
     {
         self.with_conn(|conn| {
             let mut tx = conn.start_transaction(true, None, None)?;
@@ -132,7 +131,7 @@ impl Transactional for Mysql {
 }
 
 impl<'a> Transaction for my::Transaction<'a> {
-    fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>> {
+    fn write(&mut self, q: Query) -> crate::Result<Option<GraphqlId>> {
         let (sql, params) = visitor::Mysql::build(q);
         debug!("{}\n{:?}", sql, params);
 
@@ -142,7 +141,7 @@ impl<'a> Transaction for my::Transaction<'a> {
         Ok(Some(GraphqlId::from(result.last_insert_id())))
     }
 
-    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
+    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> crate::Result<Vec<SqlRow>> {
         let (sql, params) = visitor::Mysql::build(q);
         debug!("{}\n{:?}", sql, params);
 
@@ -157,7 +156,7 @@ impl<'a> Transaction for my::Transaction<'a> {
         Ok(result)
     }
 
-    fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> SqlResult<()> {
+    fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> crate::Result<()> {
         self.write(Query::from("SET FOREIGN_KEY_CHECKS=0"))?;
 
         for delete in WriteQueryBuilder::truncate_tables(internal_data_model) {
@@ -172,7 +171,7 @@ impl<'a> Transaction for my::Transaction<'a> {
         Ok(())
     }
 
-    fn raw(&mut self, q: RawQuery) -> SqlResult<Value> {
+    fn raw(&mut self, q: RawQuery) -> crate::Result<Value> {
         let mut stmt = self.prepare(&q.0)?;
 
         if q.is_select() {
@@ -240,11 +239,11 @@ impl<'a> Transaction for my::Transaction<'a> {
 }
 
 impl ToSqlRow for my::Row {
-    fn to_sql_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
+    fn to_sql_row<'b, T>(&'b self, idents: T) -> crate::Result<SqlRow>
     where
         T: IntoIterator<Item = &'b TypeIdentifier>,
     {
-        fn convert(row: &my::Row, i: usize, typid: &TypeIdentifier) -> SqlResult<PrismaValue> {
+        fn convert(row: &my::Row, i: usize, typid: &TypeIdentifier) -> crate::Result<PrismaValue> {
             let result = match typid {
                 TypeIdentifier::String => match row.get_opt(i) {
                     Some(val) => val.map(|val| PrismaValue::String(val)).unwrap_or(PrismaValue::Null),
@@ -326,9 +325,9 @@ impl ToSqlRow for my::Row {
 }
 
 impl Mysql {
-    fn with_conn<F, T>(&self, f: F) -> SqlResult<T>
+    fn with_conn<F, T>(&self, f: F) -> crate::Result<T>
     where
-        F: FnOnce(&mut r2d2::PooledConnection<MysqlConnectionManager>) -> SqlResult<T>,
+        F: FnOnce(&mut r2d2::PooledConnection<MysqlConnectionManager>) -> crate::Result<T>,
     {
         let mut conn = self.pool.get()?;
         let result = f(&mut conn);

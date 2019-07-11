@@ -234,7 +234,7 @@ fn infer_UpdateField_simple() {
         r#"
         model Test {
             id String @id @default(cuid())
-            field Boolean @default(false)
+            field Boolean @default(false) @unique
         }
     "#,
     );
@@ -249,6 +249,7 @@ fn infer_UpdateField_simple() {
         db_name: None,
         is_created_at: None,
         is_updated_at: None,
+        is_unique: Some(true),
         id_info: None,
         default: Some(Some(Value::Boolean(false))),
         scalar_list: None,

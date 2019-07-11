@@ -37,7 +37,9 @@ impl SourceLoader {
 
         for decl in &self.source_declarations {
             // The provider given in the config block identifies the source type.
-            if provider == decl.connector_type() {
+            // TODO: The second condition is a fallback to mitigate the postgres -> postgresql rename. It should be
+            // renamed at some point.
+            if provider == decl.connector_type() || (decl.connector_type() == "postgresql" && provider == "postgres") {
                 return Ok(Some(decl.create(
                     // The name in front of the block is the name of the concrete instantiation.
                     &ast_source.name.name,

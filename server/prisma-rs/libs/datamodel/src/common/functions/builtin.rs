@@ -28,8 +28,8 @@ impl Functional for EnvFunctional {
         if let Ok(var) = std::env::var(&var_name) {
             Ok(MaybeExpression::Value(ast::Value::Any(var, span.clone())))
         } else {
-            Err(ValidationError::new_functional_evaluation_error(
-                &format!("Environment variable not found: \"{}\".", var_name),
+            Err(ValidationError::new_environment_functional_evaluation_error(
+                &var_name,
                 var_wrapped.span(),
             ))
         }
