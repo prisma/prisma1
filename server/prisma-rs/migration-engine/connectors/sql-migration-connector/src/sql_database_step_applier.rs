@@ -146,11 +146,11 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
                     }
                     TableChange::DropColumn(DropColumn { name }) => {
                         // TODO: this does not work on MySQL for columns with foreign keys. Here the FK must be dropped first by name.
-                        let name = quote(&name, sql_family); 
+                        let name = quote(&name, sql_family);
                         lines.push(format!("DROP COLUMN {}", name));
                     },
                     TableChange::AlterColumn(AlterColumn { name, column }) => {
-                        let name = quote(&name, sql_family); 
+                        let name = quote(&name, sql_family);
                         lines.push(format!("DROP COLUMN {}", name));
                         let col_sql = render_column(sql_family, schema_name.to_string(), &column, true);
                         lines.push(format!("ADD COLUMN {}", col_sql));
@@ -190,7 +190,7 @@ fn render_column(
                 Some(ref default) if column_description.required => format!("DEFAULT {}", default),
                 Some(_) => "".to_string(), // we use the default value right now only to smoothen migrations. So we only use it when absolutely needed.
                 None => "".to_string(),
-            }        
+            }
         },
         None => "".to_string(),
     };
@@ -231,7 +231,7 @@ fn render_value(value: &Value) -> Option<String> {
         Value::Float(x) => Some(format!("{}", x)),
         Value::Decimal(x) => Some(format!("{}", x)),
         Value::String(x) => Some(format!("'{}'", x)),
-        
+
         Value::DateTime(x) => {
             let mut raw = format!("{}", x); // this will produce a String 1970-01-01 00:00:00 UTC
             raw.truncate(raw.len() - 4); // strip the UTC suffix
