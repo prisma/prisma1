@@ -182,7 +182,7 @@ fn attach_delete(
 }
 
 fn attach_delete_many(
-    mut map: ValueMap,
+    map: ValueMap,
     nested_write_queries: &mut NestedWriteQueries,
     rel_field: &RelationFieldRef,
 ) -> CoreResult<()> {

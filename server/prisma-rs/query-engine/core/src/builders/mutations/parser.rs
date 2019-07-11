@@ -176,7 +176,7 @@ pub enum NestedValue {
 
 impl ValueMap {
     /// Extract mutation arguments from a value map
-    pub fn eval_tree(&self, self_name: &str) -> Vec<NestedValue> {
+    pub fn eval_tree(&self, _self_name: &str) -> Vec<NestedValue> {
         println!("eval_tree");
         let mut vec = Vec::new();
 
