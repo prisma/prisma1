@@ -30,7 +30,7 @@ impl<'a> DatamodelConverter<'a> {
             models: self.convert_models(),
             relations: self.convert_relations(),
             enums: self.convert_enums(),
-            version: None,
+            version: Some("prisma2".to_string()),
         }
     }
 
