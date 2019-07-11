@@ -102,7 +102,7 @@ trait SchemaBaseV11 {
           p        String @unique
           childReq Child  @relation(references: [id])
       }
-      
+
       model Child {
           id        String  @id @default(cuid())
           c         String  @unique
@@ -115,7 +115,7 @@ trait SchemaBaseV11 {
           p        String @unique
           childReq Child
       }
-      
+
       model Child {
           id        String  @id @default(cuid())
           c         String  @unique
@@ -224,7 +224,7 @@ trait SchemaBaseV11 {
         p        String? @unique
         childReq Child   @relation(references: [id])
     }
-    
+
     model Child {
         id         String  @id @default(cuid())
         c          String  @unique
@@ -235,9 +235,9 @@ trait SchemaBaseV11 {
     model Parent {
         id       String  @id @default(cuid())
         p        String? @unique
-        childReq Child 
+        childReq Child
     }
-    
+
     model Child {
         id         String   @id @default(cuid())
         c          String   @unique
@@ -248,9 +248,9 @@ trait SchemaBaseV11 {
     model Parent {
         id       String  @id @default(cuid())
         p        String? @unique
-        childReq Child 
+        childReq Child
     }
-    
+
     model Child {
         id         String  @id @default(cuid())
         c          String  @unique
@@ -356,7 +356,7 @@ trait SchemaBaseV11 {
                             p        String? @unique
                             childReq Child
                         }
-                        
+
                         model Child @embedded {
                             c String
                         }"""
@@ -366,7 +366,7 @@ trait SchemaBaseV11 {
                             p        String? @unique
                             childOpt Child?
                         }
-                        
+
                         model Child @embedded {
                             c String
                         }"""
@@ -376,7 +376,7 @@ trait SchemaBaseV11 {
                             p           String? @unique
                             childrenOpt [Child]
                         }
-                        
+
                         model Child @embedded{
                             id   String @id @default(cuid())
                             c    String
