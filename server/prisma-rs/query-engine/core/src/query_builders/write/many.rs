@@ -6,7 +6,7 @@ use crate::{
     CoreError, CoreResult,
 };
 use connector::write_ast::*;
-use prisma_models::{Field, ModelRef, PrismaArgs, RelationFieldRef};
+use prisma_models::{ModelRef, PrismaArgs, RelationFieldRef};
 use std::sync::Arc;
 
 pub struct ManyNestedBuilder;
