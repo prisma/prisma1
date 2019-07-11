@@ -1,11 +1,10 @@
 use super::database_inspector_impl::{convert_introspected_columns, IntrospectedForeignKey};
 use super::information_schema::InformationSchema;
 use super::*;
-use prisma_query::Connectional;
 use std::sync::Arc;
 
 pub struct Postgres {
-    pub connectional: Arc<Connectional>,
+    pub database: Arc<MigrationDatabase>,
     information_schema: InformationSchema,
 }
 
@@ -23,11 +22,11 @@ impl DatabaseInspector for Postgres {
 }
 
 impl Postgres {
-    pub fn new(connectional: Arc<Connectional>) -> Postgres {
+    pub fn new(database: Arc<MigrationDatabase>) -> Postgres {
         Postgres {
-            connectional: Arc::clone(&connectional),
+            database: Arc::clone(&database),
             information_schema: InformationSchema {
-                connectional: Arc::clone(&connectional),
+                database,
                 data_type_column: "udt_name".to_string(),
             },
         }
@@ -77,15 +76,16 @@ impl Postgres {
             schema, table
         );
 
-        let result_set = self.connectional.query_on_raw_connection(&schema, &sql, &[]).unwrap();
+        let result_set = self.database.query_raw(schema, &sql, &[]).unwrap();
+
         result_set
             .into_iter()
             .map(|row| IntrospectedForeignKey {
-                name: row.get_as_string("fkConstraintName").unwrap(),
-                table: row.get_as_string("fkTableName").unwrap(),
-                column: row.get_as_string("fkColumnName").unwrap(),
-                referenced_table: row.get_as_string("referencedTableName").unwrap(),
-                referenced_column: row.get_as_string("referencedColumnName").unwrap(),
+                name: row["fkConstraintName"].to_string().unwrap(),
+                table: row["fkTableName"].to_string().unwrap(),
+                column: row["fkColumnName"].to_string().unwrap(),
+                referenced_table: row["referencedTableName"].to_string().unwrap(),
+                referenced_column: row["referencedColumnName"].to_string().unwrap(),
             })
             .collect()
     }

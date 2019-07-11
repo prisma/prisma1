@@ -1,7 +1,7 @@
 mod many_related_records;
 
 use crate::{cursor_condition::CursorCondition, filter_conversion::AliasedCondition, ordering::Ordering};
-use connector::{
+use connector_interface::{
     filter::{Filter, RecordFinder},
     QueryArguments,
 };

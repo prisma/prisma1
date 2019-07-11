@@ -1,8 +1,8 @@
 use super::introspect_database;
-use sql_migration_connector::database_inspector::*;
 use migration_connector::MigrationStep;
 use migration_core::commands::*;
 use migration_core::MigrationEngine;
+use sql_migration_connector::database_inspector::*;
 
 pub fn infer_and_apply(engine: &MigrationEngine, datamodel: &str) -> DatabaseSchema {
     infer_and_apply_with_migration_id(&engine, &datamodel, "the-migration-id")

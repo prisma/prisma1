@@ -1,11 +1,9 @@
 use datamodel;
 use migration_core::{parse_datamodel, MigrationEngine};
-use prisma_query::connector::Sqlite;
-use prisma_query::Connectional;
 use sql_migration_connector::database_inspector::*;
+use sql_migration_connector::migration_database::{MigrationDatabase, Sqlite};
 use sql_migration_connector::SqlFamily;
 use sql_migration_connector::SqlMigrationConnector;
-use std::convert::TryFrom;
 use std::sync::Arc;
 
 pub const SCHEMA_NAME: &str = "migration_engine";
@@ -82,25 +80,26 @@ pub fn introspect_database(engine: &MigrationEngine) -> DatabaseSchema {
     result
 }
 
-pub fn connectional(sql_family: SqlFamily) -> Arc<Connectional> {
+pub fn database(sql_family: SqlFamily) -> Arc<MigrationDatabase> {
     match sql_family {
-        SqlFamily::Postgres => postgres_connectional(),
-        SqlFamily::Sqlite => sqlite_connectional(),
-        SqlFamily::Mysql => mysql_connectional(),
+        SqlFamily::Postgres => postgres_database(),
+        SqlFamily::Sqlite => sqlite_database(),
+        SqlFamily::Mysql => mysql_database(),
     }
 }
 
-fn postgres_connectional() -> Arc<Connectional> {
+fn postgres_database() -> Arc<MigrationDatabase> {
     let postgres = SqlMigrationConnector::postgres_helper(&postgres_url());
     postgres.db_connection
 }
 
-fn sqlite_connectional() -> Arc<Connectional> {
+fn sqlite_database() -> Arc<MigrationDatabase> {
     let url = format!("file:{}", sqlite_test_file());
-    Arc::new(Sqlite::try_from(url.as_ref()).expect("Loading SQLite failed"))
+
+    Arc::new(Sqlite::new(url).expect("Loading SQLite failed"))
 }
 
-fn mysql_connectional() -> Arc<Connectional> {
+fn mysql_database() -> Arc<MigrationDatabase> {
     let helper = SqlMigrationConnector::mysql_helper(&mysql_url());
     helper.db_connection
 }

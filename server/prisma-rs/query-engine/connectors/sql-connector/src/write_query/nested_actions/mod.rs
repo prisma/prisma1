@@ -12,7 +12,7 @@ pub use nested_set::*;
 
 use crate::error::*;
 use crate::query_builder::QueryBuilder;
-use connector::{error::RecordFinderInfo, filter::RecordFinder};
+use connector_interface::{error::RecordFinderInfo, filter::RecordFinder};
 use prisma_models::*;
 use prisma_query::ast::*;
 

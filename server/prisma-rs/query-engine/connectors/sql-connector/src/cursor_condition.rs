@@ -1,4 +1,4 @@
-use connector::QueryArguments;
+use connector_interface::QueryArguments;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 use std::sync::Arc;
