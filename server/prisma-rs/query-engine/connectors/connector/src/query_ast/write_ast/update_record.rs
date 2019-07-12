@@ -7,7 +7,7 @@ pub struct UpdateRecord {
     pub where_: RecordFinder,
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
-    pub nested_writes: NestedWriteQueries,
+    pub nested_writes: NestedWriteQueries, // Why is this a struct and not actual queries?
 }
 
 #[derive(Debug, Clone)]

@@ -1,5 +1,4 @@
-use super::*;
-use crate::query_builders::{utils, Builder, ParsedField, ParsedInputMap, ParsedInputValue, QueryBuilderResult};
+use crate::query_builders::{Builder, ParsedField, ParsedInputMap, ParsedInputValue, QueryBuilderResult};
 use connector::write_ast::{CreateRecord, NestedWriteQueries, RootWriteQuery, WriteQuery};
 use prisma_models::{Field, ModelRef, PrismaArgs, PrismaListValue, PrismaValue, RelationFieldRef};
 use std::{convert::TryInto, sync::Arc};
@@ -18,9 +17,14 @@ impl CreateBuilder {
 impl Builder<WriteQuery> for CreateBuilder {
     fn build(self) -> QueryBuilderResult<WriteQuery> {
         let data_argument = self.field.arguments.into_iter().find(|arg| arg.name == "data").unwrap();
+
+        // Todo generate read query from output type selection
+
         let model = self.model;
         let data_map: ParsedInputMap = data_argument.value.try_into()?;
         let create_args = create_arguments(&model, data_map)?;
+
+        // Todo generate nested queries
 
         let cr = CreateRecord {
             model: model,
@@ -29,7 +33,7 @@ impl Builder<WriteQuery> for CreateBuilder {
             nested_writes: NestedWriteQueries::default(),
         };
 
-        Ok(WriteQuery::Root(RootWriteQuery::CreateRecord(cr)))
+        Ok(cr.into())
     }
 }
 
