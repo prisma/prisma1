@@ -26,10 +26,10 @@ impl TryInto<PrismaValue> for ParsedInputValue {
     }
 }
 
-impl TryInto<BTreeMap<String, ParsedInputValue>> for ParsedInputValue {
+impl TryInto<ParsedInputMap> for ParsedInputValue {
     type Error = QueryValidationError;
 
-    fn try_into(self) -> QueryBuilderResult<BTreeMap<String, ParsedInputValue>> {
+    fn try_into(self) -> QueryBuilderResult<ParsedInputMap> {
         match self {
             ParsedInputValue::Map(val) => Ok(val),
             v => Err(QueryValidationError::AssertionError(format!(
@@ -40,10 +40,10 @@ impl TryInto<BTreeMap<String, ParsedInputValue>> for ParsedInputValue {
     }
 }
 
-impl TryInto<Option<BTreeMap<String, ParsedInputValue>>> for ParsedInputValue {
+impl TryInto<Option<ParsedInputMap>> for ParsedInputValue {
     type Error = QueryValidationError;
 
-    fn try_into(self) -> QueryBuilderResult<Option<BTreeMap<String, ParsedInputValue>>> {
+    fn try_into(self) -> QueryBuilderResult<Option<ParsedInputMap>> {
         match self {
             ParsedInputValue::Single(PrismaValue::Null) => Ok(None),
             ParsedInputValue::Map(val) => Ok(Some(val)),

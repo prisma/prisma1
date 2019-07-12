@@ -326,7 +326,7 @@ impl QueryBuilder {
         &self,
         object: BTreeMap<String, QueryValue>,
         schema_object: InputObjectTypeStrongRef,
-    ) -> QueryBuilderResult<BTreeMap<String, ParsedInputValue>> {
+    ) -> QueryBuilderResult<ParsedInputMap> {
         let left: HashSet<&str> = schema_object
             .get_fields()
             .iter()

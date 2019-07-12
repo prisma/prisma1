@@ -2,7 +2,7 @@ use super::*;
 use crate::query_builders::{ParsedArgument, ParsedInputValue, QueryBuilderResult};
 use connector::{filter::RecordFinder, QueryArguments};
 use prisma_models::ModelRef;
-use std::{collections::BTreeMap, convert::TryInto};
+use std::convert::TryInto;
 
 /// Expects the caller to know that it is structurally guaranteed that a record finder can be extracted
 /// from the given set of arguments, e.g. that the query schema guarantees that the necessary fields are present.
@@ -10,7 +10,7 @@ use std::{collections::BTreeMap, convert::TryInto};
 /// to extract a record finder, e.g. if too many fields are given.
 pub fn extract_record_finder(arguments: Vec<ParsedArgument>, model: &ModelRef) -> QueryBuilderResult<RecordFinder> {
     let where_arg = arguments.into_iter().find(|arg| arg.name == "where").unwrap();
-    let values: BTreeMap<String, ParsedInputValue> = where_arg.value.try_into().unwrap();
+    let values: ParsedInputMap = where_arg.value.try_into().unwrap();
 
     if values.len() != 1 {
         Err(QueryValidationError::AssertionError(format!(
@@ -64,7 +64,7 @@ pub fn extract_query_args(arguments: Vec<ParsedArgument>, model: &ModelRef) -> Q
                     "where" => arg
                         .value
                         .try_into()
-                        .and_then(|res: Option<BTreeMap<String, ParsedInputValue>>| match res {
+                        .and_then(|res: Option<ParsedInputMap>| match res {
                             Some(m) => Ok(Some(extract_filter(m, model)?)),
                             None => Ok(None),
                         })

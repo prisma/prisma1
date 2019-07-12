@@ -11,6 +11,8 @@ use prisma_models::{EnumValue, EnumValueWrapper, GraphqlId, OrderBy, PrismaValue
 use serde_json::Value;
 use std::{collections::BTreeMap, convert::TryInto};
 
+pub type ParsedInputMap = BTreeMap<String, ParsedInputValue>;
+
 #[derive(Debug)]
 pub struct ParsedObject {
     pub fields: Vec<ParsedField>,
@@ -34,5 +36,5 @@ pub struct ParsedArgument {
 pub enum ParsedInputValue {
     Single(PrismaValue),
     List(Vec<ParsedInputValue>),
-    Map(BTreeMap<String, ParsedInputValue>),
+    Map(ParsedInputMap),
 }

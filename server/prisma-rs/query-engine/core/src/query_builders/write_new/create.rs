@@ -1,7 +1,8 @@
 use super::*;
-use crate::query_builders::{utils, Builder, ParsedField, ParsedInputValue, QueryBuilderResult};
+use crate::query_builders::{utils, Builder, ParsedField, ParsedInputMap, ParsedInputValue, QueryBuilderResult};
 use connector::write_ast::{CreateRecord, NestedWriteQueries, RootWriteQuery, WriteQuery};
-use prisma_models::{Field, ModelRef, PrismaArgs, PrismaListValue, PrismaValue};
+use prisma_models::{Field, ModelRef, PrismaArgs, PrismaListValue, PrismaValue, RelationFieldRef};
+use std::{convert::TryInto, sync::Arc};
 
 pub struct CreateBuilder {
     field: ParsedField,
@@ -16,47 +17,54 @@ impl CreateBuilder {
 
 impl Builder<WriteQuery> for CreateBuilder {
     fn build(self) -> QueryBuilderResult<WriteQuery> {
-        // let data_argument = self.field.arguments.into_iter().next().expect("Data argument is missing");
-        // let as_map = data_argument.value.to_map()?;
+        let data_argument = self.field.arguments.into_iter().find(|arg| arg.name == "data").unwrap();
+        let model = self.model;
+        let data_map: ParsedInputMap = data_argument.value.try_into()?;
+        let create_args = create_arguments(&model, data_map)?;
 
-        let mut non_list_args: PrismaArgs = PrismaArgs::new();
-        let mut list_args: Vec<(String, PrismaListValue)> = Vec::new();
+        let cr = CreateRecord {
+            model: model,
+            non_list_args: create_args.non_list,
+            list_args: create_args.list,
+            nested_writes: NestedWriteQueries::default(),
+        };
 
-        // // TODO: those pattern matches hint at the fact that i need a function to convert to a list of flat ParsedInputValues
-        // // i basically disallow ParsedInputValue::Map in these cases.
-        // for (field_name, value) in as_map {
-        //     let field = self.model.fields().find_from_all(&field_name).expect("Field not found");
-        //     if field.is_list() {
-        //         match value {
-        //             ParsedInputValue::Single(PrismaValue::List(list_value)) => {
-        //                 list_args.push((field_name, list_value));
-        //             },
-        //             _ => unimplemented!(),
-        //         }
-        //     } else {
-        //         match value {
-        //             ParsedInputValue::Single(prisma_value) => {
-        //                 non_list_args.insert(field_name, prisma_value);
-        //             },
-        //             _ => unimplemented!(),
-        //         }
-        //     }
-        // }
-
-        // let cr = CreateRecord{
-        //     model: self.model,
-        //     non_list_args: non_list_args,
-        //     list_args: list_args,
-        //     nested_writes: NestedWriteQueries::default(),
-        // };
-
-        // Ok(WriteQuery::Root(RootWriteQuery::CreateRecord(cr)))
-        unimplemented!()
+        Ok(WriteQuery::Root(RootWriteQuery::CreateRecord(cr)))
     }
 }
 
-fn create_arguments() -> (PrismaArgs, Vec<(String, ParsedInputValue)>) {
-    // let mut non_list_args: PrismaArgs = PrismaArgs::new();
-    // let mut list_args: Vec<(String, PrismaListValue)> = Vec::new();
-    unimplemented!()
+#[derive(Default, Debug)]
+struct SplitArguments {
+    pub non_list: PrismaArgs,
+    pub list: Vec<(String, PrismaListValue)>,
+    pub nested: Vec<(RelationFieldRef, ParsedInputValue)>,
+}
+
+fn create_arguments(model: &ModelRef, data_map: ParsedInputMap) -> QueryBuilderResult<SplitArguments> {
+    data_map.into_iter().try_fold(
+        SplitArguments::default(),
+        |mut args, (k, v): (String, ParsedInputValue)| {
+            let field = model.fields().find_from_all(&k).unwrap();
+            match field {
+                Field::Scalar(sf) if sf.is_list => {
+                    let vals: ParsedInputMap = v.try_into()?;
+                    let set_value: PrismaValue = vals.into_iter().find(|(k, _)| k == "set").unwrap().1.try_into()?;
+                    let list_value: PrismaListValue = set_value.try_into()?;
+
+                    args.list.push((sf.name.clone(), list_value))
+                }
+
+                Field::Scalar(sf) => {
+                    let value: PrismaValue = v.try_into()?;
+                    args.non_list.insert(sf.name.clone(), value)
+                }
+
+                Field::Relation(ref rf) => {
+                    args.nested.push((Arc::clone(rf), v));
+                }
+            };
+
+            Ok(args)
+        },
+    )
 }
