@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
-    query_document::*, CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType,
-    IntoArc, ObjectTypeStrongRef, OperationTag, QuerySchemaRef, ScalarType,
+    query_document::*, CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType, IntoArc,
+    ObjectTypeStrongRef, OperationTag, QuerySchemaRef, ScalarType,
 };
 use chrono::prelude::*;
 use connector::Query;
@@ -105,9 +105,10 @@ impl QueryBuilder {
                     .expect("Expected Mutation object fields to always have an associated operation.");
 
                 let builder = match field_operation.operation {
-                    OperationTag::CreateOne => {
-                        WriteQueryBuilder::CreateBuilder(CreateBuilder::new(parsed_field, Arc::clone(&field_operation.model)))
-                    }
+                    OperationTag::CreateOne => WriteQueryBuilder::CreateBuilder(CreateBuilder::new(
+                        parsed_field,
+                        Arc::clone(&field_operation.model),
+                    )),
                     _ => unimplemented!(),
                 };
 

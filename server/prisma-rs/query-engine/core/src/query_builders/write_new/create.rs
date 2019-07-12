@@ -1,6 +1,6 @@
 use super::*;
-use crate::query_builders::{Builder, utils, ParsedField, ParsedInputValue, QueryBuilderResult};
-use connector::write_ast::{WriteQuery, RootWriteQuery, CreateRecord, NestedWriteQueries};
+use crate::query_builders::{utils, Builder, ParsedField, ParsedInputValue, QueryBuilderResult};
+use connector::write_ast::{CreateRecord, NestedWriteQueries, RootWriteQuery, WriteQuery};
 use prisma_models::{Field, ModelRef, PrismaArgs, PrismaListValue, PrismaValue};
 
 pub struct CreateBuilder {
@@ -16,12 +16,11 @@ impl CreateBuilder {
 
 impl Builder<WriteQuery> for CreateBuilder {
     fn build(self) -> QueryBuilderResult<WriteQuery> {
-
         // let data_argument = self.field.arguments.into_iter().next().expect("Data argument is missing");
         // let as_map = data_argument.value.to_map()?;
 
-        // let mut non_list_args: PrismaArgs = PrismaArgs::new();
-        // let mut list_args: Vec<(String, PrismaListValue)> = Vec::new();
+        let mut non_list_args: PrismaArgs = PrismaArgs::new();
+        let mut list_args: Vec<(String, PrismaListValue)> = Vec::new();
 
         // // TODO: those pattern matches hint at the fact that i need a function to convert to a list of flat ParsedInputValues
         // // i basically disallow ParsedInputValue::Map in these cases.
@@ -50,7 +49,14 @@ impl Builder<WriteQuery> for CreateBuilder {
         //     list_args: list_args,
         //     nested_writes: NestedWriteQueries::default(),
         // };
+
         // Ok(WriteQuery::Root(RootWriteQuery::CreateRecord(cr)))
         unimplemented!()
     }
+}
+
+fn create_arguments() -> (PrismaArgs, Vec<(String, ParsedInputValue)>) {
+    // let mut non_list_args: PrismaArgs = PrismaArgs::new();
+    // let mut list_args: Vec<(String, PrismaListValue)> = Vec::new();
+    unimplemented!()
 }

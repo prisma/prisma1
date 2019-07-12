@@ -8,7 +8,7 @@ pub use many_relation::*;
 pub use one::*;
 pub use one_relation::*;
 
-use crate::query_builders::{ParsedField, QueryBuilderResult, Builder};
+use crate::query_builders::{Builder, ParsedField, QueryBuilderResult};
 use connector::read_ast::ReadQuery;
 use prisma_models::{
     Field, ModelRef, RelationFieldRef, SelectedField, SelectedFields, SelectedRelationField, SelectedScalarField,

@@ -1,5 +1,5 @@
 use super::*;
-use crate::query_builders::{utils, ParsedField, QueryBuilderResult, Builder};
+use crate::query_builders::{utils, Builder, ParsedField, QueryBuilderResult};
 use connector::read_ast::{ManyRecordsQuery, ReadQuery};
 use prisma_models::ModelRef;
 
