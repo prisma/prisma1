@@ -1,5 +1,5 @@
 use super::*;
-use crate::query_builders::{utils, ParsedField, ParsedInputValue, QueryBuilderResult};
+use crate::query_builders::{Builder, utils, ParsedField, ParsedInputValue, QueryBuilderResult};
 use connector::write_ast::{WriteQuery, RootWriteQuery, CreateRecord, NestedWriteQueries};
 use prisma_models::{Field, ModelRef, PrismaArgs, PrismaListValue, PrismaValue};
 
@@ -14,7 +14,7 @@ impl CreateBuilder {
     }
 }
 
-impl CreateBuilder {
+impl Builder<WriteQuery> for CreateBuilder {
     fn build(self) -> QueryBuilderResult<WriteQuery> {
 
         // let data_argument = self.field.arguments.into_iter().next().expect("Data argument is missing");

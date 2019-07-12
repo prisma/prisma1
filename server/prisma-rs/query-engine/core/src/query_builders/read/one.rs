@@ -1,5 +1,5 @@
 use super::*;
-use crate::query_builders::{utils, ParsedField, QueryBuilderResult};
+use crate::query_builders::{utils, ParsedField, QueryBuilderResult, Builder};
 use connector::read_ast::{ReadQuery, RecordQuery};
 use prisma_models::ModelRef;
 
@@ -14,7 +14,7 @@ impl ReadOneRecordBuilder {
     }
 }
 
-impl Builder for ReadOneRecordBuilder {
+impl Builder<ReadQuery> for ReadOneRecordBuilder {
     /// Builds a read query tree from a parsed top-level field of a query
     /// Unwraps are safe because of query validation that ensures conformity to the query schema.
     fn build(self) -> QueryBuilderResult<ReadQuery> {

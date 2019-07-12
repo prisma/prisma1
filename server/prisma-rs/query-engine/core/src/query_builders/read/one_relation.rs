@@ -1,5 +1,5 @@
 use super::*;
-use crate::query_builders::{utils, ParsedField, QueryBuilderResult};
+use crate::query_builders::{utils, ParsedField, QueryBuilderResult, Builder};
 use connector::read_ast::{ReadQuery, RelatedRecordQuery};
 use prisma_models::{ModelRef, RelationFieldRef};
 use std::sync::Arc;
@@ -21,7 +21,7 @@ impl ReadOneRelationRecordBuilder {
     }
 }
 
-impl Builder for ReadOneRelationRecordBuilder {
+impl Builder<ReadQuery> for ReadOneRelationRecordBuilder {
     fn build(self) -> QueryBuilderResult<ReadQuery> {
         let args = utils::extract_query_args(self.field.arguments, &self.model)?;
         let name = self.field.alias.unwrap_or(self.field.name);

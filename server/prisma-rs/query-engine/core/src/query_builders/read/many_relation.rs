@@ -1,5 +1,5 @@
 use super::*;
-use crate::query_builders::{utils, ParsedField, QueryBuilderResult};
+use crate::query_builders::{utils, ParsedField, QueryBuilderResult, Builder};
 use connector::read_ast::{ManyRelatedRecordsQuery, ReadQuery};
 use prisma_models::{ModelRef, RelationFieldRef};
 
@@ -20,7 +20,7 @@ impl ReadManyRelationRecordsBuilder {
     }
 }
 
-impl Builder for ReadManyRelationRecordsBuilder {
+impl Builder<ReadQuery> for ReadManyRelationRecordsBuilder {
     fn build(self) -> QueryBuilderResult<ReadQuery> {
         let args = utils::extract_query_args(self.field.arguments, &self.model)?;
         let name = self.field.alias.unwrap_or(self.field.name);

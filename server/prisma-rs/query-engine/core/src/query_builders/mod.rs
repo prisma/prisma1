@@ -18,3 +18,7 @@ pub use utils::*;
 
 /// Query builder sub-result type.
 pub type QueryBuilderResult<T> = Result<T, QueryValidationError>;
+
+pub trait Builder<T> {
+    fn build(self) -> QueryBuilderResult<T>;
+}

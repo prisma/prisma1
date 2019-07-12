@@ -111,7 +111,7 @@ impl QueryBuilder {
                     _ => unimplemented!(),
                 };
 
-                builder.build().map(|query| Query::Read(query))
+                builder.build().map(|query| Query::Write(query))
             })
             .collect()
     }

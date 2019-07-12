@@ -8,16 +8,12 @@ pub use many_relation::*;
 pub use one::*;
 pub use one_relation::*;
 
-use crate::query_builders::{ParsedField, QueryBuilderResult};
+use crate::query_builders::{ParsedField, QueryBuilderResult, Builder};
 use connector::read_ast::ReadQuery;
 use prisma_models::{
     Field, ModelRef, RelationFieldRef, SelectedField, SelectedFields, SelectedRelationField, SelectedScalarField,
 };
 use std::sync::Arc;
-
-pub trait Builder {
-    fn build(self) -> QueryBuilderResult<ReadQuery>;
-}
 
 pub enum ReadQueryBuilder {
     ReadOneRecordBuilder(ReadOneRecordBuilder),
@@ -26,7 +22,7 @@ pub enum ReadQueryBuilder {
     ReadManyRelationRecordsBuilder(ReadManyRelationRecordsBuilder),
 }
 
-impl Builder for ReadQueryBuilder {
+impl Builder<ReadQuery> for ReadQueryBuilder {
     fn build(self) -> QueryBuilderResult<ReadQuery> {
         match self {
             ReadQueryBuilder::ReadOneRecordBuilder(b) => b.build(),
