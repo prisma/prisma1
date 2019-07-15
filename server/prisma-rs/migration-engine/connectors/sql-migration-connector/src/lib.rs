@@ -12,9 +12,11 @@ use database_inspector::DatabaseInspector;
 pub use error::*;
 use migration_connector::*;
 use postgres::Config as PostgresConfig;
+use prisma_models::PrismaArgs;
 use prisma_query::connector::{Mysql, PostgreSql, Sqlite};
 use prisma_query::Connectional;
 use serde_json;
+use serde_json::error::Category::Data;
 use sql_database_migration_inferrer::*;
 use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
@@ -111,57 +113,37 @@ impl SqlMigrationConnector {
     }
 
     pub fn postgres_helper(url: &str) -> DatabaseHelper {
-        let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
-        let mut config = PostgresConfig::new();
-        if let Some(host) = parsed_url.host_str() {
-            config.host(host);
-        }
-        config.user(parsed_url.username());
-        if let Some(password) = parsed_url.password() {
-            config.password(password);
-        }
-        config.dbname("postgres"); // otherwise the user name is used as the database to connect to
-        let mut db_name = parsed_url.path().to_string();
-        db_name.replace_range(..1, ""); // strip leading slash
-        config.connect_timeout(Duration::from_secs(5));
+        let postgres_config = PrismaPostgresConfig::parse(&url);
+        match postgres_config.db_connection() {
+            Ok(db_connection) => DatabaseHelper {
+                db_connection: Arc::new(db_connection),
+                schema: postgres_config.schema,
+            },
+            Err(prisma_query::error::Error::ConnectionError(_)) => {
+                // assume that the error is because the database does not exist yet
+                let root_connection = postgres_config
+                    .root_connection()
+                    .expect("The user does not have root privelege and can not create a new database");
 
-        match PostgreSql::new(config.clone(), 1) {
-            Ok(root_connection) => {
-                let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
+                let db_sql = format!("CREATE DATABASE \"{}\";", &postgres_config.db_name);
                 let _ = root_connection.query_on_raw_connection("", &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
+
+                DatabaseHelper {
+                    db_connection: Arc::new(
+                        postgres_config
+                            .db_connection()
+                            .expect("Could not acquire connection to new created database"),
+                    ),
+                    schema: postgres_config.schema,
+                }
             }
-            Err(err) => {
-                println!("Could not connect to `postgres` database {:?}", err);
-                // this means that the user did not have access to the root database
-            }
+            Err(err) => panic!("Encountered unrecoverable error: {:?}", err),
         }
-
-        let schema = parsed_url
-            .query_pairs()
-            .into_iter()
-            .find(|qp| qp.0 == Cow::Borrowed("schema"))
-            .map(|pair| pair.1.to_string())
-            .unwrap_or("public".to_string());
-
-        let connection_limit = parsed_url
-            .query_pairs()
-            .into_iter()
-            .find(|qp| qp.0 == Cow::Borrowed("connection_limit"))
-            .map(|pair| {
-                let as_int: u32 = pair.1.parse().expect("connection_limit parameter was not an int");
-                as_int
-            })
-            .unwrap_or(1);
-
-        config.dbname(&db_name);
-        let db_connection = Arc::new(PostgreSql::new(config, connection_limit).expect("Connecting to Postgres failed"));
-
-        DatabaseHelper { db_connection, schema }
     }
 
     pub fn mysql_helper(url: &str) -> DatabaseHelper {
         let mut builder = mysql::OptsBuilder::new();
-        let parsed_url = Url::parse(url).expect("url parsing failed");
+        let parsed_url = Url::parse(url).expect("the provided URL was invalid");
 
         builder.ip_or_hostname(parsed_url.host_str());
         builder.tcp_port(parsed_url.port().unwrap_or(3306));
@@ -253,6 +235,72 @@ impl SqlMigrationConnector {
             destructive_changes_checker,
             database_inspector: Arc::clone(&inspector),
         })
+    }
+}
+
+struct PrismaPostgresConfig {
+    pub host: String,
+    pub user_name: String,
+    pub password: String,
+    pub db_name: String,
+    pub schema: String,
+    pub connection_limit: u32,
+}
+
+impl PrismaPostgresConfig {
+    fn parse(url: &str) -> PrismaPostgresConfig {
+        let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
+        let host = parsed_url.host_str().unwrap_or("localhost").to_string();
+        let user_name = parsed_url.username().to_string();
+        let password = parsed_url.password().unwrap_or("").to_string();
+        let mut db_name = parsed_url.path().to_string(); // strip leading slash
+        db_name.replace_range(..1, "");
+
+        let schema = parsed_url
+            .query_pairs()
+            .into_iter()
+            .find(|qp| qp.0 == Cow::Borrowed("schema"))
+            .map(|pair| pair.1.to_string())
+            .unwrap_or("public".to_string());
+
+        let connection_limit = parsed_url
+            .query_pairs()
+            .into_iter()
+            .find(|qp| qp.0 == Cow::Borrowed("connection_limit"))
+            .map(|pair| {
+                let as_int: u32 = pair.1.parse().expect("connection_limit parameter was not an int");
+                as_int
+            })
+            .unwrap_or(1);
+
+        PrismaPostgresConfig {
+            host,
+            user_name,
+            password,
+            db_name,
+            schema,
+            connection_limit,
+        }
+    }
+
+    fn root_connection(&self) -> prisma_query::Result<PostgreSql> {
+        let config = self.config("postgres");
+        PostgreSql::new(config, 1)
+    }
+
+    fn db_connection(&self) -> prisma_query::Result<PostgreSql> {
+        let config = self.config(&self.db_name);
+        PostgreSql::new(config, 1)
+    }
+
+    fn config(&self, db_name: &str) -> PostgresConfig {
+        let mut config = PostgresConfig::new();
+        config.host(&self.host);
+        config.user(&self.user_name);
+        config.password(&self.password);
+        config.dbname(db_name);
+        config.connect_timeout(Duration::from_secs(5));
+        config
     }
 }
 
