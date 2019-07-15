@@ -23,17 +23,28 @@ fn allow_multiple_relations() {
     user_model
         .assert_has_field("posts")
         .assert_relation_to("Post")
-        .assert_arity(&dml::FieldArity::List);
+        .assert_arity(&dml::FieldArity::List)
+        .assert_relation_name("PostToUser");
     user_model
         .assert_has_field("more_posts")
         .assert_relation_to("Post")
-        .assert_arity(&dml::FieldArity::List);
+        .assert_arity(&dml::FieldArity::List)
+        .assert_relation_name("more_posts");
 
     let post_model = schema.assert_has_model("Post");
     post_model
         .assert_has_field("text")
         .assert_base_type(&PrismaType::String);
-    post_model.assert_has_field("user").assert_relation_to("User");
+    post_model
+        .assert_has_field("user")
+        .assert_relation_to("User")
+        .assert_arity(&dml::FieldArity::Required)
+        .assert_relation_name("PostToUser");
+    post_model
+        .assert_has_field("posting_user")
+        .assert_relation_to("User")
+        .assert_arity(&dml::FieldArity::Required)
+        .assert_relation_name("more_posts");
 }
 
 #[test]
