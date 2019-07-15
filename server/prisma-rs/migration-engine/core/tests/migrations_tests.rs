@@ -366,7 +366,7 @@ fn adding_a_many_to_many_relation_with_custom_name_must_work() {
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
-        let relation_table = result.table_bang("_MyRelation");
+        let relation_table = result.table_bang("_my_relation");
         assert_eq!(relation_table.columns.len(), 2);
         let aColumn = relation_table.column_bang("A");
         assert_eq!(aColumn.tpe, ColumnType::Int);
