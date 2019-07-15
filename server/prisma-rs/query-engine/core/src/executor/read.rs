@@ -1,5 +1,5 @@
 use crate::CoreResult;
-use connector::{self, ManagedDatabaseReader, query_ast::*, result_ast::*, ScalarListValues};
+use connector::{self, query_ast::*, result_ast::*, ManagedDatabaseReader, ScalarListValues};
 use prisma_models::{GraphqlId, ScalarField, SelectedFields, SingleRecord};
 use std::{convert::TryFrom, sync::Arc};
 
@@ -103,9 +103,7 @@ impl ReadQueryExecutor {
 
                             results.push(ReadQueryResult::Single(result));
                         }
-                    }
-                    // FIXME: Required fields need to return Errors, non-required can be ignored!
-                    else if let Ok(record) = SingleRecord::try_from(result) {
+                    } else if let Ok(record) = SingleRecord::try_from(result) {
                         let ids = vec![record.get_id_value(query.parent_field.related_model())?.clone()];
                         let list_fields = selected_fields.scalar_lists();
                         let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
