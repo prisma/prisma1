@@ -65,8 +65,7 @@ impl MysqlInspector {
                 AND kcu.table_name = '{}'
                 AND kcu.referenced_table_name IS NOT NULL;
             "#,
-            schema,
-            table
+            schema, table
         );
 
         let result_set = self.connectional.query_on_raw_connection(&schema, &sql, &[]).unwrap();
@@ -87,7 +86,7 @@ fn column_type(column: &IntrospectedColumn) -> ColumnType {
     // https://dev.mysql.com/doc/refman/8.0/en/data-types.html
     match column.tpe.as_ref() {
         "tinyint" => ColumnType::Boolean,
-        s if s.contains("varchar") => ColumnType::String,
+        s if s.contains("char") => ColumnType::String,
         s if s.contains("text") => ColumnType::String,
         s if s.contains("int") => ColumnType::Int,
         "decimal" | "numeric" | "float" | "double" => ColumnType::Float,

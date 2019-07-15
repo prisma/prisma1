@@ -136,7 +136,7 @@ fn column_type(column: &IntrospectedColumn) -> ColumnType {
         "REAL" => ColumnType::Float,
         "BOOLEAN" => ColumnType::Boolean,
         "TEXT" => ColumnType::String,
-        s if s.starts_with("VARCHAR") => ColumnType::String,
+        s if s.contains("CHAR") => ColumnType::String,
         "DATE" => ColumnType::DateTime,
         x => panic!(format!(
             "type {} is not supported here yet. Column was: {}",
