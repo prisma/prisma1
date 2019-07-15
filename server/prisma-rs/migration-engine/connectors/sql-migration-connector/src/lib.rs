@@ -1,3 +1,4 @@
+pub mod database_inspector;
 mod database_schema_calculator;
 mod database_schema_differ;
 mod error;
@@ -6,13 +7,12 @@ mod sql_database_step_applier;
 mod sql_destructive_changes_checker;
 mod sql_migration;
 mod sql_migration_persistence;
-pub mod database_inspector;
 
 use database_inspector::DatabaseInspector;
 pub use error::*;
 use migration_connector::*;
 use postgres::Config as PostgresConfig;
-use prisma_query::connector::{PostgreSql, Sqlite, Mysql};
+use prisma_query::connector::{Mysql, PostgreSql, Sqlite};
 use prisma_query::Connectional;
 use serde_json;
 use sql_database_migration_inferrer::*;
@@ -95,7 +95,10 @@ impl SqlMigrationConnector {
                 Self::create_connector(conn, sql_family, schema_name, Some(file_path))
             }
             SqlFamily::Postgres => {
-                assert!(url.starts_with("postgresql:"), "the url for postgres must start with 'postgresql:'");
+                assert!(
+                    url.starts_with("postgresql:"),
+                    "the url for postgres must start with 'postgresql:'"
+                );
                 let postgres_helper = Self::postgres_helper(&url);
                 Self::create_connector(postgres_helper.db_connection, sql_family, postgres_helper.schema, None)
             }
@@ -117,6 +120,7 @@ impl SqlMigrationConnector {
         if let Some(password) = parsed_url.password() {
             config.password(password);
         }
+        config.dbname("postgres"); // otherwise the user name is used as the database to connect to
         let mut db_name = parsed_url.path().to_string();
         db_name.replace_range(..1, ""); // strip leading slash
         config.connect_timeout(Duration::from_secs(5));
@@ -126,7 +130,8 @@ impl SqlMigrationConnector {
                 let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
                 let _ = root_connection.query_on_raw_connection("", &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
             }
-            Err(_) => {
+            Err(err) => {
+                println!("Could not connect to `postgres` database {:?}", err);
                 // this means that the user did not have access to the root database
             }
         }
@@ -135,15 +140,15 @@ impl SqlMigrationConnector {
             .query_pairs()
             .into_iter()
             .find(|qp| qp.0 == Cow::Borrowed("schema"))
-            .map(|pair|pair.1.to_string())
+            .map(|pair| pair.1.to_string())
             .unwrap_or("public".to_string());
 
         let connection_limit = parsed_url
             .query_pairs()
             .into_iter()
             .find(|qp| qp.0 == Cow::Borrowed("connection_limit"))
-            .map(|pair|{
-                let as_int: u32 =  pair.1.parse().expect("connection_limit parameter was not an int");
+            .map(|pair| {
+                let as_int: u32 = pair.1.parse().expect("connection_limit parameter was not an int");
                 as_int
             })
             .unwrap_or(1);
@@ -165,13 +170,18 @@ impl SqlMigrationConnector {
         builder.verify_peer(false);
         builder.stmt_cache_size(Some(1000));
 
-        let db_name = parsed_url.path_segments().and_then(|mut segments| segments.next()).expect("db name must be set");
+        let db_name = parsed_url
+            .path_segments()
+            .and_then(|mut segments| segments.next())
+            .expect("db name must be set");
 
         let root_connection = Mysql::new(builder);
         match root_connection {
             Ok(root_connection) => {
                 let db_sql = format!("CREATE SCHEMA IF NOT EXISTS `{}`;", &db_name);
-                root_connection.query_on_raw_connection("", &db_sql, &[]).expect("Creating the schema failed");
+                root_connection
+                    .query_on_raw_connection("", &db_sql, &[])
+                    .expect("Creating the schema failed");
             }
             Err(_) => {
                 // this means that the user did not have root access
@@ -278,11 +288,14 @@ impl MigrationConnector for SqlMigrationConnector {
                     .expect("Creation of Postgres Schema failed");
             }
             SqlFamily::Mysql => {
-                let schema_sql = dbg!(format!("CREATE SCHEMA IF NOT EXISTS `{}` DEFAULT CHARACTER SET latin1;", &self.schema_name));
+                let schema_sql = dbg!(format!(
+                    "CREATE SCHEMA IF NOT EXISTS `{}` DEFAULT CHARACTER SET latin1;",
+                    &self.schema_name
+                ));
                 self.connectional
                     .query_on_raw_connection(&self.schema_name, &schema_sql, &[])
                     .expect("Creation of Mysql Schema failed");
-            },
+            }
         }
         self.migration_persistence.init();
         Ok(())
