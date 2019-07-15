@@ -27,7 +27,7 @@ export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
   }
 
   protected isTypeReserved(type: IGQLType): boolean {
-    return type.name == '_RelayId'
+    return type.name === '_RelayId' || type.name === '_Migration'
   }
   protected toTypeIdentifyer(
     fieldTypeName: string,

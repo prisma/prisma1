@@ -27,7 +27,7 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
   }
 
   protected isTypeReserved(type: IGQLType): boolean {
-    return type.name == '_RelayId'
+    return type.name === '_RelayId' || type.name === '_Migration'
   }
   protected toTypeIdentifyer(
     fieldTypeName: string,
@@ -126,7 +126,7 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
           let [dummy, seqName] = match
 
           // Trim quotes.
-          if(seqName.startsWith('"')) {
+          if (seqName.startsWith('"')) {
             seqName = seqName.substring(1, seqName.length - 1)
           }
 
