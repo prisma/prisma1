@@ -81,8 +81,8 @@ impl SqlMigrationConnector {
                 result_set.into_iter().next().is_some()
             }
             SqlFamily::Mysql => {
-                // TODO: implement this actually
-                false
+                Self::mysql_helper(&url); // this will implicitly create the database
+                true
             }
         }
     }
