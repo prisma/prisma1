@@ -131,10 +131,14 @@ impl<'a> DatamodelConverter<'a> {
                             .find_model(&to)
                             .expect(&format!("Related model {} not found", to));
 
-                        // TODO: handle case of implicit back relation field
                         let related_field = related_model
                             .fields()
-                            .find(|f| related_type(f) == Some(model.name.to_string()) && f.name != field.name)
+                            .find(|f| match f.field_type {
+                                dml::FieldType::Relation(ref rel_info) => {
+                                    &rel_info.to == &model.name && &rel_info.name == name && f.name != field.name
+                                }
+                                _ => false,
+                            })
                             .expect(&format!(
                                 "Related model for model {} and field {} not found",
                                 model.name, field.name
@@ -294,13 +298,6 @@ impl TempRelationHolder {
                 referencing_column: column.to_string(),
             }),
         }
-    }
-}
-
-fn related_type(field: &dml::Field) -> Option<String> {
-    match &field.field_type {
-        dml::FieldType::Relation(relation_info) => Some(relation_info.to.to_string()),
-        _ => None,
     }
 }
 
