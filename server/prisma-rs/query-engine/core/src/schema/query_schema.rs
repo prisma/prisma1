@@ -186,6 +186,27 @@ impl ModelOperation {
     pub fn new(model: ModelRef, operation: OperationTag) -> Self {
         Self { model, operation }
     }
+
+    /// Returns the mirror operation for an operation:
+    /// For a write operation the appropriate read operation and vice versa.
+    pub fn mirror(&self) -> Self {
+        let operation = match self.operation {
+            OperationTag::FindOne => OperationTag::CreateOne,
+            OperationTag::FindMany => OperationTag::CreateMany,
+            OperationTag::CreateOne => OperationTag::FindOne,
+            OperationTag::CreateMany => OperationTag::FindMany,
+            OperationTag::UpdateOne => OperationTag::FindOne,
+            OperationTag::UpdateMany => OperationTag::FindMany,
+            OperationTag::DeleteOne => OperationTag::FindOne,
+            OperationTag::DeleteMany => OperationTag::FindMany,
+            OperationTag::UpsertOne => OperationTag::FindOne,
+        };
+
+        Self {
+            model: Arc::clone(&self.model),
+            operation,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]

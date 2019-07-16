@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     query_document::*, CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType, IntoArc,
-    ObjectTypeStrongRef, OperationTag, QuerySchemaRef, ScalarType,
+    ObjectTypeStrongRef, OperationTag, QuerySchemaRef, ScalarType, ModelOperation,
 };
 use chrono::prelude::*;
 use connector::Query;
@@ -31,8 +31,6 @@ impl QueryBuilder {
             .operations
             .into_iter()
             .map(|op| self.map_operation(op).map_err(|err| err.into()))
-            .collect::<Vec<QueryBuilderResult<Vec<Query>>>>()
-            .into_iter()
             .collect::<QueryBuilderResult<Vec<Vec<Query>>>>()
             .map(|vec| vec.into_iter().flatten().collect())
             .map_err(|err| err.into())
@@ -41,13 +39,13 @@ impl QueryBuilder {
     /// Maps an operation to a query.
     fn map_operation(&self, operation: Operation) -> QueryBuilderResult<Vec<Query>> {
         match operation {
-            Operation::Read(read_op) => self.map_read(read_op),
-            Operation::Write(write_op) => self.map_write(write_op),
+            Operation::Read(read_op) => self.map_read_operation(read_op),
+            Operation::Write(write_op) => self.map_write_operation(write_op),
         }
     }
 
-    /// Maps a read operation to a query.
-    fn map_read(&self, read_op: ReadOperation) -> QueryBuilderResult<Vec<Query>> {
+    /// Maps a read operation to one or more queries.
+    fn map_read_operation(&self, read_op: ReadOperation) -> QueryBuilderResult<Vec<Query>> {
         let query_object = self.query_schema.query();
         let parsed = self.parse_object(&read_op.selections, &query_object)?;
 
@@ -68,29 +66,34 @@ impl QueryBuilder {
                     .as_ref()
                     .expect("Expected Query object fields to always have an associated operation.");
 
-                // Only read one / many is possible on the root.
-                let builder = match field_operation.operation {
-                    OperationTag::FindOne => ReadQueryBuilder::ReadOneRecordBuilder(ReadOneRecordBuilder::new(
-                        parsed_field,
-                        Arc::clone(&field_operation.model),
-                    )),
-                    OperationTag::FindMany => ReadQueryBuilder::ReadManyRecordsBuilder(ReadManyRecordsBuilder::new(
-                        parsed_field,
-                        Arc::clone(&field_operation.model),
-                    )),
-                    _ => unreachable!(),
-                };
-
-                builder.build().map(|query| Query::Read(query))
+                self.map_read(parsed_field, field_operation)
             })
             .collect()
     }
 
-    /// Maps a write operation to a query.
-    fn map_write(&self, write_op: WriteOperation) -> QueryBuilderResult<Vec<Query>> {
+    fn map_read(&self, parsed_field: ParsedField, operation: &ModelOperation) -> QueryBuilderResult<Query> {
+        let builder = match operation.operation {
+            OperationTag::FindOne => ReadQueryBuilder::ReadOneRecordBuilder(ReadOneRecordBuilder::new(
+                parsed_field,
+                Arc::clone(&operation.model),
+            )),
+            OperationTag::FindMany => ReadQueryBuilder::ReadManyRecordsBuilder(ReadManyRecordsBuilder::new(
+                parsed_field,
+                Arc::clone(&operation.model),
+            )),
+            _ => unreachable!(),
+        };
+
+        builder.build().map(|query| Query::Read(query))
+    }
+
+    /// Maps a write operation to one or more queries.
+    fn map_write_operation(&self, write_op: WriteOperation) -> QueryBuilderResult<Vec<Query>> {
         let mutation_object = self.query_schema.mutation();
         let parsed = self.parse_object(&write_op.selections, &mutation_object)?;
 
+        // Every top-level field on the parsed object corresponds to one write query root.
+        // Sub-selections of a write operation field are mapped into an accompanying read query.
         parsed
             .fields
             .into_iter()
@@ -111,6 +114,8 @@ impl QueryBuilder {
                     )),
                     _ => unimplemented!(),
                 };
+
+                // Sub selections are the read query.
 
                 builder.build().map(|query| Query::Write(query))
             })

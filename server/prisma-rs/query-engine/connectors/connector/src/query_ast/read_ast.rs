@@ -14,7 +14,7 @@ pub enum ReadQuery {
 #[derive(Debug, Clone)]
 pub struct RecordQuery {
     pub name: String,
-    pub record_finder: RecordFinder,
+    pub record_finder: Option<RecordFinder>,
     pub selected_fields: SelectedFields,
     pub nested: Vec<ReadQuery>,
     pub selection_order: Vec<String>,

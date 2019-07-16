@@ -40,17 +40,14 @@ impl QueryExecutor {
         // ...
 
         // 3. Execute query plan
-        // WIP
         let results: Vec<ReadQueryResult> = queries
             .into_iter()
             .map(|query| match query {
-                Query::Read(read) => self.read_executor.execute(&vec![read]), // Interface is weird
-                Query::Write(_) => unimplemented!(),
+                Query::Read(read) => self.read_executor.execute(&vec![read]),
+                Query::Write(_, _) => unimplemented!(),
             })
-            .collect::<Vec<CoreResult<Vec<_>>>>()
-            .into_iter()
             .collect::<CoreResult<Vec<Vec<_>>>>()
-            .map(|v| v.into_iter().flatten().collect())?; // ...
+            .map(|v| v.into_iter().flatten().collect())?;
 
         // 4. Build IR response
         Ok(results
