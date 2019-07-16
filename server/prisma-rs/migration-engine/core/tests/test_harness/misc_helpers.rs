@@ -1,12 +1,12 @@
-use sql_migration_connector::database_inspector::*;
-use sql_migration_connector::SqlMigrationConnector;
 use datamodel;
 use migration_core::{parse_datamodel, MigrationEngine};
-use sql_migration_connector::SqlFamily;
-use prisma_query::Connectional;
-use std::sync::Arc;
 use prisma_query::connector::Sqlite;
+use prisma_query::Connectional;
+use sql_migration_connector::database_inspector::*;
+use sql_migration_connector::SqlFamily;
+use sql_migration_connector::SqlMigrationConnector;
 use std::convert::TryFrom;
+use std::sync::Arc;
 
 pub const SCHEMA_NAME: &str = "migration_engine";
 
@@ -54,6 +54,7 @@ where
     if !ignores.contains(&SqlFamily::Mysql) {
         println!("Testing with MySQL now");
         let engine = test_engine(&mysql_test_config());
+        println!("ENGINE DONE");
         testFn(SqlFamily::Mysql, &engine);
     } else {
         println!("Ignoring MySQL")
@@ -159,11 +160,7 @@ pub fn postgres_url() -> String {
 }
 
 pub fn mysql_url() -> String {
-    dbg!(format!(
-        "mysql://root:prisma@{}:3306/{}",
-        db_host_mysql(),
-        SCHEMA_NAME
-    ))
+    dbg!(format!("mysql://root:prisma@{}:3306/{}", db_host_mysql(), SCHEMA_NAME))
 }
 
 fn db_host_postgres() -> String {

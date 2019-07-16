@@ -62,7 +62,6 @@ impl SqlFamily {
 }
 
 impl SqlMigrationConnector {
-    #[allow(unused)]
     pub fn exists(sql_family: SqlFamily, url: &str) -> bool {
         match sql_family {
             SqlFamily::Sqlite => {
@@ -70,19 +69,28 @@ impl SqlMigrationConnector {
                 sqlite.does_file_exist()
             }
             SqlFamily::Postgres => {
-                let postgres_helper = Self::postgres_helper(&url);
+                let helper = Self::postgres_helper(&url);
                 let check_sql = format!(
                     "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{}';",
-                    postgres_helper.schema
+                    helper.schema
                 );
-                let result_set = postgres_helper
-                    .db_connection
-                    .query_on_raw_connection("", &check_sql, &[]);
+                let result_set = helper.db_connection.query_on_raw_connection("", &check_sql, &[]);
                 result_set.into_iter().next().is_some()
             }
             SqlFamily::Mysql => {
-                Self::mysql_helper(&url); // this will implicitly create the database
-                true
+                let mysql_config = PrismaMysqlConfig::parse(&url);
+                // we check whether the db exists by trying to connect to it
+                match mysql_config.root_connection() {
+                    Ok(connection) => {
+                        let check_sql = format!(
+                            "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{}';",
+                            mysql_config.db_name
+                        );
+                        let result_set = connection.query_on_raw_connection("", &check_sql, &[]);
+                        result_set.into_iter().next().is_some()
+                    }
+                    Err(_) => false,
+                }
             }
         }
     }
@@ -142,38 +150,15 @@ impl SqlMigrationConnector {
     }
 
     pub fn mysql_helper(url: &str) -> DatabaseHelper {
-        let mut builder = mysql::OptsBuilder::new();
-        let parsed_url = Url::parse(url).expect("the provided URL was invalid");
-
-        builder.ip_or_hostname(parsed_url.host_str());
-        builder.tcp_port(parsed_url.port().unwrap_or(3306));
-        builder.user(Some(parsed_url.username()));
-        builder.pass(parsed_url.password());
-        builder.verify_peer(false);
-        builder.stmt_cache_size(Some(1000));
-
-        let db_name = parsed_url
-            .path_segments()
-            .and_then(|mut segments| segments.next())
-            .expect("db name must be set");
-
-        let root_connection = Mysql::new(builder);
-        match root_connection {
-            Ok(root_connection) => {
-                let db_sql = format!("CREATE SCHEMA IF NOT EXISTS `{}`;", &db_name);
-                root_connection
-                    .query_on_raw_connection("", &db_sql, &[])
-                    .expect("Creating the schema failed");
-            }
-            Err(_) => {
-                // this means that the user did not have root access
-            }
-        }
-        let mysql = Mysql::new_from_url(&url).expect("Connecting to MySQL failed");
-
+        let config = PrismaMysqlConfig::parse(&url);
+        // we acquire a root connection here because the db connection blocks insanely long when the db does not exist
         DatabaseHelper {
-            db_connection: Arc::new(mysql),
-            schema: db_name.to_string(),
+            db_connection: Arc::new(
+                config
+                    .root_connection()
+                    .expect("Could not acquire root connection to MySQL"),
+            ),
+            schema: config.db_name,
         }
     }
 
@@ -304,6 +289,75 @@ impl PrismaPostgresConfig {
     }
 }
 
+struct PrismaMysqlConfig {
+    pub host: String,
+    pub port: u16,
+    pub user_name: String,
+    pub password: String,
+    pub db_name: String,
+    pub connection_limit: u32,
+}
+
+impl PrismaMysqlConfig {
+    fn parse(url: &str) -> PrismaMysqlConfig {
+        let parsed_url = Url::parse(url).expect("the provided URL was invalid");
+
+        let host = parsed_url.host_str().unwrap_or("localhost").to_string();;
+        let port = parsed_url.port().unwrap_or(3306);
+        let user_name = parsed_url.username().to_string();
+        let password = parsed_url.password().unwrap_or("").to_string();
+        let db_name = parsed_url
+            .path_segments()
+            .and_then(|mut segments| segments.next())
+            .expect("db name must be set")
+            .to_string();
+
+        let connection_limit = parsed_url
+            .query_pairs()
+            .into_iter()
+            .find(|qp| qp.0 == Cow::Borrowed("connection_limit"))
+            .map(|pair| {
+                let as_int: u32 = pair.1.parse().expect("connection_limit parameter was not an int");
+                as_int
+            })
+            .unwrap_or(1);
+
+        PrismaMysqlConfig {
+            host,
+            port,
+            user_name,
+            password,
+            db_name,
+            connection_limit,
+        }
+    }
+
+    fn root_connection(&self) -> prisma_query::Result<Mysql> {
+        let config = self.config();
+        Mysql::new(config)
+    }
+
+    fn db_connection(&self) -> prisma_query::Result<Mysql> {
+        let mut config = self.config();
+        config.db_name(Some(self.db_name.to_string()));
+        Mysql::new(config)
+    }
+
+    fn config(&self) -> mysql::OptsBuilder {
+        let mut builder = mysql::OptsBuilder::new();
+
+        builder.ip_or_hostname(Some(self.host.to_string()));
+        builder.tcp_port(self.port);
+        builder.user(Some(self.user_name.clone()));
+        builder.pass(Some(self.password.clone()));
+        builder.verify_peer(false);
+        builder.stmt_cache_size(Some(1000));
+        builder.tcp_connect_timeout(Some(std::time::Duration::from_millis(5000)));
+
+        builder
+    }
+}
+
 pub struct DatabaseHelper {
     pub db_connection: Arc<Connectional>,
     pub schema: String,
@@ -317,6 +371,7 @@ impl MigrationConnector for SqlMigrationConnector {
     }
 
     fn initialize(&self) -> ConnectorResult<()> {
+        // TODO: this code probably does not ever do anything. The schema/db creation happens already in the helper functions above.
         match self.sql_family {
             SqlFamily::Sqlite => {
                 if let Some(file_path) = &self.file_path {
