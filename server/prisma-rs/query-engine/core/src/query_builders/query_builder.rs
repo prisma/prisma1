@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     query_document::*, CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType, IntoArc,
-    ObjectTypeStrongRef, OperationTag, QuerySchemaRef, ScalarType, ModelOperation,
+    ModelOperation, ObjectTypeStrongRef, OperationTag, QuerySchemaRef, ScalarType,
 };
 use chrono::prelude::*;
 use connector::Query;
@@ -94,32 +94,33 @@ impl QueryBuilder {
 
         // Every top-level field on the parsed object corresponds to one write query root.
         // Sub-selections of a write operation field are mapped into an accompanying read query.
-        parsed
-            .fields
-            .into_iter()
-            .map(|parsed_field| {
-                let field = mutation_object
-                    .find_field(parsed_field.name.clone())
-                    .expect("Expected validation to guarantee existing field on Mutation object.");
+        // parsed
+        //     .fields
+        //     .into_iter()
+        //     .map(|parsed_field| {
+        //         let field = mutation_object
+        //             .find_field(parsed_field.name.clone())
+        //             .expect("Expected validation to guarantee existing field on Mutation object.");
 
-                let field_operation = field
-                    .operation
-                    .as_ref()
-                    .expect("Expected Mutation object fields to always have an associated operation.");
+        //         let field_operation = field
+        //             .operation
+        //             .as_ref()
+        //             .expect("Expected Mutation object fields to always have an associated operation.");
 
-                let builder = match field_operation.operation {
-                    OperationTag::CreateOne => WriteQueryBuilder::CreateBuilder(CreateBuilder::new(
-                        parsed_field,
-                        Arc::clone(&field_operation.model),
-                    )),
-                    _ => unimplemented!(),
-                };
+        //         let builder = match field_operation.operation {
+        //             OperationTag::CreateOne => WriteQueryBuilder::CreateBuilder(CreateBuilder::new(
+        //                 parsed_field,
+        //                 Arc::clone(&field_operation.model),
+        //             )),
+        //             _ => unimplemented!(),
+        //         };
 
-                // Sub selections are the read query.
+        //         // Sub selections are the read query.
 
-                builder.build().map(|query| Query::Write(query))
-            })
-            .collect()
+        //         builder.build().map(|query| Query::Write(query))
+        //     })
+        //     .collect()
+        unimplemented!()
     }
 
     /// Parses and validates a set of selections against a schema (output) object.

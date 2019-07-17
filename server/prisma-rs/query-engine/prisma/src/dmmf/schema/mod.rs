@@ -90,7 +90,7 @@ impl RenderContext {
     pub fn add_mapping(&self, name: String, operation: Option<&ModelOperation>) {
         operation.into_iter().for_each(|op| {
             let model_name = op.model.name.clone();
-            let operation_str = camel_case(format!("{:?}", op.operation));
+            let operation_str = format!("{}", op.operation);
             let mut mappings = self.mappings.borrow_mut();
             let mapping = mappings.iter().find(|mapping| mapping.model_name == model_name);
 

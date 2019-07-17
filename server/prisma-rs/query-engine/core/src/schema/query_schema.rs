@@ -1,8 +1,9 @@
 use super::*;
 use once_cell::sync::OnceCell;
-use prisma_models::{InternalDataModelRef, ModelRef, PrismaValue, EnumType};
+use prisma_models::{EnumType, InternalDataModelRef, ModelRef, PrismaValue};
 use std::{
     boxed::Box,
+    fmt,
     sync::{Arc, Weak},
 };
 
@@ -186,40 +187,46 @@ impl ModelOperation {
     pub fn new(model: ModelRef, operation: OperationTag) -> Self {
         Self { model, operation }
     }
-
-    /// Returns the mirror operation for an operation:
-    /// For a write operation the appropriate read operation and vice versa.
-    pub fn mirror(&self) -> Self {
-        let operation = match self.operation {
-            OperationTag::FindOne => OperationTag::CreateOne,
-            OperationTag::FindMany => OperationTag::CreateMany,
-            OperationTag::CreateOne => OperationTag::FindOne,
-            OperationTag::CreateMany => OperationTag::FindMany,
-            OperationTag::UpdateOne => OperationTag::FindOne,
-            OperationTag::UpdateMany => OperationTag::FindMany,
-            OperationTag::DeleteOne => OperationTag::FindOne,
-            OperationTag::DeleteMany => OperationTag::FindMany,
-            OperationTag::UpsertOne => OperationTag::FindOne,
-        };
-
-        Self {
-            model: Arc::clone(&self.model),
-            operation,
-        }
-    }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+/// Designates which operation is intended for a query and in case of non-read
+/// operations, which appropriate operation should be used to query the output.
+#[derive(Debug, Clone, PartialEq)]
 pub enum OperationTag {
+    /// Read operations.
     FindOne,
     FindMany,
-    CreateOne,
-    CreateMany,
-    UpdateOne,
-    UpdateMany,
-    DeleteOne,
-    DeleteMany,
-    UpsertOne,
+
+    /// Write operations with associated result operations.
+    CreateOne(Box<OperationTag>),
+    UpdateOne(Box<OperationTag>),
+    UpdateMany(Box<OperationTag>),
+    DeleteOne(Box<OperationTag>),
+    DeleteMany(Box<OperationTag>),
+    UpsertOne(Box<OperationTag>),
+
+    /// Marks an operation to write the result of the previous query directly
+    /// as map shaped as the defined output type of a query.
+    /// This is a temporary workaround until the serialization has been reworked.
+    CoerceResultToOutputType,
+}
+
+impl fmt::Display for OperationTag {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s = match self {
+            OperationTag::FindOne => "findOne",
+            OperationTag::FindMany => "findMany",
+            OperationTag::CreateOne(_) => "createOne",
+            OperationTag::UpdateOne(_) => "updateOne",
+            OperationTag::UpdateMany(_) => "updateMany",
+            OperationTag::DeleteOne(_) => "deleteOne",
+            OperationTag::DeleteMany(_) => "deleteMany",
+            OperationTag::UpsertOne(_) => "upsertOne",
+            OperationTag::CoerceResultToOutputType => unreachable!(), // Only top-level ops are reached.
+        };
+
+        s.fmt(f)
+    }
 }
 
 #[derive(Debug)]
@@ -306,10 +313,6 @@ impl InputType {
     pub fn boolean() -> InputType {
         InputType::Scalar(ScalarType::Boolean)
     }
-
-    // pub fn scalar_enum(referencing: EnumType) -> InputType {
-    //     InputType::Scalar(ScalarType::Enum(Arc::new(referencing)))
-    // }
 
     pub fn date_time() -> InputType {
         InputType::Scalar(ScalarType::DateTime)
