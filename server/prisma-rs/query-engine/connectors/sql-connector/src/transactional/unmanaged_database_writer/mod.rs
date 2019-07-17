@@ -7,7 +7,7 @@ mod update;
 mod update_many;
 
 use crate::{database::SqlDatabase, error::SqlError, RawQuery, Transaction, Transactional};
-use connector::{self, write_ast::*, result_ast::*, UnmanagedDatabaseWriter};
+use connector::{self, result_ast::*, write_ast::*, UnmanagedDatabaseWriter};
 use serde_json::Value;
 use std::sync::Arc;
 

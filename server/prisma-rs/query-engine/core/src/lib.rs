@@ -21,4 +21,15 @@ pub use error::*;
 pub use executor::QueryExecutor;
 pub use schema::*;
 
+use connector::Query;
+
 pub type CoreResult<T> = Result<T, CoreError>;
+
+/// Temporary type to work around current dependent execution limitations.
+pub type QueryPair = (Query, ResultResolutionStrategy);
+
+pub enum ResultResolutionStrategy {
+    Query(Query),
+    CoerceInto(OutputTypeRef),
+    None,
+}

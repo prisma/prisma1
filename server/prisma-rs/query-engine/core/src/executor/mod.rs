@@ -5,11 +5,13 @@ mod write;
 pub use read::ReadQueryExecutor;
 pub use write::WriteQueryExecutor;
 
-use crate::result_ir::ResultIrBuilder;
 use crate::{
-    query_builders::QueryBuilder, query_document::QueryDocument, result_ir::Response, CoreResult, QuerySchemaRef,
+    query_builders::QueryBuilder,
+    query_document::QueryDocument,
+    result_ir::{Response, ResultIrBuilder},
+    CoreResult, QuerySchemaRef, ResultResolutionStrategy, OutputTypeRef
 };
-use connector::{Query, ReadQueryResult};
+use connector::{Query, QueryResult, WriteQueryResult, ReadQueryResult, ReadQuery, Identifier, SingleReadQueryResult};
 
 /// Central query executor and main entry point into the query core.
 pub struct QueryExecutor {
@@ -40,20 +42,54 @@ impl QueryExecutor {
         // ...
 
         // 3. Execute query plan
-        // let results: Vec<ReadQueryResult> = queries
-        //     .into_iter()
-        //     .map(|query| match query {
-        //         Query::Read(read) => self.read_executor.execute(&vec![read]),
-        //         Query::Write(_) => unimplemented!(),
-        //     })
-        //     .collect::<CoreResult<Vec<Vec<_>>>>()
-        //     .map(|v| v.into_iter().flatten().collect())?;
+        let results: Vec<ReadQueryResult> = queries
+            .into_iter()
+            .map(|query| match query {
+                (Query::Read(read), _) => self.read_executor.execute(&vec![read]),
+                (Query::Write(write), strategy) => {
+                    let write_result = self.write_executor.execute(vec![write])?;
+                    let result = match strategy {
+                        ResultResolutionStrategy::CoerceInto(typ) => unimplemented!(),
+                        ResultResolutionStrategy::Query(q) => match q {
+                            ReadQuery::RecordQuery(rq) => self.read_executor.execute(&vec![rq])?,
+                            _ => unreachable!(), // Invariant for now
+                        },
+                        ResultResolutionStrategy::None => unimplemented!(),
+                    };
 
-        // 4. Build IR response
+                    unimplemented!()
+                }
+            })
+            .collect::<CoreResult<Vec<Vec<_>>>>()
+            .map(|v| v.into_iter().flatten().collect())?;
+
+        // 4. Build IR response / Parse results into IR response
         // Ok(results
         //     .into_iter()
         //     .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
         //     .build())
+        unimplemented!()
+    }
+
+    // fn execute_read(&self, query: ReadQuery, parent_result: Option<QueryResult>) -> CoreResult<> {
+
+    // }
+
+    fn coerce_result(&self, result: WriteQueryResult, typ: &OutputTypeRef) -> CoreResult<ReadQueryResult> {
+        match result.identifier {
+            Identifier::Id(id) => unimplemented!(),
+            Identifier::Count(c) => ReadQueryResult::Single(SingleReadQueryResult {
+                name: "".into(),
+                fields: vec![],
+                scalars: None,
+                nested: vec![],
+                lists: vec![],
+                selected_fields:
+            }),
+            Identifier::Record(r) => unimplemented!(),
+            Identifier::None => unimplemented!(),
+        };
+
         unimplemented!()
     }
 

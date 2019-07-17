@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     query_document::*, CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType, IntoArc,
-    ModelOperation, ObjectTypeStrongRef, OperationTag, OutputType, QuerySchemaRef, ScalarType,
+    ModelOperation, ObjectTypeStrongRef, OperationTag, QueryPair, QuerySchemaRef, ResultResolutionStrategy, ScalarType,
 };
 use chrono::prelude::*;
 use connector::Query;
@@ -14,14 +14,6 @@ use uuid::Uuid;
 
 pub struct QueryBuilder {
     pub query_schema: QuerySchemaRef,
-}
-
-pub type QueryPair = (Query, ResultResolutionStrategy);
-
-pub enum ResultResolutionStrategy {
-    Query(Query),
-    CoerceInto(OutputType),
-    None,
 }
 
 // Todo:

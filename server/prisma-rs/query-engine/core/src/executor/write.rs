@@ -1,9 +1,5 @@
-//use crate::{
-//    query_builders::{LookAhead, WriteQuerySet, WriteQueryTreeResult},
-//    CoreResult,
-//};
-
-use connector::UnmanagedDatabaseWriter;
+use crate::CoreResult;
+use connector::{UnmanagedDatabaseWriter, WriteQueryResult, WriteQuery};
 use std::sync::Arc;
 
 /// A small wrapper around running WriteQueries
@@ -14,14 +10,15 @@ pub struct WriteQueryExecutor {
 
 impl WriteQueryExecutor {
     //    /// A convenience function around `exec_one`
-    //    pub fn execute(&self, write_queries: Vec<WriteQuerySet>) -> CoreResult<Vec<WriteQueryTreeResult>> {
-    //        let mut vec = vec![];
-    //        for wq in write_queries {
-    //            vec.append(&mut self.exec_one(wq)?);
-    //        }
-    //
-    //        Ok(vec)
-    //    }
+    pub fn execute(&self, write_queries: Vec<WriteQuery>) -> CoreResult<Vec<WriteQueryResult>> {
+        //        let mut vec = vec![];
+        //        for wq in write_queries {
+        //            vec.append(&mut self.exec_one(wq)?);
+        //        }
+        //
+        //        Ok(vec)
+        unimplemented!()
+    }
 
     //    /// Execute a single WriteQuerySet tree, in dependent order
     //    ///
