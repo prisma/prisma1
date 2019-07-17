@@ -9,6 +9,9 @@ pub enum ReadQuery {
     ManyRecordsQuery(ManyRecordsQuery),
     RelatedRecordQuery(RelatedRecordQuery),
     ManyRelatedRecordsQuery(ManyRelatedRecordsQuery),
+
+    /// Placeholder query for dependent result resolution.
+    ResolveParentQuery(ResolveParentQuery),
 }
 
 #[derive(Debug, Clone)]
@@ -48,4 +51,9 @@ pub struct ManyRelatedRecordsQuery {
     pub selected_fields: SelectedFields,
     pub nested: Vec<ReadQuery>,
     pub selection_order: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ResolveParentQuery {
+    // pub into: OutputTypeRef,
 }

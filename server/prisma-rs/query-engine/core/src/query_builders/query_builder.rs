@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     query_document::*, CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType, IntoArc,
-    ModelOperation, ObjectTypeStrongRef, OperationTag, QuerySchemaRef, ScalarType,
+    ModelOperation, ObjectTypeStrongRef, OperationTag, QuerySchemaRef, ScalarType, OutputType
 };
 use chrono::prelude::*;
 use connector::Query;
@@ -16,6 +16,14 @@ pub struct QueryBuilder {
     pub query_schema: QuerySchemaRef,
 }
 
+pub type QueryPair = (Query, ResultResolutionStrategy);
+
+pub enum ResultResolutionStrategy {
+    Query(Query),
+    CoerceInto(OutputType),
+    None,
+}
+
 // Todo:
 // - Use error collections instead of letting first error win.
 // - UUID ids are not encoded in any useful way in the schema.
@@ -26,18 +34,18 @@ impl QueryBuilder {
     }
 
     /// Builds queries from a query document.
-    pub fn build(self, query_doc: QueryDocument) -> CoreResult<Vec<Query>> {
+    pub fn build(self, query_doc: QueryDocument) -> CoreResult<Vec<QueryPair>> {
         query_doc
             .operations
             .into_iter()
             .map(|op| self.map_operation(op).map_err(|err| err.into()))
-            .collect::<QueryBuilderResult<Vec<Vec<Query>>>>()
+            .collect::<QueryBuilderResult<Vec<Vec<QueryPair>>>>()
             .map(|vec| vec.into_iter().flatten().collect())
             .map_err(|err| err.into())
     }
 
     /// Maps an operation to a query.
-    fn map_operation(&self, operation: Operation) -> QueryBuilderResult<Vec<Query>> {
+    fn map_operation(&self, operation: Operation) -> QueryBuilderResult<Vec<QueryPair>> {
         match operation {
             Operation::Read(read_op) => self.map_read_operation(read_op),
             Operation::Write(write_op) => self.map_write_operation(write_op),
@@ -45,7 +53,7 @@ impl QueryBuilder {
     }
 
     /// Maps a read operation to one or more queries.
-    fn map_read_operation(&self, read_op: ReadOperation) -> QueryBuilderResult<Vec<Query>> {
+    fn map_read_operation(&self, read_op: ReadOperation) -> QueryBuilderResult<Vec<QueryPair>> {
         let query_object = self.query_schema.query();
         let parsed = self.parse_object(&read_op.selections, &query_object)?;
 
@@ -66,7 +74,7 @@ impl QueryBuilder {
                     .as_ref()
                     .expect("Expected Query object fields to always have an associated operation.");
 
-                self.map_read(parsed_field, field_operation)
+                self.map_read(parsed_field, field_operation).map(|res| (res, ResultResolutionStrategy::None))
             })
             .collect()
     }
@@ -88,39 +96,47 @@ impl QueryBuilder {
     }
 
     /// Maps a write operation to one or more queries.
-    fn map_write_operation(&self, write_op: WriteOperation) -> QueryBuilderResult<Vec<Query>> {
+    fn map_write_operation(&self, write_op: WriteOperation) -> QueryBuilderResult<Vec<QueryPair>> {
         let mutation_object = self.query_schema.mutation();
         let parsed = self.parse_object(&write_op.selections, &mutation_object)?;
 
         // Every top-level field on the parsed object corresponds to one write query root.
         // Sub-selections of a write operation field are mapped into an accompanying read query.
-        // parsed
-        //     .fields
-        //     .into_iter()
-        //     .map(|parsed_field| {
-        //         let field = mutation_object
-        //             .find_field(parsed_field.name.clone())
-        //             .expect("Expected validation to guarantee existing field on Mutation object.");
+        parsed
+            .fields
+            .into_iter()
+            .map(|parsed_field| {
+                let field = mutation_object
+                    .find_field(parsed_field.name.clone())
+                    .expect("Expected validation to guarantee existing field on Mutation object.");
 
-        //         let field_operation = field
-        //             .operation
-        //             .as_ref()
-        //             .expect("Expected Mutation object fields to always have an associated operation.");
+                let field_operation = field
+                    .operation
+                    .as_ref()
+                    .expect("Expected Mutation object fields to always have an associated operation.");
 
-        //         let builder = match field_operation.operation {
-        //             OperationTag::CreateOne => WriteQueryBuilder::CreateBuilder(CreateBuilder::new(
-        //                 parsed_field,
-        //                 Arc::clone(&field_operation.model),
-        //             )),
-        //             _ => unimplemented!(),
-        //         };
+                // let (write_builder, result_strategy) = match field_operation.operation {
+                //     OperationTag::CreateOne(result_op) => {
+                //         let result_strategy = match result_op {
+                //             OperationTag::FindOne => ResultResolutionStrategy::Query(),
+                //             OperationTag::CoerceResultToOutputType => ResultResolutionStrategy::CoerceInto(field.field_type),
+                //             _ => unreachable!(),
+                //         };
 
-        //         // Sub selections are the read query.
+                //         WriteQueryBuilder::CreateBuilder(CreateBuilder::new(
+                //             parsed_field,
+                //             Arc::clone(&field_operation.model),
+                //         ));
+                //     },
+                //     _ => unimplemented!(),
+                // };
 
-        //         builder.build().map(|query| Query::Write(query))
-        //     })
-        //     .collect()
-        unimplemented!()
+                // Sub selections are the read query.
+
+                // builder.build().map(|query| (Query::Write(query), result_strategy))
+                unimplemented!()
+            })
+            .collect()
     }
 
     /// Parses and validates a set of selections against a schema (output) object.

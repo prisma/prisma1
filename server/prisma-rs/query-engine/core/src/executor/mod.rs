@@ -40,20 +40,21 @@ impl QueryExecutor {
         // ...
 
         // 3. Execute query plan
-        let results: Vec<ReadQueryResult> = queries
-            .into_iter()
-            .map(|query| match query {
-                Query::Read(read) => self.read_executor.execute(&vec![read]),
-                Query::Write(_, _) => unimplemented!(),
-            })
-            .collect::<CoreResult<Vec<Vec<_>>>>()
-            .map(|v| v.into_iter().flatten().collect())?;
+        // let results: Vec<ReadQueryResult> = queries
+        //     .into_iter()
+        //     .map(|query| match query {
+        //         Query::Read(read) => self.read_executor.execute(&vec![read]),
+        //         Query::Write(_) => unimplemented!(),
+        //     })
+        //     .collect::<CoreResult<Vec<Vec<_>>>>()
+        //     .map(|v| v.into_iter().flatten().collect())?;
 
         // 4. Build IR response
-        Ok(results
-            .into_iter()
-            .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
-            .build())
+        // Ok(results
+        //     .into_iter()
+        //     .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
+        //     .build())
+        unimplemented!()
     }
 
     //    /// Legacy path
