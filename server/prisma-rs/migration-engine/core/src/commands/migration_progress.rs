@@ -18,9 +18,10 @@ impl MigrationCommand for MigrationProgressCommand {
 
     fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
         let migration_persistence = engine.connector().migration_persistence();
-        let migration = migration_persistence
-            .by_name(&self.input.migration_id)
-            .expect("Could not load migration from database.");
+        let migration = migration_persistence.by_name(&self.input.migration_id).expect(&format!(
+            "Could not load migration from database. Migration name was: {}",
+            &self.input.migration_id
+        ));
 
         Ok(MigrationProgressOutput {
             status: migration.status,
