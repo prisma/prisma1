@@ -562,6 +562,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "database-introspection"
+version = "0.1.0"
+dependencies = [
+ "barrel 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mysql 16.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "postgres 0.16.0-rc.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)",
+ "rusqlite 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.94 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 1.0.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 1.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "datamodel"
 version = "0.1.0"
 dependencies = [
