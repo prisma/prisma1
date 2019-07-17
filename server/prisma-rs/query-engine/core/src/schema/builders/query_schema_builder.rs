@@ -115,6 +115,9 @@ impl<'a> QuerySchemaBuilder<'a> {
         output_objects.push(query_object_ref);
         output_objects.push(mutation_object_ref);
 
+        let query_type = Arc::new(query_type);
+        let mutation_type = Arc::new(mutation_type);
+
         QuerySchema::new(
             query_type,
             mutation_type,

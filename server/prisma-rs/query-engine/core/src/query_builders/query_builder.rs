@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     query_document::*, CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType, IntoArc,
-    ModelOperation, ObjectTypeStrongRef, OperationTag, QuerySchemaRef, ScalarType, OutputType
+    ModelOperation, ObjectTypeStrongRef, OperationTag, OutputType, QuerySchemaRef, ScalarType,
 };
 use chrono::prelude::*;
 use connector::Query;
@@ -74,7 +74,8 @@ impl QueryBuilder {
                     .as_ref()
                     .expect("Expected Query object fields to always have an associated operation.");
 
-                self.map_read(parsed_field, field_operation).map(|res| (res, ResultResolutionStrategy::None))
+                self.map_read(parsed_field, field_operation)
+                    .map(|res| (res, ResultResolutionStrategy::None))
             })
             .collect()
     }

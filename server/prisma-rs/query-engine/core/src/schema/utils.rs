@@ -1,6 +1,7 @@
 use super::*;
 use once_cell::sync::OnceCell;
 use prisma_models::{ModelRef, PrismaValue, EnumType, EnumValue};
+use std::sync::Arc;
 
 /// Object type initializer for cases where only the name is known, and fields are computed later.
 pub fn init_object_type<T>(name: T, model: Option<ModelRef>) -> ObjectType
@@ -78,7 +79,7 @@ where
     Field {
         name: name.into(),
         arguments,
-        field_type,
+        field_type: Arc::new(field_type),
         operation,
     }
 }

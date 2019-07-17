@@ -2,10 +2,13 @@ use super::*;
 use once_cell::sync::OnceCell;
 use prisma_models::{EnumType, InternalDataModelRef, ModelRef, PrismaValue};
 use std::{
+    borrow::Borrow,
     boxed::Box,
     fmt,
     sync::{Arc, Weak},
 };
+
+pub type OutputTypeRef = Arc<OutputType>;
 
 pub type ObjectTypeStrongRef = Arc<ObjectType>;
 pub type ObjectTypeRef = Weak<ObjectType>;
@@ -33,8 +36,8 @@ pub type EnumTypeRef = Arc<EnumType>;
 /// Using a QuerySchema should never involve dealing with the strong references.
 #[derive(Debug)]
 pub struct QuerySchema {
-    pub query: OutputType,
-    pub mutation: OutputType,
+    pub query: OutputTypeRef,
+    pub mutation: OutputTypeRef,
 
     /// Stores all strong refs to the input object types.
     input_object_types: Vec<InputObjectTypeStrongRef>,
@@ -47,8 +50,8 @@ pub struct QuerySchema {
 
 impl QuerySchema {
     pub fn new(
-        query: OutputType,
-        mutation: OutputType,
+        query: OutputTypeRef,
+        mutation: OutputTypeRef,
         input_object_types: Vec<InputObjectTypeStrongRef>,
         output_object_types: Vec<ObjectTypeStrongRef>,
         internal_data_model: InternalDataModelRef,
@@ -83,14 +86,14 @@ impl QuerySchema {
     }
 
     pub fn mutation(&self) -> ObjectTypeStrongRef {
-        match self.mutation {
+        match self.mutation.borrow() {
             OutputType::Object(ref o) => o.into_arc(),
             _ => unreachable!(),
         }
     }
 
     pub fn query(&self) -> ObjectTypeStrongRef {
-        match self.query {
+        match self.query.borrow() {
             OutputType::Object(ref o) => o.into_arc(),
             _ => unreachable!(),
         }
@@ -172,7 +175,7 @@ impl ObjectType {
 pub struct Field {
     pub name: String,
     pub arguments: Vec<Argument>,
-    pub field_type: OutputType,
+    pub field_type: OutputTypeRef,
     pub operation: Option<ModelOperation>,
 }
 
@@ -334,19 +337,19 @@ impl InputType {
 #[derive(Debug)]
 pub enum OutputType {
     Enum(EnumTypeRef),
-    List(Box<OutputType>),
+    List(OutputTypeRef),
     Object(ObjectTypeRef),
-    Opt(Box<OutputType>),
+    Opt(OutputTypeRef),
     Scalar(ScalarType),
 }
 
 impl OutputType {
     pub fn list(containing: OutputType) -> OutputType {
-        OutputType::List(Box::new(containing))
+        OutputType::List(Arc::new(containing))
     }
 
     pub fn opt(containing: OutputType) -> OutputType {
-        OutputType::Opt(Box::new(containing))
+        OutputType::Opt(Arc::new(containing))
     }
 
     pub fn object(containing: ObjectTypeRef) -> OutputType {
