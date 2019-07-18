@@ -1,3 +1,4 @@
+use crate::common::value::MaybeExpression::Value;
 use crate::{ast, common::argument::Arguments, common::value::ValueListValidator, configuration::Generator, errors::*};
 use std::collections::HashMap;
 
@@ -52,8 +53,22 @@ impl GeneratorLoader {
         let mut arguments: Vec<ast::Argument> = Vec::new();
 
         arguments.push(ast::Argument::new_string("provider", &generator.provider));
+
         if let Some(output) = &generator.output {
             arguments.push(ast::Argument::new_string("output", &output));
+        }
+
+        let platform_values: Vec<ast::Value> = generator
+            .platforms
+            .iter()
+            .map(|p| ast::Value::StringValue(p.to_string(), ast::Span::empty()))
+            .collect();
+        if !platform_values.is_empty() {
+            arguments.push(ast::Argument::new_array("platforms", platform_values));
+        }
+
+        if let Some(pinned_platform) = &generator.pinned_platform {
+            arguments.push(ast::Argument::new_string("pinnedPlatform", &pinned_platform));
         }
 
         for (key, value) in &generator.config {
