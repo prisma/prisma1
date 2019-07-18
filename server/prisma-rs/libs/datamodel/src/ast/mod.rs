@@ -516,6 +516,16 @@ impl Top {
             Top::Type(_) => "type",
         }
     }
+
+    pub fn name(&self) -> &str {
+        match self {
+            Top::Enum(x) => &x.name.name,
+            Top::Model(x) => &x.name.name,
+            Top::Source(x) => &x.name.name,
+            Top::Generator(x) => &x.name.name,
+            Top::Type(x) => &x.name.name,
+        }
+    }
 }
 
 /// A prisma datamodel.

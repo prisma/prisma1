@@ -35,7 +35,7 @@ pub enum ValidationError {
     #[fail(display = "\"{}\" is a reserved scalar type name and can not be used.", type_name)]
     ReservedScalarTypeError { type_name: String, span: Span },
 
-    #[fail(display = "The {} \"{}\" cannot be defined, as {} \"{}\" is already defined.", top_type, top_name, existing_top_type, top_name)]
+    #[fail(display = "The {} \"{}\" cannot be defined because a {} with that name already exists.", top_type, top_name, existing_top_type)]
     DuplicateTopError { top_type: String, existing_top_type: String, top_name: String, span: Span },
 
     // conf_block_name is pre-populated with "" in precheck.ts.

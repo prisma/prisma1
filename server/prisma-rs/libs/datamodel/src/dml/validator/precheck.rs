@@ -4,7 +4,6 @@ use crate::{
     dml,
     errors::{ErrorCollection, ValidationError},
 };
-use std::collections::HashMap;
 
 pub struct Precheck {}
 
@@ -13,45 +12,56 @@ impl Precheck {
         Self::precheck_datamodel(datamodel)
     }
 
-    pub fn precheck_datamodel<'a>(datamodel: &'a ast::Datamodel) -> Result<(), ErrorCollection> {
-        let mut models = HashMap::<&'a str, &'a ast::Top>::new();
-        let mut sources = HashMap::<&'a str, &'a ast::Top>::new();
-        let mut generators = HashMap::<&'a str, &'a ast::Top>::new();
+    fn precheck_datamodel<'a>(datamodel: &'a ast::Datamodel) -> Result<(), ErrorCollection> {
         let mut errors = ErrorCollection::new();
 
+        let mut top_level_types_checker = DuplicateChecker::new();
+        let mut sources_checker = DuplicateChecker::new();
+        let mut generators_checker = DuplicateChecker::new();
+
         for top in &datamodel.models {
+            let error = ValidationError::new_duplicate_top_error(
+                top.get_type(),
+                top.name(),
+                top.get_type(),
+                &top.identifier().span,
+            );
             match top {
                 ast::Top::Enum(enum_type) => {
-                    Self::assert_not_scalar_type(&enum_type.name, &mut errors);
-                    models.check_duplicate("", &enum_type.name.name, &top, &mut errors);
+                    Self::assert_is_not_a_reserved_scalar_type(&enum_type.name, &mut errors);
+                    top_level_types_checker.check_duplicate(top.name(), error);
                     Self::precheck_enum(&enum_type, &mut errors);
                 }
                 ast::Top::Model(model) => {
-                    Self::assert_not_scalar_type(&model.name, &mut errors);
-                    models.check_duplicate("", &model.name.name, &top, &mut errors);
+                    Self::assert_is_not_a_reserved_scalar_type(&model.name, &mut errors);
+                    top_level_types_checker.check_duplicate(top.name(), error);
                     Self::precheck_model(&model, &mut errors);
                 }
                 ast::Top::Type(custom_type) => {
-                    Self::assert_not_scalar_type(&custom_type.name, &mut errors);
-                    models.check_duplicate("", &custom_type.name.name, &top, &mut errors);
+                    Self::assert_is_not_a_reserved_scalar_type(&custom_type.name, &mut errors);
+                    top_level_types_checker.check_duplicate(top.name(), error);
                 }
                 ast::Top::Source(source) => {
-                    Self::assert_not_scalar_type(&source.name, &mut errors);
-                    sources.check_duplicate("", &source.name.name, &top, &mut errors);
+                    Self::assert_is_not_a_reserved_scalar_type(&source.name, &mut errors);
+                    sources_checker.check_duplicate(top.name(), error);
                     Self::precheck_source_config(&source, &mut errors);
                 }
                 ast::Top::Generator(generator) => {
-                    Self::assert_not_scalar_type(&generator.name, &mut errors);
-                    generators.check_duplicate("", &generator.name.name, &top, &mut errors);
+                    Self::assert_is_not_a_reserved_scalar_type(&generator.name, &mut errors);
+                    generators_checker.check_duplicate(top.name(), error);
                     Self::precheck_generator_config(&generator, &mut errors);
                 }
             }
         }
 
+        errors.append(&mut top_level_types_checker.errors());
+        errors.append(&mut sources_checker.errors());
+        errors.append(&mut generators_checker.errors());
+
         errors.ok()
     }
 
-    pub fn assert_not_scalar_type(identifier: &ast::Identifier, errors: &mut ErrorCollection) {
+    fn assert_is_not_a_reserved_scalar_type(identifier: &ast::Identifier, errors: &mut ErrorCollection) {
         if let Ok(_) = dml::ScalarType::from_str_and_span(&identifier.name, &identifier.span) {
             errors.push(ValidationError::new_reserved_scalar_type_error(
                 &identifier.name,
@@ -60,124 +70,78 @@ impl Precheck {
         }
     }
 
-    pub fn precheck_enum<'a>(enum_type: &'a ast::Enum, errors: &mut ErrorCollection) {
-        let mut values = HashMap::<&'a str, &'a ast::EnumValue>::new();
+    fn precheck_enum<'a>(enum_type: &'a ast::Enum, errors: &mut ErrorCollection) {
+        let mut checker = DuplicateChecker::new();
         for value in &enum_type.values {
-            values.check_duplicate(&enum_type.name.name, &value.name, &value, errors);
+            let error = ValidationError::new_duplicate_enum_value_error(&enum_type.name.name, &value.name, &value.span);
+            checker.check_duplicate(&value.name, error);
         }
+        errors.append(&mut checker.errors());
     }
 
-    pub fn precheck_model<'a>(model: &'a ast::Model, errors: &mut ErrorCollection) {
-        let mut fields = HashMap::<&'a str, &'a ast::Field>::new();
+    fn precheck_model<'a>(model: &'a ast::Model, errors: &mut ErrorCollection) {
+        let mut checker = DuplicateChecker::new();
         for field in &model.fields {
-            fields.check_duplicate(&model.name.name, &field.name.name, &field, errors);
+            let error = ValidationError::new_duplicate_field_error(
+                &model.name.name,
+                &field.name.name,
+                &field.identifier().span,
+            );
+            checker.check_duplicate(&field.name.name, error);
         }
+        errors.append(&mut checker.errors());
     }
 
-    pub fn precheck_generator_config<'a>(config: &'a ast::GeneratorConfig, errors: &mut ErrorCollection) {
-        let mut args = HashMap::<&'a str, &'a ast::Argument>::new();
+    fn precheck_generator_config<'a>(config: &'a ast::GeneratorConfig, errors: &mut ErrorCollection) {
+        let mut checker = DuplicateChecker::new();
         for arg in &config.properties {
-            args.check_duplicate(
+            let error = ValidationError::new_duplicate_config_key_error(
                 &format!("generator configuration \"{}\"", config.name.name),
                 &arg.name.name,
-                &arg,
-                errors,
+                &arg.identifier().span,
             );
+            checker.check_duplicate(&arg.name.name, error);
         }
+        errors.append(&mut checker.errors());
     }
 
-    pub fn precheck_source_config<'a>(config: &'a ast::SourceConfig, errors: &mut ErrorCollection) {
-        let mut args = HashMap::<&'a str, &'a ast::Argument>::new();
+    fn precheck_source_config<'a>(config: &'a ast::SourceConfig, errors: &mut ErrorCollection) {
+        let mut checker = DuplicateChecker::new();
         for arg in &config.properties {
-            args.check_duplicate(
+            let error = ValidationError::new_duplicate_config_key_error(
                 &format!("datasource configuration \"{}\"", config.name.name),
                 &arg.name.name,
-                &arg,
-                errors,
-            );
-        }
-    }
-}
-
-trait CheckDuplicate<K, T> {
-    fn check_duplicate(&mut self, parent_name: &str, key: K, obj: T, error: &mut ErrorCollection);
-}
-
-// Top
-impl<'a> CheckDuplicate<&'a str, &'a ast::Top> for HashMap<&'a str, &'a ast::Top> {
-    fn check_duplicate(&mut self, _parent_name: &str, key: &'a str, obj: &'a ast::Top, errors: &mut ErrorCollection) {
-        if self.contains_key(key) {
-            errors.push(ValidationError::new_duplicate_top_error(
-                obj.get_type(),
-                self[key].get_type(),
-                key,
-                &obj.identifier().span,
-            ));
-        } else {
-            self.insert(key, obj);
-        }
-    }
-}
-
-// Enum
-impl<'a> CheckDuplicate<&'a str, &'a ast::EnumValue> for HashMap<&'a str, &'a ast::EnumValue> {
-    fn check_duplicate(
-        &mut self,
-        parent_name: &str,
-        key: &'a str,
-        value: &'a ast::EnumValue,
-        errors: &mut ErrorCollection,
-    ) {
-        if self.contains_key(key) {
-            errors.push(ValidationError::new_duplicate_enum_value_error(
-                parent_name,
-                key,
-                &value.span,
-            ));
-        } else {
-            self.insert(key, value);
-        }
-    }
-}
-
-// Field
-impl<'a> CheckDuplicate<&'a str, &'a ast::Field> for HashMap<&'a str, &'a ast::Field> {
-    fn check_duplicate(
-        &mut self,
-        parent_name: &str,
-        key: &'a str,
-        field: &'a ast::Field,
-        errors: &mut ErrorCollection,
-    ) {
-        if self.contains_key(key) {
-            errors.push(ValidationError::new_duplicate_field_error(
-                parent_name,
-                key,
-                &field.identifier().span,
-            ));
-        } else {
-            self.insert(key, field);
-        }
-    }
-}
-
-// Config
-impl<'a> CheckDuplicate<&'a str, &'a ast::Argument> for HashMap<&'a str, &'a ast::Argument> {
-    fn check_duplicate(
-        &mut self,
-        parent_name: &str,
-        key: &'a str,
-        arg: &'a ast::Argument,
-        errors: &mut ErrorCollection,
-    ) {
-        if self.contains_key(key) {
-            errors.push(ValidationError::new_duplicate_config_key_error(
-                parent_name,
-                key,
                 &arg.identifier().span,
-            ));
-        } else {
-            self.insert(key, arg);
+            );
+            checker.check_duplicate(&arg.name.name, error);
         }
+        errors.append(&mut checker.errors());
+    }
+}
+
+struct DuplicateChecker<'a> {
+    seen: Vec<&'a str>,
+    errors: ErrorCollection,
+}
+
+impl<'a> DuplicateChecker<'a> {
+    fn new() -> DuplicateChecker<'static> {
+        DuplicateChecker {
+            seen: Vec::new(),
+            errors: ErrorCollection::new(),
+        }
+    }
+
+    fn check_duplicate(&mut self, name: &'a str, error: ValidationError) {
+        let already_exists = self.seen.iter().find(|x| *x == &name).is_some();
+        if already_exists {
+            self.errors.push(error);
+        } else {
+            self.seen.push(&name);
+        }
+    }
+
+    fn errors(self) -> ErrorCollection {
+        self.errors
     }
 }
