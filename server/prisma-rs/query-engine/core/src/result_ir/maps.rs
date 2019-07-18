@@ -21,7 +21,7 @@ pub fn build_map(result: SingleReadQueryResult) -> Option<Map> {
     };
 
     // Parent id for nested queries has to be the id of this record.
-    let parent_id = result.find_id().cloned();
+    let parent_id = result.collect_id().cloned();
 
     // Then add nested selected fields
     outer = result.nested.into_iter().fold(outer, |mut map, query| {
@@ -58,7 +58,7 @@ pub fn build_map(result: SingleReadQueryResult) -> Option<Map> {
     });
 
     // Re-order fields to be in-line with what the query specified
-    // This also removes implicit fields
+    // This also removes extra fields, like injected fields.
     Some(result.fields.iter().fold(Map::new(), |mut map, field| {
         map.insert(
             field.clone(),

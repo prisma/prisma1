@@ -146,8 +146,8 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
         .map(|k| k.to_owned())
         .collect();
 
-    let model = Arc::clone(&result.selected_fields.model());
     let final_field_order = result.fields.clone();
+    let id_field_name = result.id_field;
 
     // There is always at least one scalar selected (id), making scalars the perfect entry point.
     result
@@ -156,7 +156,7 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
         .into_iter()
         .map(|record| {
             let record_id = record
-                .get_id_value(&field_names, Arc::clone(&model))
+                .collect_id(&field_names, &id_field_name)
                 .expect("Expected ID value to be present in the result set for each returned record.")
                 .clone();
 

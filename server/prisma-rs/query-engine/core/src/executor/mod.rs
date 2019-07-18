@@ -9,9 +9,9 @@ use crate::{
     query_builders::QueryBuilder,
     query_document::QueryDocument,
     result_ir::{Response, ResultIrBuilder},
-    CoreResult, QuerySchemaRef, ResultResolutionStrategy, OutputTypeRef
+    CoreResult, OutputTypeRef, QueryResult, QuerySchemaRef, ResultResolutionStrategy,
 };
-use connector::{Query, QueryResult, WriteQueryResult, ReadQueryResult, ReadQuery, Identifier, SingleReadQueryResult};
+use connector::{Identifier, Query, ReadQuery, ReadQueryResult, SingleReadQueryResult, WriteQueryResult};
 
 /// Central query executor and main entry point into the query core.
 pub struct QueryExecutor {
@@ -23,6 +23,7 @@ pub struct QueryExecutor {
 // - Partial execution semantics?
 // - Do we need a clearer separation of queries coming from different query blocks? (e.g. 2 query { ... } in GQL)
 // - ReadQueryResult should probably just be QueryResult
+// - This is all temporary code until the larger query execution overhaul.
 impl QueryExecutor {
     pub fn new(read_executor: ReadQueryExecutor, write_executor: WriteQueryExecutor) -> Self {
         QueryExecutor {
@@ -42,26 +43,27 @@ impl QueryExecutor {
         // ...
 
         // 3. Execute query plan
-        let results: Vec<ReadQueryResult> = queries
+        let results: Vec<QueryResult> = queries
             .into_iter()
             .map(|query| match query {
-                (Query::Read(read), _) => self.read_executor.execute(&vec![read]),
+                (Query::Read(read), _) => self
+                    .read_executor
+                    .execute(read, vec![])
+                    .map(|res| QueryResult::Read(res)),
+
                 (Query::Write(write), strategy) => {
                     let write_result = self.write_executor.execute(vec![write])?;
-                    let result = match strategy {
+                    match strategy {
                         ResultResolutionStrategy::CoerceInto(typ) => unimplemented!(),
                         ResultResolutionStrategy::Query(q) => match q {
-                            ReadQuery::RecordQuery(rq) => self.read_executor.execute(&vec![rq])?,
+                            Query::Read(rq) => self.read_executor.execute(rq, vec![]).map(|res| QueryResult::Read(res)),
                             _ => unreachable!(), // Invariant for now
                         },
                         ResultResolutionStrategy::None => unimplemented!(),
-                    };
-
-                    unimplemented!()
+                    }
                 }
             })
-            .collect::<CoreResult<Vec<Vec<_>>>>()
-            .map(|v| v.into_iter().flatten().collect())?;
+            .collect::<CoreResult<Vec<_>>>()?;
 
         // 4. Build IR response / Parse results into IR response
         // Ok(results
@@ -70,10 +72,6 @@ impl QueryExecutor {
         //     .build())
         unimplemented!()
     }
-
-    // fn execute_read(&self, query: ReadQuery, parent_result: Option<QueryResult>) -> CoreResult<> {
-
-    // }
 
     fn coerce_result(&self, result: WriteQueryResult, typ: &OutputTypeRef) -> CoreResult<ReadQueryResult> {
         match result.identifier {
@@ -84,7 +82,7 @@ impl QueryExecutor {
                 scalars: None,
                 nested: vec![],
                 lists: vec![],
-                selected_fields:
+                id_field: String::new(),
             }),
             Identifier::Record(r) => unimplemented!(),
             Identifier::None => unimplemented!(),

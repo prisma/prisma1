@@ -21,7 +21,7 @@ pub use error::*;
 pub use executor::QueryExecutor;
 pub use schema::*;
 
-use connector::Query;
+use connector::{Query, ReadQueryResult};
 
 pub type CoreResult<T> = Result<T, CoreError>;
 
@@ -32,4 +32,10 @@ pub enum ResultResolutionStrategy {
     Query(Query),
     CoerceInto(OutputTypeRef),
     None,
+}
+
+/// Temporary result type to tie together dependent query execution and the old result structures
+pub enum QueryResult {
+    Read(ReadQueryResult),
+    Direct(result_ir::Response),
 }

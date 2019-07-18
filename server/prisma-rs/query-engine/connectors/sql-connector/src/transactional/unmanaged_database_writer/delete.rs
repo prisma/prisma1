@@ -14,7 +14,7 @@ use std::sync::Arc;
 pub fn execute(conn: &mut Transaction, record_finder: &RecordFinder) -> crate::Result<SingleRecord> {
     let model = record_finder.field.model();
     let record = conn.find_record(record_finder)?;
-    let id = record.get_id_value(Arc::clone(&model)).unwrap();
+    let id = record.collect_id(&model.fields().id().name).unwrap();
 
     DeleteActions::check_relation_violations(Arc::clone(&model), &[&id], |select| {
         let ids = conn.select_ids(select)?;

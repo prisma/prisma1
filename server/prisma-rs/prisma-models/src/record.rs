@@ -1,5 +1,5 @@
-use crate::{DomainError as Error, DomainResult, GraphqlId, ModelRef, PrismaValue};
-use std::{convert::TryFrom, sync::Arc};
+use crate::{DomainError as Error, DomainResult, GraphqlId, PrismaValue};
+use std::convert::TryFrom;
 
 #[derive(Debug, Clone)]
 pub struct SingleRecord {
@@ -27,8 +27,8 @@ impl SingleRecord {
         Self { record, field_names }
     }
 
-    pub fn get_id_value(&self, model: ModelRef) -> DomainResult<GraphqlId> {
-        self.record.get_id_value(&self.field_names, model)
+    pub fn collect_id(&self, id_field: &str) -> DomainResult<GraphqlId> {
+        self.record.collect_id(&self.field_names, id_field)
     }
 
     pub fn get_field_value(&self, field: &str) -> DomainResult<&PrismaValue> {
@@ -43,14 +43,10 @@ pub struct ManyRecords {
 }
 
 impl ManyRecords {
-    pub fn get_id_values(&self, model: ModelRef) -> DomainResult<Vec<GraphqlId>> {
+    pub fn collect_ids(&self, id_field: &str) -> DomainResult<Vec<GraphqlId>> {
         self.records
             .iter()
-            .map(|record| {
-                record
-                    .get_id_value(&self.field_names, Arc::clone(&model))
-                    .map(|i| i.clone())
-            })
+            .map(|record| record.collect_id(&self.field_names, id_field).map(|i| i.clone()))
             .collect()
     }
 
@@ -89,20 +85,8 @@ impl Record {
         }
     }
 
-    pub fn get_id_value(&self, field_names: &Vec<String>, model: ModelRef) -> DomainResult<GraphqlId> {
-        let id_field = model.fields().id();
-        let index = field_names
-            .iter()
-            .position(|r| r == &id_field.name)
-            .map(|i| Ok(i))
-            .unwrap_or_else(|| {
-                Err(Error::FieldNotFound {
-                    name: id_field.name.clone(),
-                    model: model.name.clone(),
-                })
-            })?;
-
-        Ok(GraphqlId::try_from(&self.values[index])?)
+    pub fn collect_id(&self, field_names: &Vec<String>, id_field: &str) -> DomainResult<GraphqlId> {
+        self.get_field_value(field_names, id_field).and_then(|raw| GraphqlId::try_from(raw))
     }
 
     pub fn get_field_value(&self, field_names: &Vec<String>, field: &str) -> DomainResult<&PrismaValue> {
