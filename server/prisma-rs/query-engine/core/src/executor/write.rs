@@ -9,14 +9,7 @@ pub struct WriteQueryExecutor {
 }
 
 impl WriteQueryExecutor {
-    //    /// A convenience function around `exec_one`
-    pub fn execute(&self, write_queries: Vec<WriteQuery>) -> CoreResult<Vec<WriteQueryResult>> {
-        //        let mut vec = vec![];
-        //        for wq in write_queries {
-        //            vec.append(&mut self.exec_one(wq)?);
-        //        }
-        //
-        //        Ok(vec)
+    pub fn execute(&self, write_queries: WriteQuery) -> CoreResult<WriteQueryResult> {
         unimplemented!()
     }
 

@@ -12,6 +12,7 @@ use crate::{
     CoreResult, OutputTypeRef, QueryResult, QuerySchemaRef, ResultResolutionStrategy,
 };
 use connector::{Identifier, Query, ReadQuery, ReadQueryResult, SingleReadQueryResult, WriteQueryResult};
+use prisma_models::{RecordFinder, ModelRef};
 
 /// Central query executor and main entry point into the query core.
 pub struct QueryExecutor {
@@ -52,7 +53,7 @@ impl QueryExecutor {
                     .map(|res| QueryResult::Read(res)),
 
                 (Query::Write(write), strategy) => {
-                    let write_result = self.write_executor.execute(vec![write])?;
+                    let write_result = self.write_executor.execute(write)?;
                     match strategy {
                         ResultResolutionStrategy::CoerceInto(typ) => unimplemented!(),
                         ResultResolutionStrategy::Query(q) => match q {
@@ -70,6 +71,10 @@ impl QueryExecutor {
         //     .into_iter()
         //     .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
         //     .build())
+        unimplemented!()
+    }
+
+    fn to_record_finder(write_result: WriteQueryResult, model: ModelRef) -> CoreResult<RecordFinder> {
         unimplemented!()
     }
 
