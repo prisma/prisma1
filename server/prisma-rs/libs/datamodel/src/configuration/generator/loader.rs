@@ -1,13 +1,20 @@
-use crate::{ast, common::argument::Arguments, configuration::Generator, errors::*};
+use crate::{ast, common::argument::Arguments, common::value::ValueListValidator, configuration::Generator, errors::*};
 use std::collections::HashMap;
 
 pub struct GeneratorLoader {}
+
+const PROVIDER_KEY: &str = "provider";
+const OUTPUT_KEY: &str = "output";
+const PLATFORMS_KEY: &str = "platforms";
+const PINNED_PLATFORM_KEY: &str = "pinnedPlatform";
+const FIRST_CLASS_PROPERTIES: &'static [&'static str] = &[PROVIDER_KEY, OUTPUT_KEY, PLATFORMS_KEY, PINNED_PLATFORM_KEY];
+
 impl GeneratorLoader {
     pub fn lift_generator(ast_generator: &ast::GeneratorConfig) -> Result<Generator, ValidationError> {
         let mut args = Arguments::new(&ast_generator.properties, ast_generator.span);
 
-        let provider = args.arg("provider")?.as_str()?;
-        let output = if let Ok(arg) = args.arg("output") {
+        let provider = args.arg(PROVIDER_KEY)?.as_str()?;
+        let output = if let Ok(arg) = args.arg(OUTPUT_KEY) {
             Some(arg.as_str()?)
         } else {
             None
@@ -15,9 +22,12 @@ impl GeneratorLoader {
 
         let mut properties: HashMap<String, String> = HashMap::new();
 
+        let platforms = args.arg(PLATFORMS_KEY)?.as_array()?.to_str_vec()?;
+        let pinned_platform = args.arg(PINNED_PLATFORM_KEY).and_then(|p| p.as_str()).ok();
+
         for prop in &ast_generator.properties {
-            // Exclude reserved options.
-            if prop.name.name == "provider" || prop.name.name == "output" {
+            let is_first_class_prop = FIRST_CLASS_PROPERTIES.iter().find(|k| *k == &prop.name.name).is_some();
+            if is_first_class_prop {
                 continue;
             }
 
@@ -28,6 +38,8 @@ impl GeneratorLoader {
             name: ast_generator.name.name.clone(),
             provider: provider,
             output: output,
+            platforms: platforms,
+            pinned_platform: pinned_platform,
             config: properties,
             documentation: ast_generator.documentation.clone().map(|comment| comment.text),
         })
