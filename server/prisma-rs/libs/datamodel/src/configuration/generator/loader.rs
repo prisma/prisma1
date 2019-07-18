@@ -22,8 +22,11 @@ impl GeneratorLoader {
 
         let mut properties: HashMap<String, String> = HashMap::new();
 
-        let platforms = args.arg(PLATFORMS_KEY)?.as_array()?.to_str_vec()?;
-        let pinned_platform = args.arg(PINNED_PLATFORM_KEY).and_then(|p| p.as_str()).ok();
+        let platforms = match args.arg(PLATFORMS_KEY).ok() {
+            Some(x) => x.as_array()?.to_str_vec()?,
+            None => Vec::new(),
+        };
+        let pinned_platform = args.arg(PINNED_PLATFORM_KEY).and_then(|x| x.as_str()).ok();
 
         for prop in &ast_generator.properties {
             let is_first_class_prop = FIRST_CLASS_PROPERTIES.iter().find(|k| *k == &prop.name.name).is_some();
