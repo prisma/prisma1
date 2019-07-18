@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![allow(unused)]
 mod test_harness;
 use sql_migration_connector::database_inspector::*;
 use sql_migration_connector::SqlFamily;
