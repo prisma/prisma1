@@ -15,9 +15,9 @@ fn fail_on_duplicate_models() {
     let errors = parse_error(dml);
 
     errors.assert_is(ValidationError::new_duplicate_top_error(
-        "model",
-        "model",
         "User",
+        "model",
+        "model",
         &Span::new(53, 57),
     ));
 }
@@ -36,9 +36,9 @@ fn fail_on_model_enum_conflict() {
     let errors = parse_error(dml);
 
     errors.assert_is(ValidationError::new_duplicate_top_error(
+        "User",
         "model",
         "enum",
-        "User",
         &Span::new(65, 69),
     ));
 }
@@ -54,10 +54,30 @@ fn fail_on_model_type_conflict() {
     let errors = parse_error(dml);
 
     errors.assert_is(ValidationError::new_duplicate_top_error(
+        "User",
         "model",
         "type",
-        "User",
         &Span::new(34, 38),
+    ));
+}
+
+#[test]
+fn fail_on_enum_type_conflict() {
+    let dml = r#"
+    type User = String
+    enum User {
+        Admin
+        Moderator
+    }
+    "#;
+
+    let errors = parse_error(dml);
+
+    errors.assert_is(ValidationError::new_duplicate_top_error(
+        "User",
+        "enum",
+        "type",
+        &Span::new(33, 37),
     ));
 }
 

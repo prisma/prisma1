@@ -77,6 +77,19 @@ pub trait WithIdentifier {
     fn identifier(&self) -> &Identifier;
 }
 
+pub trait WithName {
+    fn name(&self) -> &str;
+}
+
+impl<T> WithName for T
+where
+    T: WithIdentifier,
+{
+    fn name(&self) -> &str {
+        &self.identifier().name
+    }
+}
+
 /// The arity of a field.
 #[derive(Debug)]
 pub enum FieldArity {
@@ -352,6 +365,12 @@ pub struct EnumValue {
     pub span: Span,
 }
 
+impl WithName for EnumValue {
+    fn name(&self) -> &str {
+        &self.name
+    }
+}
+
 impl WithSpan for EnumValue {
     fn span(&self) -> &Span {
         &self.span
@@ -514,6 +533,16 @@ impl Top {
             Top::Source(_) => "source",
             Top::Generator(_) => "generator",
             Top::Type(_) => "type",
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        match self {
+            Top::Enum(x) => &x.name.name,
+            Top::Model(x) => &x.name.name,
+            Top::Source(x) => &x.name.name,
+            Top::Generator(x) => &x.name.name,
+            Top::Type(x) => &x.name.name,
         }
     }
 }
