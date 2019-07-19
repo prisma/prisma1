@@ -13,14 +13,31 @@ const SCHEMA: &str = "DatabaseInspectorTest";
 #[test]
 fn all_columns_types_must_work() {
     test_each_backend(
-        |_, mut migration| {
-            migration.create_table("User", |t| {
-                t.add_column("int_col", types::integer());
-                t.add_column("float_col", types::float());
+        |db_type, mut migration| {
+            migration.create_table("User", move |t| {
+                t.add_column("array_bin_col", types::array(&types::binary()));
+                t.add_column("array_bool_col", types::array(&types::boolean()));
+                t.add_column("array_date_col", types::array(&types::date()));
+                t.add_column("array_double_col", types::array(&types::double()));
+                // t.add_column("array_float_col", types::array(&types::float()));
+                t.add_column("array_int_col", types::array(&types::integer()));
+                t.add_column("array_text_col", types::array(&types::text()));
+                // t.add_column("array_varchar_col", types::array(&types::varchar(255)));
+                t.add_column("binary_col", types::binary());
                 t.add_column("boolean_col", types::boolean());
-                t.add_column("string1_col", types::text());
-                t.add_column("string2_col", types::varchar(1));
                 t.add_column("date_time_col", types::date());
+                t.add_column("double_col", types::double());
+                t.add_column("float_col", types::float());
+                t.add_column("int_col", types::integer());
+                if db_type != "sqlite" {
+                    t.add_column("json_col", types::json());
+                }
+                t.add_column("primary_col", types::primary());
+                t.add_column("string1_col", types::text());
+                if db_type != "sqlite" {
+                    t.add_column("uuid_col", types::uuid());
+                }
+                t.add_column("string2_col", types::varchar(1));
             });
         },
         |inspector| {
@@ -29,43 +46,151 @@ fn all_columns_types_must_work() {
             let table = result.table("User").unwrap();
             let expected_columns = vec![
                 Column {
-                    name: "int_col".to_string(),
-                    tpe: ColumnType{raw: String::from("INTEGER"), family: ColumnTypeFamily::Int},
+                    name: "array_bin_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("BINARY[]"),
+                        family: ColumnTypeFamily::BinArray,
+                    },
                     arity: ColumnArity::Required,
                     default: None,
                     auto_increment: None,
                 },
                 Column {
-                    name: "float_col".to_string(),
-                    tpe: ColumnType{raw: String::from("REAL"), family: ColumnTypeFamily::Float},
+                    name: "array_bool_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("BOOLEAN[]"),
+                        family: ColumnTypeFamily::BoolArray,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "array_date_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("DATE[]"),
+                        family: ColumnTypeFamily::DateTimeArray,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "array_double_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("DOUBLE[]"),
+                        family: ColumnTypeFamily::DoubleArray,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "array_int_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("INTEGER[]"),
+                        family: ColumnTypeFamily::IntArray,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "array_text_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("TEXT[]"),
+                        family: ColumnTypeFamily::StringArray,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "binary_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("BINARY"),
+                        family: ColumnTypeFamily::Binary,
+                    },
                     arity: ColumnArity::Required,
                     default: None,
                     auto_increment: None,
                 },
                 Column {
                     name: "boolean_col".to_string(),
-                    tpe: ColumnType{raw: String::from("BOOLEAN"), family: ColumnTypeFamily::Boolean},
-                    arity: ColumnArity::Required,
-                    default: None,
-                    auto_increment: None,
-                },
-                Column {
-                    name: "string1_col".to_string(),
-                    tpe: ColumnType{raw: String::from("TEXT"), family: ColumnTypeFamily::String},
-                    arity: ColumnArity::Required,
-                    default: None,
-                    auto_increment: None,
-                },
-                Column {
-                    name: "string2_col".to_string(),
-                    tpe: ColumnType{raw: String::from("VARCHAR(1)"), family: ColumnTypeFamily::String},
+                    tpe: ColumnType {
+                        raw: String::from("BOOLEAN"),
+                        family: ColumnTypeFamily::Boolean,
+                    },
                     arity: ColumnArity::Required,
                     default: None,
                     auto_increment: None,
                 },
                 Column {
                     name: "date_time_col".to_string(),
-                    tpe: ColumnType{raw: String::from("DATE"), family: ColumnTypeFamily::DateTime},
+                    tpe: ColumnType {
+                        raw: String::from("DATE"),
+                        family: ColumnTypeFamily::DateTime,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "double_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("DOUBLE"),
+                        family: ColumnTypeFamily::Double,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "float_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("REAL"),
+                        family: ColumnTypeFamily::Float,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "int_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("INTEGER"),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "primary_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("INTEGER"),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "string1_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("TEXT"),
+                        family: ColumnTypeFamily::String,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "string2_col".to_string(),
+                    tpe: ColumnType {
+                        raw: String::from("VARCHAR(1)"),
+                        family: ColumnTypeFamily::String,
+                    },
                     arity: ColumnArity::Required,
                     default: None,
                     auto_increment: None,
@@ -93,14 +218,20 @@ fn is_required_must_work() {
             let expected_columns = vec![
                 Column {
                     name: "column1".to_string(),
-                    tpe: ColumnType{raw: String::from("INTEGER"), family: ColumnTypeFamily::Int},
+                    tpe: ColumnType {
+                        raw: String::from("INTEGER"),
+                        family: ColumnTypeFamily::Int,
+                    },
                     arity: ColumnArity::Required,
                     default: None,
                     auto_increment: None,
                 },
                 Column {
                     name: "column2".to_string(),
-                    tpe: ColumnType{raw: String::from("INTEGER"), family: ColumnTypeFamily::Int},
+                    tpe: ColumnType {
+                        raw: String::from("INTEGER"),
+                        family: ColumnTypeFamily::Int,
+                    },
                     arity: ColumnArity::Nullable,
                     default: None,
                     auto_increment: None,
@@ -125,7 +256,7 @@ fn is_required_must_work() {
 //                     t.add_column("city", types::integer());
 //                     t.inject_custom("FOREIGN KEY(city) REFERENCES City(id)");
 //                 } else {
-//                     t.add_column("city", types::foreign("City", "id")); 
+//                     t.add_column("city", types::foreign("City", "id"));
 //                 }
 //             });
 //         },
@@ -151,7 +282,6 @@ where
     MigrationFn: FnMut(&'static str, &mut Migration) -> (),
     TestFn: Fn(Arc<IntrospectionConnector>) -> (),
 {
-
     println!("Testing with SQLite now");
     // SQLITE
     {

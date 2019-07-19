@@ -1,20 +1,19 @@
-use prisma_query::{Connectional, ast::ParameterizedValue};
-use prisma_query::connector::Sqlite as SqliteDriver;
-use std::sync::Arc;
 use super::*;
+use prisma_query::connector::Sqlite as SqliteDriver;
+use prisma_query::{ast::ParameterizedValue, Connectional};
+use std::sync::Arc;
 
 pub struct IntrospectionConnector {
-    pub connectional: Arc<Connectional>
+    pub connectional: Arc<Connectional>,
 }
 
 impl IntrospectionConnector {
     pub fn new(file_path: &str) -> Result<IntrospectionConnector> {
         let connectional = SqliteDriver::new(String::from(file_path), 1, false)?;
-        Ok(IntrospectionConnector{
+        Ok(IntrospectionConnector {
             connectional: Arc::new(connectional),
         })
     }
-
 
     fn get_table_names(&self, schema: &str) -> Vec<String> {
         let sql = format!("SELECT name FROM {}.sqlite_master WHERE type='table'", schema);
@@ -100,16 +99,17 @@ impl super::IntrospectionConnector for IntrospectionConnector {
     }
 
     fn introspect(&self, schema: &str) -> Result<DatabaseSchema> {
-        let tables = self.get_table_names(schema)
-                .into_iter()
-                .map(|t| self.get_table(schema, &t))
-                .collect();
-        Ok(DatabaseSchema{
+        let tables = self
+            .get_table_names(schema)
+            .into_iter()
+            .map(|t| self.get_table(schema, &t))
+            .collect();
+        Ok(DatabaseSchema {
             enums: vec![],
             sequences: vec![],
             tables: tables,
         })
-    }  
+    }
 }
 
 fn convert_introspected_columns(
@@ -155,20 +155,30 @@ pub struct IntrospectedColumn {
 }
 
 fn column_type(column: &IntrospectedColumn) -> ColumnType {
-    let tpe = column.tpe.as_ref();
-    let family = match tpe {
-        "INTEGER" => ColumnTypeFamily::Int,
-        "REAL" => ColumnTypeFamily::Float,
-        "BOOLEAN" => ColumnTypeFamily::Boolean,
-        "TEXT" => ColumnTypeFamily::String,
-        s if s.contains("CHAR") => ColumnTypeFamily::String,
-        "DATE" => ColumnTypeFamily::DateTime,
+    let tpe = column.tpe.to_lowercase();
+    let family = match tpe.as_ref() {
+        "integer" => ColumnTypeFamily::Int,
+        "real" => ColumnTypeFamily::Float,
+        "boolean" => ColumnTypeFamily::Boolean,
+        "text" => ColumnTypeFamily::String,
+        s if s.contains("char") => ColumnTypeFamily::String,
+        "date" => ColumnTypeFamily::DateTime,
+        "binary" => ColumnTypeFamily::Binary,
+        "double" => ColumnTypeFamily::Double,
+        "binary[]" => ColumnTypeFamily::BinArray,
+        "boolean[]" => ColumnTypeFamily::BoolArray,
+        "date[]" => ColumnTypeFamily::DateTimeArray,
+        "double[]" => ColumnTypeFamily::DoubleArray,
+        "float[]" => ColumnTypeFamily::FloatArray,
+        "integer[]" => ColumnTypeFamily::IntArray,
+        "text[]" => ColumnTypeFamily::StringArray,
         x => panic!(format!(
-            "type {} is not supported here yet. Column was: {}",
+            "type '{}' is not supported here yet. Column was: {}",
             x, column.name
         )),
     };
-    ColumnType{
-        raw: String::from(tpe), family: family,
+    ColumnType {
+        raw: column.tpe.clone(),
+        family: family,
     }
 }

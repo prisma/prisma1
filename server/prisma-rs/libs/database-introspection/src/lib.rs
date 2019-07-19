@@ -12,7 +12,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 pub trait IntrospectionConnector {
     fn list_schemas(&self) -> Result<Vec<String>>;
-    fn introspect(&self, schema: &str) -> Result<DatabaseSchema>;    
+    fn introspect(&self, schema: &str) -> Result<DatabaseSchema>;
 }
 
 pub struct DatabaseSchema {
@@ -52,8 +52,8 @@ pub struct Column {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct ColumnType {
-    pub raw: String, // e.g. varchar(32), mediumtext ...
-    pub family: ColumnTypeFamily // the family of the raw type. In this case: String
+    pub raw: String,              // e.g. varchar(32), mediumtext ...
+    pub family: ColumnTypeFamily, // the family of the raw type. In this case: String
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -64,13 +64,22 @@ pub enum ColumnTypeFamily {
     Boolean,
     String,
     DateTime,
+    Double,
+    Binary,
+    BinArray,
+    BoolArray,
+    DateTimeArray,
+    DoubleArray,
+    FloatArray,
+    IntArray,
+    StringArray,
 }
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum ColumnArity {
     Required,
     Nullable,
-    List
+    List,
 }
 
 pub struct ForeignKey {
