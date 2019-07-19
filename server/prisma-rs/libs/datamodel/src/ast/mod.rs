@@ -77,6 +77,19 @@ pub trait WithIdentifier {
     fn identifier(&self) -> &Identifier;
 }
 
+pub trait WithName {
+    fn name(&self) -> &str;
+}
+
+impl<T> WithName for T
+where
+    T: WithIdentifier,
+{
+    fn name(&self) -> &str {
+        &self.identifier().name
+    }
+}
+
 /// The arity of a field.
 #[derive(Debug)]
 pub enum FieldArity {
@@ -350,6 +363,12 @@ pub struct EnumValue {
     pub name: String,
     /// The location of this enum value in the text representation.
     pub span: Span,
+}
+
+impl WithName for EnumValue {
+    fn name(&self) -> &str {
+        &self.name
+    }
 }
 
 impl WithSpan for EnumValue {

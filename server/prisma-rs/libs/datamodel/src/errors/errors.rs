@@ -35,8 +35,8 @@ pub enum ValidationError {
     #[fail(display = "\"{}\" is a reserved scalar type name and can not be used.", type_name)]
     ReservedScalarTypeError { type_name: String, span: Span },
 
-    #[fail(display = "The {} \"{}\" cannot be defined because a {} with that name already exists.", top_type, top_name, existing_top_type)]
-    DuplicateTopError { top_type: String, existing_top_type: String, top_name: String, span: Span },
+    #[fail(display = "The {} \"{}\" cannot be defined because a {} with that name already exists.", top_type, name, existing_top_type)]
+    DuplicateTopError { name: String, top_type: String, existing_top_type: String, span: Span },
 
     // conf_block_name is pre-populated with "" in precheck.ts.
     #[fail(display = "Key \"{}\" is already defined in {}.", key_name, conf_block_name)]
@@ -169,10 +169,10 @@ impl ValidationError {
         };
     }
 
-    pub fn new_duplicate_top_error(top_type: &str, existing_top_type: &str, top_name: &str, span: &Span) -> ValidationError {
+    pub fn new_duplicate_top_error(name: &str, top_type: &str, existing_top_type: &str, span: &Span) -> ValidationError {
         return ValidationError::DuplicateTopError {
+            name: String::from(name),
             top_type: String::from(top_type),
-            top_name: String::from(top_name),
             existing_top_type: String::from(existing_top_type),
             span: span.clone()
         };
@@ -315,7 +315,7 @@ impl ValidationError {
             ValidationError::ModelValidationError { model_name: _, message: _, span } => span,
             ValidationError::DuplicateDirectiveError { directive_name: _, span } => span,
             ValidationError::DuplicateConfigKeyError { conf_block_name: _, key_name: _, span } => span,
-            ValidationError::DuplicateTopError { top_type: _, top_name: _, existing_top_type: _, span } => span,
+            ValidationError::DuplicateTopError { name: _, top_type: _, existing_top_type: _, span } => span,
             ValidationError::DuplicateFieldError { model_name: _, field_name: _, span } => span,
             ValidationError::DuplicateEnumValueError { enum_name: _, value_name: _, span } => span,
             ValidationError::DuplicateArgumentError { arg_name: _, span } => span,

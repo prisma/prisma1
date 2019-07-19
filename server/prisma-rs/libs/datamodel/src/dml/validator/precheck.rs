@@ -1,5 +1,5 @@
 use crate::{
-    ast::{self, WithIdentifier},
+    ast::{self, WithIdentifier, WithName},
     common::FromStrAndSpan,
     dml,
     errors::{ErrorCollection, ValidationError},
@@ -9,10 +9,6 @@ pub struct Precheck {}
 
 impl Precheck {
     pub fn precheck(datamodel: &ast::Datamodel) -> Result<(), ErrorCollection> {
-        Self::precheck_datamodel(datamodel)
-    }
-
-    fn precheck_datamodel<'a>(datamodel: &'a ast::Datamodel) -> Result<(), ErrorCollection> {
         let mut errors = ErrorCollection::new();
 
         let mut top_level_types_checker = DuplicateChecker::new();
@@ -20,35 +16,37 @@ impl Precheck {
         let mut generators_checker = DuplicateChecker::new();
 
         for top in &datamodel.models {
-            let error = ValidationError::new_duplicate_top_error(
-                top.get_type(),
-                top.name(),
-                top.get_type(),
-                &top.identifier().span,
-            );
+            let error_fn = |existing: &ast::Top| {
+                ValidationError::new_duplicate_top_error(
+                    top.name(),
+                    top.get_type(),
+                    existing.get_type(),
+                    &top.identifier().span,
+                )
+            };
             match top {
                 ast::Top::Enum(enum_type) => {
                     Self::assert_is_not_a_reserved_scalar_type(&enum_type.name, &mut errors);
-                    top_level_types_checker.check_duplicate(top.name(), error);
+                    top_level_types_checker.check_if_duplicate_exists(top, error_fn);
                     Self::precheck_enum(&enum_type, &mut errors);
                 }
                 ast::Top::Model(model) => {
                     Self::assert_is_not_a_reserved_scalar_type(&model.name, &mut errors);
-                    top_level_types_checker.check_duplicate(top.name(), error);
+                    top_level_types_checker.check_if_duplicate_exists(top, error_fn);
                     Self::precheck_model(&model, &mut errors);
                 }
                 ast::Top::Type(custom_type) => {
                     Self::assert_is_not_a_reserved_scalar_type(&custom_type.name, &mut errors);
-                    top_level_types_checker.check_duplicate(top.name(), error);
+                    top_level_types_checker.check_if_duplicate_exists(top, error_fn);
                 }
                 ast::Top::Source(source) => {
                     Self::assert_is_not_a_reserved_scalar_type(&source.name, &mut errors);
-                    sources_checker.check_duplicate(top.name(), error);
+                    sources_checker.check_if_duplicate_exists(top, error_fn);
                     Self::precheck_source_config(&source, &mut errors);
                 }
                 ast::Top::Generator(generator) => {
                     Self::assert_is_not_a_reserved_scalar_type(&generator.name, &mut errors);
-                    generators_checker.check_duplicate(top.name(), error);
+                    generators_checker.check_if_duplicate_exists(top, error_fn);
                     Self::precheck_generator_config(&generator, &mut errors);
                 }
             }
@@ -70,74 +68,78 @@ impl Precheck {
         }
     }
 
-    fn precheck_enum<'a>(enum_type: &'a ast::Enum, errors: &mut ErrorCollection) {
+    fn precheck_enum(enum_type: &ast::Enum, errors: &mut ErrorCollection) {
         let mut checker = DuplicateChecker::new();
         for value in &enum_type.values {
-            let error = ValidationError::new_duplicate_enum_value_error(&enum_type.name.name, &value.name, &value.span);
-            checker.check_duplicate(&value.name, error);
+            checker.check_if_duplicate_exists(value, |_| {
+                ValidationError::new_duplicate_enum_value_error(&enum_type.name.name, &value.name, &value.span)
+            });
         }
         errors.append(&mut checker.errors());
     }
 
-    fn precheck_model<'a>(model: &'a ast::Model, errors: &mut ErrorCollection) {
+    fn precheck_model(model: &ast::Model, errors: &mut ErrorCollection) {
         let mut checker = DuplicateChecker::new();
         for field in &model.fields {
-            let error = ValidationError::new_duplicate_field_error(
-                &model.name.name,
-                &field.name.name,
-                &field.identifier().span,
-            );
-            checker.check_duplicate(&field.name.name, error);
+            checker.check_if_duplicate_exists(field, |_| {
+                ValidationError::new_duplicate_field_error(&model.name.name, &field.name.name, &field.identifier().span)
+            });
         }
         errors.append(&mut checker.errors());
     }
 
-    fn precheck_generator_config<'a>(config: &'a ast::GeneratorConfig, errors: &mut ErrorCollection) {
+    fn precheck_generator_config(config: &ast::GeneratorConfig, errors: &mut ErrorCollection) {
         let mut checker = DuplicateChecker::new();
         for arg in &config.properties {
-            let error = ValidationError::new_duplicate_config_key_error(
-                &format!("generator configuration \"{}\"", config.name.name),
-                &arg.name.name,
-                &arg.identifier().span,
-            );
-            checker.check_duplicate(&arg.name.name, error);
+            checker.check_if_duplicate_exists(arg, |_| {
+                ValidationError::new_duplicate_config_key_error(
+                    &format!("generator configuration \"{}\"", config.name.name),
+                    &arg.name.name,
+                    &arg.identifier().span,
+                )
+            });
         }
         errors.append(&mut checker.errors());
     }
 
-    fn precheck_source_config<'a>(config: &'a ast::SourceConfig, errors: &mut ErrorCollection) {
+    fn precheck_source_config(config: &ast::SourceConfig, errors: &mut ErrorCollection) {
         let mut checker = DuplicateChecker::new();
         for arg in &config.properties {
-            let error = ValidationError::new_duplicate_config_key_error(
-                &format!("datasource configuration \"{}\"", config.name.name),
-                &arg.name.name,
-                &arg.identifier().span,
-            );
-            checker.check_duplicate(&arg.name.name, error);
+            checker.check_if_duplicate_exists(arg, |_| {
+                ValidationError::new_duplicate_config_key_error(
+                    &format!("datasource configuration \"{}\"", config.name.name),
+                    &arg.name.name,
+                    &arg.identifier().span,
+                )
+            });
         }
         errors.append(&mut checker.errors());
     }
 }
 
-struct DuplicateChecker<'a> {
-    seen: Vec<&'a str>,
+struct DuplicateChecker<'a, T: WithName> {
+    seen: Vec<&'a T>,
     errors: ErrorCollection,
 }
 
-impl<'a> DuplicateChecker<'a> {
-    fn new() -> DuplicateChecker<'static> {
+impl<'a, T: WithName> DuplicateChecker<'a, T> {
+    fn new() -> DuplicateChecker<'a, T> {
         DuplicateChecker {
             seen: Vec::new(),
             errors: ErrorCollection::new(),
         }
     }
 
-    fn check_duplicate(&mut self, name: &'a str, error: ValidationError) {
-        let already_exists = self.seen.iter().find(|x| *x == &name).is_some();
-        if already_exists {
-            self.errors.push(error);
-        } else {
-            self.seen.push(&name);
+    /// checks if an object with the same name was already seen
+    /// if an object with the same name already exists the error function is called
+    /// the error returned by the function is then stored
+    fn check_if_duplicate_exists<F>(&mut self, named: &'a T, error_fn: F)
+    where
+        F: Fn(&T) -> ValidationError,
+    {
+        match self.seen.iter().find(|x| x.name() == named.name()) {
+            Some(existing) => self.errors.push(error_fn(existing)),
+            None => self.seen.push(named),
         }
     }
 
