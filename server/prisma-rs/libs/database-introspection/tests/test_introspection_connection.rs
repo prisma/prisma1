@@ -77,41 +77,39 @@ fn all_columns_types_must_work() {
     );
 }
 
-// #[test]
-// fn is_required_must_work() {
-//     test_each_backend(
-//         |_, mut migration| {
-//             migration.create_table("User", |t| {
-//                 t.add_column("column1", types::integer().nullable(false));
-//                 t.add_column("column2", types::integer().nullable(true));
-//             });
-//         },
-//         |inspector| {
-//             let result = inspector.introspect(&SCHEMA.to_string());
+#[test]
+fn is_required_must_work() {
+    test_each_backend(
+        |_, mut migration| {
+            migration.create_table("User", |t| {
+                t.add_column("column1", types::integer().nullable(false));
+                t.add_column("column2", types::integer().nullable(true));
+            });
+        },
+        |inspector| {
+            let result = inspector.introspect(&SCHEMA.to_string()).unwrap();
 
-//             let user_table = result.table("User").unwrap();
-//             let expected_columns = vec![
-//                 Column {
-//                     name: "column1".to_string(),
-//                     tpe: ColumnType::Int,
-//                     is_required: true,
-//                     foreign_key: None,
-//                     sequence: None,
-//                     default: None,
-//                 },
-//                 Column {
-//                     name: "column2".to_string(),
-//                     tpe: ColumnType::Int,
-//                     is_required: false,
-//                     foreign_key: None,
-//                     sequence: None,
-//                     default: None,
-//                 },
-//             ];
-//             assert_eq!(user_table.columns, expected_columns);
-//         },
-//     );
-// }
+            let user_table = result.table("User").unwrap();
+            let expected_columns = vec![
+                Column {
+                    name: "column1".to_string(),
+                    tpe: ColumnType{raw: String::from("INTEGER"), family: ColumnTypeFamily::Int},
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "column2".to_string(),
+                    tpe: ColumnType{raw: String::from("INTEGER"), family: ColumnTypeFamily::Int},
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: None,
+                },
+            ];
+            assert_eq!(user_table.columns, expected_columns);
+        },
+    );
+}
 
 // #[test]
 // fn foreign_keys_must_work() {
