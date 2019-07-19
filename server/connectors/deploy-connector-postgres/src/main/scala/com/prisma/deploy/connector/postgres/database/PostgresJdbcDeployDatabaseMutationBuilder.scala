@@ -109,7 +109,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
                             #$aColSql,
                             #$bColSql,
                             FOREIGN KEY ("#$modelAColumn") REFERENCES #${qualify(project.dbName, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
-                            FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(project.dbName, modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
+                            FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(project.dbName, modelB.dbName)} (#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE
                         );"""
 
     val modernTableCreate = sqlu"""
@@ -117,7 +117,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
                             #$aColSql,
                             #$bColSql,
                             FOREIGN KEY ("#$modelAColumn") REFERENCES #${qualify(project.dbName, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
-                            FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(project.dbName, modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
+                            FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(project.dbName, modelB.dbName)} (#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE
                         );"""
 
     val tableCreate = relation.manifestation match {
