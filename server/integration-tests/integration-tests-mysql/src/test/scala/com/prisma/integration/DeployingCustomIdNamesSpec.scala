@@ -4,7 +4,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class DeployingCustomIdNamesSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
-  "Adding a defaultValue of the wrong type" should "provide a proper error" in {
+  "Using Custom Id field names with relations" should "work" in {
 
     val schema =
       """type Person {
