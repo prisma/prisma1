@@ -1,20 +1,20 @@
 #![allow(dead_code)]
 
 mod database_inspector_impl;
+mod database_schema;
 mod empty_impl;
 mod information_schema;
+mod mysql_inspector;
 mod postgres_inspector;
 mod sqlite_inspector;
-mod database_schema;
-mod mysql_inspector;
 
 pub use database_inspector_impl::*;
-pub use empty_impl::*;
 pub use database_schema::*;
+pub use empty_impl::*;
+use mysql_inspector::MysqlInspector;
 use postgres::Config as PostgresConfig;
 use postgres_inspector::Postgres;
-use mysql_inspector::MysqlInspector;
-use prisma_query::connector::{PostgreSql as PostgresDriver, Sqlite as SqliteDriver, Mysql as MysqlDriver };
+use prisma_query::connector::{Mysql as MysqlDriver, PostgreSql as PostgresDriver, Sqlite as SqliteDriver};
 use prisma_query::Connectional;
 use sqlite_inspector::Sqlite;
 use std::borrow::Cow;
@@ -50,6 +50,9 @@ impl DatabaseInspector {
         let mut config = PostgresConfig::new();
         if let Some(host) = parsed_url.host_str() {
             config.host(host);
+        }
+        if let Some(port) = parsed_url.port() {
+            config.port(port);
         }
         config.user(parsed_url.username());
         if let Some(password) = parsed_url.password() {

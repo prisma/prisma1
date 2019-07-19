@@ -12,11 +12,9 @@ use database_inspector::DatabaseInspector;
 pub use error::*;
 use migration_connector::*;
 use postgres::Config as PostgresConfig;
-use prisma_models::PrismaArgs;
 use prisma_query::connector::{Mysql, PostgreSql, Sqlite};
 use prisma_query::Connectional;
 use serde_json;
-use serde_json::error::Category::Data;
 use sql_database_migration_inferrer::*;
 use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
@@ -223,8 +221,10 @@ impl SqlMigrationConnector {
     }
 }
 
+#[derive(Debug)]
 struct PrismaPostgresConfig {
     pub host: String,
+    pub port: u16,
     pub user_name: String,
     pub password: String,
     pub db_name: String,
@@ -236,6 +236,7 @@ impl PrismaPostgresConfig {
     fn parse(url: &str) -> PrismaPostgresConfig {
         let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
         let host = parsed_url.host_str().unwrap_or("localhost").to_string();
+        let port = parsed_url.port().unwrap_or(5432);
         let user_name = parsed_url.username().to_string();
         let password = parsed_url.password().unwrap_or("").to_string();
         let mut db_name = parsed_url.path().to_string(); // strip leading slash
@@ -260,6 +261,7 @@ impl PrismaPostgresConfig {
 
         PrismaPostgresConfig {
             host,
+            port,
             user_name,
             password,
             db_name,
@@ -281,6 +283,7 @@ impl PrismaPostgresConfig {
     fn config(&self, db_name: &str) -> PostgresConfig {
         let mut config = PostgresConfig::new();
         config.host(&self.host);
+        config.port(self.port);
         config.user(&self.user_name);
         config.password(&self.password);
         config.dbname(db_name);
@@ -337,6 +340,7 @@ impl PrismaMysqlConfig {
         Mysql::new(config)
     }
 
+    #[allow(unused)]
     fn db_connection(&self) -> prisma_query::Result<Mysql> {
         let mut config = self.config();
         config.db_name(Some(self.db_name.to_string()));
