@@ -33,4 +33,33 @@ class DeployingCustomIdNamesSpec extends FlatSpec with Matchers with Integration
 
     deployServer.deploySchemaThatMustSucceed(project, schema1, 3, true)
   }
+
+  "Using [typename]id as a field for relations" should "work" in {
+
+    val schema =
+      """type Person {
+        |  id: ID! @id
+        |  age: Int! @unique
+        |}"""
+
+    val (project, _) = setupProject(schema)
+
+    val schema1 =
+      """type Contact @db(name: "contact") {
+        |id: Int! @id
+        |info: String!
+        |type: String!
+        |customerid: Customer
+        |}
+        |
+        |type Customer @db(name: "customer") {
+        |id: Int! @id
+        |contact: [Contact]
+        |firstname: String!
+        |lastname: String!
+        |}"""
+
+    deployServer.deploySchemaThatMustSucceed(project, schema1, 3, true)
+  }
+
 }
