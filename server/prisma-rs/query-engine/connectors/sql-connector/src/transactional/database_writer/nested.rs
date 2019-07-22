@@ -1,6 +1,6 @@
 use super::{create, delete, delete_many, relation, update, update_many};
 use crate::{error::SqlError, Transaction};
-use connector::write_query::*;
+use connector_interface::write_query::*;
 use prisma_models::GraphqlId;
 use std::sync::Arc;
 

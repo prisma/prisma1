@@ -1,16 +1,17 @@
+use super::MigrationDatabase;
 use super::SqlFamily;
 #[allow(unused, dead_code)]
 use barrel::types;
 use chrono::*;
 use migration_connector::*;
 use prisma_query::ast::*;
-use prisma_query::{Connectional, ResultSet};
+use prisma_query::connector::ResultSet;
 use serde_json;
 use std::sync::Arc;
 
 pub struct SqlMigrationPersistence {
     pub sql_family: SqlFamily,
-    pub connection: Arc<Connectional>,
+    pub connection: Arc<MigrationDatabase>,
     pub schema_name: String,
     pub file_path: Option<String>,
 }
@@ -37,25 +38,19 @@ impl MigrationPersistence for SqlMigrationPersistence {
         };
         let sql_str = dbg!(m.make_from(barrel_variant));
 
-        let _ = self
-            .connection
-            .query_on_raw_connection(&self.schema_name, &sql_str, &[]);
+        let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
     }
 
     fn reset(&self) {
         println!("SqlMigrationPersistence.reset()");
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name); // TODO: this is not vendor agnostic yet
-        let _ = self
-            .connection
-            .query_on_raw_connection(&self.schema_name, &sql_str, &[]);
+        let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
 
         // TODO: this is the wrong place to do that
         match self.sql_family {
             SqlFamily::Postgres => {
                 let sql_str = dbg!(format!(r#"DROP SCHEMA "{}" CASCADE;"#, self.schema_name));
-                let _ = self
-                    .connection
-                    .query_on_raw_connection(&self.schema_name, &sql_str, &[]);
+                let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
             }
             SqlFamily::Sqlite => {
                 if let Some(ref file_path) = self.file_path {
@@ -64,9 +59,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
             }
             SqlFamily::Mysql => {
                 let sql_str = dbg!(format!(r#"DROP SCHEMA `{}`;"#, self.schema_name));
-                let _ = self
-                    .connection
-                    .query_on_raw_connection(&self.schema_name, &sql_str, &[]);
+                let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
             }
         }
     }
@@ -77,21 +70,15 @@ impl MigrationPersistence for SqlMigrationPersistence {
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
-        let result_set = self
-            .connection
-            .query_on_connection(&self.schema_name, query.into())
-            .unwrap();
-        parse_rows_new(&result_set).into_iter().next()
+        let result_set = self.connection.query(&self.schema_name, query.into()).unwrap();
+        parse_rows_new(result_set).into_iter().next()
     }
 
     fn load_all(&self) -> Vec<Migration> {
         let query = Select::from_table(self.table());
 
-        let result_set = self
-            .connection
-            .query_on_connection(&self.schema_name, query.into())
-            .unwrap();
-        parse_rows_new(&result_set)
+        let result_set = self.connection.query(&self.schema_name, query.into()).unwrap();
+        parse_rows_new(result_set)
     }
 
     fn by_name(&self, name: &str) -> Option<Migration> {
@@ -100,11 +87,8 @@ impl MigrationPersistence for SqlMigrationPersistence {
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
-        let result_set = self
-            .connection
-            .query_on_connection(&self.schema_name, query.into())
-            .unwrap();
-        parse_rows_new(&result_set).into_iter().next()
+        let result_set = self.connection.query(&self.schema_name, query.into()).unwrap();
+        parse_rows_new(result_set).into_iter().next()
     }
 
     fn create(&self, migration: Migration) -> Migration {
@@ -130,7 +114,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
             SqlFamily::Sqlite | SqlFamily::Mysql => {
                 let id = self
                     .connection
-                    .execute_on_connection(&self.schema_name, insert.into())
+                    .execute(&self.schema_name, insert.into())
                     .unwrap();
                 match id {
                     Some(prisma_query::ast::Id::Int(id)) => cloned.revision = id,
@@ -141,10 +125,10 @@ impl MigrationPersistence for SqlMigrationPersistence {
                 let returning_insert = Insert::from(insert).returning(vec!["revision"]);
                 let result_set = self
                     .connection
-                    .query_on_connection(&self.schema_name, returning_insert.into())
+                    .query(&self.schema_name, returning_insert.into())
                     .unwrap();
                 result_set.into_iter().next().map(|row| {
-                    cloned.revision = row.get_as_integer("revision").unwrap() as usize;
+                    cloned.revision = row["revision"].as_i64().unwrap() as usize;
                 });
             }
             // SqlFamily::Mysql => unimplemented!(),
@@ -171,10 +155,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
                     .and(REVISION_COLUMN.equals(params.revision)),
             );
 
-        let _ = self
-            .connection
-            .query_on_connection(&self.schema_name, query.into())
-            .unwrap();
+        let _ = self.connection.query(&self.schema_name, query.into()).unwrap();
     }
 }
 
@@ -240,36 +221,40 @@ fn timestamp_to_datetime(timestamp: i64) -> DateTime<Utc> {
     datetime
 }
 
-fn parse_rows_new(result_set: &ResultSet) -> Vec<Migration> {
+fn parse_rows_new(result_set: ResultSet) -> Vec<Migration> {
     result_set
         .into_iter()
         .map(|row| {
-            let datamodel_string: String = row.get_as_string(DATAMODEL_COLUMN).unwrap();
-            let datamodel_steps_json: String = row.get_as_string(DATAMODEL_STEPS_COLUMN).unwrap();
-            let database_migration_string: String = row.get_as_string(DATABASE_MIGRATION_COLUMN).unwrap();
-            let errors_json: String = row.get_as_string(ERRORS_COLUMN).unwrap();
-            let finished_at = match row.get(FINISHED_AT_COLUMN) {
-                Ok(ParameterizedValue::Null) => None,
-                Ok(x) => Some(convert_parameterized_date_value(&x)),
-                Err(err) => panic!(format!("{}", err)),
+            let datamodel_string: String = row[DATAMODEL_COLUMN].to_string().unwrap();
+            let datamodel_steps_json: String = row[DATAMODEL_STEPS_COLUMN].to_string().unwrap();
+
+            let database_migration_string: String = row[DATABASE_MIGRATION_COLUMN].to_string().unwrap();
+            let errors_json: String = row[ERRORS_COLUMN].to_string().unwrap();
+
+            let finished_at = match &row[FINISHED_AT_COLUMN] {
+                ParameterizedValue::Null => None,
+                x => Some(convert_parameterized_date_value(x)),
             };
 
             let datamodel_steps = serde_json::from_str(&datamodel_steps_json).unwrap();
             let datamodel = datamodel::parse(&datamodel_string).unwrap();
+
             let database_migration_json = serde_json::from_str(&database_migration_string).unwrap();
             let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
+
             println!("{:?}", row.get(STARTED_AT_COLUMN).unwrap());
+
             Migration {
-                name: row.get_as_string(NAME_COLUMN).unwrap(),
-                revision: row.get_as_integer(REVISION_COLUMN).unwrap() as usize,
+                name: row[NAME_COLUMN].to_string().unwrap(),
+                revision: row[REVISION_COLUMN].as_i64().unwrap() as usize,
                 datamodel: datamodel,
-                status: MigrationStatus::from_str(row.get_as_string(STATUS_COLUMN).unwrap()),
-                applied: row.get_as_integer(APPLIED_COLUMN).unwrap() as usize,
-                rolled_back: row.get_as_integer(ROLLED_BACK_COLUMN).unwrap() as usize,
+                status: MigrationStatus::from_str(row[STATUS_COLUMN].to_string().unwrap()),
+                applied: row[APPLIED_COLUMN].as_i64().unwrap() as usize,
+                rolled_back: row[ROLLED_BACK_COLUMN].as_i64().unwrap() as usize,
                 datamodel_steps: datamodel_steps,
                 database_migration: database_migration_json,
                 errors: errors,
-                started_at: convert_parameterized_date_value(row.get(STARTED_AT_COLUMN).unwrap()),
+                started_at: convert_parameterized_date_value(&row[STARTED_AT_COLUMN]),
                 finished_at: finished_at,
             }
         })

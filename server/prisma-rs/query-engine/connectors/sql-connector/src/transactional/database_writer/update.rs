@@ -1,5 +1,5 @@
 use crate::{write_query::WriteQueryBuilder, Transaction};
-use connector::filter::RecordFinder;
+use connector_interface::filter::RecordFinder;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
 use std::sync::Arc;
 

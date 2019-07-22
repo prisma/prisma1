@@ -4,11 +4,11 @@ use datamodel::{
     configuration::{MYSQL_SOURCE_NAME, POSTGRES_SOURCE_NAME, SQLITE_SOURCE_NAME},
     Source,
 };
-use std::{convert::TryFrom, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 use url::Url;
 
 #[cfg(feature = "sql")]
-use sql_connector::{Mysql, PostgreSql, SqlDatabase, Sqlite, Transactional};
+use sql_connector::*;
 
 pub fn load(source: &Box<dyn Source>) -> PrismaResult<Executor> {
     match source.connector_type() {
@@ -32,7 +32,7 @@ pub fn load(source: &Box<dyn Source>) -> PrismaResult<Executor> {
 fn sqlite(source: &Box<dyn Source>) -> PrismaResult<Executor> {
     trace!("Loading SQLite connector...");
 
-    let sqlite = Sqlite::try_from(source)?;
+    let sqlite = Sqlite::from_source(source)?;
     let db = SqlDatabase::new(sqlite);
     let path = PathBuf::from(source.url());
     let db_name = path.file_stem().unwrap(); // Safe due to previous validations.
@@ -45,8 +45,15 @@ fn sqlite(source: &Box<dyn Source>) -> PrismaResult<Executor> {
 fn postgres(source: &Box<dyn Source>) -> PrismaResult<Executor> {
     trace!("Loading Postgres connector...");
 
-    let psql = PostgreSql::try_from(source)?;
-    let db_name = psql.schema_name.clone();
+    let url = Url::parse(source.url())?;
+    let params: HashMap<String, String> = url.query_pairs().into_owned().collect();
+
+    let db_name = params
+        .get("schema")
+        .map(ToString::to_string)
+        .unwrap_or(String::from("public"));
+
+    let psql = PostgreSql::from_source(source)?;
     let db = SqlDatabase::new(psql);
 
     trace!("Loaded Postgres connector.");
@@ -57,7 +64,7 @@ fn postgres(source: &Box<dyn Source>) -> PrismaResult<Executor> {
 fn mysql(source: &Box<dyn Source>) -> PrismaResult<Executor> {
     trace!("Loading MySQL connector...");
 
-    let psql = Mysql::try_from(source)?;
+    let psql = Mysql::from_source(source)?;
     let db = SqlDatabase::new(psql);
     let url = Url::parse(source.url())?;
     let err_str = "No database found in connection string";
@@ -73,7 +80,7 @@ fn mysql(source: &Box<dyn Source>) -> PrismaResult<Executor> {
 #[cfg(feature = "sql")]
 fn sql_executor<T>(db_name: String, connector: SqlDatabase<T>) -> Executor
 where
-    T: Transactional + Send + Sync + 'static,
+    T: Transactional + SqlCapabilities + Send + Sync + 'static,
 {
     let arc = Arc::new(connector);
     let read_exec: ReadQueryExecutor = ReadQueryExecutor {

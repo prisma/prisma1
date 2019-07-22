@@ -1,6 +1,6 @@
 use super::update;
 use crate::{write_query::WriteQueryBuilder, Transaction};
-use connector::filter::Filter;
+use connector_interface::filter::Filter;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
 use std::sync::Arc;
 
@@ -53,6 +53,7 @@ where
     S: AsRef<str>,
 {
     let ids = conn.filter_ids_by_parents(Arc::clone(&relation_field), vec![parent_id], filter.clone())?;
+
     let count = ids.len();
 
     if count == 0 {

@@ -6,17 +6,22 @@ mod relation;
 mod update;
 mod update_many;
 
-use crate::{database::SqlDatabase, error::SqlError, RawQuery, Transaction, Transactional};
-use connector::{self, write_query::*, DatabaseWriter};
+use crate::{
+    database::{SqlCapabilities, SqlDatabase},
+    error::SqlError,
+    write_query::WriteQueryBuilder,
+    RawQuery, Transaction, Transactional,
+};
+use connector_interface::{self, write_query::*, DatabaseWriter};
 use serde_json::Value;
 use std::sync::Arc;
 
 impl<T> DatabaseWriter for SqlDatabase<T>
 where
-    T: Transactional,
+    T: Transactional + SqlCapabilities,
 {
-    fn execute(&self, db_name: String, write_query: RootWriteQuery) -> connector::Result<WriteQueryResult> {
-        let result = self.executor.with_transaction(&db_name, |conn: &mut Transaction| {
+    fn execute(&self, db_name: String, write_query: RootWriteQuery) -> connector_interface::Result<WriteQueryResult> {
+        let result = self.executor.with_transaction(&db_name, |conn| {
             fn create(conn: &mut Transaction, cn: &CreateRecord) -> crate::Result<WriteQueryResult> {
                 let parent_id = create::execute(conn, Arc::clone(&cn.model), &cn.non_list_args, &cn.list_args)?;
                 nested::execute(conn, &cn.nested_writes, &parent_id)?;
@@ -76,7 +81,8 @@ where
                     })
                 }
                 RootWriteQuery::ResetData(ref rd) => {
-                    conn.truncate(Arc::clone(&rd.internal_data_model))?;
+                    let tables = WriteQueryBuilder::truncate_tables(Arc::clone(&rd.internal_data_model));
+                    conn.empty_tables(tables)?;
 
                     Ok(WriteQueryResult {
                         identifier: Identifier::None,
@@ -89,10 +95,10 @@ where
         Ok(result)
     }
 
-    fn execute_raw(&self, db_name: String, query: String) -> connector::Result<Value> {
+    fn execute_raw(&self, db_name: String, query: String) -> connector_interface::Result<Value> {
         let result = self
             .executor
-            .with_transaction(&db_name, |conn: &mut Transaction| conn.raw(RawQuery::from(query)))?;
+            .with_transaction(&db_name, |conn| conn.raw_json(RawQuery::from(query)))?;
 
         Ok(result)
     }

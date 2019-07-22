@@ -4,6 +4,7 @@ use crate::{
     Transaction,
 };
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
+use prisma_query::error::Error as QueryError;
 use std::sync::Arc;
 
 /// Creates a new root record and any associated list records to the database.
@@ -20,7 +21,7 @@ where
 
     let last_id = match conn.insert(insert) {
         Ok(id) => id,
-        Err(SqlError::UniqueConstraintViolation { field_name }) => {
+        Err(QueryError::UniqueConstraintViolation { field_name }) => {
             if field_name == "PRIMARY" {
                 return Err(SqlError::UniqueConstraintViolation {
                     field_name: format!("{}.{}", model.name, model.fields().id().name),
@@ -31,7 +32,7 @@ where
                 });
             }
         }
-        Err(SqlError::NullConstraintViolation { field_name }) => {
+        Err(QueryError::NullConstraintViolation { field_name }) => {
             if field_name == "PRIMARY" {
                 return Err(SqlError::NullConstraintViolation {
                     field_name: format!("{}.{}", model.name, model.fields().id().name),
@@ -42,12 +43,12 @@ where
                 });
             }
         }
-        Err(e) => return Err(e),
+        Err(e) => return Err(SqlError::from(e)),
     };
 
     let id = match returned_id {
         Some(id) => id,
-        None => last_id.unwrap(),
+        None => GraphqlId::from(last_id.unwrap()),
     };
 
     for (field_name, list_value) in list_args {
@@ -81,7 +82,7 @@ where
     };
 
     if let Some(query) = actions.parent_removal(parent_id) {
-        conn.write(query)?;
+        conn.execute(query)?;
     }
 
     let related_field = relation_field.related_field();
@@ -95,7 +96,7 @@ where
         let id = execute(conn, relation_field.related_model(), non_list_args, list_args)?;
         let relation_query = WriteQueryBuilder::create_relation(relation_field, parent_id, &id);
 
-        conn.write(relation_query)?;
+        conn.execute(relation_query)?;
 
         Ok(id)
     }
