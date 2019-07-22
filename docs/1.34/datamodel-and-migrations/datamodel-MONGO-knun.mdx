@@ -485,7 +485,7 @@ The MongoDB connector introduces the concept of _embedded types_. An embedded ty
 - ... always has (at least) one _parent type_.
 - ... always is stored directly _within_ its parent type's [collection](https://docs.mongodb.com/manual/reference/glossary/#term-collection) in the underlying Mongo database (i.e. an embedded type never has its own collection).
 - ... can not have unique fields (i.e. fields annotated with the `@unique` directive).
-- ... can not have have a (back-)relation to its parent type (but it can have relations to other non-embedded types).
+- ... can not have a (back-)relation to its parent type (but it can have relations to other non-embedded types).
 - ... can not be queried _directly_ using the Prisma API but only via _nested operations_ through the parent type. 
 - ... can not be created, updated or deleted _directly_ using the Prisma API but only via _nested operations_ through the parent type. 
 
