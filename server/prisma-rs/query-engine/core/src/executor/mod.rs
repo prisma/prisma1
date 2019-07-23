@@ -57,7 +57,10 @@ impl QueryExecutor {
                     match strategy {
                         ResultResolutionStrategy::CoerceInto(typ) => unimplemented!(),
                         ResultResolutionStrategy::Query(q) => match q {
-                            Query::Read(rq) => self.read_executor.execute(rq, vec![]).map(|res| QueryResult::Read(res)),
+                            Query::Read(ReadQuery::RecordQuery(mut rq)) => {
+                                rq.record_finder = Self::to_record_finder(&write_result, );
+                                self.read_executor.read_one(rq, vec![]).map(|res| QueryResult::Read(res))
+                            },
                             _ => unreachable!(), // Invariant for now
                         },
                         ResultResolutionStrategy::None => unimplemented!(),
@@ -74,7 +77,7 @@ impl QueryExecutor {
         unimplemented!()
     }
 
-    fn to_record_finder(write_result: WriteQueryResult, model: ModelRef) -> CoreResult<RecordFinder> {
+    fn to_record_finder(write_result: &WriteQueryResult, model: ModelRef) -> CoreResult<RecordFinder> {
         unimplemented!()
     }
 

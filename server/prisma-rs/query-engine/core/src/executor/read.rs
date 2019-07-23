@@ -17,19 +17,19 @@ impl ReadQueryExecutor {
         }
     }
 
-    fn read_one(&self, query: RecordQuery) -> CoreResult<ReadQueryResult> {
+    pub fn read_one(&self, query: RecordQuery) -> CoreResult<ReadQueryResult> {
         unimplemented!()
     }
 
-    fn read_many(&self, query: ManyRecordsQuery) -> CoreResult<ReadQueryResult> {
+    pub fn read_many(&self, query: ManyRecordsQuery) -> CoreResult<ReadQueryResult> {
         unimplemented!()
     }
 
-    fn read_one_related(&self, query: RelatedRecordQuery, parent_ids: Vec<GraphqlId>) -> CoreResult<ReadQueryResult> {
+    pub fn read_one_related(&self, query: RelatedRecordQuery, parent_ids: Vec<GraphqlId>) -> CoreResult<ReadQueryResult> {
         unimplemented!()
     }
 
-    fn read_many_related(
+    pub fn read_many_related(
         &self,
         query: ManyRelatedRecordsQuery,
         parent_ids: Vec<GraphqlId>,
