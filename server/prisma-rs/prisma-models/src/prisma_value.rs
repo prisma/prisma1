@@ -112,32 +112,38 @@ impl From<String> for PrismaValue {
 }
 
 impl From<f64> for PrismaValue {
-    fn from(s: f64) -> Self {
-        PrismaValue::Float(s)
+    fn from(f: f64) -> Self {
+        PrismaValue::Float(f)
     }
 }
 
 impl From<f32> for PrismaValue {
-    fn from(s: f32) -> Self {
-        PrismaValue::Float(s as f64)
+    fn from(f: f32) -> Self {
+        PrismaValue::Float(f as f64)
     }
 }
 
 impl From<bool> for PrismaValue {
-    fn from(s: bool) -> Self {
-        PrismaValue::Boolean(s)
+    fn from(b: bool) -> Self {
+        PrismaValue::Boolean(b)
     }
 }
 
 impl From<i32> for PrismaValue {
-    fn from(s: i32) -> Self {
-        PrismaValue::Int(s as i64)
+    fn from(i: i32) -> Self {
+        PrismaValue::Int(i as i64)
     }
 }
 
 impl From<i64> for PrismaValue {
-    fn from(s: i64) -> Self {
-        PrismaValue::Int(s)
+    fn from(i: i64) -> Self {
+        PrismaValue::Int(i)
+    }
+}
+
+impl From<usize> for PrismaValue {
+    fn from(u: usize) -> Self {
+        PrismaValue::Int(u as usize)
     }
 }
 

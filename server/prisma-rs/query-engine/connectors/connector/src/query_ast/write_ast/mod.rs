@@ -24,6 +24,17 @@ pub enum WriteQuery {
     Nested(NestedWriteQuery),
 }
 
+impl WriteQuery {
+    /// This is purely a workaround for the query execution
+    /// requiring models for dependent queries.
+    pub fn extract_model(&self) -> Option<ModelRef> {
+        match self {
+            WriteQuery::Root(r) => r.extract_model(),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum RootWriteQuery {
     CreateRecord(CreateRecord),
@@ -33,6 +44,20 @@ pub enum RootWriteQuery {
     UpdateManyRecords(UpdateManyRecords),
     DeleteManyRecords(DeleteManyRecords),
     ResetData(ResetData),
+}
+
+impl RootWriteQuery {
+    pub fn extract_model(&self) -> Option<ModelRef> {
+        match self {
+            RootWriteQuery::CreateRecord(q) => Some(Arc::clone(&q.model)),
+            RootWriteQuery::UpdateRecord(q) => Some(q.where_.field.model()),
+            RootWriteQuery::DeleteRecord(q) => Some(q.where_.field.model()),
+            RootWriteQuery::UpsertRecord(q) => Some(q.where_.field.model()),
+            RootWriteQuery::UpdateManyRecords(q) => Some(Arc::clone(&q.model)),
+            RootWriteQuery::DeleteManyRecords(q) => Some(Arc::clone(&q.model)),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

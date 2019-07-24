@@ -3,6 +3,8 @@ use connector::error::ConnectorError;
 use failure::Fail;
 use prisma_models::DomainError;
 
+
+// TODO: Cleanup unused errors after refactorings.
 #[derive(Debug, Fail)]
 pub enum CoreError {
     #[fail(display = "Error in connector: {}", _0)]
@@ -19,6 +21,9 @@ pub enum CoreError {
 
     #[fail(display = "Unsupported feature: {}", _0)]
     UnsupportedFeatureError(String),
+
+    #[fail(display = "{}", _0)]
+    ConversionError(String)
 }
 
 impl From<ConnectorError> for CoreError {

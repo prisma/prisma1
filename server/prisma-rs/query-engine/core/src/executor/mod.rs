@@ -9,10 +9,13 @@ use crate::{
     query_builders::QueryBuilder,
     query_document::QueryDocument,
     result_ir::{Response, ResultIrBuilder},
-    CoreResult, OutputTypeRef, QueryResult, QuerySchemaRef, ResultResolutionStrategy,
+    CoreError, CoreResult, OutputType, OutputTypeRef, QueryResult, QuerySchemaRef, ResultResolutionStrategy,
 };
-use connector::{Identifier, Query, ReadQuery, ReadQueryResult, SingleReadQueryResult, WriteQueryResult};
-use prisma_models::{RecordFinder, ModelRef};
+use connector::{
+    filter::RecordFinder, Identifier, Query, ReadQuery, ReadQueryResult, SingleReadQueryResult, WriteQueryResult,
+};
+use prisma_models::{ModelRef, PrismaValue};
+use std::borrow::Borrow;
 
 /// Central query executor and main entry point into the query core.
 pub struct QueryExecutor {
@@ -53,14 +56,20 @@ impl QueryExecutor {
                     .map(|res| QueryResult::Read(res)),
 
                 (Query::Write(write), strategy) => {
+                    let model = write
+                        .extract_model()
+                        .expect("Expected root queries to have an associated model.");
+
                     let write_result = self.write_executor.execute(write)?;
+
                     match strategy {
-                        ResultResolutionStrategy::CoerceInto(typ) => unimplemented!(),
+                        ResultResolutionStrategy::CoerceInto(ref typ) => Self::coerce_result(write_result, typ),
                         ResultResolutionStrategy::Query(q) => match q {
                             Query::Read(ReadQuery::RecordQuery(mut rq)) => {
-                                rq.record_finder = Self::to_record_finder(&write_result, );
-                                self.read_executor.read_one(rq, vec![]).map(|res| QueryResult::Read(res))
-                            },
+                                // Inject required information into the query and execute
+                                rq.record_finder = Some(Self::to_record_finder(&write_result, model)?);
+                                self.read_executor.read_one(rq).map(|res| QueryResult::Read(res))
+                            }
                             _ => unreachable!(), // Invariant for now
                         },
                         ResultResolutionStrategy::None => unimplemented!(),
@@ -77,26 +86,56 @@ impl QueryExecutor {
         unimplemented!()
     }
 
-    fn to_record_finder(write_result: &WriteQueryResult, model: ModelRef) -> CoreResult<RecordFinder> {
-        unimplemented!()
-    }
+    /// Attempts to coerce the given write result into the provided output type.
+    fn coerce_result(result: WriteQueryResult, typ: &OutputTypeRef) -> CoreResult<QueryResult> {
+        let value: PrismaValue = match result.identifier {
+            Identifier::Id(id) => { // Requires
+                let value: PrismaValue = id.into();
 
-    fn coerce_result(&self, result: WriteQueryResult, typ: &OutputTypeRef) -> CoreResult<ReadQueryResult> {
-        match result.identifier {
-            Identifier::Id(id) => unimplemented!(),
-            Identifier::Count(c) => ReadQueryResult::Single(SingleReadQueryResult {
-                name: "".into(),
-                fields: vec![],
-                scalars: None,
-                nested: vec![],
-                lists: vec![],
-                id_field: String::new(),
-            }),
-            Identifier::Record(r) => unimplemented!(),
-            Identifier::None => unimplemented!(),
+                unimplemented!()
+            }
+            Identifier::Count(c) => PrismaValue::from(c), // Requires object with one field that is usize / int / float, or single scalar type.
+            Identifier::Record(r) => unimplemented!(), // Requires object. Try coercing all fields of the object.
+            Identifier::None => unimplemented!(), // Null?
         };
 
         unimplemented!()
+    }
+
+    fn coerce_type(val: PrismaValue, typ: &OutputTypeRef) -> CoreResult<()> {
+
+        match typ.borrow() {
+                    OutputType::Object(o) => unimplemented!(),
+                    OutputType::Opt(inner) => unimplemented!(),
+                    OutputType::Enum(e) => unimplemented!(),
+                    OutputType::List(inner) => unimplemented!(),
+                    OutputType::Scalar(s) => unimplemented!(),
+                };
+
+        unimplemented!()
+    }
+
+    fn coerce_scalar() -> CoreResult<()> {
+        unimplemented!()
+    }
+
+    /// Attempts to convert a write query result into a RecordFinder required for dependent queries.
+    /// Assumes ID field is used as dependent field (which is true for now in the current execution model).
+    fn to_record_finder(write_result: &WriteQueryResult, model: ModelRef) -> CoreResult<RecordFinder> {
+        let id_field = model.fields().id();
+
+        match &write_result.identifier {
+            Identifier::Id(id) => Ok(RecordFinder::new(id_field, id)),
+            Identifier::Record(r) => r
+                .collect_id(&id_field.name)
+                .map(|id_val| RecordFinder::new(id_field, id_val))
+                .map_err(|err| err.into()),
+
+            other => Err(CoreError::ConversionError(format!(
+                "Impossible conversion of write query result {:?} to RecordFinder.",
+                other
+            ))),
+        }
     }
 
     //    /// Legacy path
