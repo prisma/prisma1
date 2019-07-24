@@ -9,8 +9,21 @@ use std::{thread, time};
 
 const SCHEMA: &str = "DatabaseInspectorTest";
 
+fn setup() {
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!("[{}][{}] {}", record.target(), record.level(), message))
+        })
+        .level(log::LevelFilter::Debug)
+        .chain(std::io::stdout())
+        .apply()
+        .expect("fern configuration");
+}
+
 #[test]
 fn all_columns_types_must_work() {
+    setup();
+
     test_each_backend(
         |db_type, mut migration| {
             migration.create_table("User", move |t| {
@@ -203,6 +216,8 @@ fn all_columns_types_must_work() {
 
 #[test]
 fn is_required_must_work() {
+    setup();
+
     test_each_backend(
         |_, mut migration| {
             migration.create_table("User", |t| {
@@ -287,7 +302,6 @@ where
         let mut migration = Migration::new().schema(SCHEMA);
         migrationFn("sqlite", &mut migration);
         let mut inspector = sqlite(migration);
-        println!("Running the test function now");
         testFn(&mut inspector);
     }
     // println!("Testing with Postgres now");
@@ -368,10 +382,6 @@ fn sqlite(migration: Migration) -> sqlite::IntrospectionConnector {
 
 //     (Arc::new(inspector), queryable)
 // }
-
-fn string_to_static_str(s: String) -> &'static str {
-    Box::leak(s.into_boxed_str())
-}
 
 fn db_host_postgres() -> String {
     match std::env::var("IS_BUILDKITE") {
