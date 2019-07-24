@@ -3,8 +3,7 @@
 
 use barrel::{types, Migration};
 use database_introspection::*;
-use prisma_query::connector::Sqlite as SqliteDatabaseClient;
-use prisma_query::{Connectional, ResultSet};
+use prisma_query::connector::{Queryable, Sqlite as SqliteDatabaseClient};
 use std::sync::Arc;
 use std::{thread, time};
 
@@ -280,27 +279,25 @@ fn is_required_must_work() {
 fn test_each_backend<MigrationFn, TestFn>(mut migrationFn: MigrationFn, testFn: TestFn)
 where
     MigrationFn: FnMut(&'static str, &mut Migration) -> (),
-    TestFn: Fn(Arc<IntrospectionConnector>) -> (),
+    TestFn: Fn(&mut IntrospectionConnector) -> (),
 {
     println!("Testing with SQLite now");
     // SQLITE
     {
         let mut migration = Migration::new().schema(SCHEMA);
         migrationFn("sqlite", &mut migration);
-        let (inspector, connectional) = sqlite();
-        let full_sql = migration.make::<barrel::backend::Sqlite>();
-        run_full_sql(&connectional, &full_sql);
+        let mut inspector = sqlite(migration);
         println!("Running the test function now");
-        testFn(inspector);
+        testFn(&mut inspector);
     }
-    println!("Testing with Postgres now");
+    // println!("Testing with Postgres now");
     // // POSTGRES
     // {
     //     let mut migration = Migration::new().schema(SCHEMA);
     //     migrationFn("postgres", &mut migration);
-    //     let (inspector, connectional) = postgres();
+    //     let (inspector, queryable) = postgres();
     //     let full_sql = migration.make::<barrel::backend::Pg>();
-    //     run_full_sql(&connectional, &full_sql);
+    //     run_full_sql(&queryable, &full_sql);
     //     println!("Running the test function now");
     //     testFn(inspector);
     // }
@@ -309,60 +306,67 @@ where
     // {
     //     let mut migration = Migration::new().schema(SCHEMA);
     //     migrationFn("mysql", &mut migration);
-    //     let (inspector, connectional) = mysql();
+    //     let (inspector, queryable) = mysql();
     //     let full_sql = dbg!(migration.make::<barrel::backend::MySql>());
-    //     run_full_sql(&connectional, &full_sql);
+    //     run_full_sql(&queryable, &full_sql);
     //     println!("Running the test function now");
     //     testFn(inspector);
     // }
 }
 
-fn run_full_sql(connectional: &Arc<Connectional>, full_sql: &str) {
+fn run_full_sql(queryable: &mut Queryable, full_sql: &str) {
     for sql in full_sql.split(";") {
         dbg!(sql);
         if sql != "" {
-            connectional.query_on_raw_connection(&SCHEMA, &sql, &[]).unwrap();
+            queryable.query_raw(&sql, &[]).expect("executing SQL should work");
         }
     }
 }
 
-fn sqlite() -> (Arc<IntrospectionConnector>, Arc<Connectional>) {
+fn sqlite(migration: Migration) -> sqlite::IntrospectionConnector {
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
     let database_file_path = dbg!(format!("{}/{}.db", database_folder_path, SCHEMA));
-    let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
+    std::fs::remove_file(database_file_path.clone()).expect("remove database file");
 
-    let inspector = sqlite::IntrospectionConnector::new(&database_file_path).unwrap();
-    let connectional = Arc::clone(&inspector.connectional);
+    let full_sql = migration.make::<barrel::backend::Sqlite>();
+    let conn = rusqlite::Connection::open_in_memory().expect("opening SQLite connection should work");
+    conn.execute(
+        "ATTACH DATABASE ? as ?",
+        &vec![database_file_path.clone(), String::from(SCHEMA)],
+    )
+    .expect("attach SQLite database");
+    conn.execute_batch(&full_sql).expect("executing migration");
+    conn.close().expect("closing SQLite connection");
 
-    (Arc::new(inspector), connectional)
+    sqlite::IntrospectionConnector::new(&database_file_path, SCHEMA).expect("creating SQLite connector should work")
 }
 
 // fn postgres() -> (Arc<IntrospectionConnector>, Arc<Connectional>) {
 //     let url = format!("postgresql://postgres:prisma@{}:5432/db?schema={}", db_host_postgres(), SCHEMA);
 //     let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA));
-//     let setup_connectional = DatabaseInspector::postgres(url.to_string()).connectional;
+//     let setup_connectional = DatabaseInspector::postgres(url.to_string()).queryable;
 //     let _ = setup_connectional.query_on_raw_connection(&SCHEMA, &drop_schema, &[]);
 
 //     let inspector = DatabaseInspector::postgres(url.to_string());
-//     let connectional = Arc::clone(&inspector.connectional);
+//     let queryable = Arc::clone(&inspector.queryable);
 
-//     (Arc::new(inspector), connectional)
+//     (Arc::new(inspector), queryable)
 // }
 
 // fn mysql() -> (Arc<IntrospectionConnector>, Arc<Connectional>) {
 //     let url_without_db = format!("mysql://root:prisma@{}:3306", db_host_mysql());
 //     let drop_database = dbg!(format!("DROP DATABASE IF EXISTS `{}`;", SCHEMA));
 //     let create_database = dbg!(format!("CREATE DATABASE `{}`;", SCHEMA));
-//     let setup_connectional = DatabaseInspector::mysql(url_without_db.to_string()).connectional;
+//     let setup_connectional = DatabaseInspector::mysql(url_without_db.to_string()).queryable;
 //     let _ = setup_connectional.query_on_raw_connection(&SCHEMA, &drop_database, &[]);
 //     let _ = setup_connectional.query_on_raw_connection(&SCHEMA, &create_database, &[]);
 
 //     let url = format!("mysql://root:prisma@{}:3306/{}", db_host_mysql(),  SCHEMA);
 //     let inspector = DatabaseInspector::mysql(url.to_string());
-//     let connectional = Arc::clone(&inspector.connectional);
+//     let queryable = Arc::clone(&inspector.queryable);
 
-//     (Arc::new(inspector), connectional)
+//     (Arc::new(inspector), queryable)
 // }
 
 fn string_to_static_str(s: String) -> &'static str {

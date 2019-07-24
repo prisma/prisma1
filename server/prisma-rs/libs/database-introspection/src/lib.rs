@@ -12,7 +12,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 pub trait IntrospectionConnector {
     fn list_schemas(&self) -> Result<Vec<String>>;
-    fn introspect(&self, schema: &str) -> Result<DatabaseSchema>;
+    fn introspect(&mut self, schema: &str) -> Result<DatabaseSchema>;
 }
 
 pub struct DatabaseSchema {

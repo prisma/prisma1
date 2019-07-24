@@ -573,7 +573,7 @@ dependencies = [
  "postgres 0.16.0-rc.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)",
  "rusqlite 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.94 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.97 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.40 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 1.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

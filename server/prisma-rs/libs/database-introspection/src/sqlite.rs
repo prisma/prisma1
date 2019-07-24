@@ -1,33 +1,31 @@
 use super::*;
-use prisma_query::connector::Sqlite as SqliteDriver;
-use prisma_query::{ast::ParameterizedValue, Connectional};
-use std::sync::Arc;
+use prisma_query::ast::ParameterizedValue;
+use prisma_query::connector::{Queryable, Sqlite};
 
 pub struct IntrospectionConnector {
-    pub connectional: Arc<Connectional>,
+    pub queryable: Sqlite,
 }
 
 impl IntrospectionConnector {
-    pub fn new(file_path: &str) -> Result<IntrospectionConnector> {
-        let connectional = SqliteDriver::new(String::from(file_path), 1, false)?;
-        Ok(IntrospectionConnector {
-            connectional: Arc::new(connectional),
-        })
+    pub fn new(file_path: &str, db_name: &str) -> Result<IntrospectionConnector> {
+        let mut queryable = Sqlite::new(file_path)?;
+        queryable.attach_database(db_name)?;
+        Ok(IntrospectionConnector { queryable })
     }
 
-    fn get_table_names(&self, schema: &str) -> Vec<String> {
+    fn get_table_names(&mut self, schema: &str) -> Vec<String> {
         let sql = format!("SELECT name FROM {}.sqlite_master WHERE type='table'", schema);
 
-        let result_set = self.connectional.query_on_raw_connection(&schema, &sql, &[]).unwrap();
+        let result_set = self.queryable.query_raw(&sql, &[]).unwrap();
         let names = result_set
             .into_iter()
-            .map(|row| row.get_as_string("name").unwrap())
+            .map(|row| row.get("name").and_then(|x| x.to_string()).unwrap())
             .filter(|n| n != "sqlite_sequence")
             .collect();
         names
     }
 
-    fn get_table(&self, schema: &str, table: &str) -> Table {
+    fn get_table(&mut self, schema: &str, table: &str) -> Table {
         let introspected_columns = self.get_columns(&schema, &table);
         let introspected_foreign_keys = self.get_foreign_constraints(&schema, &table);
 
@@ -46,26 +44,26 @@ impl IntrospectionConnector {
         }
     }
 
-    fn get_columns(&self, schema: &str, table: &str) -> Vec<IntrospectedColumn> {
+    fn get_columns(&mut self, schema: &str, table: &str) -> Vec<IntrospectedColumn> {
         let sql = format!(r#"Pragma "{}".table_info ("{}")"#, schema, table);
 
-        let result_set = self.connectional.query_on_raw_connection(&schema, &sql, &[]).unwrap();
+        let result_set = self.queryable.query_raw(&sql, &[]).unwrap();
         let columns = result_set
             .into_iter()
             .map(|row| {
                 let default_value = match row.get("dflt_value") {
-                    Ok(ParameterizedValue::Text(v)) => Some(v.to_string()),
-                    Ok(ParameterizedValue::Null) => None,
-                    Ok(p) => panic!(format!("expectd a string value but got {:?}", p)),
-                    Err(err) => panic!(format!("{}", err)),
+                    Some(ParameterizedValue::Text(v)) => Some(v.to_string()),
+                    Some(ParameterizedValue::Null) => None,
+                    Some(p) => panic!(format!("expected a string value but got {:?}", p)),
+                    None => panic!("couldn't get dflt_value column"),
                 };
                 IntrospectedColumn {
-                    name: row.get_as_string("name").unwrap(),
+                    name: row.get("name").and_then(|x| x.to_string()).unwrap(),
                     table: table.to_string(),
-                    tpe: row.get_as_string("type").unwrap(),
-                    is_required: row.get_as_bool("notnull").unwrap(),
+                    tpe: row.get("type").and_then(|x| x.to_string()).unwrap(),
+                    is_required: row.get("notnull").and_then(|x| x.as_bool()).unwrap(),
                     default: default_value,
-                    pk: row.get_as_integer("pk").unwrap() as u32,
+                    pk: row.get("pk").and_then(|x| x.as_i64()).unwrap() as u32,
                 }
             })
             .collect();
@@ -73,19 +71,18 @@ impl IntrospectionConnector {
         columns
     }
 
-    fn get_foreign_constraints(&self, schema: &str, table: &str) -> Vec<IntrospectedForeignKey> {
+    fn get_foreign_constraints(&mut self, schema: &str, table: &str) -> Vec<IntrospectedForeignKey> {
         let sql = format!(r#"Pragma "{}".foreign_key_list("{}");"#, schema, table);
 
-        let result_set = self.connectional.query_on_raw_connection(&schema, &sql, &[]).unwrap();
-
+        let result_set = self.queryable.query_raw(&sql, &[]).unwrap();
         let foreign_keys = result_set
             .into_iter()
             .map(|row| IntrospectedForeignKey {
                 name: "".to_string(),
                 table: table.to_string(),
-                column: row.get_as_string("from").unwrap(),
-                referenced_table: row.get_as_string("table").unwrap(),
-                referenced_column: row.get_as_string("to").unwrap(),
+                column: row.get("from").and_then(|x| x.to_string()).unwrap(),
+                referenced_table: row.get("table").and_then(|x| x.to_string()).unwrap(),
+                referenced_column: row.get("to").and_then(|x| x.to_string()).unwrap(),
             })
             .collect();
 
@@ -98,7 +95,7 @@ impl super::IntrospectionConnector for IntrospectionConnector {
         Ok(vec![])
     }
 
-    fn introspect(&self, schema: &str) -> Result<DatabaseSchema> {
+    fn introspect(&mut self, schema: &str) -> Result<DatabaseSchema> {
         let tables = self
             .get_table_names(schema)
             .into_iter()
