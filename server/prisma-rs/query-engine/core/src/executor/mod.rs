@@ -52,7 +52,7 @@ impl QueryExecutor {
             .map(|query| match query {
                 (Query::Read(read), _) => self
                     .read_executor
-                    .execute(read, vec![])
+                    .execute(read, &vec![])
                     .map(|res| QueryResult::Read(res)),
 
                 (Query::Write(write), strategy) => {
@@ -79,38 +79,32 @@ impl QueryExecutor {
             .collect::<CoreResult<Vec<_>>>()?;
 
         // 4. Build IR response / Parse results into IR response
-        // Ok(results
-        //     .into_iter()
-        //     .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
-        //     .build())
-        unimplemented!()
+        Ok(results
+            .into_iter()
+            .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
+            .build())
     }
 
     /// Attempts to coerce the given write result into the provided output type.
     fn coerce_result(result: WriteQueryResult, typ: &OutputTypeRef) -> CoreResult<QueryResult> {
         let value: PrismaValue = match result.identifier {
-            Identifier::Id(id) => { // Requires
-                let value: PrismaValue = id.into();
-
-                unimplemented!()
-            }
+            Identifier::Id(id) => id.into(),
             Identifier::Count(c) => PrismaValue::from(c), // Requires object with one field that is usize / int / float, or single scalar type.
-            Identifier::Record(r) => unimplemented!(), // Requires object. Try coercing all fields of the object.
-            Identifier::None => unimplemented!(), // Null?
+            Identifier::Record(r) => unimplemented!(),    // Requires object. Try coercing all fields of the object.
+            Identifier::None => unimplemented!(),         // Null?
         };
 
         unimplemented!()
     }
 
-    fn coerce_type(val: PrismaValue, typ: &OutputTypeRef) -> CoreResult<()> {
-
+    fn coerce_value_type(val: PrismaValue, typ: &OutputTypeRef) -> CoreResult<()> {
         match typ.borrow() {
-                    OutputType::Object(o) => unimplemented!(),
-                    OutputType::Opt(inner) => unimplemented!(),
-                    OutputType::Enum(e) => unimplemented!(),
-                    OutputType::List(inner) => unimplemented!(),
-                    OutputType::Scalar(s) => unimplemented!(),
-                };
+            OutputType::Object(o) => unimplemented!(),
+            OutputType::Opt(inner) => unimplemented!(),
+            OutputType::Enum(e) => unimplemented!(),
+            OutputType::List(inner) => unimplemented!(),
+            OutputType::Scalar(s) => unimplemented!(),
+        };
 
         unimplemented!()
     }

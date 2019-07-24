@@ -143,7 +143,7 @@ impl From<i64> for PrismaValue {
 
 impl From<usize> for PrismaValue {
     fn from(u: usize) -> Self {
-        PrismaValue::Int(u as usize)
+        PrismaValue::Int(u as i64)
     }
 }
 

@@ -7,8 +7,8 @@ use prisma_models::prelude::*;
 pub enum ReadQuery {
     RecordQuery(RecordQuery),
     ManyRecordsQuery(ManyRecordsQuery),
-    RelatedRecordQuery(RelatedRecordQuery),
-    ManyRelatedRecordsQuery(ManyRelatedRecordsQuery),
+    RelatedRecordsQuery(RelatedRecordsQuery),
+    // ManyRelatedRecordsQuery(ManyRelatedRecordsQuery),
 }
 
 #[derive(Debug, Clone)]
@@ -31,7 +31,7 @@ pub struct ManyRecordsQuery {
 }
 
 #[derive(Debug, Clone)]
-pub struct RelatedRecordQuery {
+pub struct RelatedRecordsQuery {
     pub name: String,
     pub parent_field: RelationFieldRef,
     pub args: QueryArguments,
@@ -40,12 +40,12 @@ pub struct RelatedRecordQuery {
     pub selection_order: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
-pub struct ManyRelatedRecordsQuery {
-    pub name: String,
-    pub parent_field: RelationFieldRef,
-    pub args: QueryArguments,
-    pub selected_fields: SelectedFields,
-    pub nested: Vec<ReadQuery>,
-    pub selection_order: Vec<String>,
-}
+// #[derive(Debug, Clone)]
+// pub struct ManyRelatedRecordsQuery {
+//     pub name: String,
+//     pub parent_field: RelationFieldRef,
+//     pub args: QueryArguments,
+//     pub selected_fields: SelectedFields,
+//     pub nested: Vec<ReadQuery>,
+//     pub selection_order: Vec<String>,
+// }

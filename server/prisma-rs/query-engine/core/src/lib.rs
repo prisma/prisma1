@@ -35,6 +35,7 @@ pub enum ResultResolutionStrategy {
 }
 
 /// Temporary result type to tie together dependent query execution and the old result structures
+#[derive(Debug)]
 pub enum QueryResult {
     Read(ReadQueryResult),
     Direct(result_ir::Response),

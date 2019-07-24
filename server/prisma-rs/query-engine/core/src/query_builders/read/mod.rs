@@ -1,12 +1,12 @@
 mod many;
-mod many_relation;
+mod relation;
 mod one;
-mod one_relation;
+// mod one_relation;
 
 pub use many::*;
-pub use many_relation::*;
+pub use relation::*;
 pub use one::*;
-pub use one_relation::*;
+// pub use one_relation::*;
 
 use crate::query_builders::{Builder, ParsedField, QueryBuilderResult};
 use connector::read_ast::ReadQuery;
@@ -18,8 +18,8 @@ use std::sync::Arc;
 pub enum ReadQueryBuilder {
     ReadOneRecordBuilder(ReadOneRecordBuilder),
     ReadManyRecordsBuilder(ReadManyRecordsBuilder),
-    ReadOneRelationRecordBuilder(ReadOneRelationRecordBuilder),
-    ReadManyRelationRecordsBuilder(ReadManyRelationRecordsBuilder),
+    RelatedRecordsBuilder(RelatedRecordsBuilder),
+    // ReadManyRelationRecordsBuilder(ReadManyRelationRecordsBuilder),
 }
 
 impl Builder<ReadQuery> for ReadQueryBuilder {
@@ -27,8 +27,8 @@ impl Builder<ReadQuery> for ReadQueryBuilder {
         match self {
             ReadQueryBuilder::ReadOneRecordBuilder(b) => b.build(),
             ReadQueryBuilder::ReadManyRecordsBuilder(b) => b.build(),
-            ReadQueryBuilder::ReadOneRelationRecordBuilder(b) => b.build(),
-            ReadQueryBuilder::ReadManyRelationRecordsBuilder(b) => b.build(),
+            ReadQueryBuilder::RelatedRecordsBuilder(b) => b.build(),
+            // ReadQueryBuilder::ReadManyRelationRecordsBuilder(b) => b.build(),
         }
     }
 }
@@ -76,7 +76,11 @@ pub fn collect_nested_queries(from: Vec<ParsedField>, model: &ModelRef) -> Query
                     let model = rf.related_model();
                     let parent = Arc::clone(&rf);
 
-                    Some(infer_nested(selected_field, &model, parent))
+                    Some(ReadQueryBuilder::RelatedRecordsBuilder(RelatedRecordsBuilder::new(
+            model,
+            parent,
+            selected_field,
+        )))
                 }
             }
         })
@@ -86,18 +90,18 @@ pub fn collect_nested_queries(from: Vec<ParsedField>, model: &ModelRef) -> Query
         .collect::<QueryBuilderResult<Vec<ReadQuery>>>()
 }
 
-fn infer_nested(field: ParsedField, model: &ModelRef, parent: RelationFieldRef) -> ReadQueryBuilder {
-    if parent.is_list {
-        ReadQueryBuilder::ReadManyRelationRecordsBuilder(ReadManyRelationRecordsBuilder::new(
-            Arc::clone(model),
-            Arc::clone(&parent),
-            field,
-        ))
-    } else {
-        ReadQueryBuilder::ReadOneRelationRecordBuilder(ReadOneRelationRecordBuilder::new(
-            Arc::clone(model),
-            Arc::clone(&parent),
-            field,
-        ))
-    }
-}
+// fn infer_nested(field: ParsedField, model: &ModelRef, parent: RelationFieldRef) -> ReadQueryBuilder {
+//     if parent.is_list {
+//         ReadQueryBuilder::ReadManyRelationRecordsBuilder(ReadManyRelationRecordsBuilder::new(
+//             Arc::clone(model),
+//             Arc::clone(&parent),
+//             field,
+//         ))
+//     } else {
+//         ReadQueryBuilder::RelatedRecordsBuilder(RelatedRecordsBuilder::new(
+//             Arc::clone(model),
+//             Arc::clone(&parent),
+//             field,
+//         ))
+//     }
+// }

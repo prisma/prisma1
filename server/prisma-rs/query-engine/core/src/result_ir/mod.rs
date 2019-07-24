@@ -11,6 +11,7 @@
 mod lists;
 mod maps;
 
+use crate::QueryResult;
 use connector::{QueryArguments, ReadQueryResult};
 use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
@@ -41,7 +42,7 @@ pub enum Item {
 
 /// A serialization IR builder utility
 #[derive(Debug)]
-pub struct ResultIrBuilder(Vec<ReadQueryResult>);
+pub struct ResultIrBuilder(Vec<QueryResult>);
 
 impl ResultIrBuilder {
     pub fn new() -> Self {
@@ -49,7 +50,7 @@ impl ResultIrBuilder {
     }
 
     /// Add a single query result to the builder
-    pub fn add(mut self, q: ReadQueryResult) -> Self {
+    pub fn add(mut self, q: QueryResult) -> Self {
         self.0.push(q);
         self
     }
@@ -58,14 +59,14 @@ impl ResultIrBuilder {
     pub fn build(self) -> Vec<Response> {
         self.0.into_iter().fold(vec![], |mut vec, res| {
             vec.push(match res {
-                ReadQueryResult::Single(query) => {
+                QueryResult::Read(ReadQueryResult::Single(query)) => {
                     let query_name = query.name.clone();
                     match maps::build_map(query) {
                         Some(m) => Response::Data(query_name, Item::Map(None, m)),
                         None => Response::Data(query_name, Item::Value(PrismaValue::Null)),
                     }
                 }
-                ReadQueryResult::Many(query) => {
+                QueryResult::Read(ReadQueryResult::Many(query)) => {
                     let query_name = query.name.clone();
                     let query_args = query.query_arguments.clone();
                     let mut result = lists::build_list(query);
@@ -74,7 +75,9 @@ impl ResultIrBuilder {
                     trim_records(&mut result, &query_args);
                     Response::Data(query_name, Item::List(result))
                 }
+                QueryResult::Direct(resp) => resp,
             });
+
             vec
         })
     }

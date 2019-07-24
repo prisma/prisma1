@@ -1,9 +1,9 @@
 use super::*;
 use crate::query_builders::{utils, Builder, ParsedField, QueryBuilderResult};
-use connector::read_ast::{ManyRelatedRecordsQuery, ReadQuery};
+use connector::read_ast::{RelatedRecordsQuery, ReadQuery};
 use prisma_models::{ModelRef, RelationFieldRef};
 
-pub struct ReadManyRelationRecordsBuilder {
+pub struct RelatedRecordsBuilder {
     /// The model that is queried.
     model: ModelRef,
 
@@ -14,13 +14,13 @@ pub struct ReadManyRelationRecordsBuilder {
     field: ParsedField,
 }
 
-impl ReadManyRelationRecordsBuilder {
+impl RelatedRecordsBuilder {
     pub fn new(model: ModelRef, parent: RelationFieldRef, field: ParsedField) -> Self {
         Self { model, parent, field }
     }
 }
 
-impl Builder<ReadQuery> for ReadManyRelationRecordsBuilder {
+impl Builder<ReadQuery> for RelatedRecordsBuilder {
     fn build(self) -> QueryBuilderResult<ReadQuery> {
         let args = utils::extract_query_args(self.field.arguments, &self.model)?;
         let name = self.field.alias.unwrap_or(self.field.name);
@@ -30,7 +30,7 @@ impl Builder<ReadQuery> for ReadManyRelationRecordsBuilder {
         let nested = collect_nested_queries(sub_selections, &self.model)?;
         let parent_field = self.parent;
 
-        Ok(ReadQuery::ManyRelatedRecordsQuery(ManyRelatedRecordsQuery {
+        Ok(ReadQuery::RelatedRecordsQuery(RelatedRecordsQuery {
             name,
             parent_field,
             args,
