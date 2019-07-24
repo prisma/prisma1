@@ -1,12 +1,10 @@
 mod many;
-mod relation;
 mod one;
-// mod one_relation;
+mod relation;
 
 pub use many::*;
-pub use relation::*;
 pub use one::*;
-// pub use one_relation::*;
+pub use relation::*;
 
 use crate::query_builders::{Builder, ParsedField, QueryBuilderResult};
 use connector::read_ast::ReadQuery;
@@ -77,10 +75,10 @@ pub fn collect_nested_queries(from: Vec<ParsedField>, model: &ModelRef) -> Query
                     let parent = Arc::clone(&rf);
 
                     Some(ReadQueryBuilder::RelatedRecordsBuilder(RelatedRecordsBuilder::new(
-            model,
-            parent,
-            selected_field,
-        )))
+                        model,
+                        parent,
+                        selected_field,
+                    )))
                 }
             }
         })
@@ -89,19 +87,3 @@ pub fn collect_nested_queries(from: Vec<ParsedField>, model: &ModelRef) -> Query
         .map(|builder| builder.build())
         .collect::<QueryBuilderResult<Vec<ReadQuery>>>()
 }
-
-// fn infer_nested(field: ParsedField, model: &ModelRef, parent: RelationFieldRef) -> ReadQueryBuilder {
-//     if parent.is_list {
-//         ReadQueryBuilder::ReadManyRelationRecordsBuilder(ReadManyRelationRecordsBuilder::new(
-//             Arc::clone(model),
-//             Arc::clone(&parent),
-//             field,
-//         ))
-//     } else {
-//         ReadQueryBuilder::RelatedRecordsBuilder(RelatedRecordsBuilder::new(
-//             Arc::clone(model),
-//             Arc::clone(&parent),
-//             field,
-//         ))
-//     }
-// }

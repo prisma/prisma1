@@ -1,6 +1,6 @@
 use super::*;
 use crate::query_builders::{utils, Builder, ParsedField, QueryBuilderResult};
-use connector::read_ast::{RelatedRecordsQuery, ReadQuery};
+use connector::read_ast::{ReadQuery, RelatedRecordsQuery};
 use prisma_models::{ModelRef, RelationFieldRef};
 
 pub struct RelatedRecordsBuilder {
