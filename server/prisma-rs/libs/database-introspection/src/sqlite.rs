@@ -15,7 +15,6 @@ impl IntrospectionConnector {
 
     fn get_table_names(&mut self, schema: &str) -> Vec<String> {
         let sql = format!("SELECT name FROM {}.sqlite_master WHERE type='table'", schema);
-
         let result_set = self.queryable.query_raw(&sql, &[]).unwrap();
         let names = result_set
             .into_iter()
@@ -25,18 +24,14 @@ impl IntrospectionConnector {
         names
     }
 
-    fn get_table(&mut self, schema: &str, table: &str) -> Table {
-        let introspected_columns = self.get_columns(&schema, &table);
-        let introspected_foreign_keys = self.get_foreign_constraints(&schema, &table);
-
-        let mut columns_copy = introspected_columns.clone();
-        columns_copy.sort_by_key(|c| c.pk);
+    fn get_table(&mut self, schema: &str, name: &str) -> Table {
+        let introspected_columns = self.get_columns(&schema, name);
+        let introspected_foreign_keys = self.get_foreign_keys(&schema, name);
         Table {
-            name: table.to_string(),
+            name: name.to_string(),
             columns: convert_introspected_columns(
                 introspected_columns,
                 introspected_foreign_keys,
-                Box::new(column_type),
             ),
             indexes: Vec::new(),
             primary_key: None,
@@ -71,9 +66,8 @@ impl IntrospectionConnector {
         columns
     }
 
-    fn get_foreign_constraints(&mut self, schema: &str, table: &str) -> Vec<IntrospectedForeignKey> {
+    fn get_foreign_keys(&mut self, schema: &str, table: &str) -> Vec<IntrospectedForeignKey> {
         let sql = format!(r#"Pragma "{}".foreign_key_list("{}");"#, schema, table);
-
         let result_set = self.queryable.query_raw(&sql, &[]).unwrap();
         let foreign_keys = result_set
             .into_iter()
@@ -112,7 +106,6 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 fn convert_introspected_columns(
     columns: Vec<IntrospectedColumn>,
     foreign_keys: Vec<IntrospectedForeignKey>,
-    column_type: Box<Fn(&IntrospectedColumn) -> ColumnType>,
 ) -> Vec<Column> {
     columns
         .iter()
@@ -123,7 +116,7 @@ fn convert_introspected_columns(
             };
             Column {
                 name: c.name.clone(),
-                tpe: column_type(c),
+                tpe: get_column_type(c),
                 arity: arity,
                 default: None,
                 auto_increment: None,
@@ -151,7 +144,7 @@ pub struct IntrospectedColumn {
     pub pk: u32,
 }
 
-fn column_type(column: &IntrospectedColumn) -> ColumnType {
+fn get_column_type(column: &IntrospectedColumn) -> ColumnType {
     let tpe = column.tpe.to_lowercase();
     let family = match tpe.as_ref() {
         "integer" => ColumnTypeFamily::Int,
