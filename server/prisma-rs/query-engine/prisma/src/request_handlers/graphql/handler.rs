@@ -1,6 +1,6 @@
 use super::protocol_adapter::GraphQLProtocolAdapter;
 use crate::{context::PrismaContext, serializers::json, PrismaRequest, PrismaResult, RequestHandler};
-use core::result_ir;
+use core::response_ir;
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -33,7 +33,7 @@ impl RequestHandler for GraphQlRequestHandler {
 fn handle_graphql_query(
     req: PrismaRequest<GraphQlBody>,
     ctx: &PrismaContext,
-) -> PrismaResult<Vec<result_ir::Response>> {
+) -> PrismaResult<Vec<response_ir::Response>> {
     debug!("Incoming GQL query: {:?}", &req.body.query);
 
     let gql_doc = gql::parse_query(&req.body.query)?;

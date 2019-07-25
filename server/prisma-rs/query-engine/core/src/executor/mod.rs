@@ -1,4 +1,3 @@
-//mod pipeline;
 mod read;
 mod write;
 
@@ -8,11 +7,12 @@ pub use write::WriteQueryExecutor;
 use crate::{
     query_builders::QueryBuilder,
     query_document::QueryDocument,
-    result_ir::{Response, ResultIrBuilder},
-    CoreError, CoreResult, OutputType, OutputTypeRef, QueryResult, QuerySchemaRef, ResultResolutionStrategy,
+    response_ir::{Response, ResultIrBuilder},
+    CoreError, CoreResult, OutputType, OutputTypeRef, QueryPair, QuerySchemaRef, ResultPair, ResultResolutionStrategy,
 };
 use connector::{
-    filter::RecordFinder, Identifier, Query, ReadQuery, ReadQueryResult, SingleReadQueryResult, WriteQueryResult,
+    filter::RecordFinder, Identifier, Query, QueryResult, ReadQuery, ReadQueryResult, SingleReadQueryResult,
+    WriteQueryResult,
 };
 use prisma_models::{ModelRef, PrismaValue};
 use std::borrow::Borrow;
@@ -47,71 +47,109 @@ impl QueryExecutor {
         // ...
 
         // 3. Execute query plan
-        let results: Vec<QueryResult> = queries
-            .into_iter()
-            .map(|query| match query {
-                (Query::Read(read), _) => self
-                    .read_executor
-                    .execute(read, &vec![])
-                    .map(|res| QueryResult::Read(res)),
-
-                (Query::Write(write), strategy) => {
-                    let model = write
-                        .extract_model()
-                        .expect("Expected root queries to have an associated model.");
-
-                    let write_result = self.write_executor.execute(write)?;
-
-                    match strategy {
-                        ResultResolutionStrategy::CoerceInto(ref typ) => Self::coerce_result(write_result, typ),
-                        ResultResolutionStrategy::Query(q) => match q {
-                            Query::Read(ReadQuery::RecordQuery(mut rq)) => {
-                                // Inject required information into the query and execute
-                                rq.record_finder = Some(Self::to_record_finder(&write_result, model)?);
-                                self.read_executor.read_one(rq).map(|res| QueryResult::Read(res))
-                            }
-                            _ => unreachable!(), // Invariant for now
-                        },
-                        ResultResolutionStrategy::None => unimplemented!(),
-                    }
-                }
-            })
-            .collect::<CoreResult<Vec<_>>>()?;
+        let results: Vec<ResultPair> = self.execute_queries(queries)?;
 
         // 4. Build IR response / Parse results into IR response
-        Ok(results
-            .into_iter()
-            .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
-            .build())
+        // Ok(results
+        //     .into_iter()
+        //     .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
+        //     .build())
+        unimplemented!()
     }
 
-    /// Attempts to coerce the given write result into the provided output type.
-    fn coerce_result(result: WriteQueryResult, typ: &OutputTypeRef) -> CoreResult<QueryResult> {
-        let value: PrismaValue = match result.identifier {
-            Identifier::Id(id) => id.into(),
-            Identifier::Count(c) => PrismaValue::from(c), // Requires object with one field that is usize / int / float, or single scalar type.
-            Identifier::Record(r) => unimplemented!(),    // Requires object. Try coercing all fields of the object.
-            Identifier::None => unimplemented!(),         // Null?
+    fn execute_queries(&self, queries: Vec<QueryPair>) -> CoreResult<Vec<ResultPair>> {
+        queries.into_iter().map(|query| self.execute_query(query)).collect()
+    }
+
+    fn execute_query(&self, query: QueryPair) -> CoreResult<ResultPair> {
+        let (query, strategy) = query;
+        let model_opt = query.extract_model();
+
+        let query_result = match query {
+            Query::Read(read) => unimplemented!(),
+            // self
+            //     .read_executor
+            //     .execute(read, &vec![])
+            //     .map(|res| {
+            //         let res = QueryResult::Read(res);
+            //         match strategy {
+            //             ResultResolutionStrategy::Serialize(ref typ) => ResultPair(),
+            //             ResultResolutionStrategy::Dependent(dependent_pair) => match *dependent_pair {
+            //                 (Query::Read(ReadQuery::RecordQuery(mut rq)), strategy) => {
+            //                     // Inject required information into the query and execute
+            //                     rq.record_finder = Some(Self::to_record_finder(&write_result, model)?);
+            //                     self.read_executor.read_one(rq).map(|res| QueryResult::Read(res))
+            //                 }
+            //                 _ => unreachable!(), // Invariant for now
+            //             },
+            //         }}),
+            Query::Write(write) => {
+                // let model = write
+                //     .extract_model()
+                //     .expect("Expected write queries to have an associated model.");
+
+                // self.write_executor.execute(write).map(|res| {
+                //     match strategy {
+                //     ResultResolutionStrategy::Serialize(ref typ) => ,
+                //     ResultResolutionStrategy::Dependent(dependent_pair) => match *dependent_pair {
+                //         (Query::Read(ReadQuery::RecordQuery(mut rq)), strategy) => {
+                //             // Inject required information into the query and execute
+                //             rq.record_finder = Some(Self::to_record_finder(&write_result, model)?);
+                //             self.read_executor.read_one(rq).map(|res| QueryResult::Read(res))
+                //         }
+                //         _ => unreachable!(), // Invariant for now
+                //     },
+                // }})
+                // })
+                unimplemented!()
+            }
         };
 
+        self.resolve_result(query_result, strategy)
+    }
+
+    fn resolve_result(result: QueryResult, strategy: ResultResolutionStrategy, model: Option<ModelRef>) -> CoreResult<ResultPair> {
+        // match strategy {
+            //             ResultResolutionStrategy::Serialize(ref typ) => ResultPair(),
+            //             ResultResolutionStrategy::Dependent(dependent_pair) => match *dependent_pair {
+            //                 (Query::Read(ReadQuery::RecordQuery(mut rq)), strategy) => {
+            //                     // Inject required information into the query and execute
+            //                     rq.record_finder = Some(Self::to_record_finder(&write_result, model)?);
+            //                     self.read_executor.read_one(rq).map(|res| QueryResult::Read(res))
+            //                 }
+            //                 _ => unreachable!(), // Invariant for now
+            //             },
+            //         }}),
         unimplemented!()
     }
 
-    fn coerce_value_type(val: PrismaValue, typ: &OutputTypeRef) -> CoreResult<()> {
-        match typ.borrow() {
-            OutputType::Object(o) => unimplemented!(),
-            OutputType::Opt(inner) => unimplemented!(),
-            OutputType::Enum(e) => unimplemented!(),
-            OutputType::List(inner) => unimplemented!(),
-            OutputType::Scalar(s) => unimplemented!(),
-        };
+    // /// Attempts to coerce the given write result into the provided output type.
+    // fn coerce_result(result: WriteQueryResult, typ: &OutputTypeRef) -> CoreResult<QueryResult> {
+    //     let value: PrismaValue = match result.identifier {
+    //         Identifier::Id(id) => id.into(),
+    //         Identifier::Count(c) => PrismaValue::from(c), // Requires object with one field that is usize / int / float, or single scalar type.
+    //         Identifier::Record(r) => unimplemented!(),    // Requires object. Try coercing all fields of the object.
+    //         Identifier::None => unimplemented!(),         // Null?
+    //     };
 
-        unimplemented!()
-    }
+    //     unimplemented!()
+    // }
 
-    fn coerce_scalar() -> CoreResult<()> {
-        unimplemented!()
-    }
+    // fn coerce_value_type(val: PrismaValue, typ: &OutputTypeRef) -> CoreResult<()> {
+    //     match typ.borrow() {
+    //         OutputType::Object(o) => unimplemented!(),
+    //         OutputType::Opt(inner) => unimplemented!(),
+    //         OutputType::Enum(e) => unimplemented!(),
+    //         OutputType::List(inner) => unimplemented!(),
+    //         OutputType::Scalar(s) => unimplemented!(),
+    //     };
+
+    //     unimplemented!()
+    // }
+
+    // fn coerce_scalar() -> CoreResult<()> {
+    //     unimplemented!()
+    // }
 
     /// Attempts to convert a write query result into a RecordFinder required for dependent queries.
     /// Assumes ID field is used as dependent field (which is true for now in the current execution model).
@@ -131,40 +169,6 @@ impl QueryExecutor {
             ))),
         }
     }
-
-    //    /// Legacy path
-    //    /// Can be given a list of both ReadQueries and WriteQueries
-    //    ///
-    //    /// Will execute WriteQueries first, then all ReadQueries, while preserving order.
-    //    pub fn exec_all(&self, queries: Vec<Query>) -> CoreResult<Vec<ReadQueryResult>> {
-    //        // Give all queries to the pipeline module
-    //        let mut pipeline = QueryPipeline::from(queries);
-    //
-    //        // Execute prefetch queries for destructive writes
-    //        let (idx, queries): (Vec<_>, Vec<_>) = pipeline.prefetch().into_iter().unzip();
-    //        let results = self.read_executor.execute(&queries)?;
-    //        pipeline.store_prefetch(idx.into_iter().zip(results).collect());
-    //
-    //        // Execute write queries and generate required read queries
-    //        let (idx, writes): (Vec<_>, Vec<_>) = pipeline.get_writes().into_iter().unzip();
-    //        let results = self.write_executor.execute(writes)?;
-    //        let (idx, reads): (Vec<_>, Vec<_>) = pipeline
-    //            .process_writes(idx.into_iter().zip(results).collect())
-    //            .into_iter()
-    //            .unzip();
-    //
-    //        // Execute read queries created by write-queries
-    //        let results = self.read_executor.execute(&reads)?;
-    //        pipeline.store_reads(idx.into_iter().zip(results.into_iter()).collect());
-    //
-    //        // Now execute all remaining reads
-    //        let (idx, queries): (Vec<_>, Vec<_>) = pipeline.get_reads().into_iter().unzip();
-    //        let results = self.read_executor.execute(&queries)?;
-    //        pipeline.store_reads(idx.into_iter().zip(results).collect());
-    //
-    //        // Consume pipeline into return value
-    //        Ok(pipeline.consume())
-    //    }
 
     /// Returns db name used in the executor.
     pub fn db_name(&self) -> String {

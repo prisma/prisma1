@@ -67,7 +67,7 @@ impl QueryBuilder {
                     .expect("Expected Query object fields to always have an associated operation.");
 
                 self.map_read(parsed_field, field_operation)
-                    .map(|res| (res, ResultResolutionStrategy::None))
+                    .map(|res| (res, ResultResolutionStrategy::Serialize(Arc::clone(&field.field_type))))
             })
             .collect()
     }

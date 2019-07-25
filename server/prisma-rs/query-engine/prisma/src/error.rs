@@ -1,4 +1,4 @@
-use core::{result_ir, CoreError};
+use core::{response_ir, CoreError};
 use datamodel::errors::ErrorCollection;
 use failure::{Error, Fail};
 use graphql_parser::query::ParseError as GqlParseError;
@@ -40,10 +40,10 @@ pub enum PrismaError {
 }
 
 /// Helps to handle gracefully handle errors as a response.
-impl Into<result_ir::Response> for PrismaError {
-    fn into(self) -> result_ir::Response {
+impl Into<response_ir::Response> for PrismaError {
+    fn into(self) -> response_ir::Response {
         let error_msg = format!("{}", self);
-        result_ir::Response::Error(error_msg)
+        response_ir::Response::Error(error_msg)
     }
 }
 

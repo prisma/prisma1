@@ -1,20 +1,24 @@
-//! Prisma Intermediate Data Representation
+//! Prisma Response (Intermediate Data Representation)
 //!
-//! The data format returned via `PrismaQueryResult` isn't
-//! very convenient to work with. This module takes care of
-//! processing the results and transforming them into a
-//! different AST
+//! This module takes care of processing the results
+//! and transforming them into a different AST.
 //!
-//! This IR (intermediate representation) is meant for general
-//! processing and storage. It can also be easily serialized.
+//! This IR is meant for general processing and storage.
+//! It can also be easily serialized.
 
 mod lists;
 mod maps;
 
-use crate::QueryResult;
+use crate::ResultPair;
 use connector::{QueryArguments, ReadQueryResult};
 use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
+
+/// A `key -> value` map to an IR item
+pub type Map = IndexMap<String, Item>;
+
+/// A list of IR items
+pub type List = Vec<Item>;
 
 /// A response can either be some `key-value` data representation
 /// or an error that occured.
@@ -25,12 +29,6 @@ pub enum Response {
     Error(String), // FIXME: Use actual error type
 }
 
-/// A `key -> value` map to an IR item
-pub type Map = IndexMap<String, Item>;
-
-/// A list of IR items
-pub type List = Vec<Item>;
-
 /// An IR item that either expands to a subtype or leaf-record
 #[derive(Debug)]
 pub enum Item {
@@ -40,9 +38,9 @@ pub enum Item {
     Value(PrismaValue),
 }
 
-/// A serialization IR builder utility
+/// An IR builder utility
 #[derive(Debug)]
-pub struct ResultIrBuilder(Vec<QueryResult>);
+pub struct ResultIrBuilder(Vec<ResultPair>);
 
 impl ResultIrBuilder {
     pub fn new() -> Self {
@@ -50,36 +48,37 @@ impl ResultIrBuilder {
     }
 
     /// Add a single query result to the builder
-    pub fn add(mut self, q: QueryResult) -> Self {
+    pub fn add(mut self, q: ResultPair) -> Self {
         self.0.push(q);
         self
     }
 
     /// Parse collected queries into the return wrapper type
     pub fn build(self) -> Vec<Response> {
-        self.0.into_iter().fold(vec![], |mut vec, res| {
-            vec.push(match res {
-                QueryResult::Read(ReadQueryResult::Single(query)) => {
-                    let query_name = query.name.clone();
-                    match maps::build_map(query) {
-                        Some(m) => Response::Data(query_name, Item::Map(None, m)),
-                        None => Response::Data(query_name, Item::Value(PrismaValue::Null)),
-                    }
-                }
-                QueryResult::Read(ReadQueryResult::Many(query)) => {
-                    let query_name = query.name.clone();
-                    let query_args = query.query_arguments.clone();
-                    let mut result = lists::build_list(query);
+        unimplemented!()
+        // self.0.into_iter().fold(vec![], |mut vec, res| {
+        //     vec.push(match res {
+        //         QueryResult::Read(ReadQueryResult::Single(query)) => {
+        //             let query_name = query.name.clone();
+        //             match maps::build_map(query) {
+        //                 Some(m) => Response::Data(query_name, Item::Map(None, m)),
+        //                 None => Response::Data(query_name, Item::Value(PrismaValue::Null)),
+        //             }
+        //         }
+        //         QueryResult::Read(ReadQueryResult::Many(query)) => {
+        //             let query_name = query.name.clone();
+        //             let query_args = query.query_arguments.clone();
+        //             let mut result = lists::build_list(query);
 
-                    // Trim excess data from the processed result set
-                    trim_records(&mut result, &query_args);
-                    Response::Data(query_name, Item::List(result))
-                }
-                QueryResult::Direct(resp) => resp,
-            });
+        //             // Trim excess data from the processed result set
+        //             trim_records(&mut result, &query_args);
+        //             Response::Data(query_name, Item::List(result))
+        //         }
+        //         QueryResult::Direct(resp) => resp,
+        //     });
 
-            vec
-        })
+        //     vec
+        // })
     }
 }
 
@@ -87,8 +86,7 @@ impl ResultIrBuilder {
 /// This would be the right place to add pagination markers (has next page, etc.).
 pub fn trim_records(data: &mut Vec<Item>, query_args: &QueryArguments) {
     // The query engine reverses lists when querying for `last`, so we need to reverse again to have the intended order.
-    let reversed = query_args.last.is_some();
-    if reversed {
+    if query_args.last.is_some() {
         data.reverse();
     }
 
