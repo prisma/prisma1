@@ -8,6 +8,28 @@ pub struct IntrospectionConnector {
     pub queryable: Sqlite,
 }
 
+impl super::IntrospectionConnector for IntrospectionConnector {
+    fn list_schemas(&self) -> Result<Vec<String>> {
+        Ok(vec![])
+    }
+
+    fn introspect(&mut self, schema: &str) -> Result<DatabaseSchema> {
+        debug!("Introspecting schema '{}'", schema);
+        let tables = self
+            .get_table_names(schema)
+            .into_iter()
+            .map(|t| self.get_table(schema, &t))
+            .collect();
+        Ok(DatabaseSchema {
+            // There's no enum type in SQLite.
+            enums: vec![],
+            // There are no sequences in SQLite.
+            sequences: vec![],
+            tables: tables,
+        })
+    }
+}
+
 impl IntrospectionConnector {
     pub fn new(file_path: &str, db_name: &str) -> Result<IntrospectionConnector> {
         debug!(
@@ -128,26 +150,23 @@ impl IntrospectionConnector {
     }
 }
 
-impl super::IntrospectionConnector for IntrospectionConnector {
-    fn list_schemas(&self) -> Result<Vec<String>> {
-        Ok(vec![])
-    }
+#[derive(Debug)]
+pub struct IntrospectedForeignKey {
+    pub name: String,
+    pub table: String,
+    pub column: String,
+    pub referenced_table: String,
+    pub referenced_column: String,
+}
 
-    fn introspect(&mut self, schema: &str) -> Result<DatabaseSchema> {
-        debug!("Introspecting schema '{}'", schema);
-        let tables = self
-            .get_table_names(schema)
-            .into_iter()
-            .map(|t| self.get_table(schema, &t))
-            .collect();
-        Ok(DatabaseSchema {
-            // There's no enum type in SQLite.
-            enums: vec![],
-            // There are no sequences in SQLite.
-            sequences: vec![],
-            tables: tables,
-        })
-    }
+#[derive(Debug, Clone)]
+pub struct IntrospectedColumn {
+    pub name: String,
+    pub table: String,
+    pub tpe: String,
+    pub default: Option<String>,
+    pub is_required: bool,
+    pub pk: i64,
 }
 
 fn convert_introspected_columns(columns: Vec<IntrospectedColumn>) -> Vec<Column> {
@@ -168,25 +187,6 @@ fn convert_introspected_columns(columns: Vec<IntrospectedColumn>) -> Vec<Column>
             }
         })
         .collect()
-}
-
-#[derive(Debug)]
-pub struct IntrospectedForeignKey {
-    pub name: String,
-    pub table: String,
-    pub column: String,
-    pub referenced_table: String,
-    pub referenced_column: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct IntrospectedColumn {
-    pub name: String,
-    pub table: String,
-    pub tpe: String,
-    pub default: Option<String>,
-    pub is_required: bool,
-    pub pk: i64,
 }
 
 fn get_column_type(column: &IntrospectedColumn) -> ColumnType {
