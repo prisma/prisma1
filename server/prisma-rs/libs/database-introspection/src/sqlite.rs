@@ -35,7 +35,7 @@ impl IntrospectionConnector {
     fn get_table(&mut self, schema: &str, name: &str) -> Table {
         debug!("Introspecting table '{}' in schema '{}", name, schema);
         let (introspected_columns, primary_key) = self.get_columns(&schema, name);
-        let introspected_foreign_keys = self.get_foreign_keys(&schema, name);
+        let foreign_keys = self.get_foreign_keys(&schema, name);
         Table {
             name: name.to_string(),
             columns: convert_introspected_columns(introspected_columns),
@@ -43,7 +43,7 @@ impl IntrospectionConnector {
             indexes: Vec::new(),
             primary_key,
             // TODO
-            foreign_keys: vec![],
+            foreign_keys,
         }
     }
 
@@ -106,23 +106,21 @@ impl IntrospectionConnector {
         (cols, primary_key)
     }
 
-    fn get_foreign_keys(&mut self, schema: &str, table: &str) -> Vec<IntrospectedForeignKey> {
+    fn get_foreign_keys(&mut self, schema: &str, table: &str) -> Vec<ForeignKey> {
         let sql = format!(r#"Pragma "{}".foreign_key_list("{}");"#, schema, table);
         debug!("Introspecting table foreign keys, SQL: '{}'", sql);
         let result_set = self.queryable.query_raw(&sql, &[]).expect("querying for foreign keys");
         result_set
             .into_iter()
             .map(|row| {
-                let fk = IntrospectedForeignKey {
-                    name: "".to_string(),
-                    table: table.to_string(),
+                let fk = ForeignKey {
                     column: row.get("from").and_then(|x| x.to_string()).expect("from"),
                     referenced_table: row.get("table").and_then(|x| x.to_string()).expect("table"),
                     referenced_column: row.get("to").and_then(|x| x.to_string()).expect("to"),
                 };
                 debug!(
-                    "Found foreign key '{}', from column: '{}', to table: '{}', to column: '{}'",
-                    fk.name, fk.column, fk.referenced_table, fk.referenced_column
+                    "Found foreign key column: '{}', to table: '{}', to column: '{}'",
+                    fk.column, fk.referenced_table, fk.referenced_column
                 );
                 fk
             })

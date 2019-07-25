@@ -6,10 +6,18 @@ use database_introspection::*;
 use prisma_query::connector::{Queryable, Sqlite as SqliteDatabaseClient};
 use std::sync::Arc;
 use std::{thread, time};
+use std::sync::atomic::{AtomicBool, Ordering};
 
 const SCHEMA: &str = "DatabaseInspectorTest";
 
+static IS_SETUP: AtomicBool = AtomicBool::new(false);
+
 fn setup() {
+    let is_setup = IS_SETUP.load(Ordering::Relaxed);
+    if is_setup {
+        return;
+    }
+    
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!("[{}][{}] {}", record.target(), record.level(), message))
@@ -18,6 +26,8 @@ fn setup() {
         .chain(std::io::stdout())
         .apply()
         .expect("fern configuration");
+
+    IS_SETUP.store(true, Ordering::Relaxed);
 }
 
 #[test]
@@ -56,9 +66,8 @@ fn all_columns_types_must_work() {
             });
         },
         |inspector| {
-            let result = inspector.introspect(&SCHEMA.to_string()).unwrap();
-
-            let table = result.table("User").unwrap();
+            let result = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
+            let table = result.table("User").expect("couldn't get User table");
             let expected_columns = vec![
                 Column {
                     name: "array_bin_col".to_string(),
@@ -239,7 +248,6 @@ fn is_required_must_work() {
         },
         |inspector| {
             let result = inspector.introspect(&SCHEMA.to_string()).unwrap();
-
             let user_table = result.table("User").unwrap();
             let expected_columns = vec![
                 Column {
@@ -268,40 +276,55 @@ fn is_required_must_work() {
     );
 }
 
-// #[test]
-// fn foreign_keys_must_work() {
-//     test_each_backend(
-//         |db_type, mut migration| {
-//             let db_type = db_type.clone();
-//             migration.create_table("City", |t| {
-//                 t.add_column("id", types::primary());
-//             });
-//             migration.create_table("User", move |t| {
-//                 // barrel does not render foreign keys correctly for mysql
-//                 if db_type == "mysql"{
-//                     t.add_column("city", types::integer());
-//                     t.inject_custom("FOREIGN KEY(city) REFERENCES City(id)");
-//                 } else {
-//                     t.add_column("city", types::foreign("City", "id"));
-//                 }
-//             });
-//         },
-//         |inspector| {
-//             let result = inspector.introspect(&SCHEMA.to_string());
+#[test]
+fn foreign_keys_must_work() {
+    setup();
 
-//             let user_table = result.table("User").unwrap();
-//             let expected_columns = vec![Column {
-//                 name: "city".to_string(),
-//                 tpe: ColumnType::Int,
-//                 is_required: true,
-//                 foreign_key: Some(ForeignKey::new("City".to_string(), "id".to_string())),
-//                 sequence: None,
-//                 default: None,
-//             }];
-//             assert_eq!(user_table.columns, expected_columns);
-//         },
-//     );
-// }
+    test_each_backend(
+        |db_type, mut migration| {
+            let db_type = db_type.clone();
+            migration.create_table("City", |t| {
+                t.add_column("id", types::primary());
+            });
+            migration.create_table("User", move |t| {
+                // barrel does not render foreign keys correctly for mysql
+                // TODO: Investigate
+                if db_type == "mysql"{
+                    t.add_column("city", types::integer());
+                    t.inject_custom("FOREIGN KEY(city) REFERENCES City(id)");
+                } else {
+                    t.add_column("city", types::foreign("City", "id"));
+                }
+            });
+        },
+        |inspector| {
+            let schema = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
+            let user_table = schema.table("User").expect("couldn't get User table");
+            let expected_columns = vec![Column {
+                name: "city".to_string(),
+                tpe: ColumnType{
+                    raw: "INTEGER".to_string(),
+                    family: ColumnTypeFamily::Int,
+                },
+                arity: ColumnArity::Required,
+                default: None,
+                auto_increment: None,
+            }];
+
+            assert_eq!(user_table, &Table{
+                name: "User".to_string(),
+                columns: expected_columns,
+                indexes: vec![],
+                primary_key: None,
+                foreign_keys: vec![ForeignKey{
+                    column: "city".to_string(),
+                    referenced_column: "id".to_string(),
+                    referenced_table: "City".to_string(),
+                }],
+            });
+        },
+    );
+}
 
 fn test_each_backend<MigrationFn, TestFn>(mut migrationFn: MigrationFn, testFn: TestFn)
 where

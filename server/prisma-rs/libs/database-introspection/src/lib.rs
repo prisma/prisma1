@@ -39,6 +39,7 @@ impl DatabaseSchema {
 }
 
 /// A table found in a schema.
+#[derive(PartialEq, Debug)]
 pub struct Table {
     /// The table's name.
     pub name: String,
@@ -142,14 +143,12 @@ pub enum ColumnArity {
 /// A foreign key.
 #[derive(PartialEq, Debug)]
 pub struct ForeignKey {
-    /// Foreign key name.
-    pub name: Option<String>,
-    /// Foreign source columns.
-    pub source_columns: Vec<String>,
-    /// Foreign target table.
-    pub target_table: String,
-    /// Foreign key target columns.
-    pub target_columns: Vec<String>,
+    /// Column name.
+    pub column: String,
+    /// Referenced table.
+    pub referenced_table: String,
+    /// Referenced column.
+    pub referenced_column: String,
 }
 
 /// A SQL enum.
