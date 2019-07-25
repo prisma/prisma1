@@ -29,6 +29,7 @@ pub type CoreResult<T> = Result<T, CoreError>;
 pub type QueryPair = (Query, ResultResolutionStrategy);
 
 pub enum ResultResolutionStrategy {
+    /// Resolve the actual result by evaluating another query
     Query(Query),
     CoerceInto(OutputTypeRef),
     None,

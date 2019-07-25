@@ -23,7 +23,8 @@ impl RelatedRecordsBuilder {
 impl Builder<ReadQuery> for RelatedRecordsBuilder {
     fn build(self) -> QueryBuilderResult<ReadQuery> {
         let args = utils::extract_query_args(self.field.arguments, &self.model)?;
-        let name = self.field.alias.unwrap_or(self.field.name);
+        let name = self.field.name;
+        let alias = self.field.alias;
         let sub_selections = self.field.sub_selections.unwrap().fields;
         let selection_order: Vec<String> = collect_selection_order(&sub_selections);
         let selected_fields = collect_selected_fields(&sub_selections, &self.model, Some(Arc::clone(&self.parent)));
@@ -32,6 +33,7 @@ impl Builder<ReadQuery> for RelatedRecordsBuilder {
 
         Ok(ReadQuery::RelatedRecordsQuery(RelatedRecordsQuery {
             name,
+            alias,
             parent_field,
             args,
             selected_fields,

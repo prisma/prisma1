@@ -19,7 +19,8 @@ impl Builder<ReadQuery> for ReadOneRecordBuilder {
     /// Unwraps are safe because of query validation that ensures conformity to the query schema.
     fn build(self) -> QueryBuilderResult<ReadQuery> {
         let record_finder = utils::extract_record_finder(self.field.arguments, &self.model)?;
-        let name = self.field.alias.unwrap_or(self.field.name);
+        let name = self.field.name;
+        let alias = self.field.alias;
         let sub_selections = self.field.sub_selections.unwrap().fields;
         let selection_order: Vec<String> = collect_selection_order(&sub_selections);
         let selected_fields = collect_selected_fields(&sub_selections, &self.model, None);
@@ -27,6 +28,7 @@ impl Builder<ReadQuery> for ReadOneRecordBuilder {
 
         Ok(ReadQuery::RecordQuery(RecordQuery {
             name,
+            alias,
             record_finder,
             selected_fields,
             nested,

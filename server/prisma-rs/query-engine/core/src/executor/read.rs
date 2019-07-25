@@ -12,7 +12,6 @@ impl ReadQueryExecutor {
         match query {
             ReadQuery::RecordQuery(q) => self.read_one(q),
             ReadQuery::ManyRecordsQuery(q) => self.read_many(q),
-            // ReadQuery::RelatedRecordQuery(q) => self.read_one_related(q, parent_ids),
             ReadQuery::RelatedRecordsQuery(q) => self.read_related(q, parent_ids),
         }
     }
@@ -38,8 +37,9 @@ impl ReadQueryExecutor {
                     .collect::<CoreResult<Vec<ReadQueryResult>>>()?;
 
                 Ok(ReadQueryResult::Single(SingleReadQueryResult {
-                    name: query.name.clone(),
-                    fields: query.selection_order.clone(),
+                    name: query.name,
+                    alias: query.alias,
+                    fields: query.selection_order,
                     scalars,
                     nested,
                     lists,
@@ -47,8 +47,9 @@ impl ReadQueryExecutor {
                 }))
             }
             None => Ok(ReadQueryResult::Single(SingleReadQueryResult {
-                name: query.name.clone(),
-                fields: query.selection_order.clone(),
+                name: query.name,
+                alias: query.alias,
+                fields: query.selection_order,
                 scalars: None,
                 nested: vec![],
                 lists: vec![],
@@ -75,8 +76,9 @@ impl ReadQueryExecutor {
             .collect::<CoreResult<Vec<ReadQueryResult>>>()?;
 
         Ok(ReadQueryResult::Many(ManyReadQueryResults::new(
-            query.name.clone(),
-            query.selection_order.clone(),
+            query.name,
+            query.alias,
+            query.selection_order,
             scalars,
             nested,
             lists,
@@ -107,8 +109,9 @@ impl ReadQueryExecutor {
             .collect::<CoreResult<Vec<ReadQueryResult>>>()?;
 
         Ok(ReadQueryResult::Many(ManyReadQueryResults::new(
-            query.name.clone(),
-            query.selection_order.clone(),
+            query.name,
+            query.alias,
+            query.selection_order,
             scalars,
             nested,
             lists,
@@ -116,46 +119,6 @@ impl ReadQueryExecutor {
             id_field,
         )))
     }
-
-    // pub fn read_many_related(
-    //     &self,
-    //     query: RelatedRecordsQuery,
-    //     parent_ids: &[GraphqlId],
-    // ) -> CoreResult<ReadQueryResult> {
-    //     unimplemented!()
-    // }
-
-    //         ReadQuery::ManyRelatedRecordsQuery(query) => {
-    //             let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
-
-    //             let scalars = self.data_resolver.get_related_records(
-    //                 Arc::clone(&query.parent_field),
-    //                 &parent_ids,
-    //                 query.args.clone(),
-    //                 &selected_fields,
-    //             )?;
-
-    //             // FIXME: Rewrite to not panic and also in a more functional way!
-    //             let ids = scalars.get_id_values(Arc::clone(&query.parent_field.related_model()))?;
-    //             let list_fields = selected_fields.scalar_lists();
-    //             let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
-    //             let nested = self.execute_internal(&query.nested, ids.clone())?;
-
-    //             results.push(ReadQueryResult::Many(ManyReadQueryResults::new(
-    //                 query.name.clone(),
-    //                 query.selection_order.clone(),
-    //                 scalars,
-    //                 nested,
-    //                 lists,
-    //                 query.args.clone(),
-    //                 selected_fields,
-    //             )));
-    //         }
-    //     }
-    // }
-
-    //     Ok(results)
-    // }
 
     fn resolve_scalar_list_fields(
         &self,

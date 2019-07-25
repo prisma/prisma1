@@ -18,8 +18,11 @@ impl ReadQueryResult {
 
 #[derive(Debug)]
 pub struct SingleReadQueryResult {
-    /// Designates the key under which the result is serialized.
+    /// Orignal query key.
     pub name: String,
+
+    /// Designates the key under which the result is serialized.
+    pub alias: Option<String>,
 
     /// Holds an ordered list of selected field names.
     pub fields: Vec<String>,
@@ -39,8 +42,11 @@ pub struct SingleReadQueryResult {
 
 #[derive(Debug)]
 pub struct ManyReadQueryResults {
-    /// Designates the key under which all the results are serialized.
+    /// Orignal query key.
     pub name: String,
+
+    /// Designates the key under which the result is serialized.
+    pub alias: Option<String>,
 
     /// Holds an ordered list of selected field names for each contained record.
     pub fields: Vec<String>,
@@ -85,6 +91,7 @@ impl SingleReadQueryResult {
 impl ManyReadQueryResults {
     pub fn new(
         name: String,
+        alias: Option<String>,
         fields: Vec<String>,
         scalars: ManyRecords,
         nested: Vec<ReadQueryResult>,
@@ -94,6 +101,7 @@ impl ManyReadQueryResults {
     ) -> Self {
         let result = Self {
             name,
+            alias,
             fields,
             scalars,
             nested,
@@ -103,22 +111,6 @@ impl ManyReadQueryResults {
             __inhibit: (),
         };
 
-        // result.remove_excess_records();
         result
-    }
-
-    /// Collect all IDs from a query result
-    pub fn collect_ids(&self) -> Option<Vec<&GraphqlId>> {
-        let id_position: usize = self.scalars.field_names.iter().position(|name| name == "id")?;
-
-        self.scalars
-            .records
-            .iter()
-            .map(|record| record.values.get(id_position))
-            .map(|pv| match pv {
-                Some(PrismaValue::GraphqlId(id)) => Some(id),
-                _ => None,
-            })
-            .collect()
     }
 }
