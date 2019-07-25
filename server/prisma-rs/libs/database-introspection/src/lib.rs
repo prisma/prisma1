@@ -109,24 +109,8 @@ pub enum ColumnTypeFamily {
     String,
     /// DateTime types.
     DateTime,
-    /// Double precision floating point types.
-    Double,
     /// Binary types.
     Binary,
-    /// Binary array types.
-    BinArray,
-    /// Bool array types.
-    BoolArray,
-    /// DateTime types.
-    DateTimeArray,
-    /// Double precision floating point array types.
-    DoubleArray,
-    /// Floating point array types.
-    FloatArray,
-    /// Integer array types.
-    IntArray,
-    /// String array types.
-    StringArray,
 }
 
 /// A column's arity.

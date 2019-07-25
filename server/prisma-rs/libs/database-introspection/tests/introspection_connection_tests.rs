@@ -73,7 +73,7 @@ fn all_columns_types_must_work() {
                     name: "array_bin_col".to_string(),
                     tpe: ColumnType {
                         raw: String::from("BINARY[]"),
-                        family: ColumnTypeFamily::BinArray,
+                        family: ColumnTypeFamily::Binary,
                     },
                     arity: ColumnArity::Required,
                     default: None,
@@ -83,7 +83,7 @@ fn all_columns_types_must_work() {
                     name: "array_bool_col".to_string(),
                     tpe: ColumnType {
                         raw: String::from("BOOLEAN[]"),
-                        family: ColumnTypeFamily::BoolArray,
+                        family: ColumnTypeFamily::Boolean,
                     },
                     arity: ColumnArity::Required,
                     default: None,
@@ -93,7 +93,7 @@ fn all_columns_types_must_work() {
                     name: "array_date_col".to_string(),
                     tpe: ColumnType {
                         raw: String::from("DATE[]"),
-                        family: ColumnTypeFamily::DateTimeArray,
+                        family: ColumnTypeFamily::DateTime,
                     },
                     arity: ColumnArity::Required,
                     default: None,
@@ -103,7 +103,7 @@ fn all_columns_types_must_work() {
                     name: "array_double_col".to_string(),
                     tpe: ColumnType {
                         raw: String::from("DOUBLE[]"),
-                        family: ColumnTypeFamily::DoubleArray,
+                        family: ColumnTypeFamily::Float,
                     },
                     arity: ColumnArity::Required,
                     default: None,
@@ -113,7 +113,7 @@ fn all_columns_types_must_work() {
                     name: "array_int_col".to_string(),
                     tpe: ColumnType {
                         raw: String::from("INTEGER[]"),
-                        family: ColumnTypeFamily::IntArray,
+                        family: ColumnTypeFamily::Int,
                     },
                     arity: ColumnArity::Required,
                     default: None,
@@ -123,7 +123,7 @@ fn all_columns_types_must_work() {
                     name: "array_text_col".to_string(),
                     tpe: ColumnType {
                         raw: String::from("TEXT[]"),
-                        family: ColumnTypeFamily::StringArray,
+                        family: ColumnTypeFamily::String,
                     },
                     arity: ColumnArity::Required,
                     default: None,
@@ -163,7 +163,7 @@ fn all_columns_types_must_work() {
                     name: "double_col".to_string(),
                     tpe: ColumnType {
                         raw: String::from("DOUBLE"),
-                        family: ColumnTypeFamily::Double,
+                        family: ColumnTypeFamily::Float,
                     },
                     arity: ColumnArity::Required,
                     default: None,
