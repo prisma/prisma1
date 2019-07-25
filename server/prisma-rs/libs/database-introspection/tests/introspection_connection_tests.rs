@@ -31,9 +31,11 @@ fn all_columns_types_must_work() {
                 t.add_column("array_bool_col", types::array(&types::boolean()));
                 t.add_column("array_date_col", types::array(&types::date()));
                 t.add_column("array_double_col", types::array(&types::double()));
+                // TODO: Figure out
                 // t.add_column("array_float_col", types::array(&types::float()));
                 t.add_column("array_int_col", types::array(&types::integer()));
                 t.add_column("array_text_col", types::array(&types::text()));
+                // TODO: Figure out
                 // t.add_column("array_varchar_col", types::array(&types::varchar(255)));
                 t.add_column("binary_col", types::binary());
                 t.add_column("boolean_col", types::boolean());
@@ -44,6 +46,7 @@ fn all_columns_types_must_work() {
                 if db_type != "sqlite" {
                     t.add_column("json_col", types::json());
                 }
+                // TODO: Test also autoincrement variety
                 t.add_column("primary_col", types::primary());
                 t.add_column("string1_col", types::text());
                 if db_type != "sqlite" {
@@ -209,7 +212,16 @@ fn all_columns_types_must_work() {
                 },
             ];
 
+            assert_eq!(table.name, "User");
             assert_eq!(table.columns, expected_columns);
+            assert_eq!(table.indexes, vec![]);
+            assert_eq!(
+                table.primary_key,
+                Some(PrimaryKey {
+                    columns: vec!["primary_col".to_string()],
+                })
+            );
+            assert_eq!(table.foreign_keys, vec![]);
         },
     );
 }

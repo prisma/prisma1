@@ -47,12 +47,13 @@ pub struct Table {
     /// The table's indices.
     pub indexes: Vec<Index>,
     /// The table's primary key, if there is one.
-    pub primary_key: Option<Index>,
+    pub primary_key: Option<PrimaryKey>,
     /// The table's foreign keys.
     pub foreign_keys: Vec<ForeignKey>,
 }
 
 /// An index of a table.
+#[derive(PartialEq, Debug)]
 pub struct Index {
     /// Index name.
     pub name: String,
@@ -60,6 +61,13 @@ pub struct Index {
     pub columns: Vec<String>,
     /// Is index unique?
     pub unique: bool,
+}
+
+/// The primary key of a table.
+#[derive(PartialEq, Debug)]
+pub struct PrimaryKey {
+    /// Columns.
+    pub columns: Vec<String>,
 }
 
 /// A column of a table.
@@ -132,6 +140,7 @@ pub enum ColumnArity {
 }
 
 /// A foreign key.
+#[derive(PartialEq, Debug)]
 pub struct ForeignKey {
     /// Foreign key name.
     pub name: Option<String>,

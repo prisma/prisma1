@@ -2,6 +2,7 @@ use super::*;
 use log::debug;
 use prisma_query::ast::ParameterizedValue;
 use prisma_query::connector::{Queryable, Sqlite};
+use std::collections::HashMap;
 
 pub struct IntrospectionConnector {
     pub queryable: Sqlite,
@@ -33,25 +34,25 @@ impl IntrospectionConnector {
 
     fn get_table(&mut self, schema: &str, name: &str) -> Table {
         debug!("Introspecting table '{}' in schema '{}", name, schema);
-        let introspected_columns = self.get_columns(&schema, name);
+        let (introspected_columns, primary_key) = self.get_columns(&schema, name);
         let introspected_foreign_keys = self.get_foreign_keys(&schema, name);
         Table {
             name: name.to_string(),
             columns: convert_introspected_columns(introspected_columns),
             // TODO
             indexes: Vec::new(),
-            // TODO
-            primary_key: None,
+            primary_key,
             // TODO
             foreign_keys: vec![],
         }
     }
 
-    fn get_columns(&mut self, schema: &str, table: &str) -> Vec<IntrospectedColumn> {
+    fn get_columns(&mut self, schema: &str, table: &str) -> (Vec<IntrospectedColumn>, Option<PrimaryKey>) {
         let sql = format!(r#"Pragma "{}".table_info ("{}")"#, schema, table);
         debug!("Introspecting table columns, query: '{}'", sql);
         let result_set = self.queryable.query_raw(&sql, &[]).unwrap();
-        result_set
+        let mut pk_cols: HashMap<i64, String> = HashMap::new();
+        let cols = result_set
             .into_iter()
             .map(|row| {
                 let default_value = match row.get("dflt_value") {
@@ -68,14 +69,41 @@ impl IntrospectionConnector {
                     default: default_value.clone(),
                     pk: row.get("pk").and_then(|x| x.as_i64()).expect("primary key"),
                 };
+                if col.pk > 0 {
+                    pk_cols.insert(col.pk, col.name.clone());
+                }
+
                 debug!(
                     "Found column '{}', type: '{}', is_required: {}, default: '{}', primary key: {}",
-                    col.name, col.tpe, col.is_required, default_value.unwrap_or("none".to_string()),
+                    col.name,
+                    col.tpe,
+                    col.is_required,
+                    default_value.unwrap_or("none".to_string()),
                     col.pk
                 );
+
                 col
             })
-            .collect()
+            .collect();
+
+        let primary_key = match pk_cols.is_empty() {
+            true => {
+                debug!("Determined that table has no primary key");
+                None
+            }
+            false => {
+                let mut columns: Vec<String> = vec![];
+                let mut col_idxs: Vec<&i64> = pk_cols.keys().collect();
+                col_idxs.sort_unstable();
+                for i in col_idxs {
+                    columns.push(pk_cols[i].clone());
+                }
+                debug!("Determined that table has primary key with columns {:?}", columns);
+                Some(PrimaryKey { columns })
+            }
+        };
+
+        (cols, primary_key)
     }
 
     fn get_foreign_keys(&mut self, schema: &str, table: &str) -> Vec<IntrospectedForeignKey> {
