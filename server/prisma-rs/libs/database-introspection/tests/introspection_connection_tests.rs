@@ -247,8 +247,8 @@ fn is_required_must_work() {
             });
         },
         |inspector| {
-            let result = inspector.introspect(&SCHEMA.to_string()).unwrap();
-            let user_table = result.table("User").unwrap();
+            let result = inspector.introspect(&SCHEMA.to_string()).expect("introspecting");
+            let user_table = result.table("User").expect("getting User table");
             let expected_columns = vec![
                 Column {
                     name: "column1".to_string(),
@@ -331,25 +331,24 @@ where
     MigrationFn: FnMut(&'static str, &mut Migration) -> (),
     TestFn: Fn(&mut IntrospectionConnector) -> (),
 {
-    println!("Testing with SQLite now");
     // SQLITE
-    {
-        let mut migration = Migration::new().schema(SCHEMA);
-        migrationFn("sqlite", &mut migration);
-        let mut inspector = sqlite(migration);
-        testFn(&mut inspector);
-    }
-    // println!("Testing with Postgres now");
-    // // POSTGRES
     // {
     //     let mut migration = Migration::new().schema(SCHEMA);
-    //     migrationFn("postgres", &mut migration);
-    //     let (inspector, queryable) = postgres();
-    //     let full_sql = migration.make::<barrel::backend::Pg>();
-    //     run_full_sql(&queryable, &full_sql);
-    //     println!("Running the test function now");
-    //     testFn(inspector);
+    //     migrationFn("sqlite", &mut migration);
+    //     let mut inspector = get_sqlite_connector(migration);
+
+    //     testFn(&mut inspector);
     // }
+    // POSTGRES
+    {
+        let mut migration = Migration::new().schema(SCHEMA);
+        migrationFn("postgres", &mut migration);
+        let mut inspector = get_postgres_connector(migration);
+        // let full_sql = migration.make::<barrel::backend::Pg>();
+        // run_full_sql(&queryable, &full_sql);
+
+        testFn(&mut inspector);
+    }
     // println!("Testing with MySQL now");
     // // MySQL
     // {
@@ -372,7 +371,7 @@ fn run_full_sql(queryable: &mut Queryable, full_sql: &str) {
     }
 }
 
-fn sqlite(migration: Migration) -> sqlite::IntrospectionConnector {
+fn get_sqlite_connector(migration: Migration) -> sqlite::IntrospectionConnector {
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
     let database_file_path = dbg!(format!("{}/{}.db", database_folder_path, SCHEMA));
@@ -391,17 +390,36 @@ fn sqlite(migration: Migration) -> sqlite::IntrospectionConnector {
     sqlite::IntrospectionConnector::new(&database_file_path, SCHEMA).expect("creating SQLite connector should work")
 }
 
-// fn postgres() -> (Arc<IntrospectionConnector>, Arc<Connectional>) {
-//     let url = format!("postgresql://postgres:prisma@{}:5432/db?schema={}", db_host_postgres(), SCHEMA);
-//     let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA));
-//     let setup_connectional = DatabaseInspector::postgres(url.to_string()).queryable;
-//     let _ = setup_connectional.query_on_raw_connection(&SCHEMA, &drop_schema, &[]);
+fn get_postgres_connector(migration: Migration) -> postgres::IntrospectionConnector {
+    // Drop schema if it exists
+    let host = match std::env::var("IS_BUILDKITE") {
+        Ok(_) => "test-db-postgres",
+        Err(_) => "127.0.0.1",
+    };
+    let mut client = ::postgres::Config::new()
+        .user("prisma")
+        .password("prisma")
+        .host(host)
+        .port(5432)
+        .dbname("prisma-test")
+        .connect(::postgres::NoTls)
+        .expect("connecting to Postgres");
 
-//     let inspector = DatabaseInspector::postgres(url.to_string());
-//     let queryable = Arc::clone(&inspector.queryable);
+    let drop_schema = format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA);
+    println!("Dropping schema: '{}'", drop_schema);
+    client.execute(drop_schema.as_str(), &[]).expect("dropping schema");
 
-//     (Arc::new(inspector), queryable)
-// }
+    println!("Creating schema '{}'", SCHEMA);
+    client.execute(format!("CREATE SCHEMA \"{}\";", SCHEMA).as_str(), &[]).expect("creating schema");
+    println!("Created schema '{}'", SCHEMA);
+
+    let full_sql = migration.make::<barrel::backend::Pg>();
+    println!("Executing migration '{}'", full_sql);
+    client.execute(full_sql.as_str(), &[]).expect("executing migration");
+    println!("Executed migration");
+
+    postgres::IntrospectionConnector::new(client).expect("creating Postgres connector")
+}
 
 // fn mysql() -> (Arc<IntrospectionConnector>, Arc<Connectional>) {
 //     let url_without_db = format!("mysql://root:prisma@{}:3306", db_host_mysql());
@@ -417,13 +435,6 @@ fn sqlite(migration: Migration) -> sqlite::IntrospectionConnector {
 
 //     (Arc::new(inspector), queryable)
 // }
-
-fn db_host_postgres() -> String {
-    match std::env::var("IS_BUILDKITE") {
-        Ok(_) => "test-db-postgres".to_string(),
-        Err(_) => "127.0.0.1".to_string(),
-    }
-}
 
 fn db_host_mysql() -> String {
     match std::env::var("IS_BUILDKITE") {

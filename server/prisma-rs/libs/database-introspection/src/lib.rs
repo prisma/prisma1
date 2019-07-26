@@ -1,6 +1,7 @@
 use failure::{Error, Fail};
 
 pub mod sqlite;
+pub mod postgres;
 
 /// Introspection errors.
 #[derive(Debug, Fail)]
