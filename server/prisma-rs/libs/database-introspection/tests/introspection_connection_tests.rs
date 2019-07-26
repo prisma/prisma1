@@ -4,10 +4,10 @@
 use barrel::{types, Migration};
 use database_introspection::*;
 use prisma_query::connector::{Queryable, Sqlite as SqliteDatabaseClient};
+use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{thread, time};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::path::Path;
 
 const SCHEMA: &str = "DatabaseInspectorTest";
 
@@ -302,7 +302,7 @@ fn foreign_keys_must_work() {
             migration.create_table("User", move |t| {
                 // barrel does not render foreign keys correctly for mysql
                 // TODO: Investigate
-                if db_type == "mysql"{
+                if db_type == "mysql" {
                     t.add_column("city", types::integer());
                     t.inject_custom("FOREIGN KEY(city) REFERENCES City(id)");
                 } else {
@@ -315,7 +315,7 @@ fn foreign_keys_must_work() {
             let user_table = schema.table("User").expect("couldn't get User table");
             let expected_columns = vec![Column {
                 name: "city".to_string(),
-                tpe: ColumnType{
+                tpe: ColumnType {
                     raw: "INTEGER".to_string(),
                     family: ColumnTypeFamily::Int,
                 },
@@ -324,17 +324,20 @@ fn foreign_keys_must_work() {
                 auto_increment: None,
             }];
 
-            assert_eq!(user_table, &Table{
-                name: "User".to_string(),
-                columns: expected_columns,
-                indexes: vec![],
-                primary_key: None,
-                foreign_keys: vec![ForeignKey{
-                    column: "city".to_string(),
-                    referenced_column: "id".to_string(),
-                    referenced_table: "City".to_string(),
-                }],
-            });
+            assert_eq!(
+                user_table,
+                &Table {
+                    name: "User".to_string(),
+                    columns: expected_columns,
+                    indexes: vec![],
+                    primary_key: None,
+                    foreign_keys: vec![ForeignKey {
+                        column: "city".to_string(),
+                        referenced_column: "id".to_string(),
+                        referenced_table: "City".to_string(),
+                    }],
+                }
+            );
         },
     );
 }
@@ -421,7 +424,9 @@ fn get_postgres_connector(migration: Migration) -> postgres::IntrospectionConnec
     let drop_schema = format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA);
     client.execute(drop_schema.as_str(), &[]).expect("dropping schema");
 
-    client.execute(format!("CREATE SCHEMA \"{}\";", SCHEMA).as_str(), &[]).expect("creating schema");
+    client
+        .execute(format!("CREATE SCHEMA \"{}\";", SCHEMA).as_str(), &[])
+        .expect("creating schema");
 
     let full_sql = migration.make::<barrel::backend::Pg>();
     client.execute(full_sql.as_str(), &[]).expect("executing migration");

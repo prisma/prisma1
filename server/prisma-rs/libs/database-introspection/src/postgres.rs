@@ -1,8 +1,8 @@
 use super::*;
-use log::debug;
 use ::postgres::Client;
+use log::debug;
+use prisma_query::connector::{PostgreSql, Queryable};
 use std::collections::HashMap;
-use prisma_query::connector::{Queryable, PostgreSql};
 
 pub struct IntrospectionConnector {
     queryable: PostgreSql,
@@ -32,9 +32,7 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 impl IntrospectionConnector {
     pub fn new(client: Client) -> Result<IntrospectionConnector> {
         let queryable = PostgreSql::from(client);
-        Ok(IntrospectionConnector{
-            queryable,
-        })
+        Ok(IntrospectionConnector { queryable })
     }
 
     fn get_table_names(&mut self, schema: &str) -> Vec<String> {
@@ -44,11 +42,17 @@ impl IntrospectionConnector {
             WHERE table_schema = '{}'
             -- Views are not supported yet
             AND table_type = 'BASE TABLE'
-        ORDER BY table_name", schema);
+        ORDER BY table_name",
+            schema
+        );
         let rows = self.queryable.query_raw(&sql, &[]).expect("get table names ");
         let names = rows
             .into_iter()
-            .map(|row| row.get("table_name").and_then(|x| x.to_string()).expect("get table name"))
+            .map(|row| {
+                row.get("table_name")
+                    .and_then(|x| x.to_string())
+                    .expect("get table name")
+            })
             .collect();
 
         debug!("Found table names: {:#?}", names);
@@ -58,7 +62,7 @@ impl IntrospectionConnector {
     fn get_table(&mut self, schema: &str, name: &str) -> Table {
         let (columns, primary_key) = self.get_columns(schema, name);
         let foreign_keys = self.get_foreign_keys(schema, name);
-        Table{
+        Table {
             name: name.to_string(),
             columns,
             foreign_keys,
@@ -68,11 +72,14 @@ impl IntrospectionConnector {
     }
 
     fn get_columns(&mut self, schema: &str, table: &str) -> (Vec<Column>, Option<PrimaryKey>) {
-        let sql = format!("SELECT ordinal_position, column_name, udt_name,
+        let sql = format!(
+            "SELECT ordinal_position, column_name, udt_name,
             column_default, is_nullable = 'YES' as is_nullable, 'false' as is_auto_increment
             FROM information_schema.columns
             WHERE table_schema = '{}' AND table_name  = '{}'
-            ORDER BY column_name", schema, table);
+            ORDER BY column_name",
+            schema, table
+        );
         // Note that ordinal_position comes back as a string because it's a bigint
         let rows = self.queryable.query_raw(&sql, &[]).expect("querying for columns");
 
@@ -86,26 +93,34 @@ impl IntrospectionConnector {
                 //     pk_cols.insert(col.pk, col.name.clone());
                 // }
                 Column {
-                    name: col.get("column_name").and_then(|x| x.to_string()).expect(
-                        "get column name"),
+                    name: col
+                        .get("column_name")
+                        .and_then(|x| x.to_string())
+                        .expect("get column name"),
                     tpe: get_column_type(udt.as_ref()),
-                    arity: col.get("is_nullable").map(|x| {
-                        let is_nullable = x.as_bool().expect("is_nullable");
-                        if is_nullable {
-                            ColumnArity::Nullable
-                        } else {
-                            ColumnArity::Required
-                        }
-                    }).expect("get is_nullable"),
-                    default: col.get("column_default").map(|x| {
-                        debug!("Converting default to string: {:#?}", x);
-                        if x.is_null() {
-                            None
-                        } else {
-                            let default = x.to_string().expect("default to string");
-                            Some(default)
-                        }
-                    }).expect("get default"),
+                    arity: col
+                        .get("is_nullable")
+                        .map(|x| {
+                            let is_nullable = x.as_bool().expect("is_nullable");
+                            if is_nullable {
+                                ColumnArity::Nullable
+                            } else {
+                                ColumnArity::Required
+                            }
+                        })
+                        .expect("get is_nullable"),
+                    default: col
+                        .get("column_default")
+                        .map(|x| {
+                            debug!("Converting default to string: {:#?}", x);
+                            if x.is_null() {
+                                None
+                            } else {
+                                let default = x.to_string().expect("default to string");
+                                Some(default)
+                            }
+                        })
+                        .expect("get default"),
                     auto_increment: None,
                 }
             })
@@ -176,7 +191,7 @@ impl IntrospectionConnector {
                 Index {
                     name: index.get("name").and_then(|x| x.to_string()).expect("name"),
                     columns: vec![], //index.get("column_names").and_then(|x| x.into_vec::<String>()).expect("column_names"),
-                    unique: index.get("is_unique").and_then(|x|x.as_bool()).expect("is_unique"),
+                    unique: index.get("is_unique").and_then(|x| x.as_bool()).expect("is_unique"),
                 }
             })
             .collect();
@@ -193,7 +208,7 @@ impl IntrospectionConnector {
         //         isPrimaryKey: row.is_primary_key as boolean,
         //     }
         // })
-    } 
+    }
 }
 
 fn get_column_type(udt: &str) -> ColumnType {
