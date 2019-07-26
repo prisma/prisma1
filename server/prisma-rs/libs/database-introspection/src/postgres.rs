@@ -1,8 +1,10 @@
 use super::*;
 use ::postgres::Client;
 use log::debug;
+use prisma_query::ast::ParameterizedValue;
 use prisma_query::connector::{PostgreSql, Queryable};
-use std::collections::HashMap;
+use std::borrow::Cow;
+use std::collections::{HashMap, HashSet};
 
 pub struct IntrospectionConnector {
     queryable: PostgreSql,
@@ -21,9 +23,11 @@ impl super::IntrospectionConnector for IntrospectionConnector {
             .into_iter()
             .map(|t| self.get_table(schema, &t))
             .collect();
+        let enums = self.get_enums(schema)?;
+        let sequences = self.get_sequences(schema)?;
         Ok(DatabaseSchema {
-            enums: vec![],
-            sequences: vec![],
+            enums,
+            sequences,
             tables,
         })
     }
@@ -60,55 +64,59 @@ impl IntrospectionConnector {
     }
 
     fn get_table(&mut self, schema: &str, name: &str) -> Table {
-        let (columns, primary_key) = self.get_columns(schema, name);
+        debug!("Getting table '{}'", name);
+        let columns = self.get_columns(schema, name);
+        let (indices, primary_key) = self.get_indices(schema, name);
         let foreign_keys = self.get_foreign_keys(schema, name);
         Table {
             name: name.to_string(),
             columns,
             foreign_keys,
-            indexes: vec![],
-            primary_key: None,
+            indices,
+            primary_key,
         }
     }
 
-    fn get_columns(&mut self, schema: &str, table: &str) -> (Vec<Column>, Option<PrimaryKey>) {
+    fn get_columns(&mut self, schema: &str, table: &str) -> Vec<Column> {
         let sql = format!(
-            "SELECT ordinal_position, column_name, udt_name,
-            column_default, is_nullable = 'YES' as is_nullable, 'false' as is_auto_increment
+            "SELECT column_name, udt_name, column_default, is_nullable, 
+            'false' as is_auto_increment
             FROM information_schema.columns
             WHERE table_schema = '{}' AND table_name  = '{}'
             ORDER BY column_name",
             schema, table
         );
-        // Note that ordinal_position comes back as a string because it's a bigint
         let rows = self.queryable.query_raw(&sql, &[]).expect("querying for columns");
-
-        let mut pk_cols: HashMap<i64, String> = HashMap::new();
         let cols = rows
             .into_iter()
             .map(|col| {
                 debug!("Got column: {:#?}", col);
                 let udt = col.get("udt_name").and_then(|x| x.to_string()).expect("get udt_name");
-                // if col.pk > 0 {
-                //     pk_cols.insert(col.pk, col.name.clone());
-                // }
+                let is_nullable = col
+                    .get("is_nullable")
+                    .and_then(|x| x.to_string())
+                    .expect("get is_nullable")
+                    .to_lowercase();
+                let is_required = match is_nullable.as_ref() {
+                    "no" => true,
+                    "yes" => false,
+                    x => panic!(format!("unrecognized is_nullable variant '{}'", x)),
+                };
+                let tpe = get_column_type(udt.as_ref());
+                let arity = if tpe.raw.starts_with("_") {
+                    ColumnArity::List
+                } else if is_required {
+                    ColumnArity::Required
+                } else {
+                    ColumnArity::Nullable
+                };
                 Column {
                     name: col
                         .get("column_name")
                         .and_then(|x| x.to_string())
                         .expect("get column name"),
-                    tpe: get_column_type(udt.as_ref()),
-                    arity: col
-                        .get("is_nullable")
-                        .map(|x| {
-                            let is_nullable = x.as_bool().expect("is_nullable");
-                            if is_nullable {
-                                ColumnArity::Nullable
-                            } else {
-                                ColumnArity::Required
-                            }
-                        })
-                        .expect("get is_nullable"),
+                    tpe,
+                    arity,
                     default: col
                         .get("column_default")
                         .map(|x| {
@@ -127,41 +135,80 @@ impl IntrospectionConnector {
             .collect();
 
         debug!("Found table columns: {:#?}", cols);
-        (cols, None)
+        cols
     }
 
     fn get_foreign_keys(&mut self, schema: &str, table: &str) -> Vec<ForeignKey> {
-        vec![]
-        // let sql = format!(r#"Pragma "{}".foreign_key_list("{}");"#, schema, table);
-        // debug!("Introspecting table foreign keys, SQL: '{}'", sql);
-        // let result_set = self.queryable.query_raw(&sql, &[]).expect("querying for foreign keys");
-        // result_set
-        //     .into_iter()
-        //     .map(|row| {
-        //         let fk = ForeignKey {
-        //             column: row.get("from").and_then(|x| x.to_string()).expect("from"),
-        //             referenced_table: row.get("table").and_then(|x| x.to_string()).expect("table"),
-        //             referenced_column: row.get("to").and_then(|x| x.to_string()).expect("to"),
-        //         };
-        //         debug!(
-        //             "Found foreign key column: '{}', to table: '{}', to column: '{}'",
-        //             fk.column, fk.referenced_table, fk.referenced_column
-        //         );
-        //         fk
-        //     })
-        //     .collect()
+        let sql = format!(
+            "select 
+                att2.attname as \"child_column\", 
+                cl.relname as \"parent_table\", 
+                att.attname as \"parent_column\"
+            from
+            (select 
+                    unnest(con1.conkey) as \"parent\", 
+                    unnest(con1.confkey) as \"child\", 
+                    con1.confrelid, 
+                    con1.conrelid,
+                    con1.conname
+                from 
+                    pg_class cl
+                    join pg_namespace ns on cl.relnamespace = ns.oid
+                    join pg_constraint con1 on con1.conrelid = cl.oid
+                where
+                    cl.relname = '{}'
+                    and ns.nspname = '{}'
+                    and con1.contype = 'f'
+            ) con
+            join pg_attribute att on
+                att.attrelid = con.confrelid and att.attnum = con.child
+            join pg_class cl on
+                cl.oid = con.confrelid
+            join pg_attribute att2 on
+                att2.attrelid = con.conrelid and att2.attnum = con.parent
+            ",
+            table, schema
+        );
+        debug!("Introspecting table foreign keys, SQL: '{}'", sql);
+        let result_set = self.queryable.query_raw(&sql, &[]).expect("querying for foreign keys");
+        result_set
+            .into_iter()
+            .map(|row| {
+                debug!("Got row {:#?}", row);
+                let fk = ForeignKey {
+                    column: row
+                        .get("child_column")
+                        .and_then(|x| x.to_string())
+                        .expect("get child_column"),
+                    referenced_table: row
+                        .get("parent_table")
+                        .and_then(|x| x.to_string())
+                        .expect("get parent_table"),
+                    referenced_column: row
+                        .get("parent_column")
+                        .and_then(|x| x.to_string())
+                        .expect("get parent_column"),
+                };
+                debug!(
+                    "Found foreign key column: '{}', to table: '{}', to column: '{}'",
+                    fk.column, fk.referenced_table, fk.referenced_column
+                );
+                fk
+            })
+            .collect()
     }
 
     fn get_indices(&mut self, schema: &str, table_name: &str) -> (Vec<Index>, Option<PrimaryKey>) {
+        debug!("Getting indices");
         let sql = "SELECT indexInfos.relname as name,
-            array_to_string(array_agg(columnInfos.attname), ',') as column_names,
+            array_agg(columnInfos.attname) as column_names,
             rawIndex.indisunique as is_unique, rawIndex.indisprimary as is_primary_key
             FROM
-            -- pg_class stores infos about tables, indices etc: https://www.postgresql.org/docs/9.3/catalog-pg-class.html
+            -- pg_class stores infos about tables, indices etc: https://www.postgresql.org/docs/current/catalog-pg-class.html
             pg_class tableInfos, pg_class indexInfos,
-            -- pg_index stores indices: https://www.postgresql.org/docs/9.3/catalog-pg-index.html
+            -- pg_index stores indices: https://www.postgresql.org/docs/current/catalog-pg-index.html
             pg_index rawIndex,
-            -- pg_attribute stores infos about columns: https://www.postgresql.org/docs/9.3/catalog-pg-attribute.html
+            -- pg_attribute stores infos about columns: https://www.postgresql.org/docs/current/catalog-pg-attribute.html
             pg_attribute columnInfos,
             -- pg_namespace stores info about the schema
             pg_namespace schemaInfo
@@ -182,32 +229,113 @@ impl IntrospectionConnector {
             GROUP BY tableInfos.relname, indexInfos.relname, rawIndex.indisunique,
             rawIndex.indisprimary
         ";
-        let rows = self.queryable.query_raw(&sql, &[]).expect("querying for indices");
-
+        let rows = self
+            .queryable
+            .query_raw(
+                &sql,
+                &[
+                    ParameterizedValue::Text(Cow::from(schema)),
+                    ParameterizedValue::Text(Cow::from(table_name)),
+                ],
+            )
+            .expect("querying for indices");
+        let mut pk: Option<PrimaryKey> = None;
         let indices = rows
             .into_iter()
-            .map(|index| {
+            .filter_map(|index| {
                 debug!("Got index: {:#?}", index);
-                Index {
-                    name: index.get("name").and_then(|x| x.to_string()).expect("name"),
-                    columns: vec![], //index.get("column_names").and_then(|x| x.into_vec::<String>()).expect("column_names"),
-                    unique: index.get("is_unique").and_then(|x| x.as_bool()).expect("is_unique"),
+                let is_pk = index
+                    .get("is_primary_key")
+                    .and_then(|x| x.as_bool())
+                    .expect("get is_primary_key");
+                // TODO: Implement and use as_slice instead of into_vec, to avoid cloning
+                let columns = index
+                    .get("column_names")
+                    .and_then(|x| x.clone().into_vec::<String>())
+                    .expect("column_names");
+                if is_pk {
+                    pk = Some(PrimaryKey { columns });
+                    None
+                } else {
+                    Some(Index {
+                        name: index.get("name").and_then(|x| x.to_string()).expect("name"),
+                        columns,
+                        unique: index.get("is_unique").and_then(|x| x.as_bool()).expect("is_unique"),
+                    })
                 }
             })
             .collect();
 
-        debug!("Found table indices: {:#?}", indices);
-        (indices, None)
+        debug!("Found table indices: {:#?}, primary key: {:#?}", indices, pk);
+        (indices, pk)
+    }
 
-        // return (await this.query(indexQuery, [schemaName, tableName])).map(row => {
-        //     return {
-        //         table_name,
-        //         name: row.index_name as string,
-        //         fields: this.parseJoinedArray(row.column_names),
-        //         unique: row.is_unique as boolean,
-        //         isPrimaryKey: row.is_primary_key as boolean,
-        //     }
-        // })
+    fn get_sequences(&mut self, schema: &str) -> Result<Vec<Sequence>> {
+        debug!("Getting sequences");
+        let sql = format!(
+            "SELECT start_value, sequence_name
+                  FROM information_schema.sequences
+                  WHERE sequence_schema = '{}'
+                  ",
+            schema
+        );
+        let rows = self.queryable.query_raw(&sql, &[]).expect("querying for sequences");
+        let sequences = rows
+            .into_iter()
+            .map(|seq| {
+                debug!("Got sequence: {:#?}", seq);
+                let initial_value = seq
+                    .get("start_value")
+                    .and_then(|x| x.to_string())
+                    .and_then(|x| x.parse::<u32>().ok())
+                    .expect("get start_value");
+                Sequence {
+                    // Not sure what allocation size refers to, but the TypeScript implementation
+                    // hardcodes this as 1
+                    allocation_size: 1,
+                    initial_value,
+                    name: seq
+                        .get("sequence_name")
+                        .and_then(|x| x.to_string())
+                        .expect("get sequence_name"),
+                }
+            })
+            .collect();
+
+        debug!("Found sequences: {:#?}", sequences);
+        Ok(sequences)
+    }
+
+    fn get_enums(&mut self, schema: &str) -> Result<Vec<Enum>> {
+        debug!("Getting enums");
+        let sql = format!(
+            "SELECT t.typname as name, e.enumlabel as value
+            FROM pg_type t 
+            JOIN pg_enum e ON t.oid = e.enumtypid  
+            JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+            WHERE n.nspname = '{}'
+            ",
+            schema
+        );
+        let rows = self.queryable.query_raw(&sql, &[]).expect("querying for enums");
+        let mut enum_values: HashMap<String, HashSet<String>> = HashMap::new();
+        for row in rows.into_iter() {
+            debug!("Got enum row: {:#?}", row);
+            let name = row.get("name").and_then(|x| x.to_string()).expect("get name");
+            let value = row.get("value").and_then(|x| x.to_string()).expect("get value");
+            if !enum_values.contains_key(&name) {
+                enum_values.insert(name.clone(), HashSet::new());
+            }
+            let vals = enum_values.get_mut(&name).expect("get enum values");
+            vals.insert(value);
+        }
+
+        let enums: Vec<Enum> = enum_values
+            .into_iter()
+            .map(|(k, v)| Enum { name: k, values: v })
+            .collect();
+        debug!("Found enums: {:#?}", enums);
+        Ok(enums)
     }
 }
 
@@ -216,20 +344,23 @@ fn get_column_type(udt: &str) -> ColumnType {
         "int2" => ColumnTypeFamily::Int,
         "int4" => ColumnTypeFamily::Int,
         "int8" => ColumnTypeFamily::Int,
-        "real" => ColumnTypeFamily::Float,
-        "boolean" => ColumnTypeFamily::Boolean,
+        "float4" => ColumnTypeFamily::Float,
+        "float8" => ColumnTypeFamily::Float,
+        "bool" => ColumnTypeFamily::Boolean,
         "text" => ColumnTypeFamily::String,
-        s if s.contains("char") => ColumnTypeFamily::String,
+        "varchar" => ColumnTypeFamily::String,
         "date" => ColumnTypeFamily::DateTime,
-        "binary" => ColumnTypeFamily::Binary,
-        "double" => ColumnTypeFamily::Float,
-        "binary[]" => ColumnTypeFamily::Binary,
-        "boolean[]" => ColumnTypeFamily::Boolean,
-        "date[]" => ColumnTypeFamily::DateTime,
-        "double[]" => ColumnTypeFamily::Float,
-        "float[]" => ColumnTypeFamily::Float,
-        "integer[]" => ColumnTypeFamily::Int,
-        "text[]" => ColumnTypeFamily::String,
+        "bytea" => ColumnTypeFamily::Binary,
+        "json" => ColumnTypeFamily::Json,
+        "uuid" => ColumnTypeFamily::Uuid,
+        // Array types
+        "_bytea" => ColumnTypeFamily::Binary,
+        "_bool" => ColumnTypeFamily::Boolean,
+        "_date" => ColumnTypeFamily::DateTime,
+        "_float8" => ColumnTypeFamily::Float,
+        "_float4" => ColumnTypeFamily::Float,
+        "_int4" => ColumnTypeFamily::Int,
+        "_text" => ColumnTypeFamily::String,
         x => panic!(format!("type '{}' is not supported here yet.", x)),
     };
     ColumnType {

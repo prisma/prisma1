@@ -62,7 +62,7 @@ impl IntrospectionConnector {
             name: name.to_string(),
             columns: introspected_columns,
             // TODO
-            indexes: Vec::new(),
+            indices: Vec::new(),
             primary_key,
             foreign_keys,
         }
@@ -76,6 +76,7 @@ impl IntrospectionConnector {
         let cols = result_set
             .into_iter()
             .map(|row| {
+                debug!("Got column row {:#?}", row);
                 let default_value = match row.get("dflt_value") {
                     Some(ParameterizedValue::Text(v)) => Some(v.to_string()),
                     Some(ParameterizedValue::Null) => None,
