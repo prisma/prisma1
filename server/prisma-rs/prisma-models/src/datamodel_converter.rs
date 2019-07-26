@@ -39,7 +39,7 @@ impl<'a> DatamodelConverter<'a> {
             .enums()
             .map(|e| InternalEnum {
                 name: e.name.clone(),
-                values: e.values.clone(),
+                values: e.values.iter().map(|v| v.name.clone()).collect(),
             })
             .collect()
     }
@@ -418,7 +418,7 @@ impl DatamodelFieldExtensions for dml::Field {
                     .find(|e| e.name == name.clone())
                     .map(|e| InternalEnum {
                         name: e.name.clone(),
-                        values: e.values.clone(),
+                        values: e.values.iter().map(|v| v.name.clone()).collect(),
                     })
             }
             _ => None,
