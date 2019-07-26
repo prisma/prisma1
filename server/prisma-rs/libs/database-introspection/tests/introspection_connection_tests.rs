@@ -8,6 +8,7 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{thread, time};
+use std::path::Path;
 
 const SCHEMA: &str = "DatabaseInspectorTest";
 
