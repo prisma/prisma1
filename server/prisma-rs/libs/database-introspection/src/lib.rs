@@ -1,7 +1,8 @@
 use failure::{Error, Fail};
+use std::collections::HashSet;
 
-pub mod sqlite;
 pub mod postgres;
+pub mod sqlite;
 
 /// Introspection errors.
 #[derive(Debug, Fail)]
@@ -34,8 +35,17 @@ pub struct DatabaseSchema {
 
 impl DatabaseSchema {
     /// Get a table.
-    pub fn table(&self, name: &str) -> Option<&Table> {
+    pub fn get_table(&self, name: &str) -> Option<&Table> {
         self.tables.iter().find(|x| x.name == name)
+    }
+
+    /// Get an enum.
+    pub fn get_enum(&self, name: &str) -> Option<&Enum> {
+        self.enums.iter().find(|x| x.name == name)
+    }
+
+    pub fn get_sequence(&self, name: &str) -> Option<&Sequence> {
+        self.sequences.iter().find(|x| x.name == name)
     }
 }
 
@@ -47,7 +57,7 @@ pub struct Table {
     /// The table's columns.
     pub columns: Vec<Column>,
     /// The table's indices.
-    pub indexes: Vec<Index>,
+    pub indices: Vec<Index>,
     /// The table's primary key, if there is one.
     pub primary_key: Option<PrimaryKey>,
     /// The table's foreign keys.
@@ -113,6 +123,10 @@ pub enum ColumnTypeFamily {
     DateTime,
     /// Binary types.
     Binary,
+    /// JSON types.
+    Json,
+    /// UUID types.
+    Uuid,
 }
 
 /// A column's arity.
@@ -129,23 +143,25 @@ pub enum ColumnArity {
 /// A foreign key.
 #[derive(PartialEq, Debug)]
 pub struct ForeignKey {
-    /// Column name.
-    pub column: String,
+    /// Column names.
+    pub columns: Vec<String>,
     /// Referenced table.
     pub referenced_table: String,
-    /// Referenced column.
-    pub referenced_column: String,
+    /// Referenced columns.
+    pub referenced_columns: Vec<String>,
 }
 
 /// A SQL enum.
+#[derive(PartialEq, Debug)]
 pub struct Enum {
     /// Enum name.
     pub name: String,
     /// Possible enum values.
-    pub values: Vec<String>,
+    pub values: HashSet<String>,
 }
 
 /// A SQL sequence.
+#[derive(PartialEq, Debug)]
 pub struct Sequence {
     /// Sequence name.
     pub name: String,

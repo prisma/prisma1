@@ -3,11 +3,13 @@
 
 use barrel::{types, Migration};
 use database_introspection::*;
+use log::debug;
 use prisma_query::connector::{Queryable, Sqlite as SqliteDatabaseClient};
+use std::collections::HashSet;
+use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{thread, time};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::path::Path;
 
 const SCHEMA: &str = "DatabaseInspectorTest";
 
@@ -30,6 +32,118 @@ fn setup() {
         .expect("fern configuration");
 
     IS_SETUP.store(true, Ordering::Relaxed);
+}
+
+fn binary_array_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "BINARY[]".to_string(),
+        "postgres" => "_bytea".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn bool_array_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "BOOLEAN[]".to_string(),
+        "postgres" => "_bool".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn datetime_array_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "DATE[]".to_string(),
+        "postgres" => "_date".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn double_array_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "DOUBLE[]".to_string(),
+        "postgres" => "_float8".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn int_array_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "INTEGER[]".to_string(),
+        "postgres" => "_int4".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn text_array_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "TEXT[]".to_string(),
+        "postgres" => "_text".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn binary_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "BINARY".to_string(),
+        "postgres" => "bytea".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn bool_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "BOOLEAN".to_string(),
+        "postgres" => "bool".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn datetime_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "DATE".to_string(),
+        "postgres" => "date".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn double_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "DOUBLE".to_string(),
+        "postgres" => "float8".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn float_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "REAL".to_string(),
+        "postgres" => "float8".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn int_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "INTEGER".to_string(),
+        "postgres" => "int4".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn text_type(db_type: &str) -> String {
+    match db_type {
+        "sqlite" => "TEXT".to_string(),
+        "postgres" => "text".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
+}
+
+fn varchar_type(db_type: &str, length: u64) -> String {
+    match db_type {
+        "sqlite" => format!("VARCHAR({})", length),
+        "postgres" => "varchar".to_string(),
+        _ => panic!(format!("unrecognized database type {}", db_type)),
+    }
 }
 
 #[test]
@@ -55,26 +169,24 @@ fn all_column_types_must_work() {
                 t.add_column("double_col", types::double());
                 t.add_column("float_col", types::float());
                 t.add_column("int_col", types::integer());
-                if db_type != "sqlite" {
-                    t.add_column("json_col", types::json());
-                }
                 // TODO: Test also autoincrement variety
                 t.add_column("primary_col", types::primary());
                 t.add_column("string1_col", types::text());
+                t.add_column("string2_col", types::varchar(1));
                 if db_type != "sqlite" {
+                    t.add_column("json_col", types::json());
                     t.add_column("uuid_col", types::uuid());
                 }
-                t.add_column("string2_col", types::varchar(1));
             });
         },
         |db_type, inspector| {
             let result = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
-            let table = result.table("User").expect("couldn't get User table");
-            let expected_columns = vec![
+            let table = result.get_table("User").expect("couldn't get User table");
+            let mut expected_columns = vec![
                 Column {
                     name: "array_bin_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("BINARY[]"),
+                        raw: binary_array_type(db_type),
                         family: ColumnTypeFamily::Binary,
                     },
                     arity: ColumnArity::List,
@@ -84,7 +196,7 @@ fn all_column_types_must_work() {
                 Column {
                     name: "array_bool_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("BOOLEAN[]"),
+                        raw: bool_array_type(db_type),
                         family: ColumnTypeFamily::Boolean,
                     },
                     arity: ColumnArity::List,
@@ -94,7 +206,7 @@ fn all_column_types_must_work() {
                 Column {
                     name: "array_date_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("DATE[]"),
+                        raw: datetime_array_type(db_type),
                         family: ColumnTypeFamily::DateTime,
                     },
                     arity: ColumnArity::List,
@@ -104,7 +216,7 @@ fn all_column_types_must_work() {
                 Column {
                     name: "array_double_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("DOUBLE[]"),
+                        raw: double_array_type(db_type),
                         family: ColumnTypeFamily::Float,
                     },
                     arity: ColumnArity::List,
@@ -114,7 +226,7 @@ fn all_column_types_must_work() {
                 Column {
                     name: "array_int_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("INTEGER[]"),
+                        raw: int_array_type(db_type),
                         family: ColumnTypeFamily::Int,
                     },
                     arity: ColumnArity::List,
@@ -124,7 +236,7 @@ fn all_column_types_must_work() {
                 Column {
                     name: "array_text_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("TEXT[]"),
+                        raw: text_array_type(db_type),
                         family: ColumnTypeFamily::String,
                     },
                     arity: ColumnArity::List,
@@ -134,7 +246,7 @@ fn all_column_types_must_work() {
                 Column {
                     name: "binary_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("BINARY"),
+                        raw: binary_type(db_type),
                         family: ColumnTypeFamily::Binary,
                     },
                     arity: ColumnArity::Required,
@@ -144,7 +256,7 @@ fn all_column_types_must_work() {
                 Column {
                     name: "boolean_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("BOOLEAN"),
+                        raw: bool_type(db_type),
                         family: ColumnTypeFamily::Boolean,
                     },
                     arity: ColumnArity::Required,
@@ -154,7 +266,7 @@ fn all_column_types_must_work() {
                 Column {
                     name: "date_time_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("DATE"),
+                        raw: datetime_type(db_type),
                         family: ColumnTypeFamily::DateTime,
                     },
                     arity: ColumnArity::Required,
@@ -164,7 +276,7 @@ fn all_column_types_must_work() {
                 Column {
                     name: "double_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("DOUBLE"),
+                        raw: double_type(db_type),
                         family: ColumnTypeFamily::Float,
                     },
                     arity: ColumnArity::Required,
@@ -174,7 +286,7 @@ fn all_column_types_must_work() {
                 Column {
                     name: "float_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("REAL"),
+                        raw: float_type(db_type),
                         family: ColumnTypeFamily::Float,
                     },
                     arity: ColumnArity::Required,
@@ -184,7 +296,7 @@ fn all_column_types_must_work() {
                 Column {
                     name: "int_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("INTEGER"),
+                        raw: int_type(db_type),
                         family: ColumnTypeFamily::Int,
                     },
                     arity: ColumnArity::Required,
@@ -194,17 +306,23 @@ fn all_column_types_must_work() {
                 Column {
                     name: "primary_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("INTEGER"),
+                        raw: int_type(db_type),
                         family: ColumnTypeFamily::Int,
                     },
                     arity: ColumnArity::Required,
-                    default: None,
+                    default: match db_type {
+                        "postgres" => Some(format!(
+                            "nextval(\'\"{}\".\"User_primary_col_seq\"\'::regclass)",
+                            SCHEMA
+                        )),
+                        _ => None,
+                    },
                     auto_increment: None,
                 },
                 Column {
                     name: "string1_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("TEXT"),
+                        raw: text_type(db_type),
                         family: ColumnTypeFamily::String,
                     },
                     arity: ColumnArity::Required,
@@ -214,7 +332,7 @@ fn all_column_types_must_work() {
                 Column {
                     name: "string2_col".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("VARCHAR(1)"),
+                        raw: varchar_type(db_type, 1),
                         family: ColumnTypeFamily::String,
                     },
                     arity: ColumnArity::Required,
@@ -222,17 +340,42 @@ fn all_column_types_must_work() {
                     auto_increment: None,
                 },
             ];
+            if db_type != "sqlite" {
+                expected_columns.push(Column {
+                    name: "json_col".to_string(),
+                    tpe: ColumnType {
+                        raw: "json".to_string(),
+                        family: ColumnTypeFamily::Json,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                });
+                expected_columns.push(Column {
+                    name: "uuid_col".to_string(),
+                    tpe: ColumnType {
+                        raw: "uuid".to_string(),
+                        family: ColumnTypeFamily::Uuid,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                });
+            }
+            expected_columns.sort_unstable_by_key(|c| c.name.to_owned());
 
-            assert_eq!(table.name, "User");
-            assert_eq!(table.columns, expected_columns);
-            assert_eq!(table.indexes, vec![]);
             assert_eq!(
-                table.primary_key,
-                Some(PrimaryKey {
-                    columns: vec!["primary_col".to_string()],
-                })
+                table,
+                &Table {
+                    name: "User".to_string(),
+                    columns: expected_columns,
+                    indices: vec![],
+                    primary_key: Some(PrimaryKey {
+                        columns: vec!["primary_col".to_string()],
+                    }),
+                    foreign_keys: vec![],
+                }
             );
-            assert_eq!(table.foreign_keys, vec![]);
         },
     );
 }
@@ -251,17 +394,12 @@ fn is_required_must_work() {
         |db_type, inspector| {
             let result = inspector.introspect(&SCHEMA.to_string()).expect("introspecting");
 
-            let user_table = result.table("User").expect("getting User table");
+            let user_table = result.get_table("User").expect("getting User table");
             let expected_columns = vec![
                 Column {
                     name: "column1".to_string(),
                     tpe: ColumnType {
-                        raw: match db_type {
-                            "sqlite" => "INTEGER".to_string(),
-                            "postgres" => "int4".to_string(),
-                            "mysql" => "int4".to_string(),
-                            _ => panic!(format!("unrecognized database type {}", db_type)),
-                        },
+                        raw: int_type(db_type),
                         family: ColumnTypeFamily::Int,
                     },
                     arity: ColumnArity::Required,
@@ -271,12 +409,7 @@ fn is_required_must_work() {
                 Column {
                     name: "column2".to_string(),
                     tpe: ColumnType {
-                        raw: match db_type {
-                            "sqlite" => "INTEGER".to_string(),
-                            "postgres" => "int4".to_string(),
-                            "mysql" => "int4".to_string(),
-                            _ => panic!(format!("unrecognized database type {}", db_type)),
-                        },
+                        raw: int_type(db_type),
                         family: ColumnTypeFamily::Int,
                     },
                     arity: ColumnArity::Nullable,
@@ -302,7 +435,7 @@ fn foreign_keys_must_work() {
             migration.create_table("User", move |t| {
                 // barrel does not render foreign keys correctly for mysql
                 // TODO: Investigate
-                if db_type == "mysql"{
+                if db_type == "mysql" {
                     t.add_column("city", types::integer());
                     t.inject_custom("FOREIGN KEY(city) REFERENCES City(id)");
                 } else {
@@ -312,11 +445,11 @@ fn foreign_keys_must_work() {
         },
         |db_type, inspector| {
             let schema = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
-            let user_table = schema.table("User").expect("couldn't get User table");
+            let user_table = schema.get_table("User").expect("couldn't get User table");
             let expected_columns = vec![Column {
                 name: "city".to_string(),
-                tpe: ColumnType{
-                    raw: "INTEGER".to_string(),
+                tpe: ColumnType {
+                    raw: int_type(db_type),
                     family: ColumnTypeFamily::Int,
                 },
                 arity: ColumnArity::Required,
@@ -324,17 +457,113 @@ fn foreign_keys_must_work() {
                 auto_increment: None,
             }];
 
-            assert_eq!(user_table, &Table{
-                name: "User".to_string(),
-                columns: expected_columns,
-                indexes: vec![],
-                primary_key: None,
-                foreign_keys: vec![ForeignKey{
-                    column: "city".to_string(),
-                    referenced_column: "id".to_string(),
-                    referenced_table: "City".to_string(),
-                }],
+            assert_eq!(
+                user_table,
+                &Table {
+                    name: "User".to_string(),
+                    columns: expected_columns,
+                    indices: vec![],
+                    primary_key: None,
+                    foreign_keys: vec![ForeignKey {
+                        columns: vec!["city".to_string()],
+                        referenced_columns: vec!["id".to_string()],
+                        referenced_table: "City".to_string(),
+                    }],
+                }
+            );
+        },
+    );
+}
+
+#[test]
+fn multi_column_foreign_keys_must_work() {
+    setup();
+
+    test_each_backend(
+        |db_type, mut migration| {
+            let db_type = db_type.clone();
+            migration.create_table("City", |t| {
+                t.add_column("id", types::primary());
+                t.add_column("name", types::text());
             });
+            migration.create_table("User", move |t| {
+                t.add_column("city", types::integer());
+                t.add_column("city_name", types::text());
+                t.inject_custom("FOREIGN KEY(city, city_name) REFERENCES City(id, name)");
+            });
+        },
+        |db_type, inspector| {
+            let schema = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
+            let user_table = schema.get_table("User").expect("couldn't get User table");
+            let expected_columns = vec![Column {
+                name: "city".to_string(),
+                tpe: ColumnType {
+                    raw: int_type(db_type),
+                    family: ColumnTypeFamily::Int,
+                },
+                arity: ColumnArity::Required,
+                default: None,
+                auto_increment: None,
+            }];
+
+            assert_eq!(
+                user_table,
+                &Table {
+                    name: "User".to_string(),
+                    columns: expected_columns,
+                    indices: vec![],
+                    primary_key: None,
+                    foreign_keys: vec![ForeignKey {
+                        columns: vec!["city".to_string(), "city_name".to_string()],
+                        referenced_columns: vec!["id".to_string(), "name".to_string()],
+                        referenced_table: "City".to_string(),
+                    }],
+                }
+            );
+        },
+    );
+}
+
+#[test]
+fn postgres_enums_must_work() {
+    setup();
+
+    let mut inspector = get_postgres_connector(&format!(
+        "CREATE TYPE \"{}\".\"mood\" AS ENUM ('sad', 'ok', 'happy')",
+        SCHEMA
+    ));
+
+    let schema = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
+    let got_enum = schema.get_enum("mood").expect("get enum");
+
+    let values: HashSet<String> = ["happy".to_string(), "ok".to_string(), "sad".to_string()]
+        .iter()
+        .cloned()
+        .collect();
+    assert_eq!(
+        got_enum,
+        &Enum {
+            name: "mood".to_string(),
+            values,
+        }
+    );
+}
+
+#[test]
+fn postgres_sequences_must_work() {
+    setup();
+
+    let mut inspector = get_postgres_connector(&format!("CREATE SEQUENCE \"{}\".\"test\"", SCHEMA));
+
+    let schema = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
+    let got_seq = schema.get_sequence("test").expect("get sequence");
+
+    assert_eq!(
+        got_seq,
+        &Sequence {
+            name: "test".to_string(),
+            initial_value: 1,
+            allocation_size: 1,
         },
     );
 }
@@ -348,7 +577,8 @@ where
     {
         let mut migration = Migration::new().schema(SCHEMA);
         migrationFn("sqlite", &mut migration);
-        let mut inspector = get_sqlite_connector(migration);
+        let full_sql = migration.make::<barrel::backend::Sqlite>();
+        let mut inspector = get_sqlite_connector(&full_sql);
 
         testFn("sqlite", &mut inspector);
     }
@@ -356,9 +586,8 @@ where
     // {
     //     let mut migration = Migration::new().schema(SCHEMA);
     //     migrationFn("postgres", &mut migration);
-    //     let mut inspector = get_postgres_connector(migration);
-    //     // let full_sql = migration.make::<barrel::backend::Pg>();
-    //     // run_full_sql(&queryable, &full_sql);
+    //     let full_sql = migration.make::<barrel::backend::Pg>();
+    //     let mut inspector = get_postgres_connector(&full_sql);
 
     //     testFn("postgres", &mut inspector);
     // }
@@ -373,16 +602,7 @@ where
     // }
 }
 
-fn run_full_sql(queryable: &mut Queryable, full_sql: &str) {
-    for sql in full_sql.split(";") {
-        dbg!(sql);
-        if sql != "" {
-            queryable.query_raw(&sql, &[]).expect("executing SQL should work");
-        }
-    }
-}
-
-fn get_sqlite_connector(migration: Migration) -> sqlite::IntrospectionConnector {
+fn get_sqlite_connector(sql: &str) -> sqlite::IntrospectionConnector {
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
     let database_file_path = dbg!(format!("{}/{}.db", database_folder_path, SCHEMA));
@@ -390,20 +610,19 @@ fn get_sqlite_connector(migration: Migration) -> sqlite::IntrospectionConnector 
         std::fs::remove_file(database_file_path.clone()).expect("remove database file");
     }
 
-    let full_sql = migration.make::<barrel::backend::Sqlite>();
     let conn = rusqlite::Connection::open_in_memory().expect("opening SQLite connection should work");
     conn.execute(
         "ATTACH DATABASE ? as ?",
         &vec![database_file_path.clone(), String::from(SCHEMA)],
     )
     .expect("attach SQLite database");
-    conn.execute_batch(&full_sql).expect("executing migration");
+    conn.execute_batch(sql).expect("executing migration");
     conn.close().expect("closing SQLite connection");
 
     sqlite::IntrospectionConnector::new(&database_file_path, SCHEMA).expect("creating SQLite connector should work")
 }
 
-fn get_postgres_connector(migration: Migration) -> postgres::IntrospectionConnector {
+fn get_postgres_connector(sql: &str) -> postgres::IntrospectionConnector {
     // Drop schema if it exists
     let host = match std::env::var("IS_BUILDKITE") {
         Ok(_) => "test-db-postgres",
@@ -421,10 +640,16 @@ fn get_postgres_connector(migration: Migration) -> postgres::IntrospectionConnec
     let drop_schema = format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA);
     client.execute(drop_schema.as_str(), &[]).expect("dropping schema");
 
-    client.execute(format!("CREATE SCHEMA \"{}\";", SCHEMA).as_str(), &[]).expect("creating schema");
+    client
+        .execute(format!("CREATE SCHEMA \"{}\";", SCHEMA).as_str(), &[])
+        .expect("creating schema");
 
-    let full_sql = migration.make::<barrel::backend::Pg>();
-    client.execute(full_sql.as_str(), &[]).expect("executing migration");
+    let sql_string = sql.to_string();
+    let statements: Vec<&str> = sql_string.split(";").collect();
+    for statement in statements {
+        debug!("Executing migration statement: '{}'", statement);
+        client.execute(statement, &[]).expect("executing migration statement");
+    }
 
     postgres::IntrospectionConnector::new(client).expect("creating Postgres connector")
 }

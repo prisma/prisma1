@@ -62,7 +62,7 @@ impl IntrospectionConnector {
             name: name.to_string(),
             columns: introspected_columns,
             // TODO
-            indexes: Vec::new(),
+            indices: Vec::new(),
             primary_key,
             foreign_keys,
         }
@@ -76,15 +76,14 @@ impl IntrospectionConnector {
         let cols = result_set
             .into_iter()
             .map(|row| {
+                debug!("Got column row {:#?}", row);
                 let default_value = match row.get("dflt_value") {
                     Some(ParameterizedValue::Text(v)) => Some(v.to_string()),
                     Some(ParameterizedValue::Null) => None,
                     Some(p) => panic!(format!("expected a string value but got {:?}", p)),
                     None => panic!("couldn't get dflt_value column"),
                 };
-                let tpe = get_column_type(
-                    &row.get("type").and_then(|x| x.to_string()).expect("type")
-                );
+                let tpe = get_column_type(&row.get("type").and_then(|x| x.to_string()).expect("type"));
                 let pk = row.get("pk").and_then(|x| x.as_i64()).expect("primary key");
                 let is_required = row.get("notnull").and_then(|x| x.as_bool()).expect("notnull");
                 let arity = if tpe.raw.ends_with("[]") {
@@ -146,14 +145,20 @@ impl IntrospectionConnector {
         result_set
             .into_iter()
             .map(|row| {
+                // TODO: multi-column
+                let column = row.get("from").and_then(|x| x.to_string()).expect("from");
+                let columns = vec![column];
+                // TODO: multi-column
+                let referenced_column = row.get("to").and_then(|x| x.to_string()).expect("to");
+                let referenced_columns = vec![referenced_column];
                 let fk = ForeignKey {
-                    column: row.get("from").and_then(|x| x.to_string()).expect("from"),
+                    columns,
                     referenced_table: row.get("table").and_then(|x| x.to_string()).expect("table"),
-                    referenced_column: row.get("to").and_then(|x| x.to_string()).expect("to"),
+                    referenced_columns,
                 };
                 debug!(
-                    "Found foreign key column: '{}', to table: '{}', to column: '{}'",
-                    fk.column, fk.referenced_table, fk.referenced_column
+                    "Found foreign key column: '{:?}', to table: '{}', to column: '{:?}'",
+                    fk.columns, fk.referenced_table, fk.referenced_columns
                 );
                 fk
             })
