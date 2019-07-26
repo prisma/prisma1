@@ -82,7 +82,8 @@ pub struct Column {
     /// Column arity.
     pub arity: ColumnArity,
     /// Column default.
-    pub default: Option<String>, // does this field need to be richer? E.g. to easier detect the usages of sequences here
+    // Does this field need to be richer? E.g. to easier detect the usages of sequences here
+    pub default: Option<String>,
     /// Column auto increment setting, MySQL/SQLite only.
     pub auto_increment: Option<bool>,
 }

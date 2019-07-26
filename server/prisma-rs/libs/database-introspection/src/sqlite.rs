@@ -44,7 +44,7 @@ impl IntrospectionConnector {
     fn get_table_names(&mut self, schema: &str) -> Vec<String> {
         let sql = format!("SELECT name FROM {}.sqlite_master WHERE type='table'", schema);
         debug!("Introspecting table names with query: '{}'", sql);
-        let result_set = self.queryable.query_raw(&sql, &[]).unwrap();
+        let result_set = self.queryable.query_raw(&sql, &[]).expect("get table names");
         let names = result_set
             .into_iter()
             .map(|row| row.get("name").and_then(|x| x.to_string()).unwrap())
@@ -56,20 +56,19 @@ impl IntrospectionConnector {
 
     fn get_table(&mut self, schema: &str, name: &str) -> Table {
         debug!("Introspecting table '{}' in schema '{}", name, schema);
-        let (introspected_columns, primary_key) = self.get_columns(&schema, name);
-        let foreign_keys = self.get_foreign_keys(&schema, name);
+        let (introspected_columns, primary_key) = self.get_columns(schema, name);
+        let foreign_keys = self.get_foreign_keys(schema, name);
         Table {
             name: name.to_string(),
-            columns: convert_introspected_columns(introspected_columns),
+            columns: introspected_columns,
             // TODO
             indexes: Vec::new(),
             primary_key,
-            // TODO
             foreign_keys,
         }
     }
 
-    fn get_columns(&mut self, schema: &str, table: &str) -> (Vec<IntrospectedColumn>, Option<PrimaryKey>) {
+    fn get_columns(&mut self, schema: &str, table: &str) -> (Vec<Column>, Option<PrimaryKey>) {
         let sql = format!(r#"Pragma "{}".table_info ("{}")"#, schema, table);
         debug!("Introspecting table columns, query: '{}'", sql);
         let result_set = self.queryable.query_raw(&sql, &[]).unwrap();
@@ -83,25 +82,37 @@ impl IntrospectionConnector {
                     Some(p) => panic!(format!("expected a string value but got {:?}", p)),
                     None => panic!("couldn't get dflt_value column"),
                 };
-                let col = IntrospectedColumn {
-                    name: row.get("name").and_then(|x| x.to_string()).expect("name"),
-                    table: table.to_string(),
-                    tpe: row.get("type").and_then(|x| x.to_string()).expect("type"),
-                    is_required: row.get("notnull").and_then(|x| x.as_bool()).expect("notnull"),
-                    default: default_value.clone(),
-                    pk: row.get("pk").and_then(|x| x.as_i64()).expect("primary key"),
+                let tpe = get_column_type(
+                    &row.get("type").and_then(|x| x.to_string()).expect("type")
+                );
+                let pk = row.get("pk").and_then(|x| x.as_i64()).expect("primary key");
+                let is_required = row.get("notnull").and_then(|x| x.as_bool()).expect("notnull");
+                let arity = if tpe.raw.ends_with("[]") {
+                    ColumnArity::List
+                } else if is_required {
+                    ColumnArity::Required
+                } else {
+                    ColumnArity::Nullable
                 };
-                if col.pk > 0 {
-                    pk_cols.insert(col.pk, col.name.clone());
+                let col = Column {
+                    name: row.get("name").and_then(|x| x.to_string()).expect("name"),
+                    tpe,
+                    arity: arity.clone(),
+                    default: default_value.clone(),
+                    // TODO
+                    auto_increment: None,
+                };
+                if pk > 0 {
+                    pk_cols.insert(pk, col.name.clone());
                 }
 
                 debug!(
-                    "Found column '{}', type: '{}', is_required: {}, default: '{}', primary key: {}",
+                    "Found column '{}', type: '{:?}', default: '{}', arity: {:?}, primary key: {}",
                     col.name,
                     col.tpe,
-                    col.is_required,
                     default_value.unwrap_or("none".to_string()),
-                    col.pk
+                    arity,
+                    pk
                 );
 
                 col
@@ -169,29 +180,9 @@ pub struct IntrospectedColumn {
     pub pk: i64,
 }
 
-fn convert_introspected_columns(columns: Vec<IntrospectedColumn>) -> Vec<Column> {
-    columns
-        .iter()
-        .map(|c| {
-            let arity = match c.is_required {
-                true => ColumnArity::Required,
-                false => ColumnArity::Nullable,
-            };
-            Column {
-                name: c.name.clone(),
-                tpe: get_column_type(c),
-                arity: arity,
-                default: None,
-                // TODO
-                auto_increment: None,
-            }
-        })
-        .collect()
-}
-
-fn get_column_type(column: &IntrospectedColumn) -> ColumnType {
-    let tpe = column.tpe.to_lowercase();
-    let family = match tpe.as_ref() {
+fn get_column_type(tpe: &str) -> ColumnType {
+    let tpe_lower = tpe.to_lowercase();
+    let family = match tpe_lower.as_ref() {
         "integer" => ColumnTypeFamily::Int,
         "real" => ColumnTypeFamily::Float,
         "boolean" => ColumnTypeFamily::Boolean,
@@ -207,13 +198,10 @@ fn get_column_type(column: &IntrospectedColumn) -> ColumnType {
         "float[]" => ColumnTypeFamily::Float,
         "integer[]" => ColumnTypeFamily::Int,
         "text[]" => ColumnTypeFamily::String,
-        x => panic!(format!(
-            "type '{}' is not supported here yet. Column was: {}",
-            x, column.name
-        )),
+        x => panic!(format!("type '{}' is not supported here yet", x)),
     };
     ColumnType {
-        raw: column.tpe.clone(),
+        raw: tpe.to_string(),
         family: family,
     }
 }

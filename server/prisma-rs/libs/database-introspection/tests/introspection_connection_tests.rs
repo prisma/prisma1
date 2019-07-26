@@ -22,7 +22,7 @@ fn setup() {
         .format(|out, message, record| {
             out.finish(format_args!("[{}][{}] {}", record.target(), record.level(), message))
         })
-        .level(log::LevelFilter::Debug)
+        .level(log::LevelFilter::Warn)
         .chain(std::io::stdout())
         .apply()
         .expect("fern configuration");
@@ -31,7 +31,7 @@ fn setup() {
 }
 
 #[test]
-fn all_columns_types_must_work() {
+fn all_column_types_must_work() {
     setup();
 
     test_each_backend(
@@ -65,7 +65,7 @@ fn all_columns_types_must_work() {
                 t.add_column("string2_col", types::varchar(1));
             });
         },
-        |inspector| {
+        |db_type, inspector| {
             let result = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
             let table = result.table("User").expect("couldn't get User table");
             let expected_columns = vec![
@@ -75,7 +75,7 @@ fn all_columns_types_must_work() {
                         raw: String::from("BINARY[]"),
                         family: ColumnTypeFamily::Binary,
                     },
-                    arity: ColumnArity::Required,
+                    arity: ColumnArity::List,
                     default: None,
                     auto_increment: None,
                 },
@@ -85,7 +85,7 @@ fn all_columns_types_must_work() {
                         raw: String::from("BOOLEAN[]"),
                         family: ColumnTypeFamily::Boolean,
                     },
-                    arity: ColumnArity::Required,
+                    arity: ColumnArity::List,
                     default: None,
                     auto_increment: None,
                 },
@@ -95,7 +95,7 @@ fn all_columns_types_must_work() {
                         raw: String::from("DATE[]"),
                         family: ColumnTypeFamily::DateTime,
                     },
-                    arity: ColumnArity::Required,
+                    arity: ColumnArity::List,
                     default: None,
                     auto_increment: None,
                 },
@@ -105,7 +105,7 @@ fn all_columns_types_must_work() {
                         raw: String::from("DOUBLE[]"),
                         family: ColumnTypeFamily::Float,
                     },
-                    arity: ColumnArity::Required,
+                    arity: ColumnArity::List,
                     default: None,
                     auto_increment: None,
                 },
@@ -115,7 +115,7 @@ fn all_columns_types_must_work() {
                         raw: String::from("INTEGER[]"),
                         family: ColumnTypeFamily::Int,
                     },
-                    arity: ColumnArity::Required,
+                    arity: ColumnArity::List,
                     default: None,
                     auto_increment: None,
                 },
@@ -125,7 +125,7 @@ fn all_columns_types_must_work() {
                         raw: String::from("TEXT[]"),
                         family: ColumnTypeFamily::String,
                     },
-                    arity: ColumnArity::Required,
+                    arity: ColumnArity::List,
                     default: None,
                     auto_increment: None,
                 },
@@ -246,14 +246,20 @@ fn is_required_must_work() {
                 t.add_column("column2", types::integer().nullable(true));
             });
         },
-        |inspector| {
+        |db_type, inspector| {
             let result = inspector.introspect(&SCHEMA.to_string()).expect("introspecting");
+
             let user_table = result.table("User").expect("getting User table");
             let expected_columns = vec![
                 Column {
                     name: "column1".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("INTEGER"),
+                        raw: match db_type {
+                            "sqlite" => "INTEGER".to_string(),
+                            "postgres" => "int4".to_string(),
+                            "mysql" => "int4".to_string(),
+                            _ => panic!(format!("unrecognized database type {}", db_type)),
+                        },
                         family: ColumnTypeFamily::Int,
                     },
                     arity: ColumnArity::Required,
@@ -263,7 +269,12 @@ fn is_required_must_work() {
                 Column {
                     name: "column2".to_string(),
                     tpe: ColumnType {
-                        raw: String::from("INTEGER"),
+                        raw: match db_type {
+                            "sqlite" => "INTEGER".to_string(),
+                            "postgres" => "int4".to_string(),
+                            "mysql" => "int4".to_string(),
+                            _ => panic!(format!("unrecognized database type {}", db_type)),
+                        },
                         family: ColumnTypeFamily::Int,
                     },
                     arity: ColumnArity::Nullable,
@@ -297,7 +308,7 @@ fn foreign_keys_must_work() {
                 }
             });
         },
-        |inspector| {
+        |db_type, inspector| {
             let schema = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
             let user_table = schema.table("User").expect("couldn't get User table");
             let expected_columns = vec![Column {
@@ -329,27 +340,26 @@ fn foreign_keys_must_work() {
 fn test_each_backend<MigrationFn, TestFn>(mut migrationFn: MigrationFn, testFn: TestFn)
 where
     MigrationFn: FnMut(&'static str, &mut Migration) -> (),
-    TestFn: Fn(&mut IntrospectionConnector) -> (),
+    TestFn: Fn(&'static str, &mut IntrospectionConnector) -> (),
 {
     // SQLITE
-    // {
-    //     let mut migration = Migration::new().schema(SCHEMA);
-    //     migrationFn("sqlite", &mut migration);
-    //     let mut inspector = get_sqlite_connector(migration);
-
-    //     testFn(&mut inspector);
-    // }
-    // POSTGRES
     {
         let mut migration = Migration::new().schema(SCHEMA);
-        migrationFn("postgres", &mut migration);
-        let mut inspector = get_postgres_connector(migration);
-        // let full_sql = migration.make::<barrel::backend::Pg>();
-        // run_full_sql(&queryable, &full_sql);
+        migrationFn("sqlite", &mut migration);
+        let mut inspector = get_sqlite_connector(migration);
 
-        testFn(&mut inspector);
+        testFn("sqlite", &mut inspector);
     }
-    // println!("Testing with MySQL now");
+    // POSTGRES
+    // {
+    //     let mut migration = Migration::new().schema(SCHEMA);
+    //     migrationFn("postgres", &mut migration);
+    //     let mut inspector = get_postgres_connector(migration);
+    //     // let full_sql = migration.make::<barrel::backend::Pg>();
+    //     // run_full_sql(&queryable, &full_sql);
+
+    //     testFn("postgres", &mut inspector);
+    // }
     // // MySQL
     // {
     //     let mut migration = Migration::new().schema(SCHEMA);
@@ -357,8 +367,7 @@ where
     //     let (inspector, queryable) = mysql();
     //     let full_sql = dbg!(migration.make::<barrel::backend::MySql>());
     //     run_full_sql(&queryable, &full_sql);
-    //     println!("Running the test function now");
-    //     testFn(inspector);
+    //     testFn("mysql", inspector);
     // }
 }
 
@@ -406,17 +415,12 @@ fn get_postgres_connector(migration: Migration) -> postgres::IntrospectionConnec
         .expect("connecting to Postgres");
 
     let drop_schema = format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA);
-    println!("Dropping schema: '{}'", drop_schema);
     client.execute(drop_schema.as_str(), &[]).expect("dropping schema");
 
-    println!("Creating schema '{}'", SCHEMA);
     client.execute(format!("CREATE SCHEMA \"{}\";", SCHEMA).as_str(), &[]).expect("creating schema");
-    println!("Created schema '{}'", SCHEMA);
 
     let full_sql = migration.make::<barrel::backend::Pg>();
-    println!("Executing migration '{}'", full_sql);
     client.execute(full_sql.as_str(), &[]).expect("executing migration");
-    println!("Executed migration");
 
     postgres::IntrospectionConnector::new(client).expect("creating Postgres connector")
 }
