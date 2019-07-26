@@ -6,13 +6,14 @@
 //! This IR is meant for general processing and storage.
 //! It can also be easily serialized.
 
-mod lists;
-mod maps;
+// mod lists;
+// mod maps;
 
-use crate::ResultPair;
-use connector::{QueryArguments, ReadQueryResult};
+use crate::{CoreError, CoreResult, IntoArc, ObjectTypeStrongRef, OutputType, OutputTypeRef, ResultPair};
+use connector::{QueryArguments, QueryResult, ReadQueryResult, WriteQueryResult};
 use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
+use std::borrow::Borrow;
 
 /// A `key -> value` map to an IR item
 pub type Map = IndexMap<String, Item>;
@@ -54,8 +55,21 @@ impl ResultIrBuilder {
     }
 
     /// Parse collected queries into the return wrapper type
-    pub fn build(self) -> Vec<Response> {
-        unimplemented!()
+    pub fn build(self) -> CoreResult<Vec<Response>> {
+        self.0
+            .into_iter()
+            .fold(vec![], |mut vec, res| {
+                let response = match res {
+                    ResultPair::Read(r, typ) => Self::serialize_read(r, typ),
+                    _ => unimplemented!(),
+                };
+
+                vec.push(response);
+                vec
+            })
+            .into_iter()
+            .collect()
+
         // self.0.into_iter().fold(vec![], |mut vec, res| {
         //     vec.push(match res {
         //         QueryResult::Read(ReadQueryResult::Single(query)) => {
@@ -79,6 +93,28 @@ impl ResultIrBuilder {
 
         //     vec
         // })
+    }
+
+    fn serialize_read(result: ReadQueryResult, typ: OutputTypeRef) -> CoreResult<Response> {
+        match typ.borrow() {
+            OutputType::Object(obj) => {
+                Self::serialize_object(obj.into_arc()).map(|res| Response::Data(result.name, Item::Map(None, res)))
+            }
+            OutputType::List(inner) => unimplemented!(),
+            OutputType::Opt(inner) => unimplemented!(), // check for nulls here
+            OutputType::Enum(et) => unimplemented!(),
+            OutputType::Scalar(st) => unimplemented!(),
+        };
+
+        unimplemented!()
+    }
+
+    fn serialize_list(typ: OutputTypeRef) -> CoreResult<List> {
+        unimplemented!()
+    }
+
+    fn serialize_object(typ: ObjectTypeStrongRef) -> CoreResult<Map> {
+        unimplemented!()
     }
 }
 

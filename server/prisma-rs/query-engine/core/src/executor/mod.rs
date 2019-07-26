@@ -11,8 +11,7 @@ use crate::{
     CoreError, CoreResult, OutputType, OutputTypeRef, QueryPair, QuerySchemaRef, ResultPair, ResultResolutionStrategy,
 };
 use connector::{
-    filter::RecordFinder, Identifier, ModelExtractor, Query, QueryResult, ReadQuery, ReadQueryResult,
-    SingleReadQueryResult, WriteQueryResult,
+    filter::RecordFinder, Identifier, ModelExtractor, Query, QueryResult, ReadQuery, ReadQueryResult, WriteQueryResult,
 };
 use prisma_models::{ModelRef, PrismaValue};
 use std::borrow::Borrow;
@@ -50,10 +49,10 @@ impl QueryExecutor {
         let results: Vec<ResultPair> = self.execute_queries(queries)?;
 
         // 4. Build IR response / Parse results into IR response
-        Ok(results
+        results
             .into_iter()
             .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
-            .build())
+            .build()
     }
 
     fn execute_queries(&self, queries: Vec<QueryPair>) -> CoreResult<Vec<ResultPair>> {

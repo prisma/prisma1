@@ -7,18 +7,27 @@ pub struct SingleRecord {
     pub field_names: Vec<String>,
 }
 
-impl TryFrom<ManyRecords> for SingleRecord {
-    type Error = Error;
+// impl TryFrom<ManyRecords> for SingleRecord {
+//     type Error = Error;
 
-    fn try_from(mn: ManyRecords) -> DomainResult<SingleRecord> {
-        let field_names = mn.field_names;
+//     fn try_from(mn: ManyRecords) -> DomainResult<SingleRecord> {
+//         let field_names = mn.field_names;
 
-        mn.records
-            .into_iter()
-            .rev()
-            .next()
-            .map(|record| SingleRecord { record, field_names })
-            .ok_or(Error::ConversionFailure("ManyRecords", "SingleRecord"))
+//         mn.records
+//             .into_iter()
+//             .rev()
+//             .next()
+//             .map(|record| SingleRecord { record, field_names })
+//             .ok_or(Error::ConversionFailure("ManyRecords", "SingleRecord"))
+//     }
+// }
+
+impl Into<ManyRecords> for SingleRecord {
+    fn into(self) -> ManyRecords {
+        ManyRecords {
+            records: vec![self.record],
+            field_names: self.field_names,
+        }
     }
 }
 
@@ -36,7 +45,7 @@ impl SingleRecord {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ManyRecords {
     pub records: Vec<Record>,
     pub field_names: Vec<String>,
@@ -86,7 +95,8 @@ impl Record {
     }
 
     pub fn collect_id(&self, field_names: &Vec<String>, id_field: &str) -> DomainResult<GraphqlId> {
-        self.get_field_value(field_names, id_field).and_then(|raw| GraphqlId::try_from(raw))
+        self.get_field_value(field_names, id_field)
+            .and_then(|raw| GraphqlId::try_from(raw))
     }
 
     pub fn get_field_value(&self, field_names: &Vec<String>, field: &str) -> DomainResult<&PrismaValue> {

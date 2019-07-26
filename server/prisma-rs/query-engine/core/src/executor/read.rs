@@ -1,7 +1,9 @@
 use crate::CoreResult;
 use connector::{self, query_ast::*, result_ast::*, ManagedDatabaseReader, ScalarListValues};
-use prisma_models::{GraphqlId, ScalarField, SelectedFields, SingleRecord};
-use std::{convert::TryFrom, sync::Arc};
+use prisma_models::{GraphqlId, ScalarField, SelectedFields};
+use std::{
+    sync::Arc,
+};
 
 pub struct ReadQueryExecutor {
     pub data_resolver: Arc<dyn ManagedDatabaseReader + Send + Sync + 'static>,
@@ -26,7 +28,7 @@ impl ReadQueryExecutor {
         let id_field = model.fields().id().name.clone();
 
         match scalars {
-            Some(ref record) => {
+            Some(record) => {
                 let ids = vec![record.collect_id(&id_field)?];
                 let list_fields = selected_fields.scalar_lists();
                 let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
@@ -36,25 +38,24 @@ impl ReadQueryExecutor {
                     .map(|q| self.execute(q, &ids))
                     .collect::<CoreResult<Vec<ReadQueryResult>>>()?;
 
-                Ok(ReadQueryResult::Single(SingleReadQueryResult {
+                Ok(ReadQueryResult {
                     name: query.name,
                     alias: query.alias,
                     fields: query.selection_order,
-                    scalars,
+                    scalars: record.into(),
                     nested,
                     lists,
                     id_field,
-                }))
+                    ..Default::default()
+                })
             }
-            None => Ok(ReadQueryResult::Single(SingleReadQueryResult {
+            None => Ok(ReadQueryResult {
                 name: query.name,
                 alias: query.alias,
                 fields: query.selection_order,
-                scalars: None,
-                nested: vec![],
-                lists: vec![],
                 id_field,
-            })),
+                ..Default::default()
+            }),
         }
     }
 
@@ -75,16 +76,16 @@ impl ReadQueryExecutor {
             .map(|q| self.execute(q, &ids))
             .collect::<CoreResult<Vec<ReadQueryResult>>>()?;
 
-        Ok(ReadQueryResult::Many(ManyReadQueryResults::new(
-            query.name,
-            query.alias,
-            query.selection_order,
+        Ok(ReadQueryResult {
+            name: query.name,
+            alias: query.alias,
+            fields: query.selection_order,
+            query_arguments: query.args,
             scalars,
             nested,
             lists,
-            query.args,
             id_field,
-        )))
+        })
     }
 
     /// Queries related records for a set of parent IDs.
@@ -108,16 +109,16 @@ impl ReadQueryExecutor {
             .map(|q| self.execute(q, &ids))
             .collect::<CoreResult<Vec<ReadQueryResult>>>()?;
 
-        Ok(ReadQueryResult::Many(ManyReadQueryResults::new(
-            query.name,
-            query.alias,
-            query.selection_order,
+        Ok(ReadQueryResult {
+            name: query.name,
+            alias: query.alias,
+            fields: query.selection_order,
+            query_arguments: query.args,
             scalars,
             nested,
             lists,
-            query.args,
             id_field,
-        )))
+        })
     }
 
     fn resolve_scalar_list_fields(
