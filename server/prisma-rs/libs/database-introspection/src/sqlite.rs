@@ -82,9 +82,7 @@ impl IntrospectionConnector {
                     Some(p) => panic!(format!("expected a string value but got {:?}", p)),
                     None => panic!("couldn't get dflt_value column"),
                 };
-                let tpe = get_column_type(
-                    &row.get("type").and_then(|x| x.to_string()).expect("type")
-                );
+                let tpe = get_column_type(&row.get("type").and_then(|x| x.to_string()).expect("type"));
                 let pk = row.get("pk").and_then(|x| x.as_i64()).expect("primary key");
                 let is_required = row.get("notnull").and_then(|x| x.as_bool()).expect("notnull");
                 let arity = if tpe.raw.ends_with("[]") {
