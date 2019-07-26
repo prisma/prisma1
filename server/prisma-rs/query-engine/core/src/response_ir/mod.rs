@@ -60,7 +60,7 @@ impl ResultIrBuilder {
             .into_iter()
             .fold(vec![], |mut vec, res| {
                 let response = match res {
-                    ResultPair::Read(r, typ) => Self::serialize_read(r, typ),
+                    ResultPair::Read(r, typ) => Self::serialize_read(r, typ), // todo coerce into error types on err
                     _ => unimplemented!(),
                 };
 
@@ -95,28 +95,98 @@ impl ResultIrBuilder {
         // })
     }
 
+    /// The query validation makes sure that the output selection already has the correct shape.
+    /// This means that we can make the following assumptions:
+    /// - Objects don't need to check required fields.
+    /// - Objects don't need to check extra fields - just pick the selected ones and ignore the rest.
+    ///
+    ///
+    /// The output validation has to make sure that returned values:
+    /// - Are of the correct type.
+    /// - Are nullable if not present.
     fn serialize_read(result: ReadQueryResult, typ: OutputTypeRef) -> CoreResult<Response> {
-        match typ.borrow() {
+        let name = result.alias.clone().unwrap_or_else(|| result.name.clone());
+
+        // Depth-first serialization
+        // First, move lists and nested out of result for separate processing.
+        // let nested = std::mem::replace(&mut result.nested, vec![]);
+        // let lists = std::mem::replace(&mut result.lists, vec![]);
+
+        // // Parse and validate all nested objects with their respective output type
+        // nested.into_iter().map(|nested_result| {
+        //     // Returns field name -> Item?
+        //     // todo...
+        // });
+
+        let item: Option<Item> = match typ.borrow() {
             OutputType::Object(obj) => {
-                Self::serialize_object(obj.into_arc()).map(|res| Response::Data(result.name, Item::Map(None, res)))
+                Self::serialize_object(result, obj.into_arc())? //.map(|res| res.map(|res| Item::Map(None, res)))
             }
-            OutputType::List(inner) => unimplemented!(),
-            OutputType::Opt(inner) => unimplemented!(), // check for nulls here
+
+            OutputType::List(inner) => unimplemented!(), // trim here?
+            OutputType::Opt(inner) => {
+                // let inner_result =
+                unimplemented!()
+            },
             OutputType::Enum(et) => unimplemented!(),
             OutputType::Scalar(st) => unimplemented!(),
         };
 
+        // The optional handling above makes sure that if a field is nullable, it's returned as PrismaValue::Null.
+        match item {
+            Some(item) => Response::Data(name, item),
+            None => Err(CoreError::SerializationError(format!("Required field {} returned null.", name))),
+        }
+    }
+
+    /// None if no list is present
+    fn serialize_list(result: ReadQueryResult, typ: OutputTypeRef) -> CoreResult<Option<List>> {
         unimplemented!()
     }
 
-    fn serialize_list(typ: OutputTypeRef) -> CoreResult<List> {
+    /// None if no object is present
+    fn serialize_object(result: ReadQueryResult, typ: ObjectTypeStrongRef) -> CoreResult<Option<Item>> {
+        // Match fields to
+
         unimplemented!()
     }
 
-    fn serialize_object(typ: ObjectTypeStrongRef) -> CoreResult<Map> {
+    fn serialize_scalar(result: ReadQueryResult, typ: ObjectTypeStrongRef) -> CoreResult<PrismaValue> {
+        unimplemented!()
+    }
+
+    fn serialize_enum(result: ReadQueryResult, typ: ObjectTypeStrongRef) -> CoreResult<Map> {
         unimplemented!()
     }
 }
+
+// /// Attempts to coerce the given write result into the provided output type.
+// fn coerce_result(result: WriteQueryResult, typ: &OutputTypeRef) -> CoreResult<QueryResult> {
+//     let value: PrismaValue = match result.identifier {
+//         Identifier::Id(id) => id.into(),
+//         Identifier::Count(c) => PrismaValue::from(c), // Requires object with one field that is usize / int / float, or single scalar type.
+//         Identifier::Record(r) => unimplemented!(),    // Requires object. Try coercing all fields of the object.
+//         Identifier::None => unimplemented!(),         // Null?
+//     };
+
+//     unimplemented!()
+// }
+
+// fn coerce_value_type(val: PrismaValue, typ: &OutputTypeRef) -> CoreResult<()> {
+//     match typ.borrow() {
+//         OutputType::Object(o) => unimplemented!(),
+//         OutputType::Opt(inner) => unimplemented!(),
+//         OutputType::Enum(e) => unimplemented!(),
+//         OutputType::List(inner) => unimplemented!(),
+//         OutputType::Scalar(s) => unimplemented!(),
+//     };
+
+//     unimplemented!()
+// }
+
+// fn coerce_scalar() -> CoreResult<()> {
+//     unimplemented!()
+// }
 
 /// Removes the excess records added to by the database query layer based on the query arguments
 /// This would be the right place to add pagination markers (has next page, etc.).

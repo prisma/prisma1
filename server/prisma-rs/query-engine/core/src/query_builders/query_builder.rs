@@ -133,6 +133,10 @@ impl QueryBuilder {
     }
 
     /// Parses and validates a set of selections against a schema (output) object.
+    /// On an output object, nullability designates whether or not an output field can be null
+    /// (in contrast, nullability on an input object means whether or not a field as to be provided).
+    /// The above is the reason we don't need to check nullability here, as it is done by the output
+    /// validation in the serialization step.
     fn parse_object(
         &self,
         selections: &Vec<Selection>,
@@ -175,6 +179,7 @@ impl QueryBuilder {
                     .field_type
                     .as_object_type()
                     .map(|obj| self.parse_object(&selection.sub_selections, &obj));
+
                 let sub_selections = match sub_selections {
                     Some(sub) => Some(sub?),
                     None => None,

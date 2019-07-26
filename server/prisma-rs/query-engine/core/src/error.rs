@@ -23,7 +23,10 @@ pub enum CoreError {
     UnsupportedFeatureError(String),
 
     #[fail(display = "{}", _0)]
-    ConversionError(String)
+    ConversionError(String),
+
+    #[fail(display = "{}", _0)]
+    SerializationError(String),
 }
 
 impl From<ConnectorError> for CoreError {

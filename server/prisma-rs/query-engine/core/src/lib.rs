@@ -25,7 +25,8 @@ use connector::{Query, ReadQueryResult, WriteQueryResult};
 
 pub type CoreResult<T> = Result<T, CoreError>;
 
-/// Temporary type to work around current dependent execution limitations.
+/// Augments connector queries with additional information on how to resolve their results.
+/// This is intended to be a temporary type to work around current dependent execution limitations.
 pub type QueryPair = (Query, ResultResolutionStrategy);
 
 #[derive(Debug)]
@@ -40,5 +41,5 @@ pub enum ResultResolutionStrategy {
 #[derive(Debug)]
 pub enum ResultPair {
     Read(ReadQueryResult, OutputTypeRef),
-    Write(WriteQueryResult, OutputTypeRef)
+    Write(WriteQueryResult, OutputTypeRef),
 }
