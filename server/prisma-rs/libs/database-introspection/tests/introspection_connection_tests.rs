@@ -7,6 +7,7 @@ use prisma_query::connector::{Queryable, Sqlite as SqliteDatabaseClient};
 use std::sync::Arc;
 use std::{thread, time};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::path::Path;
 
 const SCHEMA: &str = "DatabaseInspectorTest";
 
@@ -384,7 +385,9 @@ fn get_sqlite_connector(migration: Migration) -> sqlite::IntrospectionConnector 
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
     let database_file_path = dbg!(format!("{}/{}.db", database_folder_path, SCHEMA));
-    std::fs::remove_file(database_file_path.clone()).expect("remove database file");
+    if Path::new(&database_file_path).exists() {
+        std::fs::remove_file(database_file_path.clone()).expect("remove database file");
+    }
 
     let full_sql = migration.make::<barrel::backend::Sqlite>();
     let conn = rusqlite::Connection::open_in_memory().expect("opening SQLite connection should work");
