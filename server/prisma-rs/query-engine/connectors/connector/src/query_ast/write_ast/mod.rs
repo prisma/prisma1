@@ -15,6 +15,7 @@ pub use update_record::*;
 pub use upsert_record::*;
 
 use crate::filter::{Filter, RecordFinder};
+use super::ModelExtractor;
 use prisma_models::prelude::*;
 use std::sync::Arc;
 
@@ -24,10 +25,8 @@ pub enum WriteQuery {
     Nested(NestedWriteQuery),
 }
 
-impl WriteQuery {
-    /// This is purely a workaround for the query execution
-    /// requiring models for dependent queries.
-    pub fn extract_model(&self) -> Option<ModelRef> {
+impl ModelExtractor for WriteQuery {
+    fn extract_model(&self) -> Option<ModelRef> {
         match self {
             WriteQuery::Root(r) => r.extract_model(),
             _ => None,

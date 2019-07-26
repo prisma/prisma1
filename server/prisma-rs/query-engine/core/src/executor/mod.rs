@@ -11,8 +11,8 @@ use crate::{
     CoreError, CoreResult, OutputType, OutputTypeRef, QueryPair, QuerySchemaRef, ResultPair, ResultResolutionStrategy,
 };
 use connector::{
-    filter::RecordFinder, Identifier, Query, QueryResult, ReadQuery, ReadQueryResult, SingleReadQueryResult,
-    WriteQueryResult,
+    filter::RecordFinder, Identifier, ModelExtractor, Query, QueryResult, ReadQuery, ReadQueryResult,
+    SingleReadQueryResult, WriteQueryResult,
 };
 use prisma_models::{ModelRef, PrismaValue};
 use std::borrow::Borrow;
@@ -50,11 +50,10 @@ impl QueryExecutor {
         let results: Vec<ResultPair> = self.execute_queries(queries)?;
 
         // 4. Build IR response / Parse results into IR response
-        // Ok(results
-        //     .into_iter()
-        //     .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
-        //     .build())
-        unimplemented!()
+        Ok(results
+            .into_iter()
+            .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
+            .build())
     }
 
     fn execute_queries(&self, queries: Vec<QueryPair>) -> CoreResult<Vec<ResultPair>> {
@@ -64,63 +63,48 @@ impl QueryExecutor {
     fn execute_query(&self, query: QueryPair) -> CoreResult<ResultPair> {
         let (query, strategy) = query;
         let model_opt = query.extract_model();
-
         let query_result = match query {
-            Query::Read(read) => unimplemented!(),
-            // self
-            //     .read_executor
-            //     .execute(read, &vec![])
-            //     .map(|res| {
-            //         let res = QueryResult::Read(res);
-            //         match strategy {
-            //             ResultResolutionStrategy::Serialize(ref typ) => ResultPair(),
-            //             ResultResolutionStrategy::Dependent(dependent_pair) => match *dependent_pair {
-            //                 (Query::Read(ReadQuery::RecordQuery(mut rq)), strategy) => {
-            //                     // Inject required information into the query and execute
-            //                     rq.record_finder = Some(Self::to_record_finder(&write_result, model)?);
-            //                     self.read_executor.read_one(rq).map(|res| QueryResult::Read(res))
-            //                 }
-            //                 _ => unreachable!(), // Invariant for now
-            //             },
-            //         }}),
-            Query::Write(write) => {
-                // let model = write
-                //     .extract_model()
-                //     .expect("Expected write queries to have an associated model.");
+            Query::Read(read) => self
+                .read_executor
+                .execute(read, &vec![])
+                .map(|res| QueryResult::Read(res)),
+            Query::Write(write) => self.write_executor.execute(write).map(|res| QueryResult::Write(res)),
+        }?;
 
-                // self.write_executor.execute(write).map(|res| {
-                //     match strategy {
-                //     ResultResolutionStrategy::Serialize(ref typ) => ,
-                //     ResultResolutionStrategy::Dependent(dependent_pair) => match *dependent_pair {
-                //         (Query::Read(ReadQuery::RecordQuery(mut rq)), strategy) => {
-                //             // Inject required information into the query and execute
-                //             rq.record_finder = Some(Self::to_record_finder(&write_result, model)?);
-                //             self.read_executor.read_one(rq).map(|res| QueryResult::Read(res))
-                //         }
-                //         _ => unreachable!(), // Invariant for now
-                //     },
-                // }})
-                // })
-                unimplemented!()
-            }
-        };
-
-        self.resolve_result(query_result, strategy)
+        self.resolve_result(query_result, strategy, model_opt)
     }
 
-    fn resolve_result(result: QueryResult, strategy: ResultResolutionStrategy, model: Option<ModelRef>) -> CoreResult<ResultPair> {
-        // match strategy {
-            //             ResultResolutionStrategy::Serialize(ref typ) => ResultPair(),
-            //             ResultResolutionStrategy::Dependent(dependent_pair) => match *dependent_pair {
-            //                 (Query::Read(ReadQuery::RecordQuery(mut rq)), strategy) => {
-            //                     // Inject required information into the query and execute
-            //                     rq.record_finder = Some(Self::to_record_finder(&write_result, model)?);
-            //                     self.read_executor.read_one(rq).map(|res| QueryResult::Read(res))
-            //                 }
-            //                 _ => unreachable!(), // Invariant for now
-            //             },
-            //         }}),
-        unimplemented!()
+    fn resolve_result(
+        &self,
+        result: QueryResult,
+        strategy: ResultResolutionStrategy,
+        model: Option<ModelRef>,
+    ) -> CoreResult<ResultPair> {
+        match result {
+            QueryResult::Read(r) => match strategy {
+                ResultResolutionStrategy::Serialize(typ) => Ok(ResultPair::Read(r, typ)),
+                ResultResolutionStrategy::Dependent(_) => unimplemented!(), // Dependent query exec. from read is not supported in this exec. model.
+            },
+
+            QueryResult::Write(w) => match strategy {
+                ResultResolutionStrategy::Serialize(typ) => Ok(ResultPair::Write(w, typ)),
+                ResultResolutionStrategy::Dependent(dependent_pair) => match model {
+                    Some(model) => match *dependent_pair {
+                        (Query::Read(ReadQuery::RecordQuery(mut rq)), strategy) => {
+                            // Inject required information into the query and execute
+                            rq.record_finder = Some(Self::to_record_finder(&w, model)?);
+
+                            let dependent_pair = (Query::Read(ReadQuery::RecordQuery(rq)), strategy);
+                            self.execute_query(dependent_pair)
+                        }
+                        _ => unreachable!(), // Invariant for now
+                    },
+                    None => Err(CoreError::ConversionError(
+                        "Model required for dependent query execution".into(),
+                    )),
+                },
+            },
+        }
     }
 
     // /// Attempts to coerce the given write result into the provided output type.
