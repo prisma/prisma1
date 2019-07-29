@@ -122,6 +122,7 @@ impl From<prisma_query::error::Error> for SqlError {
         match e {
             prisma_query::error::Error::QueryError(e) => SqlError::QueryError(e.into()),
             prisma_query::error::Error::NotFound => SqlError::RecordDoesNotExist,
+            prisma_query::error::Error::InvalidConnectionArguments => SqlError::InvalidConnectionArguments,
 
             prisma_query::error::Error::UniqueConstraintViolation { field_name } => {
                 SqlError::UniqueConstraintViolation { field_name }
