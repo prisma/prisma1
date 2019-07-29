@@ -58,7 +58,7 @@ impl QueryBuilder {
             .into_iter()
             .map(|parsed_field| {
                 let field = query_object
-                    .find_field(parsed_field.name.clone())
+                    .find_field(&parsed_field.name)
                     .expect("Expected validation to guarantee existing field on Query object.");
 
                 let field_operation = field
@@ -100,7 +100,7 @@ impl QueryBuilder {
             .into_iter()
             .map(|parsed_field| {
                 let field = mutation_object
-                    .find_field(parsed_field.name.clone())
+                    .find_field(&parsed_field.name)
                     .expect("Expected validation to guarantee existing field on Mutation object.");
 
                 let field_operation = field

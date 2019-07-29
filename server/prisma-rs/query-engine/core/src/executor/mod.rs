@@ -49,10 +49,10 @@ impl QueryExecutor {
         let results: Vec<ResultPair> = self.execute_queries(queries)?;
 
         // 4. Build IR response / Parse results into IR response
-        results
+        Ok(results
             .into_iter()
             .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
-            .build()
+            .build())
     }
 
     fn execute_queries(&self, queries: Vec<QueryPair>) -> CoreResult<Vec<ResultPair>> {
@@ -67,6 +67,7 @@ impl QueryExecutor {
                 .read_executor
                 .execute(read, &vec![])
                 .map(|res| QueryResult::Read(res)),
+
             Query::Write(write) => self.write_executor.execute(write).map(|res| QueryResult::Write(res)),
         }?;
 

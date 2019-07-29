@@ -157,12 +157,8 @@ impl ObjectType {
             .unwrap();
     }
 
-    pub fn find_field<T>(&self, name: T) -> Option<FieldRef>
-    where
-        T: Into<String>,
-    {
-        let name = name.into();
-        self.get_fields().into_iter().find(|f| f.name == name).cloned()
+    pub fn find_field(&self, name: &str) -> Option<FieldRef> {
+        self.get_fields().into_iter().find(|f| &f.name == name).cloned()
     }
 
     /// True if fields are empty, false otherwise.
@@ -397,6 +393,13 @@ impl OutputType {
             OutputType::Object(obj) => Some(obj.into_arc()),
             OutputType::Opt(inner) => inner.as_object_type(),
             OutputType::Scalar(_) => None,
+        }
+    }
+
+    pub fn is_list(&self) -> bool {
+        match self {
+            OutputType::List(_) => true,
+            _ => false,
         }
     }
 }
