@@ -61,7 +61,10 @@ impl SqlFamily {
 impl SqlMigrationConnector {
     pub fn exists(sql_family: SqlFamily, url: &str) -> bool {
         match sql_family {
-            SqlFamily::Sqlite => PathBuf::from(url).exists(),
+            SqlFamily::Sqlite => {
+                let file_path = url.trim_start_matches("file:").to_string();
+                PathBuf::from(file_path).exists()
+            }
             SqlFamily::Postgres => {
                 let helper = Self::postgres_helper(&url);
                 let check_sql = format!(
