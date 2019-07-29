@@ -6,9 +6,6 @@
 //! - [DatabaseWriter](../connector/trait.DatabaseWriter.html) to write
 //!   data.
 
-#[macro_use]
-extern crate log;
-
 mod cursor_condition;
 mod database;
 mod error;
