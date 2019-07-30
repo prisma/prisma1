@@ -30,7 +30,7 @@ fn should_add_back_relations() {
 }
 
 #[test]
-fn must_add_to_fields_on_the_right_side() {
+fn must_add_to_fields_on_the_right_side_for_one_to_one_relations() {
     // the to fields are always added to model with the lower name in lexicographic order
     let dml = r#"
     model User1 {
@@ -78,7 +78,7 @@ fn must_add_to_fields_on_the_right_side() {
 }
 
 #[test]
-fn must_add_to_fields_correctly_for_implicit_back_relations() {
+fn must_add_to_fields_correctly_for_implicit_back_relations_for_one_to_one_relations() {
     // Post is lower that User. So the to_fields should be stored in Post.
     let dml = r#"
     model User {
@@ -91,7 +91,7 @@ fn must_add_to_fields_correctly_for_implicit_back_relations() {
     }
     "#;
 
-    let schema = dbg!(parse(dml));
+    let schema = parse(dml);
 
     schema
         .assert_has_model("User")
@@ -104,8 +104,84 @@ fn must_add_to_fields_correctly_for_implicit_back_relations() {
 }
 
 #[test]
+fn must_add_to_fields_on_both_sides_for_many_to_many_relations() {
+    let dml = r#"
+    model User {
+        user_id Int    @id
+        posts   Post[] 
+    }
+
+    model Post {
+        post_id Int    @id
+        users   User[]
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    schema
+        .assert_has_model("User")
+        .assert_has_field("posts")
+        .assert_relation_to_fields(&["post_id"]);
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("users")
+        .assert_relation_to_fields(&["user_id"]);
+}
+
+#[test]
+fn must_add_to_fields_on_both_sides_for_one_to_many_relations() {
+    let dml = r#"
+    model User {
+        user_id Int    @id
+        posts   Post[] 
+    }
+
+    model Post {
+        post_id Int    @id
+        user    User
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    schema
+        .assert_has_model("User")
+        .assert_has_field("posts")
+        .assert_relation_to_fields(&[]);
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("user")
+        .assert_relation_to_fields(&["user_id"]);
+
+    // prove that lexicographic order does not have an influence.
+    let dml = r#"
+    model User {
+        user_id Int    @id
+        post    Post 
+    }
+
+    model Post {
+        post_id Int    @id
+        users   User[]
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    schema
+        .assert_has_model("User")
+        .assert_has_field("post")
+        .assert_relation_to_fields(&["post_id"]);
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("users")
+        .assert_relation_to_fields(&[]);
+}
+
+#[test]
 fn should_not_add_back_relation_fields_for_many_to_many_relations() {
-    // Equal name for both fields was a bug triggerer.
+    // Equal name for both fields was a bug trigger.
     let dml = r#"
 model Blog {
   id Int @id
