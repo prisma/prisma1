@@ -84,7 +84,7 @@ impl ResultIrBuilder {
                 match res {
                     ResultPair::Read(r, typ) => {
                         let name = r.alias.clone().unwrap_or_else(|| r.name.clone());
-                        let serialized = Self::serialize_read(r, &typ, None);
+                        let serialized = Self::serialize_read(r, &typ, false, false);
 
                         match serialized {
                             Ok(result) => {
@@ -106,41 +106,6 @@ impl ResultIrBuilder {
             .collect()
     }
 
-    fn transform(
-        mut items: Vec<Item>,
-        enclosing_type: Option<&OutputTypeRef>,
-        name: &str,
-        query_args: &QueryArguments,
-    ) -> CoreResult<Item> {
-        if let Some(ec) = enclosing_type {
-            match ec.borrow() {
-                OutputType::List(_) => {
-                    trim_records(&mut items, query_args);
-                    Ok(Item::List(items))
-                }
-
-                _ => unreachable!(),
-            }
-        } else {
-            // As we have no enclosing type, it can't be a list, hence check for single node.
-            // If nothing is contained, use null. Nulls will be checked subsequently by opt checks.
-            if items.len() > 1 {
-                Err(CoreError::SerializationError(format!(
-                    "2 Expected at most 1 item for '{}', got {}",
-                    name,
-                    items.len()
-                )))
-            } else if items.is_empty() {
-                Err(CoreError::SerializationError(format!(
-                    "Required field '{}' returned null",
-                    name
-                )))
-            } else {
-                Ok(items.pop().unwrap())
-            }
-        }
-    }
-
     /// The query validation makes sure that the output selection already has the correct shape.
     /// This means that we can make the following assumptions:
     /// - Objects don't need to check required fields.
@@ -150,113 +115,76 @@ impl ResultIrBuilder {
     /// - Are of the correct type.
     /// - Are nullable if not present.
     ///
-    /// The enclosing type is required to make non-local decisions like if something is a list or optional.
+    /// The is_list and is_optional flags dictate how object checks are done.
+    /// // todo more here
     ///
     /// Returns a pair of (parent ID, response)
     fn serialize_read(
         result: ReadQueryResult,
         typ: &OutputTypeRef,
-        enclosing_type: Option<&OutputTypeRef>, // is_list: Option<bool>
+        is_list: bool,
+        is_optional: bool,
     ) -> CoreResult<CheckedItemsWithParents> {
         let query_args = result.query_arguments.clone();
         let name = result.name.clone();
 
-        Ok(match typ.borrow() {
-            OutputType::List(inner) => {
-                let inner_result = Self::serialize_read(result, inner, Some(typ))?;
-                inner_result
-            }
-
-            OutputType::Opt(inner) => {
-                let inner_result = Self::serialize_read(result, inner, Some(typ))?;
-
-                // inner_result.into_iter().map(|(parent, mut items| {
-                //     let transformed = Self::transform(items, enclosing_type, &name, &query_args);
-
-                //     // if items.is_empty() {
-                //     //     Ok((parent, Item::Value(PrismaValue::Null)))
-                //     // } else {
-                //     //     Ok((parent, items.pop().unwrap()))
-                //     // }
-                //     unimplemented!()
-                // }).collect()
-
-                inner_result
-            }
-
+        match typ.borrow() {
+            OutputType::List(inner) => Self::serialize_read(result, inner, true, false), // List resets optionals TODO document in details why
+            OutputType::Opt(inner) => Self::serialize_read(result, inner, is_list, true),
             OutputType::Object(obj) => {
                 let result = Self::serialize_objects(result, obj.into_arc())?;
 
-                // Based on the enclosing type, check the results:
-                // Go through the result map and for each parent node, check the shape of the dependent results.
-                // - If it's a list, trim records based on query args.
-                // - If it's an opt, check whatever is contained for nulls.
-                if let Some(ec) = enclosing_type {
-                    match ec.borrow() {
-                        OutputType::List(_) => result
+                match (is_list, is_optional) {
+                    // List(Opt(_)) | List(_)
+                    (true, opt) => {
+                        result
                             .into_iter()
                             .map(|(parent, mut items)| {
-                                trim_records(&mut items, &query_args);
-                                (parent, Item::List(items))
-                            })
-                            .collect(),
+                                if !opt {
+                                    // Check that all items are non-null
+                                    if let Some(_) = items.iter().find(|item| match item {
+                                        Item::Value(PrismaValue::Null) => true,
+                                        _ => false,
+                                    }) {
+                                        return Err(CoreError::SerializationError(format!(
+                                            "Required field '{}' returned a null record",
+                                            name
+                                        )));
+                                    }
+                                }
 
-                        OutputType::Opt(_) => result
+                                // Trim excess records
+                                trim_records(&mut items, &query_args);
+                                Ok((parent, Item::List(items)))
+                            })
+                            .collect()
+                    }
+
+                    // Opt(_)
+                    (false, opt) => {
+                        result
                             .into_iter()
                             .map(|(parent, mut items)| {
-                                // WIP not sure what should happen here
-                                if items.is_empty() {
+                                // As it's not a list, we require a single result
+                                if items.len() > 1 {
+                                    Err(CoreError::SerializationError(format!(
+                                        "Expected at most 1 item for '{}', got {}",
+                                        name,
+                                        items.len()
+                                    )))
+                                } else if items.is_empty() {
                                     Ok((parent, Item::Value(PrismaValue::Null)))
                                 } else {
                                     Ok((parent, items.pop().unwrap()))
                                 }
-
-                                // // As the enclosing type is not a list, we need to make sure that at most one result is returned.
-                                // if items.len() > 1 {
-                                //     Err(CoreError::SerializationError(format!(
-                                //         "1 Expected at most 1 item for '{}', got {}",
-                                //         name,
-                                //         items.len()
-                                //     )))
-                                // } else if items.is_empty() {
-                                //     Ok((parent, Item::Value(PrismaValue::Null)))
-                                // } else {
-                                //     Ok((parent, items.pop().unwrap()))
-                                // }
                             })
-                            .collect::<CoreResult<CheckedItemsWithParents>>()?,
-
-                        _ => unreachable!(),
+                            .collect()
                     }
-                } else {
-                    // As we have no enclosing type, it can't be optional or a list, hence:
-                    // - Validate for single node.
-                    // - Validate nulls.
-                    // WIP this is not really a good solution, as we lose information about what field is actually the culprit.
-                    result
-                        .into_iter()
-                        .map(|(parent, mut items)| {
-                            // As the enclosing type is not a list, we need to make sure that at most one result is returned.
-                            if items.len() > 1 {
-                                Err(CoreError::SerializationError(format!(
-                                    "2 Expected at most 1 item for '{}', got {}",
-                                    name,
-                                    items.len()
-                                )))
-                            } else if items.is_empty() {
-                                Err(CoreError::SerializationError(format!(
-                                    "Required field '{}' returned null",
-                                    name
-                                )))
-                            } else {
-                                Ok((parent, items.pop().unwrap()))
-                            }
-                        })
-                        .collect::<CoreResult<CheckedItemsWithParents>>()?
                 }
             }
+
             _ => unreachable!(), // We always serialize reads into objects or lists on the top levels. Scalars and enums are handled separately.
-        })
+        }
     }
 
     /// Serializes the given result into objects of given type.
@@ -280,7 +208,7 @@ impl ResultIrBuilder {
         for nested_result in nested {
             let name = nested_result.name.clone();
             let field = typ.find_field(&name).unwrap();
-            let result = Self::serialize_read(nested_result, &field.field_type, None)?;
+            let result = Self::serialize_read(nested_result, &field.field_type, false, false)?;
 
             nested_mapping.insert(name, result);
         }
@@ -372,52 +300,55 @@ impl ResultIrBuilder {
     }
 
     fn serialize_scalar(value: PrismaValue, typ: &OutputTypeRef) -> CoreResult<Item> {
-        let item_value = match (&value, typ.borrow()) {
-            (PrismaValue::Null, OutputType::Opt(_)) => PrismaValue::Null,
-            (_, OutputType::Scalar(st)) => match (st, value) {
-                (ScalarType::String, PrismaValue::String(s)) => PrismaValue::String(s),
+        match (&value, typ.borrow()) {
+            (PrismaValue::Null, OutputType::Opt(_)) => Ok(Item::Value(PrismaValue::Null)),
+            (_, OutputType::Opt(inner)) => Self::serialize_scalar(value, inner),
+            (_, OutputType::Scalar(st)) => {
+                let item_value = match (st, value) {
+                    (ScalarType::String, PrismaValue::String(s)) => PrismaValue::String(s),
 
-                (ScalarType::ID, PrismaValue::GraphqlId(id)) => PrismaValue::GraphqlId(id),
-                (ScalarType::ID, val) => PrismaValue::GraphqlId(GraphqlId::try_from(val)?),
+                    (ScalarType::ID, PrismaValue::GraphqlId(id)) => PrismaValue::GraphqlId(id),
+                    (ScalarType::ID, val) => PrismaValue::GraphqlId(GraphqlId::try_from(val)?),
 
-                (ScalarType::Int, PrismaValue::Float(f)) => PrismaValue::Int(f as i64),
-                (ScalarType::Int, PrismaValue::Int(i)) => PrismaValue::Int(i),
+                    (ScalarType::Int, PrismaValue::Float(f)) => PrismaValue::Int(f as i64),
+                    (ScalarType::Int, PrismaValue::Int(i)) => PrismaValue::Int(i),
 
-                (ScalarType::Float, PrismaValue::Float(f)) => PrismaValue::Float(f),
-                (ScalarType::Float, PrismaValue::Int(i)) => PrismaValue::Float(i as f64),
+                    (ScalarType::Float, PrismaValue::Float(f)) => PrismaValue::Float(f),
+                    (ScalarType::Float, PrismaValue::Int(i)) => PrismaValue::Float(i as f64),
 
-                (ScalarType::Enum(ref et), PrismaValue::Enum(ref ev)) => match et.value_for(&ev.name) {
-                    Some(_) => PrismaValue::Enum(ev.clone()),
-                    None => {
+                    (ScalarType::Enum(ref et), PrismaValue::Enum(ref ev)) => match et.value_for(&ev.name) {
+                        Some(_) => PrismaValue::Enum(ev.clone()),
+                        None => {
+                            return Err(CoreError::SerializationError(format!(
+                                "Enum value '{}' not found on enum '{}'",
+                                ev.as_string(),
+                                et.name
+                            )))
+                        }
+                    },
+
+                    (ScalarType::Boolean, PrismaValue::Boolean(b)) => PrismaValue::Boolean(b),
+                    (ScalarType::DateTime, PrismaValue::DateTime(dt)) => PrismaValue::DateTime(dt),
+                    (ScalarType::Json, PrismaValue::Json(j)) => PrismaValue::Json(j),
+                    (ScalarType::UUID, PrismaValue::Uuid(u)) => PrismaValue::Uuid(u),
+
+                    (st, pv) => {
                         return Err(CoreError::SerializationError(format!(
-                            "Enum value '{}' not found on enum '{}'",
-                            ev.as_string(),
-                            et.name
+                            "Attempted to serialize scalar '{}' with incompatible type '{:?}'",
+                            pv, st
                         )))
                     }
-                },
+                };
 
-                (ScalarType::Boolean, PrismaValue::Boolean(b)) => PrismaValue::Boolean(b),
-                (ScalarType::DateTime, PrismaValue::DateTime(dt)) => PrismaValue::DateTime(dt),
-                (ScalarType::Json, PrismaValue::Json(j)) => PrismaValue::Json(j),
-                (ScalarType::UUID, PrismaValue::Uuid(u)) => PrismaValue::Uuid(u),
-
-                (st, pv) => {
-                    return Err(CoreError::SerializationError(format!(
-                        "Attempted to serialize scalar '{}' with incompatible type '{:?}'",
-                        pv, st
-                    )))
-                }
-            },
+                Ok(Item::Value(item_value))
+            }
             (pv, ot) => {
                 return Err(CoreError::SerializationError(format!(
                     "Attempted to serialize scalar '{}' with non-scalar compatible type '{:?}'",
                     pv, ot
                 )))
             }
-        };
-
-        Ok(Item::Value(item_value))
+        }
     }
 
     // fn serialize_enum(result: ReadQueryResult, typ: EnumTypeRef) -> CoreResult<PrismaValue> {
