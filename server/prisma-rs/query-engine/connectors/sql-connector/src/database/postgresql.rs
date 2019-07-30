@@ -22,9 +22,7 @@ impl FromSource for PostgreSql {
     fn from_source(source: &Box<dyn Source>) -> crate::Result<Self> {
         let url = url::Url::parse(source.url())?;
         let params = PostgresParams::try_from(url)?;
-
-        let manager = PrismaConnectionManager::try_from(params.config)?;
-        let pool = r2d2::Pool::builder().max_size(params.connection_limit).build(manager)?;
+        let pool = r2d2::Pool::try_from(params).unwrap();
 
         Ok(PostgreSql { pool })
     }
@@ -51,7 +49,7 @@ impl LegacyDatabase for PostgreSql {
                     config.password(pw);
                 }
 
-                let manager = PrismaConnectionManager::try_from(config)?;
+                let manager = PrismaConnectionManager::postgres(config, None)?;
                 let pool = r2d2::Pool::builder().max_size(e.limit()).build(manager)?;
 
                 Ok(PostgreSql { pool })
@@ -63,7 +61,7 @@ impl LegacyDatabase for PostgreSql {
                 config.ssl_mode(SslMode::Prefer);
                 config.dbname(db_name);
 
-                let manager = PrismaConnectionManager::try_from(config)?;
+                let manager = PrismaConnectionManager::postgres(config, None)?;
                 let pool = r2d2::Pool::builder().max_size(s.limit()).build(manager)?;
 
                 Ok(PostgreSql { pool })

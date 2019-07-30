@@ -1,8 +1,9 @@
 use prisma_query::{
     ast::*,
-    connector::{self, Queryable, ResultSet},
+    connector::{self, Queryable, ResultSet, SqliteParams, PostgresParams, MysqlParams},
 };
 use std::{convert::TryFrom, sync::Mutex};
+use url::Url;
 
 pub trait MigrationDatabase {
     fn execute(&self, db: &str, q: Query) -> prisma_query::Result<Option<Id>>;
@@ -13,16 +14,24 @@ pub trait MigrationDatabase {
 
 pub struct Sqlite {
     inner: Mutex<Box<dyn Queryable>>,
-    file_path: String,
+    pub(crate) file_path: String,
 }
 
 impl Sqlite {
-    pub fn new(file_path: String) -> prisma_query::Result<Self> {
-        let conn = connector::Sqlite::try_from(file_path.as_str())?;
+    pub fn new(url: &str) -> prisma_query::Result<Self> {
+        let url = if url.starts_with("file:") {
+            Url::parse(url).unwrap()
+        } else {
+            Url::parse(&dbg!(format!("file:{}", url))).unwrap()
+        };
+
+        let params = SqliteParams::try_from(url)?;
+        let file_path = params.file_path.clone();
+        let conn = connector::Sqlite::new(params.file_path)?;
 
         Ok(Self {
             inner: Mutex::new(Box::new(conn)),
-            file_path,
+            file_path: file_path.to_str().unwrap().to_string(),
         })
     }
 
@@ -88,8 +97,8 @@ pub struct PostgreSql {
 }
 
 impl PostgreSql {
-    pub fn new(config: postgres::Config) -> prisma_query::Result<Self> {
-        let conn = connector::PostgreSql::new(config)?;
+    pub fn new(params: PostgresParams) -> prisma_query::Result<Self> {
+        let conn = connector::PostgreSql::new(params.config, Some(params.schema.clone()))?;
 
         Ok(Self {
             inner: Mutex::new(Box::new(conn)),
@@ -120,16 +129,8 @@ pub struct Mysql {
 }
 
 impl Mysql {
-    pub fn new(config: mysql::OptsBuilder) -> prisma_query::Result<Self> {
-        let conn = connector::Mysql::new(config)?;
-
-        Ok(Self {
-            inner: Mutex::new(Box::new(conn)),
-        })
-    }
-
-    pub fn new_from_url(url: &str) -> prisma_query::Result<Mysql> {
-        let conn = connector::Mysql::new_from_url(url)?;
+    pub fn new(params: MysqlParams) -> prisma_query::Result<Self> {
+        let conn = connector::Mysql::new(params.config)?;
 
         Ok(Self {
             inner: Mutex::new(Box::new(conn)),

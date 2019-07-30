@@ -13,19 +13,17 @@ use database_inspector::DatabaseInspector;
 pub use error::*;
 use migration_connector::*;
 use migration_database::*;
-use postgres::Config as PostgresConfig;
 use serde_json;
 use sql_database_migration_inferrer::*;
 use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
 pub use sql_migration::*;
 use sql_migration_persistence::*;
-use std::borrow::Cow;
+use std::convert::TryFrom;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::time::Duration;
 use url::Url;
 
 #[allow(unused, dead_code)]
@@ -81,7 +79,7 @@ impl SqlMigrationConnector {
                     Ok(connection) => {
                         let check_sql = format!(
                             "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{}';",
-                            mysql_config.db_name
+                            mysql_config.db_name()
                         );
                         let result_set = connection.query_raw("", &check_sql, &[]);
                         result_set.into_iter().next().is_some()
@@ -95,10 +93,10 @@ impl SqlMigrationConnector {
     pub fn new(sql_family: SqlFamily, url: &str) -> Arc<MigrationConnector<DatabaseMigration = SqlMigration>> {
         match sql_family {
             SqlFamily::Sqlite => {
-                assert!(url.starts_with("file:"), "the url for sqlite must start with 'file:'");
-                let conn = Sqlite::new(url.to_string()).unwrap();
+                let conn = Sqlite::new(url).unwrap();
+                let file_path = conn.file_path.clone();
                 let schema_name = "lift".to_string();
-                let file_path = url.trim_start_matches("file:").to_string();
+
                 Self::create_connector(Arc::new(conn), sql_family, schema_name, Some(file_path))
             }
             SqlFamily::Postgres => {
@@ -119,10 +117,11 @@ impl SqlMigrationConnector {
 
     pub fn postgres_helper(url: &str) -> DatabaseHelper {
         let postgres_config = PrismaPostgresConfig::parse(&url);
+
         match postgres_config.db_connection() {
             Ok(db_connection) => DatabaseHelper {
                 db_connection: Arc::new(db_connection),
-                schema: postgres_config.schema,
+                schema: postgres_config.schema().to_string(),
             },
             Err(prisma_query::error::Error::QueryError(_)) => {
                 // assume that the error is because the database does not exist yet
@@ -130,7 +129,7 @@ impl SqlMigrationConnector {
                     .root_connection()
                     .expect("The user does not have root privelege and can not create a new database");
 
-                let db_sql = format!("CREATE DATABASE \"{}\";", &postgres_config.db_name);
+                let db_sql = format!("CREATE DATABASE \"{}\";", postgres_config.db_name());
                 let _ = root_connection.query_raw("", &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
 
                 let conn = postgres_config
@@ -139,7 +138,7 @@ impl SqlMigrationConnector {
 
                 DatabaseHelper {
                     db_connection: Arc::new(conn),
-                    schema: postgres_config.schema,
+                    schema: postgres_config.schema().to_string(),
                 }
             }
             Err(err) => panic!("Encountered unrecoverable error: {:?}", err),
@@ -153,9 +152,10 @@ impl SqlMigrationConnector {
         let conn = config
             .root_connection()
             .expect("Could not acquire root connection to MySQL");
+
         DatabaseHelper {
             db_connection: Arc::new(conn),
-            schema: config.db_name,
+            schema: config.db_name().to_string(),
         }
     }
 
@@ -222,142 +222,65 @@ impl SqlMigrationConnector {
 
 #[derive(Debug)]
 struct PrismaPostgresConfig {
-    pub host: String,
-    pub port: u16,
-    pub user_name: String,
-    pub password: String,
-    pub db_name: String,
-    pub schema: String,
-    pub connection_limit: u32,
+    url: Url,
+    params: prisma_query::connector::PostgresParams,
 }
 
 impl PrismaPostgresConfig {
-    fn parse(url: &str) -> PrismaPostgresConfig {
-        let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
-        let host = parsed_url.host_str().unwrap_or("localhost").to_string();
-        let port = parsed_url.port().unwrap_or(5432);
-        let user_name = parsed_url.username().to_string();
-        let password = parsed_url.password().unwrap_or("").to_string();
-        let mut db_name = parsed_url.path().to_string(); // strip leading slash
-        db_name.replace_range(..1, "");
+    fn parse(url: &str) -> Self {
+        let parse_error = "Parsing of the provided connector url failed.";
+        let url = Url::parse(url).expect(parse_error);
+        let params = prisma_query::connector::PostgresParams::try_from(url.clone()).expect(parse_error);
 
-        let schema = parsed_url
-            .query_pairs()
-            .into_iter()
-            .find(|qp| qp.0 == Cow::Borrowed("schema"))
-            .map(|pair| pair.1.to_string())
-            .unwrap_or("public".to_string());
+        Self { url, params }
+    }
 
-        let connection_limit = parsed_url
-            .query_pairs()
-            .into_iter()
-            .find(|qp| qp.0 == Cow::Borrowed("connection_limit"))
-            .map(|pair| {
-                let as_int: u32 = pair.1.parse().expect("connection_limit parameter was not an int");
-                as_int
-            })
-            .unwrap_or(1);
+    fn db_name(&self) -> &str {
+        self.params.dbname.as_str()
+    }
 
-        PrismaPostgresConfig {
-            host,
-            port,
-            user_name,
-            password,
-            db_name,
-            schema,
-            connection_limit,
-        }
+    fn schema(&self) -> &str {
+        self.params.schema.as_str()
     }
 
     fn root_connection(&self) -> prisma_query::Result<PostgreSql> {
-        let config = self.config("postgres");
-        PostgreSql::new(config)
+        let mut url = self.url.clone();
+        url.set_path("postgres");
+        let params = prisma_query::connector::PostgresParams::try_from(url)?;
+
+        PostgreSql::new(params)
     }
 
     fn db_connection(&self) -> prisma_query::Result<PostgreSql> {
-        let config = self.config(&self.db_name);
-        PostgreSql::new(config)
-    }
-
-    fn config(&self, db_name: &str) -> PostgresConfig {
-        let mut config = PostgresConfig::new();
-        config.host(&self.host);
-        config.port(self.port);
-        config.user(&self.user_name);
-        config.password(&self.password);
-        config.dbname(db_name);
-        config.connect_timeout(Duration::from_secs(5));
-        config
+        let params = prisma_query::connector::PostgresParams::try_from(self.url.clone())?;
+        PostgreSql::new(params)
     }
 }
 
 struct PrismaMysqlConfig {
-    pub host: String,
-    pub port: u16,
-    pub user_name: String,
-    pub password: String,
-    pub db_name: String,
-    pub connection_limit: u32,
+    url: Url,
+    params: prisma_query::connector::MysqlParams,
 }
 
 impl PrismaMysqlConfig {
-    fn parse(url: &str) -> PrismaMysqlConfig {
-        let parsed_url = Url::parse(url).expect("the provided URL was invalid");
+    fn parse(url: &str) -> Self {
+        let parse_error = "Parsing of the provided connector url failed.";
+        let url = Url::parse(url).expect(parse_error);
+        let params = prisma_query::connector::MysqlParams::try_from(url.clone()).expect(parse_error);
 
-        let host = parsed_url.host_str().unwrap_or("localhost").to_string();;
-        let port = parsed_url.port().unwrap_or(3306);
-        let user_name = parsed_url.username().to_string();
-        let password = parsed_url.password().unwrap_or("").to_string();
-        let db_name = parsed_url
-            .path_segments()
-            .and_then(|mut segments| segments.next())
-            .expect("db name must be set")
-            .to_string();
-
-        let connection_limit = parsed_url
-            .query_pairs()
-            .into_iter()
-            .find(|qp| qp.0 == Cow::Borrowed("connection_limit"))
-            .map(|pair| {
-                let as_int: u32 = pair.1.parse().expect("connection_limit parameter was not an int");
-                as_int
-            })
-            .unwrap_or(1);
-
-        PrismaMysqlConfig {
-            host,
-            port,
-            user_name,
-            password,
-            db_name,
-            connection_limit,
-        }
+        Self { url, params }
     }
 
     fn root_connection(&self) -> prisma_query::Result<Mysql> {
-        let config = self.config();
-        Mysql::new(config)
+        let mut url = self.url.clone();
+        url.set_path("");
+        let params = prisma_query::connector::MysqlParams::try_from(url)?;
+
+        Mysql::new(params)
     }
 
-    #[allow(unused)]
-    fn db_connection(&self) -> prisma_query::Result<Mysql> {
-        let mut config = self.config();
-        config.db_name(Some(self.db_name.to_string()));
-        Mysql::new(config)
-    }
-
-    fn config(&self) -> mysql::OptsBuilder {
-        let mut builder = mysql::OptsBuilder::new();
-
-        builder.ip_or_hostname(Some(self.host.to_string()));
-        builder.tcp_port(self.port);
-        builder.user(Some(self.user_name.clone()));
-        builder.pass(Some(self.password.clone()));
-        builder.verify_peer(false);
-        builder.stmt_cache_size(Some(1000));
-        builder.tcp_connect_timeout(Some(std::time::Duration::from_millis(5000)));
-
-        builder
+    fn db_name(&self) -> &str {
+        self.params.dbname.as_str()
     }
 }
 

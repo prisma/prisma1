@@ -11,16 +11,15 @@ mod sqlite_inspector;
 use crate::migration_database::{
     MigrationDatabase, Mysql as MysqlDriver, PostgreSql as PostgresDriver, Sqlite as SqliteDriver,
 };
+use prisma_query::connector;
 pub use database_inspector_impl::*;
 pub use database_schema::*;
 pub use empty_impl::*;
 use mysql_inspector::MysqlInspector;
-use postgres::Config as PostgresConfig;
 use postgres_inspector::Postgres;
 use sqlite_inspector::Sqlite;
-use std::borrow::Cow;
+use std::convert::TryFrom;
 use std::sync::Arc;
-use std::time::Duration;
 use url::Url;
 
 pub trait DatabaseInspector {
@@ -28,12 +27,14 @@ pub trait DatabaseInspector {
 }
 
 impl DatabaseInspector {
+    const PARSE_ERROR: &'static str = "Parsing of the provided connector url failed.";
+
     pub fn empty() -> EmptyDatabaseInspectorImpl {
         EmptyDatabaseInspectorImpl {}
     }
 
     pub fn sqlite(file_path: String) -> Sqlite {
-        let conn = Arc::new(SqliteDriver::new(file_path).unwrap());
+        let conn = Arc::new(SqliteDriver::new(&file_path).unwrap());
         Self::sqlite_with_database(conn)
     }
 
@@ -42,44 +43,29 @@ impl DatabaseInspector {
     }
 
     pub fn postgres(url: String) -> Postgres {
-        // TODO: this needs to move into prisma-query
-        // TODO: the setup calls in here look wrong
-        let parsed_url = Url::parse(&url).expect("Parsing of the provided connector url failed.");
-        let mut config = PostgresConfig::new();
-        if let Some(host) = parsed_url.host_str() {
-            config.host(host);
-        }
-        if let Some(port) = parsed_url.port() {
-            config.port(port);
-        }
-        config.user(parsed_url.username());
-        if let Some(password) = parsed_url.password() {
-            config.password(password);
-        }
-        let mut db_name = parsed_url.path().to_string();
-        db_name.replace_range(..1, ""); // strip leading slash
-        config.connect_timeout(Duration::from_secs(5));
+        let url = Url::parse(&url).expect(Self::PARSE_ERROR);
 
-        let root_connection = Arc::new(PostgresDriver::new(config.clone()).unwrap());
+        let mut root_url = url.clone();
+        root_url.set_path("postgres");
+
+        let root_params = connector::PostgresParams::try_from(root_url).expect(Self::PARSE_ERROR);
+        let db_name = root_params.dbname.clone();
+
+        let schema_name = root_params.schema.clone();
+        let root_connection = Arc::new(PostgresDriver::new(root_params).unwrap());
 
         let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
-        let schema_name = parsed_url
-            .query_pairs()
-            .into_iter()
-            .find(|qp| qp.0 == Cow::Borrowed("schema"))
-            .expect("schema param is missing")
-            .1
-            .to_string();
         let _ = root_connection.query_raw(&schema_name, &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
 
-        config.dbname(&db_name);
-
-        let schema_connection = Arc::new(PostgresDriver::new(config).unwrap());
+        let params = connector::PostgresParams::try_from(url).expect(Self::PARSE_ERROR);
+        let schema_connection = Arc::new(PostgresDriver::new(params).unwrap());
 
         let schema_sql = dbg!(format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &schema_name));
+
         schema_connection
             .query_raw(&schema_name, &schema_sql, &[])
             .expect("Creation of Postgres Schema failed");
+
         Postgres::new(schema_connection)
     }
 
@@ -88,7 +74,10 @@ impl DatabaseInspector {
     }
 
     pub fn mysql(url: String) -> MysqlInspector {
-        let database = MysqlDriver::new_from_url(&url).unwrap();
+        let url = Url::parse(&url).expect(Self::PARSE_ERROR);
+        let params = connector::MysqlParams::try_from(url).expect(Self::PARSE_ERROR);
+        let database = MysqlDriver::new(params).unwrap();
+
         Self::mysql_with_database(Arc::new(database))
     }
 

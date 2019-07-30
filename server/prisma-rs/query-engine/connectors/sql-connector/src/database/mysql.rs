@@ -6,9 +6,10 @@ use datamodel::Source;
 use mysql_client as my;
 use prisma_common::config::*;
 use prisma_query::{
-    connector::Queryable,
+    connector::{Queryable, MysqlParams},
     pool::{mysql::MysqlConnectionManager, PrismaConnectionManager},
 };
+use std::convert::TryFrom;
 use url::Url;
 
 type Pool = r2d2::Pool<PrismaConnectionManager<MysqlConnectionManager>>;
@@ -19,24 +20,9 @@ pub struct Mysql {
 
 impl FromSource for Mysql {
     fn from_source(source: &Box<dyn Source>) -> crate::Result<Self> {
-        let mut builder = my::OptsBuilder::new();
         let url = Url::parse(source.url())?;
-
-        let db_name = match url.path_segments() {
-            Some(mut segments) => segments.next().unwrap_or("mysql"),
-            None => "mysql",
-        };
-
-        builder.ip_or_hostname(url.host_str());
-        builder.tcp_port(url.port().unwrap_or(3306));
-        builder.user(Some(url.username()));
-        builder.pass(url.password());
-        builder.db_name(Some(db_name));
-        builder.verify_peer(false);
-        builder.stmt_cache_size(Some(1000));
-
-        let manager = PrismaConnectionManager::from(builder);
-        let pool = r2d2::Pool::builder().max_size(10).build(manager)?;
+        let params = MysqlParams::try_from(url)?;
+        let pool = r2d2::Pool::try_from(params).unwrap();
 
         Ok(Mysql { pool })
     }
@@ -61,7 +47,7 @@ impl LegacyDatabase for Mysql {
                 builder.verify_peer(false);
                 builder.stmt_cache_size(Some(1000));
 
-                let manager = PrismaConnectionManager::from(builder);
+                let manager = PrismaConnectionManager::mysql(builder);
                 let pool = r2d2::Pool::builder().max_size(e.limit()).build(manager)?;
 
                 Ok(Mysql { pool })
@@ -78,7 +64,7 @@ impl LegacyDatabase for Mysql {
                 builder.verify_peer(false);
                 builder.stmt_cache_size(Some(1000));
 
-                let manager = PrismaConnectionManager::from(builder);
+                let manager = PrismaConnectionManager::mysql(builder);
                 let pool = r2d2::Pool::builder().max_size(s.limit()).build(manager)?;
 
                 Ok(Mysql { pool })
