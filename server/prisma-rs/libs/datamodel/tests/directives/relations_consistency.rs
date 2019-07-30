@@ -78,6 +78,32 @@ fn must_add_to_fields_on_the_right_side() {
 }
 
 #[test]
+fn must_add_to_fields_correctly_for_implicit_back_relations() {
+    // Post is lower that User. So the to_fields should be stored in Post.
+    let dml = r#"
+    model User {
+        user_id Int  @id
+        post    Post 
+    }
+
+    model Post {
+        post_id Int @id
+    }
+    "#;
+
+    let schema = dbg!(parse(dml));
+
+    schema
+        .assert_has_model("User")
+        .assert_has_field("post")
+        .assert_relation_to_fields(&[]);
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("user")
+        .assert_relation_to_fields(&["user_id"]);
+}
+
+#[test]
 fn should_not_add_back_relation_fields_for_many_to_many_relations() {
     // Equal name for both fields was a bug triggerer.
     let dml = r#"
