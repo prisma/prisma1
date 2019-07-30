@@ -17,8 +17,6 @@ use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
 use std::{borrow::Borrow, collections::HashMap, convert::TryFrom, sync::Arc};
 
-type ItemsWithParents = HashMap<Option<GraphqlId>, Vec<Item>>;
-
 /// A `key -> value` map to an IR item
 pub type Map = IndexMap<String, Item>;
 
@@ -40,6 +38,28 @@ pub enum Item {
     List(List),
     Value(PrismaValue),
 }
+
+impl Item {
+    pub fn is_null_or_empty(&self) -> bool {
+        match self {
+            Item::Value(PrismaValue::Null) => true,
+            Item::Map(map) => map.iter().find(|(k, v)| !v.is_null_or_empty()).is_none(),
+            Item::List(l) => l.is_empty() || l.iter().find(|el| !el.is_null_or_empty()).is_none(),
+            _ => false,
+        }
+    }
+}
+
+/// A grouping of items to their parent record.
+/// The item implicitly holds the information of the type of item contained.
+/// E.g., if the output type of a field designates a single object, the item will be
+/// Item::Map(map), if it's a list, Item::List(list), etc. (hence "checked")
+type CheckedItemsWithParents = IndexMap<Option<GraphqlId>, Item>;
+
+/// A grouping of items to their parent record.
+/// As opposed to the checked mapping, this map isn't holding final information about
+/// the contained items, i.e. the Items are all unchecked.
+type UncheckedItemsWithParents = IndexMap<Option<GraphqlId>, List>;
 
 /// An IR builder utility
 #[derive(Debug)]
@@ -70,9 +90,9 @@ impl ResultIrBuilder {
                             Ok(result) => {
                                 // On the top level, each result pair boils down to a exactly a single serialized result.
                                 // All checks for lists and optionals have already been performed during the recursion,
-                                // so we just unpack the only result.
-                                let (_, mut item_vec) = result.into_iter().take(1).next().unwrap();
-                                vec.push(Response::Data(name, item_vec.pop().unwrap()))
+                                // so we just unpack the only result possible.
+                                let (_, item) = result.into_iter().take(1).next().unwrap();
+                                vec.push(Response::Data(name, item));
                             }
                             Err(err) => vec.push(Response::Error(format!("{}", err))),
                         };
@@ -86,6 +106,41 @@ impl ResultIrBuilder {
             .collect()
     }
 
+    fn transform(
+        mut items: Vec<Item>,
+        enclosing_type: Option<&OutputTypeRef>,
+        name: &str,
+        query_args: &QueryArguments,
+    ) -> CoreResult<Item> {
+        if let Some(ec) = enclosing_type {
+            match ec.borrow() {
+                OutputType::List(_) => {
+                    trim_records(&mut items, query_args);
+                    Ok(Item::List(items))
+                }
+
+                _ => unreachable!(),
+            }
+        } else {
+            // As we have no enclosing type, it can't be a list, hence check for single node.
+            // If nothing is contained, use null. Nulls will be checked subsequently by opt checks.
+            if items.len() > 1 {
+                Err(CoreError::SerializationError(format!(
+                    "2 Expected at most 1 item for '{}', got {}",
+                    name,
+                    items.len()
+                )))
+            } else if items.is_empty() {
+                Err(CoreError::SerializationError(format!(
+                    "Required field '{}' returned null",
+                    name
+                )))
+            } else {
+                Ok(items.pop().unwrap())
+            }
+        }
+    }
+
     /// The query validation makes sure that the output selection already has the correct shape.
     /// This means that we can make the following assumptions:
     /// - Objects don't need to check required fields.
@@ -95,64 +150,122 @@ impl ResultIrBuilder {
     /// - Are of the correct type.
     /// - Are nullable if not present.
     ///
-    /// The enclosing type is required to make non-local decisions like if something is a list or not.
+    /// The enclosing type is required to make non-local decisions like if something is a list or optional.
     ///
     /// Returns a pair of (parent ID, response)
     fn serialize_read(
         result: ReadQueryResult,
         typ: &OutputTypeRef,
-        enclosing_type: Option<&OutputTypeRef>,
-    ) -> CoreResult<ItemsWithParents> {
-        // For each parent / items pair check the enclosing type constraint
-        let result: ItemsWithParents = match typ.borrow() {
-            OutputType::Object(obj) => Self::serialize_objects(result, obj.into_arc())?,
-            OutputType::List(inner) => Self::serialize_read(result, inner, Some(typ))?,
-            OutputType::Opt(inner) => Self::serialize_read(result, inner, Some(typ))?,
-            _ => unreachable!(), // We always serialize reads into objects or lists.
-                                 // OutputType::Enum(et) => unimplemented!(),
-                                 // OutputType::Scalar(st) => unimplemented!(),
-        };
+        enclosing_type: Option<&OutputTypeRef>, // is_list: Option<bool>
+    ) -> CoreResult<CheckedItemsWithParents> {
+        let query_args = result.query_arguments.clone();
+        let name = result.name.clone();
 
-        //
-
-        // Based on the enclosing type, check / coerce the results:
-        // Go through the result map and for each parent node, check the shape of the dependent results.
-        // - If it's a list, trim records based on query args
-        // - If it's an opt, check whatever is contained for nulls.
-        let result: ItemsWithParents = if let Some(enclosing_type) = enclosing_type {
-            match enclosing_type.borrow() {
-                OutputType::List(_) => unimplemented!(), // keep the list and trim based on query args?
-                OutputType::Opt(_) => result
-                    .into_iter()
-                    .map(|(parent, nodes)| {
-                        if nodes.is_empty() {
-                            (parent, vec![Item::Value(PrismaValue::Null)])
-                        } else {
-                            (parent, nodes)
-                        }
-                    })
-                    .collect(),
-                _ => unreachable!(),
+        Ok(match typ.borrow() {
+            OutputType::List(inner) => {
+                let inner_result = Self::serialize_read(result, inner, Some(typ))?;
+                inner_result
             }
-        } else {
-            unimplemented!()
-        };
 
-        // - Else it's a single node per parent?
+            OutputType::Opt(inner) => {
+                let inner_result = Self::serialize_read(result, inner, Some(typ))?;
 
-        Ok(result)
+                // inner_result.into_iter().map(|(parent, mut items| {
+                //     let transformed = Self::transform(items, enclosing_type, &name, &query_args);
 
-        // The optional handling above makes sure that if a field is nullable, it's returned as PrismaValue::Null.
-        // match item {
-        //     Some(item) => (parent, Response::Data(name, item)),
-        //     None => Err(CoreError::SerializationError(format!("Required field {} returned null.", name))),
-        // }
+                //     // if items.is_empty() {
+                //     //     Ok((parent, Item::Value(PrismaValue::Null)))
+                //     // } else {
+                //     //     Ok((parent, items.pop().unwrap()))
+                //     // }
+                //     unimplemented!()
+                // }).collect()
+
+                inner_result
+            }
+
+            OutputType::Object(obj) => {
+                let result = Self::serialize_objects(result, obj.into_arc())?;
+
+                // Based on the enclosing type, check the results:
+                // Go through the result map and for each parent node, check the shape of the dependent results.
+                // - If it's a list, trim records based on query args.
+                // - If it's an opt, check whatever is contained for nulls.
+                if let Some(ec) = enclosing_type {
+                    match ec.borrow() {
+                        OutputType::List(_) => result
+                            .into_iter()
+                            .map(|(parent, mut items)| {
+                                trim_records(&mut items, &query_args);
+                                (parent, Item::List(items))
+                            })
+                            .collect(),
+
+                        OutputType::Opt(_) => result
+                            .into_iter()
+                            .map(|(parent, mut items)| {
+                                // WIP not sure what should happen here
+                                if items.is_empty() {
+                                    Ok((parent, Item::Value(PrismaValue::Null)))
+                                } else {
+                                    Ok((parent, items.pop().unwrap()))
+                                }
+
+                                // // As the enclosing type is not a list, we need to make sure that at most one result is returned.
+                                // if items.len() > 1 {
+                                //     Err(CoreError::SerializationError(format!(
+                                //         "1 Expected at most 1 item for '{}', got {}",
+                                //         name,
+                                //         items.len()
+                                //     )))
+                                // } else if items.is_empty() {
+                                //     Ok((parent, Item::Value(PrismaValue::Null)))
+                                // } else {
+                                //     Ok((parent, items.pop().unwrap()))
+                                // }
+                            })
+                            .collect::<CoreResult<CheckedItemsWithParents>>()?,
+
+                        _ => unreachable!(),
+                    }
+                } else {
+                    // As we have no enclosing type, it can't be optional or a list, hence:
+                    // - Validate for single node.
+                    // - Validate nulls.
+                    // WIP this is not really a good solution, as we lose information about what field is actually the culprit.
+                    result
+                        .into_iter()
+                        .map(|(parent, mut items)| {
+                            // As the enclosing type is not a list, we need to make sure that at most one result is returned.
+                            if items.len() > 1 {
+                                Err(CoreError::SerializationError(format!(
+                                    "2 Expected at most 1 item for '{}', got {}",
+                                    name,
+                                    items.len()
+                                )))
+                            } else if items.is_empty() {
+                                Err(CoreError::SerializationError(format!(
+                                    "Required field '{}' returned null",
+                                    name
+                                )))
+                            } else {
+                                Ok((parent, items.pop().unwrap()))
+                            }
+                        })
+                        .collect::<CoreResult<CheckedItemsWithParents>>()?
+                }
+            }
+            _ => unreachable!(), // We always serialize reads into objects or lists on the top levels. Scalars and enums are handled separately.
+        })
     }
 
     /// Serializes the given result into objects of given type.
     /// Makes no assumption about the arity of the result set.
     /// Returns a vector of serialized objects (as Item::Map), grouped into a map by parent, if present.
-    fn serialize_objects(mut result: ReadQueryResult, typ: ObjectTypeStrongRef) -> CoreResult<ItemsWithParents> {
+    fn serialize_objects(
+        mut result: ReadQueryResult,
+        typ: ObjectTypeStrongRef,
+    ) -> CoreResult<UncheckedItemsWithParents> {
         // The way our query execution works, we only need to look at nested + lists if we hit an object.
         // Move lists and nested out of result for separate processing.
         let nested = std::mem::replace(&mut result.nested, vec![]);
@@ -160,7 +273,7 @@ impl ResultIrBuilder {
 
         // For each nested selected field we need to map the parents to their items.
         // { nested field -> { parent -> items } }
-        let mut nested_mapping: HashMap<String, ItemsWithParents> = HashMap::new();
+        let mut nested_mapping: HashMap<String, CheckedItemsWithParents> = HashMap::new();
 
         // Parse and validate all nested objects with their respective output type.
         // Unwraps are safe due to query validation.
@@ -169,14 +282,12 @@ impl ResultIrBuilder {
             let field = typ.find_field(&name).unwrap();
             let result = Self::serialize_read(nested_result, &field.field_type, None)?;
 
-            // Check shape?
-
             nested_mapping.insert(name, result);
         }
 
-        // For each selected list field we need to map the parents to their items.
+        // For each selected scalar list field we need to map the parents to their items.
         // { list field -> { parent -> items } }
-        let mut list_mapping: HashMap<String, ItemsWithParents> = HashMap::new();
+        let mut list_mapping: HashMap<String, UncheckedItemsWithParents> = HashMap::new();
         for list_result in lists {
             let field = typ.find_field(&list_result.0).unwrap();
 
@@ -191,7 +302,7 @@ impl ResultIrBuilder {
                 }
             };
 
-            list_mapping.insert(field.name.clone(), ItemsWithParents::new());
+            list_mapping.insert(field.name.clone(), UncheckedItemsWithParents::new());
 
             for list_pair in list_result.1 {
                 let converted: Vec<Item> = list_pair
@@ -208,10 +319,11 @@ impl ResultIrBuilder {
         }
 
         // Finally, serialize the objects based on the selected fields.
-        let mut object_mapping = ItemsWithParents::new();
-        let scalar_field_names = result.scalars.field_names; // Field names as in the ManyRecords
+        let mut object_mapping = UncheckedItemsWithParents::new();
+        let scalar_field_names = result.scalars.field_names;
 
         // Write all fields, nested and list fields unordered into a map, afterwards order all into the final order.
+        // If nothing is written to the object, write null instead.
         for record in result.scalars.records {
             let record_id = Some(record.collect_id(&scalar_field_names, &result.id_field)?);
 
@@ -221,28 +333,39 @@ impl ResultIrBuilder {
 
             let mut object: HashMap<String, Item> = HashMap::new();
 
-            // Write scalars
+            // TODO skip scalar lists?
+            // Write scalars, but skip objects, which while they are in the selection, are relations and handled separately.
             let values = record.values;
             for (val, field_name) in values.into_iter().zip(scalar_field_names.iter()) {
                 let field = typ.find_field(field_name).unwrap();
-                object.insert(field_name.to_owned(), Self::serialize_scalar(val, &field.field_type)?);
+                if !field.field_type.is_object() {
+                    object.insert(field_name.to_owned(), Self::serialize_scalar(val, &field.field_type)?);
+                }
             }
 
             // Write nested & lists
-            // Check arity here?
-            nested_mapping.iter_mut().for_each(|(field_name, mut inner)| {
+            nested_mapping.iter_mut().for_each(|(field_name, inner)| {
                 let val = inner.remove(&record_id).unwrap();
-                object.insert(field_name.to_owned(), Item::List(val));
+                object.insert(field_name.to_owned(), val);
             });
 
-            // Reorder into final form
+            // Reorder into final shape.
             let mut map = Map::new();
 
             result.fields.iter().for_each(|field_name| {
                 map.insert(field_name.to_owned(), object.remove(field_name).unwrap());
             });
 
-            object_mapping.get_mut(&record.parent_id).unwrap().push(Item::Map(map));
+            // TODO: Find out how to easily determine when a result is null.
+            // If the object is null or completely empty, coerce into null instead.
+            let result = Item::Map(map);
+            // let result = if result.is_null_or_empty() {
+            //     Item::Value(PrismaValue::Null)
+            // } else {
+            //     result
+            // };
+
+            object_mapping.get_mut(&record.parent_id).unwrap().push(result);
         }
 
         Ok(object_mapping)
@@ -297,9 +420,9 @@ impl ResultIrBuilder {
         Ok(Item::Value(item_value))
     }
 
-    fn serialize_enum(result: ReadQueryResult, typ: EnumTypeRef) -> CoreResult<PrismaValue> {
-        unimplemented!()
-    }
+    // fn serialize_enum(result: ReadQueryResult, typ: EnumTypeRef) -> CoreResult<PrismaValue> {
+    //     unimplemented!()
+    // }
 }
 
 // /// Attempts to coerce the given write result into the provided output type.

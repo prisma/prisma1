@@ -36,7 +36,7 @@ pub fn serialize(responses: Vec<Response>) -> Value {
 fn serialize_item(item: Item) -> Value {
     match item {
         Item::List(l) => Value::Array(serialize_list(l)),
-        Item::Map(_, m) => Value::Object(serialize_map(m)),
+        Item::Map(m) => Value::Object(serialize_map(m)),
         Item::Value(v) => serialize_prisma_value(v).unwrap(),
     }
 }

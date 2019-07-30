@@ -402,6 +402,13 @@ impl OutputType {
             _ => false,
         }
     }
+
+    pub fn is_object(&self) -> bool {
+        match self {
+            OutputType::Object(_) => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
