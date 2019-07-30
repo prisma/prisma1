@@ -15,7 +15,7 @@ use crate::{
 use connector::{QueryArguments, QueryResult, ReadQueryResult, WriteQueryResult};
 use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
-use std::{borrow::Borrow, collections::HashMap, sync::Arc, convert::TryFrom};
+use std::{borrow::Borrow, collections::HashMap, convert::TryFrom, sync::Arc};
 
 type ItemsWithParents = HashMap<Option<GraphqlId>, Vec<Item>>;
 
@@ -61,7 +61,7 @@ impl ResultIrBuilder {
         self.0
             .into_iter()
             .fold(vec![], |mut vec, res| {
-                let serialized = match res {
+                match res {
                     ResultPair::Read(r, typ) => {
                         let name = r.alias.clone().unwrap_or_else(|| r.name.clone());
                         let serialized = Self::serialize_read(r, &typ, None);
@@ -104,43 +104,43 @@ impl ResultIrBuilder {
         enclosing_type: Option<&OutputTypeRef>,
     ) -> CoreResult<ItemsWithParents> {
         // For each parent / items pair check the enclosing type constraint
-        let (parent, item): (Option<GraphqlId>, Option<Item>) = match typ.borrow() {
-            OutputType::Object(obj) => {
-                let objects = Self::serialize_objects(result, obj.into_arc())?;
-
-                unimplemented!()
-            }
-
-            OutputType::List(inner) => {
-                let inner_result = Self::serialize_read(result, inner, Some(typ))?;
-
-                //     match inner_result {
-                //         Response::Data(name, item) => unimplemented!(),
-                //         err => err,
-                //     };
-
-                //     // Has to be 0 - many
-                //     // trim here?
-                unimplemented!()
-            }
-
-            OutputType::Opt(inner) => {
-                let inner_result = Self::serialize_read(result, inner, Some(typ))?;
-                // inner_result.map(|(parent, response)| {
-                //     match response {
-                //         Some(response) => (parent, response),
-                //         None => (parent, Response::Data(name, Item::Value(PrismaValue::Null)))
-                //     }
-                // })
-
-                unimplemented!()
-            }
-
-            OutputType::Enum(et) => unimplemented!(),
-            OutputType::Scalar(st) => unimplemented!(),
+        let result: ItemsWithParents = match typ.borrow() {
+            OutputType::Object(obj) => Self::serialize_objects(result, obj.into_arc())?,
+            OutputType::List(inner) => Self::serialize_read(result, inner, Some(typ))?,
+            OutputType::Opt(inner) => Self::serialize_read(result, inner, Some(typ))?,
+            _ => unreachable!(), // We always serialize reads into objects or lists.
+                                 // OutputType::Enum(et) => unimplemented!(),
+                                 // OutputType::Scalar(st) => unimplemented!(),
         };
 
-        // Based on the enclosing type, check / coerce the results.
+        //
+
+        // Based on the enclosing type, check / coerce the results:
+        // Go through the result map and for each parent node, check the shape of the dependent results.
+        // - If it's a list, trim records based on query args
+        // - If it's an opt, check whatever is contained for nulls.
+        let result: ItemsWithParents = if let Some(enclosing_type) = enclosing_type {
+            match enclosing_type.borrow() {
+                OutputType::List(_) => unimplemented!(), // keep the list and trim based on query args?
+                OutputType::Opt(_) => result
+                    .into_iter()
+                    .map(|(parent, nodes)| {
+                        if nodes.is_empty() {
+                            (parent, vec![Item::Value(PrismaValue::Null)])
+                        } else {
+                            (parent, nodes)
+                        }
+                    })
+                    .collect(),
+                _ => unreachable!(),
+            }
+        } else {
+            unimplemented!()
+        };
+
+        // - Else it's a single node per parent?
+
+        Ok(result)
 
         // The optional handling above makes sure that if a field is nullable, it's returned as PrismaValue::Null.
         // match item {
@@ -151,7 +151,7 @@ impl ResultIrBuilder {
 
     /// Serializes the given result into objects of given type.
     /// Makes no assumption about the arity of the result set.
-    /// Returns a vector of serialized objects (as Item::Map), grouped into an IndexMap by parent, if present.
+    /// Returns a vector of serialized objects (as Item::Map), grouped into a map by parent, if present.
     fn serialize_objects(mut result: ReadQueryResult, typ: ObjectTypeStrongRef) -> CoreResult<ItemsWithParents> {
         // The way our query execution works, we only need to look at nested + lists if we hit an object.
         // Move lists and nested out of result for separate processing.
@@ -169,7 +169,7 @@ impl ResultIrBuilder {
             let field = typ.find_field(&name).unwrap();
             let result = Self::serialize_read(nested_result, &field.field_type, None)?;
 
-            // Check shape
+            // Check shape?
 
             nested_mapping.insert(name, result);
         }
@@ -215,7 +215,6 @@ impl ResultIrBuilder {
         for record in result.scalars.records {
             let record_id = Some(record.collect_id(&scalar_field_names, &result.id_field)?);
 
-            // let record_id = record.collect_id(field_names: &Vec<String>, id_field: &str)
             if !object_mapping.contains_key(&record.parent_id) {
                 object_mapping.insert(record.parent_id.clone(), vec![]);
             }
@@ -233,7 +232,7 @@ impl ResultIrBuilder {
             // Check arity here?
             nested_mapping.iter_mut().for_each(|(field_name, mut inner)| {
                 let val = inner.remove(&record_id).unwrap();
-                object.insert(field_name.to_owned(), val);
+                object.insert(field_name.to_owned(), Item::List(val));
             });
 
             // Reorder into final form
