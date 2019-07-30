@@ -2,10 +2,11 @@ use crate::{query_builder::ManyRelatedRecordsWithRowNumber, FromSource, SqlCapab
 use datamodel::Source;
 use prisma_query::{
     ast::ParameterizedValue,
-    connector::Queryable,
+    connector::{Queryable, SqliteParams},
     pool::{sqlite::SqliteConnectionManager, PrismaConnectionManager},
 };
-use std::collections::HashSet;
+use url::Url;
+use std::{collections::HashSet, convert::TryFrom};
 
 type Pool = r2d2::Pool<PrismaConnectionManager<SqliteConnectionManager>>;
 
@@ -17,7 +18,7 @@ pub struct Sqlite {
 
 impl Sqlite {
     pub fn new(file_path: String, connection_limit: u32, test_mode: bool) -> crate::Result<Self> {
-        let manager = PrismaConnectionManager::new(&file_path)?;
+        let manager = PrismaConnectionManager::sqlite(&file_path)?;
         let pool = r2d2::Pool::builder().max_size(connection_limit).build(manager)?;
 
         Ok(Self {
@@ -30,13 +31,15 @@ impl Sqlite {
 
 impl FromSource for Sqlite {
     fn from_source(source: &Box<dyn Source>) -> crate::Result<Self> {
-        let manager = PrismaConnectionManager::new(source.url())?;
-        let pool = r2d2::Pool::builder().max_size(10).build(manager)?;
+        let url = Url::parse(source.url())?;
+        let params = SqliteParams::try_from(url)?;
+        let file_path = params.file_path.clone();
+        let pool = r2d2::Pool::try_from(params).unwrap();
 
         Ok(Sqlite {
             pool,
             test_mode: false,
-            file_path: source.url().to_string(),
+            file_path: file_path.to_str().unwrap().to_string(),
         })
     }
 }

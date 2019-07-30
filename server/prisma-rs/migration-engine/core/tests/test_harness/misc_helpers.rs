@@ -94,9 +94,7 @@ fn postgres_database() -> Arc<MigrationDatabase> {
 }
 
 fn sqlite_database() -> Arc<MigrationDatabase> {
-    let url = format!("file:{}", sqlite_test_file());
-
-    Arc::new(Sqlite::new(url).expect("Loading SQLite failed"))
+    Arc::new(Sqlite::new(&sqlite_test_file()).expect("Loading SQLite failed"))
 }
 
 fn mysql_database() -> Arc<MigrationDatabase> {

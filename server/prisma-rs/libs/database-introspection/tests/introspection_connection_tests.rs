@@ -15,10 +15,11 @@ static IS_SETUP: AtomicBool = AtomicBool::new(false);
 
 fn setup() {
     let is_setup = IS_SETUP.load(Ordering::Relaxed);
+
     if is_setup {
         return;
     }
-    
+
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!("[{}][{}] {}", record.target(), record.level(), message))
