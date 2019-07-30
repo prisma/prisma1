@@ -30,6 +30,54 @@ fn should_add_back_relations() {
 }
 
 #[test]
+fn must_add_to_fields_on_the_right_side() {
+    // the to fields are always added to model with the lower name in lexicographic order
+    let dml = r#"
+    model User1 {
+      id         String @default(cuid()) @id @unique
+      referenceA User2
+    }
+    
+    model User2 {
+      id         String @default(cuid()) @id @unique
+      referenceB User1
+    }
+    
+    model User3 {
+      id         String @default(cuid()) @id @unique
+      referenceB User4
+    }
+    
+    model User4 {
+      id         String @default(cuid()) @id @unique
+      referenceA User3
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    schema
+        .assert_has_model("User1")
+        .assert_has_field("referenceA")
+        .assert_relation_to_fields(&["id"]);
+
+    schema
+        .assert_has_model("User2")
+        .assert_has_field("referenceB")
+        .assert_relation_to_fields(&[]);
+
+    schema
+        .assert_has_model("User3")
+        .assert_has_field("referenceB")
+        .assert_relation_to_fields(&["id"]);
+
+    schema
+        .assert_has_model("User4")
+        .assert_has_field("referenceA")
+        .assert_relation_to_fields(&[]);
+}
+
+#[test]
 fn should_not_add_back_relation_fields_for_many_to_many_relations() {
     // Equal name for both fields was a bug triggerer.
     let dml = r#"
@@ -198,7 +246,7 @@ fn should_add_back_relations_for_more_complex_cases() {
 fn should_add_to_fields_on_the_correct_side_tie_breaker() {
     let dml = r#"
     model User {
-        id Int @id
+        user_id Int @id
         post Post
     }
 
@@ -213,13 +261,13 @@ fn should_add_to_fields_on_the_correct_side_tie_breaker() {
     user_model
         .assert_has_field("post")
         .assert_relation_to("Post")
-        .assert_relation_to_fields(&["post_id"]);
+        .assert_relation_to_fields(&[]);
 
     let post_model = schema.assert_has_model("Post");
     post_model
         .assert_has_field("user")
         .assert_relation_to("User")
-        .assert_relation_to_fields(&[]);
+        .assert_relation_to_fields(&["user_id"]);
 }
 
 #[test]

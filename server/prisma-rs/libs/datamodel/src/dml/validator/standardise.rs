@@ -69,14 +69,14 @@ impl Standardiser {
                         embed_here = true;
                     } else {
                         let related_field = related_field.unwrap();
-                        let rel = if let dml::FieldType::Relation(rel) = &related_field.field_type {
+                        let related_field_rel = if let dml::FieldType::Relation(rel) = &related_field.field_type {
                             rel
                         } else {
                             panic!(STATE_ERROR)
                         };
 
-                        // If the related field has to_bields set, we continue.
-                        if rel.to_fields.len() > 0 {
+                        // If the related field has to_fields set, we continue.
+                        if related_field_rel.to_fields.len() > 0 {
                             continue;
                         }
 
@@ -86,7 +86,7 @@ impl Standardiser {
                             continue;
                         }
 
-                        // Otherise, we embed if...
+                        // Otherwise, we embed if...
 
                         // ... the related field is a list ...
                         if related_field.arity == dml::FieldArity::List {
