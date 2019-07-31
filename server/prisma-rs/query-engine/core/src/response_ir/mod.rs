@@ -82,6 +82,7 @@ impl ResultIrBuilder {
 
     /// Parse collected queries into the return wrapper type
     pub fn build(self) -> Vec<Response> {
+        dbg!(&self.0);
         self.0
             .into_iter()
             .fold(vec![], |mut vec, res| {
@@ -95,9 +96,20 @@ impl ResultIrBuilder {
                                 // On the top level, each result pair boils down to a exactly a single serialized result.
                                 // All checks for lists and optionals have already been performed during the recursion,
                                 // so we just unpack the only result possible.
-                                let (_, item) = result.into_iter().take(1).next().expect("1");
-                                vec.push(Response::Data(name, item));
+                                let result = if result.is_empty() {
+                                    match typ.borrow() {
+                                        OutputType::Opt(_) => Item::Value(PrismaValue::Null),
+                                        OutputType::List(_) => Item::List(vec![]),
+                                        _ => unreachable!(),
+                                    }
+                                } else {
+                                    let (_, item) = result.into_iter().take(1).next().unwrap();
+                                    item
+                                };
+
+                                vec.push(Response::Data(name, result));
                             }
+
                             Err(err) => vec.push(Response::Error(format!("{}", err))),
                         };
                     }
@@ -133,7 +145,7 @@ impl ResultIrBuilder {
         let name = result.name.clone();
 
         match typ.borrow() {
-            OutputType::List(inner) => Self::serialize_read(result, inner, true, false), // List resets optionals TODO document in details why
+            OutputType::List(inner) => Self::serialize_read(result, inner, true, false),
             OutputType::Opt(inner) => Self::serialize_read(result, inner, is_list, true),
             OutputType::Object(obj) => {
                 let result = Self::serialize_objects(result, obj.into_arc())?;
