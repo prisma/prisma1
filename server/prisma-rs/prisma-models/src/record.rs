@@ -7,21 +7,6 @@ pub struct SingleRecord {
     pub field_names: Vec<String>,
 }
 
-// impl TryFrom<ManyRecords> for SingleRecord {
-//     type Error = Error;
-
-//     fn try_from(mn: ManyRecords) -> DomainResult<SingleRecord> {
-//         let field_names = mn.field_names;
-
-//         mn.records
-//             .into_iter()
-//             .rev()
-//             .next()
-//             .map(|record| SingleRecord { record, field_names })
-//             .ok_or(Error::ConversionFailure("ManyRecords", "SingleRecord"))
-//     }
-// }
-
 impl Into<ManyRecords> for SingleRecord {
     fn into(self) -> ManyRecords {
         ManyRecords {

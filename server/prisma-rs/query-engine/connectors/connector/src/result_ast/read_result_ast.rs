@@ -29,8 +29,8 @@ pub struct ReadQueryResult {
     pub id_field: String,
 }
 
-impl ReadQueryResult {
-    pub fn is_empty(&self) -> bool {
-        self.scalars.records.is_empty() && self.nested.is_empty() && self.lists.is_empty()
-    }
-}
+// impl ReadQueryResult {
+//     pub fn is_empty(&self) -> bool {
+//         self.scalars.records.is_empty() && self.nested.is_empty() && self.lists.is_empty()
+//     }
+// }

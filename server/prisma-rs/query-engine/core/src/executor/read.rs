@@ -1,9 +1,7 @@
 use crate::CoreResult;
 use connector::{self, query_ast::*, result_ast::*, ManagedDatabaseReader, ScalarListValues};
 use prisma_models::{GraphqlId, ScalarField, SelectedFields};
-use std::{
-    sync::Arc,
-};
+use std::sync::Arc;
 
 pub struct ReadQueryExecutor {
     pub data_resolver: Arc<dyn ManagedDatabaseReader + Send + Sync + 'static>,
@@ -97,6 +95,12 @@ impl ReadQueryExecutor {
             query.args.clone(),
             &selected_fields,
         )?;
+
+        if query.name == "Albums" {
+            scalars.records.iter().for_each(|scalar| {
+                dbg!(scalar);
+            });
+        }
 
         let model = Arc::clone(&query.parent_field.related_model());
         let id_field = model.fields().id().name.clone();

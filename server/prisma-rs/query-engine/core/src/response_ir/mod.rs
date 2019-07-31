@@ -5,10 +5,6 @@
 //!
 //! This IR is meant for general processing and storage.
 //! It can also be easily serialized.
-
-// mod lists;
-// mod maps;
-
 use crate::{
     CoreError, CoreResult, EnumTypeRef, IntoArc, ObjectTypeStrongRef, OutputType, OutputTypeRef, ResultPair, ScalarType,
 };
@@ -172,8 +168,13 @@ impl ResultIrBuilder {
                                         name,
                                         items.len()
                                     )))
-                                } else if items.is_empty() {
+                                } else if items.is_empty() && opt {
                                     Ok((parent, Item::Value(PrismaValue::Null)))
+                                } else if items.is_empty() && opt {
+                                    Err(CoreError::SerializationError(format!(
+                                        "Required field '{}' returned a null record",
+                                        name
+                                    )))
                                 } else {
                                     Ok((parent, items.pop().unwrap()))
                                 }
@@ -271,11 +272,14 @@ impl ResultIrBuilder {
                 }
             }
 
-            // Write nested & lists
+            // Write nested results
             nested_mapping.iter_mut().for_each(|(field_name, inner)| {
-                let val = inner.remove(&record_id).unwrap();
+                let val = inner.remove(&record_id).unwrap(); //.unwrap_or_else(|| Item::List(vec![])); // todo we don't want default empty here, do we?
                 object.insert(field_name.to_owned(), val);
             });
+
+            // Write scalar list results
+            // todo...
 
             // Reorder into final shape.
             let mut map = Map::new();
