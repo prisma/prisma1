@@ -421,7 +421,7 @@ fn should_camel_case_back_relation_field_name() {
 }
 
 #[test]
-fn should_add_self_back_relation_fields_on_defined_site() {
+fn should_add_self_back_relation_fields_on_defined_side() {
     let dml = r#"
     model Human {
         id Int @id
@@ -434,12 +434,12 @@ fn should_add_self_back_relation_fields_on_defined_site() {
     model
         .assert_has_field("son")
         .assert_relation_to("Human")
-        .assert_relation_to_fields(&["id"]);
+        .assert_relation_to_fields(&[]);
 
     model
         .assert_has_field("human")
         .assert_relation_to("Human")
-        .assert_relation_to_fields(&[]);
+        .assert_relation_to_fields(&["id"]);
 }
 
 #[test]
