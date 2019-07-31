@@ -3,7 +3,6 @@ use prisma_query::{
     connector::{self, Queryable, ResultSet, SqliteParams, PostgresParams, MysqlParams},
 };
 use std::{convert::TryFrom, sync::Mutex};
-use url::Url;
 
 pub trait MigrationDatabase {
     fn execute(&self, db: &str, q: Query) -> prisma_query::Result<Option<Id>>;
@@ -19,13 +18,7 @@ pub struct Sqlite {
 
 impl Sqlite {
     pub fn new(url: &str) -> prisma_query::Result<Self> {
-        let url = if url.starts_with("file:") {
-            Url::parse(url).unwrap()
-        } else {
-            Url::parse(&dbg!(format!("file:{}", url))).unwrap()
-        };
-
-        let params = SqliteParams::try_from(url)?;
+        let params = SqliteParams::try_from(dbg!(url))?;
         let file_path = params.file_path.clone();
         let conn = connector::Sqlite::new(params.file_path)?;
 
