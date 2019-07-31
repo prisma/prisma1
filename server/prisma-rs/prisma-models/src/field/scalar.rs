@@ -160,10 +160,6 @@ impl ScalarField {
         }
     }
 
-    pub fn is_writable(&self) -> bool {
-        !self.is_id() && !self.is_created_at() && !self.is_updated_at()
-    }
-
     pub fn is_unique(&self) -> bool {
         self.is_unique || self.is_id()
     }

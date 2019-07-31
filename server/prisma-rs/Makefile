@@ -25,4 +25,5 @@ use-local-migration-engine:
 use-local-query-engine:
 	cargo build --release
 	cp target/release/prisma $(PRISMA2_BINARY_PATH)/runtime/
+	cp target/release/prisma $(PRISMA2_BINARY_PATH)/query-engine-darwin
 
