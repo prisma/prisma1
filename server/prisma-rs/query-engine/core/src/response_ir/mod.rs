@@ -363,6 +363,29 @@ impl ResultIrBuilder {
         match (&value, typ.borrow()) {
             (PrismaValue::Null, OutputType::Opt(_)) => Ok(Item::Value(PrismaValue::Null)),
             (_, OutputType::Opt(inner)) => Self::serialize_scalar(value, inner),
+            (_, OutputType::Enum(et)) => match value {
+                PrismaValue::String(s) => match et.value_for(&s) {
+                    Some(ev) => Ok(Item::Value(PrismaValue::Enum(ev.clone()))),
+                    None => Err(CoreError::SerializationError(format!(
+                        "Value '{}' not found in enum '{:?}'",
+                        s, et
+                    ))),
+                },
+
+                PrismaValue::Enum(ref ev) => match et.value_for(&ev.name) {
+                    Some(_) => Ok(Item::Value(PrismaValue::Enum(ev.clone()))),
+                    None => Err(CoreError::SerializationError(format!(
+                        "Enum value '{}' not found on enum '{}'",
+                        ev.as_string(),
+                        et.name
+                    ))),
+                },
+
+                val => Err(CoreError::SerializationError(format!(
+                    "Attempted to serialize non-enum-compatible value '{}' with enum '{:?}'",
+                    val, et
+                ))),
+            },
             (_, OutputType::Scalar(st)) => {
                 let item_value = match (st, value) {
                     (ScalarType::String, PrismaValue::String(s)) => PrismaValue::String(s),
