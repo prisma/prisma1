@@ -185,6 +185,7 @@ fn http_handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<Request
         .graphql_request_handler
         .handle(req, &request_context.context);
 
+    // TODO this copies the data for some reason.
     serde_json::to_string(&result)
 }
 

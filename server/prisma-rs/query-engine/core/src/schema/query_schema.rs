@@ -398,6 +398,7 @@ impl OutputType {
 
     pub fn is_list(&self) -> bool {
         match self {
+            OutputType::Opt(inner) => inner.is_list(),
             OutputType::List(_) => true,
             _ => false,
         }
@@ -405,6 +406,7 @@ impl OutputType {
 
     pub fn is_object(&self) -> bool {
         match self {
+            OutputType::Opt(inner) => inner.is_object(),
             OutputType::Object(_) => true,
             _ => false,
         }

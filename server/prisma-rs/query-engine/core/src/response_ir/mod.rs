@@ -1,4 +1,4 @@
-//! Prisma Response (Intermediate Data Representation)
+//! Prisma Response IR (Intermediate Representation).
 //!
 //! This module takes care of processing the results
 //! and transforming them into a different AST.
@@ -8,7 +8,7 @@
 use crate::{
     CoreError, CoreResult, EnumTypeRef, IntoArc, ObjectTypeStrongRef, OutputType, OutputTypeRef, ResultPair, ScalarType,
 };
-use connector::{QueryArguments, QueryResult, ReadQueryResult, WriteQueryResult};
+use connector::{QueryArguments, QueryResult, ReadQueryResult, ScalarListValues, WriteQueryResult};
 use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
 use std::{borrow::Borrow, collections::HashMap, convert::TryFrom, sync::Arc};
@@ -19,6 +19,9 @@ pub type Map = IndexMap<String, Item>;
 /// A list of IR items
 pub type List = Vec<Item>;
 
+/// Convenience type wrapper for Arc<Item>.
+pub type ItemRef = Arc<Item>;
+
 /// A response can either be some `key-value` data representation
 /// or an error that occured.
 #[derive(Debug)]
@@ -28,23 +31,28 @@ pub enum Response {
 }
 
 /// An IR item that either expands to a subtype or leaf-record.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Item {
     Map(Map),
     List(List),
     Value(PrismaValue),
+
+    /// Wrapper type to allow multiple parent records
+    /// to claim the same item without copying data
+    /// (serialization can then choose how to copy if necessary).
+    Ref(ItemRef),
 }
 
-impl Item {
-    pub fn is_null_or_empty(&self) -> bool {
-        match self {
-            Item::Value(PrismaValue::Null) => true,
-            Item::Map(map) => map.iter().find(|(k, v)| !v.is_null_or_empty()).is_none(),
-            Item::List(l) => l.is_empty() || l.iter().find(|el| !el.is_null_or_empty()).is_none(),
-            _ => false,
-        }
-    }
-}
+// impl Item {
+//     pub fn is_null_or_empty(&self) -> bool {
+//         match self {
+//             Item::Value(PrismaValue::Null) => true,
+//             Item::Map(map) => map.iter().find(|(k, v)| !v.is_null_or_empty()).is_none(),
+//             Item::List(l) => l.is_empty() || l.iter().find(|el| !el.is_null_or_empty()).is_none(),
+//             _ => false,
+//         }
+//     }
+// }
 
 /// A grouping of items to their parent record.
 /// The item implicitly holds the information of the type of item contained.
@@ -55,7 +63,7 @@ type CheckedItemsWithParents = IndexMap<Option<GraphqlId>, Item>;
 /// A grouping of items to their parent record.
 /// As opposed to the checked mapping, this map isn't holding final information about
 /// the contained items, i.e. the Items are all unchecked.
-type UncheckedItemsWithParents = IndexMap<Option<GraphqlId>, List>;
+type UncheckedItemsWithParents = IndexMap<Option<GraphqlId>, Vec<Item>>;
 
 /// An IR builder utility
 #[derive(Debug)]
@@ -130,6 +138,7 @@ impl ResultIrBuilder {
             OutputType::Object(obj) => {
                 let result = Self::serialize_objects(result, obj.into_arc())?;
 
+                // Items will be ref'ed on the top level to allow cheap clones in nested scenarios.
                 match (is_list, is_optional) {
                     // List(Opt(_)) | List(_)
                     (true, opt) => {
@@ -151,7 +160,7 @@ impl ResultIrBuilder {
 
                                 // Trim excess records
                                 trim_records(&mut items, &query_args);
-                                Ok((parent, Item::List(items)))
+                                Ok((parent, Item::Ref(ItemRef::new(Item::List(items)))))
                             })
                             .collect()
                     }
@@ -169,14 +178,14 @@ impl ResultIrBuilder {
                                         items.len()
                                     )))
                                 } else if items.is_empty() && opt {
-                                    Ok((parent, Item::Value(PrismaValue::Null)))
+                                    Ok((parent, Item::Ref(ItemRef::new(Item::Value(PrismaValue::Null)))))
                                 } else if items.is_empty() && opt {
                                     Err(CoreError::SerializationError(format!(
                                         "Required field '{}' returned a null record",
                                         name
                                     )))
                                 } else {
-                                    Ok((parent, items.pop().unwrap()))
+                                    Ok((parent, Item::Ref(ItemRef::new(items.pop().unwrap()))))
                                 }
                             })
                             .collect()
@@ -189,7 +198,7 @@ impl ResultIrBuilder {
     }
 
     /// Serializes the given result into objects of given type.
-    /// Makes no assumption about the arity of the result set.
+    /// Doesn't validate the shape of the result set ("unchecked" result).
     /// Returns a vector of serialized objects (as Item::Map), grouped into a map by parent, if present.
     fn serialize_objects(
         mut result: ReadQueryResult,
@@ -200,52 +209,14 @@ impl ResultIrBuilder {
         let nested = std::mem::replace(&mut result.nested, vec![]);
         let lists = std::mem::replace(&mut result.lists, vec![]);
 
-        // For each nested selected field we need to map the parents to their items.
-        // { nested field -> { parent -> items } }
-        let mut nested_mapping: HashMap<String, CheckedItemsWithParents> = HashMap::new();
+        // { <nested field name> -> { parent ID -> items } }
+        let mut nested_mapping: HashMap<String, CheckedItemsWithParents> = Self::process_nested_results(nested, &typ)?;
 
-        // Parse and validate all nested objects with their respective output type.
-        // Unwraps are safe due to query validation.
-        for nested_result in nested {
-            let name = nested_result.name.clone();
-            let field = typ.find_field(&name).unwrap();
-            let result = Self::serialize_read(nested_result, &field.field_type, false, false)?;
+        // We need the Arcs to solve the issue where we have multiple parents claiming the same data (we want to move the data out of the nested structure
+        // to prevent expensive copying during serialization).
 
-            nested_mapping.insert(name, result);
-        }
-
-        // For each selected scalar list field we need to map the parents to their items.
-        // { list field -> { parent -> items } }
-        let mut list_mapping: HashMap<String, UncheckedItemsWithParents> = HashMap::new();
-        for list_result in lists {
-            let field = typ.find_field(&list_result.0).unwrap();
-
-            let list_type = match field.field_type.borrow() {
-                OutputType::List(inner) => inner,
-                other => {
-                    return Err(CoreError::SerializationError(format!(
-                        "Attempted to serialize scalar list '{}' with non-scalar-list compatible type '{:?}'",
-                        field.name.clone(),
-                        other
-                    )))
-                }
-            };
-
-            list_mapping.insert(field.name.clone(), UncheckedItemsWithParents::new());
-
-            for list_pair in list_result.1 {
-                let converted: Vec<Item> = list_pair
-                    .values
-                    .into_iter()
-                    .map(|val| Self::serialize_scalar(val, &list_type))
-                    .collect::<CoreResult<Vec<_>>>()?;
-
-                list_mapping
-                    .get_mut(&field.name)
-                    .unwrap()
-                    .insert(Some(list_pair.record_id), converted);
-            }
-        }
+        // { <list field name> -> { parent ID -> items } }
+        let mut list_mapping = Self::process_scalar_lists(lists, &typ)?;
 
         // Finally, serialize the objects based on the selected fields.
         let mut object_mapping = UncheckedItemsWithParents::new();
@@ -262,28 +233,37 @@ impl ResultIrBuilder {
 
             let mut object: HashMap<String, Item> = HashMap::new();
 
-            // TODO skip scalar lists?
-            // Write scalars, but skip objects, which while they are in the selection, are relations and handled separately.
+            // Write scalars, but skip objects and lists, which while they are in the selection, are handled separately.
             let values = record.values;
             for (val, field_name) in values.into_iter().zip(scalar_field_names.iter()) {
                 let field = typ.find_field(field_name).unwrap();
-                if !field.field_type.is_object() {
+                if !field.field_type.is_object() && !field.field_type.is_list() {
                     object.insert(field_name.to_owned(), Self::serialize_scalar(val, &field.field_type)?);
                 }
             }
 
             // Write nested results
             nested_mapping.iter_mut().for_each(|(field_name, inner)| {
-                let val = inner.remove(&record_id).unwrap(); //.unwrap_or_else(|| Item::List(vec![])); // todo we don't want default empty here, do we?
-                object.insert(field_name.to_owned(), val);
+                let val = inner.get(&record_id).unwrap(); //.unwrap_or_else(|| Item::List(vec![])); // todo we don't want default empty here, do we?
+                                                          // The value must be a reference, everything else is an error in the serialization logic.
+                match val {
+                    Item::Ref(ref r) => object.insert(field_name.to_owned(), Item::Ref(ItemRef::clone(r))),
+                    _ => panic!("Application logic invariant error: Nested items have to be wrapped as a Item::Ref."),
+                };
             });
 
             // Write scalar list results
-            // todo...
+            list_mapping.iter_mut().for_each(|(field_name, inner)| {
+                let val = inner.get(&record_id).unwrap();
+                // Same as nested, the value must be a reference.
+                match val {
+                    Item::Ref(ref r) => object.insert(field_name.to_owned(), Item::Ref(ItemRef::clone(r))),
+                    _ => panic!("Application logic invariant error: Nested items have to be wrapped as a Item::Ref."),
+                };
+            });
 
             // Reorder into final shape.
             let mut map = Map::new();
-
             result.fields.iter().for_each(|field_name| {
                 map.insert(field_name.to_owned(), object.remove(field_name).unwrap());
             });
@@ -301,6 +281,68 @@ impl ResultIrBuilder {
         }
 
         Ok(object_mapping)
+    }
+
+    /// Processes nested results into a more ergonomic structure of { <nested field name> -> { parent ID -> item (list, map, ...) } }.
+    fn process_nested_results(
+        nested: Vec<ReadQueryResult>,
+        enclosing_type: &ObjectTypeStrongRef,
+    ) -> CoreResult<HashMap<String, CheckedItemsWithParents>> {
+        // For each nested selected field we need to map the parents to their items.
+        let mut nested_mapping = HashMap::new();
+
+        // Parse and validate all nested objects with their respective output type.
+        // Unwraps are safe due to query validation.
+        for nested_result in nested {
+            let name = nested_result.name.clone();
+            let field = enclosing_type.find_field(&name).unwrap();
+            let result = Self::serialize_read(nested_result, &field.field_type, false, false)?;
+
+            nested_mapping.insert(name, result);
+        }
+
+        Ok(nested_mapping)
+    }
+
+    /// Processes scalar lists into a more ergonomic structure of { <list field name> -> { parent ID -> item (Item::Ref) } }
+    fn process_scalar_lists(
+        lists: Vec<(String, Vec<ScalarListValues>)>,
+        enclosing_type: &ObjectTypeStrongRef,
+    ) -> CoreResult<HashMap<String, CheckedItemsWithParents>> {
+        // For each selected scalar list field we need to map the parents to their items.
+        let mut list_mapping: HashMap<String, CheckedItemsWithParents> = HashMap::new();
+        for list_result in lists {
+            let field = enclosing_type.find_field(&list_result.0).unwrap();
+
+            // Todo optional lists...?
+            let list_type = match field.field_type.borrow() {
+                OutputType::List(inner) => inner,
+                other => {
+                    return Err(CoreError::SerializationError(format!(
+                        "Attempted to serialize scalar list '{}' with non-scalar-list compatible type '{:?}'",
+                        field.name.clone(),
+                        other
+                    )))
+                }
+            };
+
+            list_mapping.insert(field.name.clone(), CheckedItemsWithParents::new());
+
+            for list_pair in list_result.1 {
+                let converted: Vec<Item> = list_pair
+                    .values
+                    .into_iter()
+                    .map(|val| Self::serialize_scalar(val, &list_type))
+                    .collect::<CoreResult<Vec<_>>>()?;
+
+                list_mapping.get_mut(&field.name).unwrap().insert(
+                    Some(list_pair.record_id),
+                    Item::Ref(ItemRef::new(Item::List(converted))),
+                );
+            }
+        }
+
+        Ok(list_mapping)
     }
 
     fn serialize_scalar(value: PrismaValue, typ: &OutputTypeRef) -> CoreResult<Item> {

@@ -5,11 +5,14 @@ use core::response_ir::{Item, Response};
 use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
 use serde_json::{Map, Number, Value};
+use std::sync::Arc;
 
 pub fn serialize(responses: Vec<Response>) -> Value {
     let mut outer_envelope = Map::new();
     let mut data_envelope = Map::new();
     let mut errors: Vec<Value> = Vec::new();
+
+    // let mut serialization_cache: HashMap<ItemRef, > = HashMap::new();
 
     for response in responses {
         match response {
@@ -38,6 +41,12 @@ fn serialize_item(item: Item) -> Value {
         Item::List(l) => Value::Array(serialize_list(l)),
         Item::Map(m) => Value::Object(serialize_map(m)),
         Item::Value(v) => serialize_prisma_value(v).unwrap(),
+
+        // Todo we're serializing multiple times here.
+        Item::Ref(r) => match Arc::try_unwrap(r) {
+            Ok(inner) => serialize_item(inner),
+            Err(r) => serialize_item((*r).clone()),
+        },
     }
 }
 

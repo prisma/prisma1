@@ -96,12 +96,6 @@ impl ReadQueryExecutor {
             &selected_fields,
         )?;
 
-        if query.name == "Albums" {
-            scalars.records.iter().for_each(|scalar| {
-                dbg!(scalar);
-            });
-        }
-
         let model = Arc::clone(&query.parent_field.related_model());
         let id_field = model.fields().id().name.clone();
         let ids = scalars.collect_ids(&id_field)?;
