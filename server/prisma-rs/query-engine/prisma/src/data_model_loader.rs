@@ -1,7 +1,7 @@
 use crate::{utilities, PrismaError, PrismaResult};
 use datamodel::{Datamodel, Source};
 use prisma_models::{DatamodelConverter, InternalDataModelTemplate};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json;
 use std::{
     fs::File,
@@ -136,17 +136,43 @@ fn load_datamodel_v2() -> PrismaResult<Option<DatamodelV2Components>> {
 
     load_v2_dml_string().inner_map(|dml_string| match datamodel::parse(&dml_string) {
         Err(errors) => Err(PrismaError::ConversionError(errors, dml_string.clone())),
-        Ok(dm) => match datamodel::load_configuration(&dml_string) {
-            Err(errors) => Err(PrismaError::ConversionError(errors, dml_string.clone())),
-            Ok(configuration) => {
-                debug!("Loaded Prisma v2 data model.");
-                Ok(Some(DatamodelV2Components {
-                    datamodel: dm,
-                    data_sources: configuration.datasources,
-                }))
-            }
-        },
+        Ok(dm) => load_configuration(&dml_string).map(|configuration| {
+            debug!("Loaded Prisma v2 data model.");
+            Some(DatamodelV2Components {
+                datamodel: dm,
+                data_sources: configuration.datasources,
+            })
+        }),
     })
+}
+
+fn load_configuration(dml_string: &str) -> PrismaResult<datamodel::Configuration> {
+    let datasource_overwrites_string = load_string_from_env("OVERWRITE_DATASOURCES")?.unwrap_or(r#"[]"#.to_string());
+    let datasource_overwrites: Vec<SourceOverride> = serde_json::from_str(&datasource_overwrites_string)?;
+
+    match datamodel::load_configuration(&dml_string) {
+        Err(errors) => Err(PrismaError::ConversionError(errors, dml_string.to_string())),
+        Ok(mut configuration) => {
+            for datasource_override in datasource_overwrites {
+                for datasource in &mut configuration.datasources {
+                    if &datasource_override.name == datasource.name() {
+                        debug!(
+                            "overwriting datasource {} with url {}",
+                            &datasource_override.name, &datasource_override.url
+                        );
+                        datasource.set_url(&datasource_override.url);
+                    }
+                }
+            }
+            Ok(configuration)
+        }
+    }
+}
+
+#[derive(Deserialize)]
+struct SourceOverride {
+    name: String,
+    url: String,
 }
 
 /// Attempts to load a Prisma DML (datamodel v2) string from either env or file.
