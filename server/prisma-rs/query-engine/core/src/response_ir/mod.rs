@@ -95,7 +95,7 @@ impl ResultIrBuilder {
                                 // On the top level, each result pair boils down to a exactly a single serialized result.
                                 // All checks for lists and optionals have already been performed during the recursion,
                                 // so we just unpack the only result possible.
-                                let (_, item) = result.into_iter().take(1).next().unwrap();
+                                let (_, item) = result.into_iter().take(1).next().expect("1");
                                 vec.push(Response::Data(name, item));
                             }
                             Err(err) => vec.push(Response::Error(format!("{}", err))),
@@ -185,7 +185,7 @@ impl ResultIrBuilder {
                                         name
                                     )))
                                 } else {
-                                    Ok((parent, Item::Ref(ItemRef::new(items.pop().unwrap()))))
+                                    Ok((parent, Item::Ref(ItemRef::new(items.pop().expect("2")))))
                                 }
                             })
                             .collect()
@@ -236,36 +236,20 @@ impl ResultIrBuilder {
             // Write scalars, but skip objects and lists, which while they are in the selection, are handled separately.
             let values = record.values;
             for (val, field_name) in values.into_iter().zip(scalar_field_names.iter()) {
-                let field = typ.find_field(field_name).unwrap();
+                let field = typ.find_field(field_name).expect("3");
                 if !field.field_type.is_object() && !field.field_type.is_list() {
                     object.insert(field_name.to_owned(), Self::serialize_scalar(val, &field.field_type)?);
                 }
             }
 
-            // Write nested results
-            nested_mapping.iter_mut().for_each(|(field_name, inner)| {
-                let val = inner.get(&record_id).unwrap(); //.unwrap_or_else(|| Item::List(vec![])); // todo we don't want default empty here, do we?
-                                                          // The value must be a reference, everything else is an error in the serialization logic.
-                match val {
-                    Item::Ref(ref r) => object.insert(field_name.to_owned(), Item::Ref(ItemRef::clone(r))),
-                    _ => panic!("Application logic invariant error: Nested items have to be wrapped as a Item::Ref."),
-                };
-            });
-
-            // Write scalar list results
-            list_mapping.iter_mut().for_each(|(field_name, inner)| {
-                let val = inner.get(&record_id).unwrap();
-                // Same as nested, the value must be a reference.
-                match val {
-                    Item::Ref(ref r) => object.insert(field_name.to_owned(), Item::Ref(ItemRef::clone(r))),
-                    _ => panic!("Application logic invariant error: Nested items have to be wrapped as a Item::Ref."),
-                };
-            });
+            // Write nested results & lists
+            Self::write_nested_items(&record_id, &mut nested_mapping, &mut object);
+            Self::write_nested_items(&record_id, &mut list_mapping, &mut object);
 
             // Reorder into final shape.
             let mut map = Map::new();
             result.fields.iter().for_each(|field_name| {
-                map.insert(field_name.to_owned(), object.remove(field_name).unwrap());
+                map.insert(field_name.to_owned(), object.remove(field_name).expect("6"));
             });
 
             // TODO: Find out how to easily determine when a result is null.
@@ -277,10 +261,28 @@ impl ResultIrBuilder {
             //     result
             // };
 
-            object_mapping.get_mut(&record.parent_id).unwrap().push(result);
+            object_mapping.get_mut(&record.parent_id).expect("7").push(result);
         }
 
         Ok(object_mapping)
+    }
+
+    /// TODO Not sure, but it might be that we need to initialize default items based on the type, instead of always lists.
+    fn write_nested_items(
+        record_id: &Option<GraphqlId>,
+        items_with_parent: &mut HashMap<String, CheckedItemsWithParents>,
+        into: &mut HashMap<String, Item>,
+    ) {
+        items_with_parent.iter_mut().for_each(|(field_name, inner)| {
+            let val = inner.get(record_id);
+
+            // The value must be a reference (or None default), everything else is an error in the serialization logic.
+            match val {
+                Some(Item::Ref(ref r)) => into.insert(field_name.to_owned(), Item::Ref(ItemRef::clone(r))),
+                None => into.insert(field_name.to_owned(), Item::Ref(ItemRef::new(Item::List(vec![])))),
+                _ => panic!("Application logic invariant error: Nested items have to be wrapped as a Item::Ref."),
+            };
+        });
     }
 
     /// Processes nested results into a more ergonomic structure of { <nested field name> -> { parent ID -> item (list, map, ...) } }.
@@ -295,7 +297,7 @@ impl ResultIrBuilder {
         // Unwraps are safe due to query validation.
         for nested_result in nested {
             let name = nested_result.name.clone();
-            let field = enclosing_type.find_field(&name).unwrap();
+            let field = enclosing_type.find_field(&name).expect("8");
             let result = Self::serialize_read(nested_result, &field.field_type, false, false)?;
 
             nested_mapping.insert(name, result);
@@ -312,7 +314,7 @@ impl ResultIrBuilder {
         // For each selected scalar list field we need to map the parents to their items.
         let mut list_mapping: HashMap<String, CheckedItemsWithParents> = HashMap::new();
         for list_result in lists {
-            let field = enclosing_type.find_field(&list_result.0).unwrap();
+            let field = enclosing_type.find_field(&list_result.0).expect("9");
 
             // Todo optional lists...?
             let list_type = match field.field_type.borrow() {
@@ -335,7 +337,7 @@ impl ResultIrBuilder {
                     .map(|val| Self::serialize_scalar(val, &list_type))
                     .collect::<CoreResult<Vec<_>>>()?;
 
-                list_mapping.get_mut(&field.name).unwrap().insert(
+                list_mapping.get_mut(&field.name).expect("10").insert(
                     Some(list_pair.record_id),
                     Item::Ref(ItemRef::new(Item::List(converted))),
                 );
