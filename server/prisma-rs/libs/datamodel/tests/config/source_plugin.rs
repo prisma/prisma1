@@ -101,6 +101,9 @@ impl Source for CustomDb {
     fn url(&self) -> &String {
         &self.url
     }
+    fn set_url(&mut self, url: &str) {
+        self.url = url.to_string();
+    }
     fn get_field_directives(&self) -> Vec<Box<DirectiveValidator<dml::Field>>> {
         vec![Box::new(CustomDirective {
             base_type: self.base_type,
