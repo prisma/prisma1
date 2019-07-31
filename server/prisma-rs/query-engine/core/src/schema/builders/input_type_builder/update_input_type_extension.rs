@@ -34,16 +34,12 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
     }
 
     fn scalar_input_fields_for_update(&self, model: ModelRef) -> Vec<InputField> {
-        let scalar_fields: Vec<ScalarFieldRef> = model
-            .fields()
-            .scalar()
-            .into_iter()
-            .filter(|f| f.is_writable())
-            .collect();
-
-        self.scalar_input_fields(model.name.clone(), "Update", scalar_fields, |f: ScalarFieldRef| {
-            self.map_optional_input_type(f)
-        })
+        self.scalar_input_fields(
+            model.name.clone(),
+            "Update",
+            model.fields().scalar(),
+            |f: ScalarFieldRef| self.map_optional_input_type(f),
+        )
     }
 
     /// For update input types only. Compute input fields for relational fields.
