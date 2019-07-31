@@ -121,6 +121,7 @@ impl From<prisma_query::error::Error> for SqlError {
     fn from(e: prisma_query::error::Error) -> Self {
         match e {
             prisma_query::error::Error::QueryError(e) => SqlError::QueryError(e.into()),
+            prisma_query::error::Error::IoError(e) => SqlError::ConnectionError(e.into()),
             prisma_query::error::Error::NotFound => SqlError::RecordDoesNotExist,
             prisma_query::error::Error::InvalidConnectionArguments => SqlError::InvalidConnectionArguments,
 

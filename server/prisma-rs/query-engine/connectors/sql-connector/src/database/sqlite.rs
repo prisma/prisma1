@@ -5,7 +5,6 @@ use prisma_query::{
     connector::{Queryable, SqliteParams},
     pool::{sqlite::SqliteConnectionManager, PrismaConnectionManager},
 };
-use url::Url;
 use std::{collections::HashSet, convert::TryFrom};
 
 type Pool = r2d2::Pool<PrismaConnectionManager<SqliteConnectionManager>>;
@@ -31,8 +30,8 @@ impl Sqlite {
 
 impl FromSource for Sqlite {
     fn from_source(source: &Box<dyn Source>) -> crate::Result<Self> {
-        let url = Url::parse(source.url())?;
-        let params = SqliteParams::try_from(url)?;
+        let params = SqliteParams::try_from(source.url().as_str())?;
+
         let file_path = params.file_path.clone();
         let pool = r2d2::Pool::try_from(params).unwrap();
 
