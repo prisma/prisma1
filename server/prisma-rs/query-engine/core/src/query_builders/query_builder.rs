@@ -1,12 +1,14 @@
 use super::*;
 use crate::{
     query_document::*, CoreResult, FieldRef, InputFieldRef, InputObjectTypeStrongRef, InputType, IntoArc,
-    ModelOperation, ObjectTypeStrongRef, OperationTag, QueryPair, QuerySchemaRef, ResultResolutionStrategy, ScalarType,
+    ModelOperation, ObjectTypeStrongRef, OperationTag, OutputTypeRef, QueryPair, QuerySchemaRef,
+    ResultResolutionStrategy, ScalarType,
 };
 use chrono::prelude::*;
 use connector::Query;
 use prisma_models::{GraphqlId, PrismaValue};
 use std::{
+    borrow::Borrow,
     collections::{BTreeMap, HashSet},
     sync::Arc,
 };
@@ -66,13 +68,17 @@ impl QueryBuilder {
                     .as_ref()
                     .expect("Expected Query object fields to always have an associated operation.");
 
-                self.map_read(parsed_field, field_operation)
-                    .map(|res| (res, ResultResolutionStrategy::Serialize(Arc::clone(&field.field_type))))
+                self.map_read(parsed_field, field_operation, &field.field_type)
             })
             .collect()
     }
 
-    fn map_read(&self, parsed_field: ParsedField, operation: &ModelOperation) -> QueryBuilderResult<Query> {
+    fn map_read(
+        &self,
+        parsed_field: ParsedField,
+        operation: &ModelOperation,
+        field_type: &OutputTypeRef,
+    ) -> QueryBuilderResult<QueryPair> {
         let builder = match operation.operation {
             OperationTag::FindOne => ReadQueryBuilder::ReadOneRecordBuilder(ReadOneRecordBuilder::new(
                 parsed_field,
@@ -85,7 +91,10 @@ impl QueryBuilder {
             _ => unreachable!(),
         };
 
-        builder.build().map(|query| Query::Read(query))
+        builder
+            .build()
+            .map(|query| Query::Read(query))
+            .map(|res| (res, ResultResolutionStrategy::Serialize(Arc::clone(field_type))))
     }
 
     /// Maps a write operation to one or more queries.
@@ -108,28 +117,58 @@ impl QueryBuilder {
                     .as_ref()
                     .expect("Expected Mutation object fields to always have an associated operation.");
 
-                // let (write_builder, result_strategy) = match field_operation.operation {
-                //     OperationTag::CreateOne(result_op) => {
-                //         let result_strategy = match result_op {
-                //             OperationTag::FindOne => ResultResolutionStrategy::Query(),
-                //             OperationTag::CoerceResultToOutputType => ResultResolutionStrategy::CoerceInto(field.field_type),
-                //             _ => unreachable!(),
-                //         };
+                let (write_query, result_strategy) = match field_operation.operation {
+                    OperationTag::CreateOne(ref result_strategy) => {
+                        let result_strategy = match result_strategy.borrow() {
+                            OperationTag::FindOne => {
+                                // Dependent model operation (code can probably go one level deeper)
+                                let model_op = ModelOperation {
+                                    model: Arc::clone(&field_operation.model),
+                                    operation: OperationTag::FindOne,
+                                };
 
-                //         WriteQueryBuilder::CreateBuilder(CreateBuilder::new(
-                //             parsed_field,
-                //             Arc::clone(&field_operation.model),
-                //         ));
-                //     },
-                //     _ => unimplemented!(),
-                // };
+                                let query = self.derive_read_one_query(&parsed_field, model_op, &field.field_type)?;
 
-                // Sub selections are the read query.
+                                ResultResolutionStrategy::Dependent(Box::new(query))
+                            }
 
-                // builder.build().map(|query| (Query::Write(query), result_strategy))
-                unimplemented!()
+                            OperationTag::CoerceResultToOutputType => {
+                                ResultResolutionStrategy::Serialize(field.field_type.clone())
+                            }
+
+                            _ => unreachable!(),
+                        };
+
+                        let write_query = WriteQueryBuilder::CreateBuilder(CreateBuilder::new(
+                            parsed_field,
+                            Arc::clone(&field_operation.model),
+                        ))
+                        .build()?;
+
+                        (write_query, result_strategy)
+                    }
+                    _ => unimplemented!(),
+                };
+
+                Ok((Query::Write(write_query), result_strategy))
             })
             .collect()
+    }
+
+    fn derive_read_one_query(
+        &self,
+        field: &ParsedField,
+        model_op: ModelOperation,
+        output_type: &OutputTypeRef,
+    ) -> QueryBuilderResult<QueryPair> {
+        let derived_field = ParsedField {
+            name: field.name.clone(),
+            alias: field.alias.clone(),
+            arguments: vec![],
+            sub_selections: field.sub_selections.clone(),
+        };
+
+        self.map_read(derived_field, &model_op, output_type)
     }
 
     /// Parses and validates a set of selections against a schema (output) object.

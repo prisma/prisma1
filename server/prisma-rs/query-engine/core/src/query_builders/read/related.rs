@@ -3,7 +3,7 @@ use crate::query_builders::{utils, Builder, ParsedField, QueryBuilderResult};
 use connector::read_ast::{ReadQuery, RelatedRecordsQuery};
 use prisma_models::{ModelRef, RelationFieldRef};
 
-pub struct RelatedRecordsBuilder {
+pub struct ReadRelatedRecordsBuilder {
     /// The model that is queried.
     model: ModelRef,
 
@@ -14,13 +14,13 @@ pub struct RelatedRecordsBuilder {
     field: ParsedField,
 }
 
-impl RelatedRecordsBuilder {
+impl ReadRelatedRecordsBuilder {
     pub fn new(model: ModelRef, parent: RelationFieldRef, field: ParsedField) -> Self {
         Self { model, parent, field }
     }
 }
 
-impl Builder<ReadQuery> for RelatedRecordsBuilder {
+impl Builder<ReadQuery> for ReadRelatedRecordsBuilder {
     fn build(self) -> QueryBuilderResult<ReadQuery> {
         let args = utils::extract_query_args(self.field.arguments, &self.model)?;
         let name = self.field.name;

@@ -13,12 +13,12 @@ use std::{collections::BTreeMap, convert::TryInto};
 
 pub type ParsedInputMap = BTreeMap<String, ParsedInputValue>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ParsedObject {
     pub fields: Vec<ParsedField>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ParsedField {
     pub name: String,
     pub alias: Option<String>,
@@ -26,13 +26,13 @@ pub struct ParsedField {
     pub sub_selections: Option<ParsedObject>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ParsedArgument {
     pub name: String,
     pub value: ParsedInputValue,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub enum ParsedInputValue {
     Single(PrismaValue),
     List(Vec<ParsedInputValue>),

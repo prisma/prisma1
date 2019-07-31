@@ -8,6 +8,7 @@ pub enum Identifier {
     None,
 }
 
+/// TODO this can likely be removed.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum WriteQueryResultType {
     Create,

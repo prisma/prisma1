@@ -13,8 +13,8 @@ pub use filters::*;
 pub use parse_ast::*;
 pub use query_builder::*;
 pub use read::*;
-pub use write_new::*;
 pub use utils::*;
+pub use write_new::*;
 
 /// Query builder sub-result type.
 pub type QueryBuilderResult<T> = Result<T, QueryValidationError>;

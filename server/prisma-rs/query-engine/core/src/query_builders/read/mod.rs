@@ -1,10 +1,10 @@
 mod many;
 mod one;
-mod relation;
+mod related;
 
 pub use many::*;
 pub use one::*;
-pub use relation::*;
+pub use related::*;
 
 use crate::query_builders::{Builder, ParsedField, QueryBuilderResult};
 use connector::read_ast::ReadQuery;
@@ -16,8 +16,7 @@ use std::sync::Arc;
 pub enum ReadQueryBuilder {
     ReadOneRecordBuilder(ReadOneRecordBuilder),
     ReadManyRecordsBuilder(ReadManyRecordsBuilder),
-    RelatedRecordsBuilder(RelatedRecordsBuilder),
-    // ReadManyRelationRecordsBuilder(ReadManyRelationRecordsBuilder),
+    ReadRelatedRecordsBuilder(ReadRelatedRecordsBuilder),
 }
 
 impl Builder<ReadQuery> for ReadQueryBuilder {
@@ -25,8 +24,7 @@ impl Builder<ReadQuery> for ReadQueryBuilder {
         match self {
             ReadQueryBuilder::ReadOneRecordBuilder(b) => b.build(),
             ReadQueryBuilder::ReadManyRecordsBuilder(b) => b.build(),
-            ReadQueryBuilder::RelatedRecordsBuilder(b) => b.build(),
-            // ReadQueryBuilder::ReadManyRelationRecordsBuilder(b) => b.build(),
+            ReadQueryBuilder::ReadRelatedRecordsBuilder(b) => b.build(),
         }
     }
 }
@@ -74,7 +72,7 @@ pub fn collect_nested_queries(from: Vec<ParsedField>, model: &ModelRef) -> Query
                     let model = rf.related_model();
                     let parent = Arc::clone(&rf);
 
-                    Some(ReadQueryBuilder::RelatedRecordsBuilder(RelatedRecordsBuilder::new(
+                    Some(ReadQueryBuilder::ReadRelatedRecordsBuilder(ReadRelatedRecordsBuilder::new(
                         model,
                         parent,
                         selected_field,
