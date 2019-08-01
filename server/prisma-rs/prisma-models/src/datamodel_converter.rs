@@ -135,7 +135,14 @@ impl<'a> DatamodelConverter<'a> {
                             .fields()
                             .find(|f| match f.field_type {
                                 dml::FieldType::Relation(ref rel_info) => {
-                                    &rel_info.to == &model.name && &rel_info.name == name && f.name != field.name
+                                    // TODO: i probably don't need to check the the `to`. The name of the relation should be enough. The parser must guarantee that the relation info is set right.
+                                    if &model.name == &related_model.name {
+                                        // SELF RELATIONS
+                                        &rel_info.to == &model.name && &rel_info.name == name && f.name != field.name
+                                    } else {
+                                        // In a normal relation the related field could be named the same hence we omit the last condition from above.
+                                        &rel_info.to == &model.name && &rel_info.name == name
+                                    }
                                 }
                                 _ => false,
                             })

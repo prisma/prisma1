@@ -15,4 +15,11 @@ failure = "0.1"
 failure_derive = "0.1"
 regex = "1.1"
 datamodel = { path = "../datamodel" }
-log = "0.4"
+
+slog = { version = "2.5", features = ["max_level_trace", "release_max_level_info"] }
+slog-async = "2.3"
+slog-json = "2.3"
+slog-scope = "4.1"
+slog-stdlog = "3.0"
+slog-term = "2.4"
+log = { version = "*", features = ["max_level_trace", "release_max_level_info"] }
