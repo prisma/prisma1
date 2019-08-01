@@ -11,27 +11,22 @@ use std::convert::TryInto;
 /// Returns Some if the extraction succeeded, None if it was not possible.
 /// Errors occur if the arguments are structurally correct, but it's semantically impossible
 /// to extract a record finder, e.g. if too many fields are given.
-pub fn extract_record_finder(arguments: Vec<ParsedArgument>, model: &ModelRef) -> QueryBuilderResult<Option<RecordFinder>> {
-    match arguments.into_iter().find(|arg| arg.name == "where") {
-        Some(where_arg) => {
-            let values: ParsedInputMap = where_arg.value.try_into()?;
+/// todo ^
+pub fn extract_record_finder(parsed_value: ParsedInputValue, model: &ModelRef) -> QueryBuilderResult<RecordFinder> {
+    let values: ParsedInputMap = parsed_value.try_into()?;
+    if values.len() != 1 {
+        Err(QueryValidationError::AssertionError(format!(
+            "Expected exactly one value for 'where' argument, got: {}",
+            values.iter().map(|v| v.0.as_str()).collect::<Vec<&str>>().join(", ")
+        )))
+    } else {
+        let field_selector: (String, ParsedInputValue) = values.into_iter().next().unwrap();
+        let model_field = model.fields().find_from_scalar(&field_selector.0).unwrap();
 
-            if values.len() != 1 {
-                Err(QueryValidationError::AssertionError(format!(
-                    "Expected exactly one value for 'where' argument, got: {}",
-                    values.iter().map(|v| v.0.as_str()).collect::<Vec<&str>>().join(", ")
-                )))
-            } else {
-                let field_selector: (String, ParsedInputValue) = values.into_iter().next().unwrap();
-                let model_field = model.fields().find_from_scalar(&field_selector.0).unwrap();
-
-                Ok(Some(RecordFinder {
-                    field: model_field,
-                    value: field_selector.1.try_into()?,
-                }))
-            }
-        }
-        None => Ok(None),
+        Ok(RecordFinder {
+            field: model_field,
+            value: field_selector.1.try_into()?,
+        })
     }
 }
 

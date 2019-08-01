@@ -85,6 +85,20 @@ pub struct NestedWriteQueries {
     pub delete_manys: Vec<NestedDeleteManyRecords>,
 }
 
+impl NestedWriteQueries {
+    pub fn merge(&mut self, other: NestedWriteQueries) {
+        self.creates.extend(other.creates);
+        self.updates.extend(other.updates);
+        self.upserts.extend(other.upserts);
+        self.deletes.extend(other.deletes);
+        self.connects.extend(other.connects);
+        self.disconnects.extend(other.disconnects);
+        self.sets.extend(other.sets);
+        self.update_manys.extend(other.update_manys);
+        self.delete_manys.extend(other.delete_manys);
+    }
+}
+
 // SET
 
 #[derive(Debug, Clone)]

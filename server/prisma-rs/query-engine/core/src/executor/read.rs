@@ -16,6 +16,7 @@ impl ReadQueryExecutor {
         }
     }
 
+    /// Queries a single record.
     pub fn read_one(&self, query: RecordQuery) -> CoreResult<ReadQueryResult> {
         let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
         let scalars = self
@@ -57,6 +58,7 @@ impl ReadQueryExecutor {
         }
     }
 
+    /// Queries a set of records.
     pub fn read_many(&self, query: ManyRecordsQuery) -> CoreResult<ReadQueryResult> {
         let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
         let scalars =
@@ -119,6 +121,7 @@ impl ReadQueryExecutor {
         })
     }
 
+    /// Resolves scalar lists for a list field for a set of parent IDs.
     fn resolve_scalar_list_fields(
         &self,
         record_ids: Vec<GraphqlId>,

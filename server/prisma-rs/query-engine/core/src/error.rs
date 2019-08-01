@@ -1,8 +1,7 @@
-use crate::{query_builders::QueryValidationError};
+use crate::query_builders::QueryValidationError;
 use connector::error::ConnectorError;
 use failure::Fail;
 use prisma_models::DomainError;
-
 
 // TODO: Cleanup unused errors after refactorings.
 #[derive(Debug, Fail)]
