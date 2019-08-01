@@ -71,7 +71,7 @@ impl IntrospectionConnector {
         let cols = result_set
             .into_iter()
             .map(|row| {
-                debug!("Got column row {:#?}", row);
+                debug!("Got column row {:?}", row);
                 let default_value = match row.get("dflt_value") {
                     Some(ParameterizedValue::Text(v)) => Some(v.to_string()),
                     Some(ParameterizedValue::Null) => None,
@@ -134,27 +134,73 @@ impl IntrospectionConnector {
     }
 
     fn get_foreign_keys(&mut self, schema: &str, table: &str) -> Vec<ForeignKey> {
+        struct IntermediateForeignKey {
+            pub columns: HashMap<i64, String>,
+            pub referenced_table: String,
+            pub referenced_columns: HashMap<i64, String>,
+        }
+
         let sql = format!(r#"Pragma "{}".foreign_key_list("{}");"#, schema, table);
         debug!("Introspecting table foreign keys, SQL: '{}'", sql);
         let result_set = self.conn.query_raw(&sql, schema).expect("querying for foreign keys");
-        result_set
+
+        // Since one foreign key with multiple columns will be represented here as several
+        // rows with the same ID, we have to use an intermediate representation that gets
+        // translated into the real foreign keys in another pass
+        let mut intermediate_fks: HashMap<i64, IntermediateForeignKey> = HashMap::new();
+        for row in result_set.into_iter() {
+            debug!("got FK introspection row {:?}", row);
+            let id = row.get("id").and_then(|x| x.as_i64()).expect("id");
+            let seq = row.get("seq").and_then(|x| x.as_i64()).expect("seq");
+            let column = row.get("from").and_then(|x| x.to_string()).expect("from");
+            let referenced_column = row.get("to").and_then(|x| x.to_string()).expect("to");
+            let referenced_table = row.get("table").and_then(|x| x.to_string()).expect("table");
+            match intermediate_fks.get_mut(&id) {
+                Some(fk) => {
+                    fk.columns.insert(seq, column);
+                    fk.referenced_columns.insert(seq, referenced_column);
+                }
+                None => {
+                    let mut columns: HashMap<i64, String> = HashMap::new();
+                    columns.insert(seq, column);
+                    let mut referenced_columns: HashMap<i64, String> = HashMap::new();
+                    referenced_columns.insert(seq, referenced_column);
+                    let fk = IntermediateForeignKey {
+                        columns,
+                        referenced_table,
+                        referenced_columns,
+                    };
+                    intermediate_fks.insert(id, fk);
+                }
+            };
+        }
+
+        intermediate_fks
+            .values()
             .into_iter()
-            .map(|row| {
-                // TODO: multi-column
-                let column = row.get("from").and_then(|x| x.to_string()).expect("from");
-                let columns = vec![column];
-                // TODO: multi-column
-                let referenced_column = row.get("to").and_then(|x| x.to_string()).expect("to");
-                let referenced_columns = vec![referenced_column];
+            .map(|intermediate_fk| {
+                let mut column_keys: Vec<&i64> = intermediate_fk.columns.keys().collect();
+                column_keys.sort();
+                let mut columns: Vec<String> = vec![];
+                columns.reserve(column_keys.len());
+                for i in column_keys {
+                    columns.push(intermediate_fk.columns[i].to_owned());
+                }
+
+                let mut referenced_column_keys: Vec<&i64> = intermediate_fk.referenced_columns.keys().collect();
+                referenced_column_keys.sort();
+                let mut referenced_columns: Vec<String> = vec![];
+                referenced_columns.reserve(referenced_column_keys.len());
+                for i in referenced_column_keys {
+                    referenced_columns.push(intermediate_fk.referenced_columns[i].to_owned());
+                }
+
                 let fk = ForeignKey {
                     columns,
-                    referenced_table: row.get("table").and_then(|x| x.to_string()).expect("table"),
+                    referenced_table: intermediate_fk.referenced_table.to_owned(),
                     referenced_columns,
                 };
-                debug!(
-                    "Found foreign key column: '{:?}', to table: '{}', to column: '{:?}'",
-                    fk.columns, fk.referenced_table, fk.referenced_columns
-                );
+                debug!("Detected foreign key {:?}", fk);
                 fk
             })
             .collect()

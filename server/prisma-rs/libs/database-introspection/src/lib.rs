@@ -146,7 +146,7 @@ pub enum ColumnArity {
 }
 
 /// A foreign key.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct ForeignKey {
     /// Column names.
     pub columns: Vec<String>,
