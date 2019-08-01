@@ -143,12 +143,12 @@ pub enum ColumnArity {
 /// A foreign key.
 #[derive(PartialEq, Debug)]
 pub struct ForeignKey {
-    /// Column name.
-    pub column: String,
+    /// Column names.
+    pub columns: Vec<String>,
     /// Referenced table.
     pub referenced_table: String,
-    /// Referenced column.
-    pub referenced_column: String,
+    /// Referenced columns.
+    pub referenced_columns: Vec<String>,
 }
 
 /// A SQL enum.
