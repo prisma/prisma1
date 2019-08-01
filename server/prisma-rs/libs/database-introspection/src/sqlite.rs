@@ -145,14 +145,20 @@ impl IntrospectionConnector {
         result_set
             .into_iter()
             .map(|row| {
+                // TODO: multi-column
+                let column = row.get("from").and_then(|x| x.to_string()).expect("from");
+                let columns = vec![column];
+                // TODO: multi-column
+                let referenced_column = row.get("to").and_then(|x| x.to_string()).expect("to");
+                let referenced_columns = vec![referenced_column];
                 let fk = ForeignKey {
-                    column: row.get("from").and_then(|x| x.to_string()).expect("from"),
+                    columns,
                     referenced_table: row.get("table").and_then(|x| x.to_string()).expect("table"),
-                    referenced_column: row.get("to").and_then(|x| x.to_string()).expect("to"),
+                    referenced_columns,
                 };
                 debug!(
-                    "Found foreign key column: '{}', to table: '{}', to column: '{}'",
-                    fk.column, fk.referenced_table, fk.referenced_column
+                    "Found foreign key column: '{:?}', to table: '{}', to column: '{:?}'",
+                    fk.columns, fk.referenced_table, fk.referenced_columns
                 );
                 fk
             })

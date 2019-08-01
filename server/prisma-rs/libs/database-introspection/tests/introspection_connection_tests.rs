@@ -465,8 +465,8 @@ fn foreign_keys_must_work() {
                     indices: vec![],
                     primary_key: None,
                     foreign_keys: vec![ForeignKey {
-                        column: "city".to_string(),
-                        referenced_column: "id".to_string(),
+                        columns: vec!["city".to_string()],
+                        referenced_columns: vec!["id".to_string()],
                         referenced_table: "City".to_string(),
                     }],
                 }
