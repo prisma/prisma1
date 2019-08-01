@@ -121,14 +121,13 @@ impl QueryBuilder {
                     OperationTag::CreateOne(ref result_strategy) => {
                         let result_strategy = match result_strategy.borrow() {
                             OperationTag::FindOne => {
-                                // Dependent model operation (code can probably go one level deeper)
+                                // Dependent model operation
                                 let model_op = ModelOperation {
                                     model: Arc::clone(&field_operation.model),
                                     operation: OperationTag::FindOne,
                                 };
 
                                 let query = self.derive_read_one_query(&parsed_field, model_op, &field.field_type)?;
-
                                 ResultResolutionStrategy::Dependent(Box::new(query))
                             }
 

@@ -1,5 +1,5 @@
-use crate::CoreResult;
-use connector::{UnmanagedDatabaseWriter, WriteQueryResult, WriteQuery};
+use crate::{CoreError, CoreResult};
+use connector::{UnmanagedDatabaseWriter, WriteQuery, WriteQueryResult};
 use std::sync::Arc;
 
 /// A small wrapper around running WriteQueries
@@ -9,8 +9,16 @@ pub struct WriteQueryExecutor {
 }
 
 impl WriteQueryExecutor {
-    pub fn execute(&self, write_queries: WriteQuery) -> CoreResult<WriteQueryResult> {
-        unimplemented!()
+    pub fn execute(&self, write_query: WriteQuery) -> CoreResult<WriteQueryResult> {
+        match write_query {
+            WriteQuery::Root(wq) => self
+                .write_executor
+                .execute(self.db_name.clone(), wq)
+                .map_err(|err| err.into()),
+            _ => Err(CoreError::UnsupportedFeatureError(
+                "Attempted to execute nested write query on the root level.".into(),
+            )),
+        }
     }
 
     //    /// Execute a single WriteQuerySet tree, in dependent order

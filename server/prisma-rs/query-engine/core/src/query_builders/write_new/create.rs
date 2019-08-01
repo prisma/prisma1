@@ -17,9 +17,6 @@ impl CreateBuilder {
 impl Builder<WriteQuery> for CreateBuilder {
     fn build(self) -> QueryBuilderResult<WriteQuery> {
         let data_argument = self.field.arguments.into_iter().find(|arg| arg.name == "data").unwrap();
-
-        // Todo generate read query from output type selection
-
         let model = self.model;
         let data_map: ParsedInputMap = data_argument.value.try_into()?;
         let create_args = create_arguments(&model, data_map)?;
