@@ -6,7 +6,7 @@ use crate::{
 };
 use chrono::prelude::*;
 use connector::Query;
-use prisma_models::{GraphqlId, PrismaValue};
+use prisma_models::{GraphqlId, ModelRef, PrismaValue};
 use std::{
     borrow::Borrow,
     collections::{BTreeMap, HashSet},
@@ -119,25 +119,12 @@ impl QueryBuilder {
 
                 let (write_query, result_strategy) = match field_operation.operation {
                     OperationTag::CreateOne(ref result_strategy) => {
-                        let result_strategy = match result_strategy.borrow() {
-                            OperationTag::FindOne => {
-                                // Dependent model operation
-                                let model_op = ModelOperation {
-                                    model: Arc::clone(&field_operation.model),
-                                    operation: OperationTag::FindOne,
-                                };
-
-                                let query = self.derive_read_one_query(&parsed_field, model_op, &field.field_type)?;
-                                ResultResolutionStrategy::Dependent(Box::new(query))
-                            }
-
-                            OperationTag::CoerceResultToOutputType => {
-                                ResultResolutionStrategy::Serialize(field.field_type.clone())
-                            }
-
-                            _ => unreachable!(),
-                        };
-
+                        let result_strategy = self.resolve_result_strategy(
+                            &parsed_field,
+                            &field.field_type,
+                            result_strategy,
+                            &field_operation.model,
+                        )?;
                         let write_query = WriteQueryBuilder::CreateBuilder(CreateBuilder::new(
                             parsed_field,
                             Arc::clone(&field_operation.model),
@@ -146,12 +133,54 @@ impl QueryBuilder {
 
                         (write_query, result_strategy)
                     }
+
+                    OperationTag::UpdateOne(ref result_strategy) => {
+                        let result_strategy = self.resolve_result_strategy(
+                            &parsed_field,
+                            &field.field_type,
+                            result_strategy,
+                            &field_operation.model,
+                        )?;
+                        let write_query = WriteQueryBuilder::UpdateBuilder(UpdateBuilder::new(
+                            parsed_field,
+                            Arc::clone(&field_operation.model),
+                        ))
+                        .build()?;
+
+                        (write_query, result_strategy)
+                    }
+
                     _ => unimplemented!(),
                 };
 
                 Ok((Query::Write(write_query), result_strategy))
             })
             .collect()
+    }
+
+    fn resolve_result_strategy(
+        &self,
+        parsed_field: &ParsedField,
+        field_type: &OutputTypeRef,
+        result_tag: &OperationTag,
+        model: &ModelRef,
+    ) -> QueryBuilderResult<ResultResolutionStrategy> {
+        Ok(match result_tag.borrow() {
+            OperationTag::FindOne => {
+                // Dependent model operation
+                let model_op = ModelOperation {
+                    model: Arc::clone(model),
+                    operation: OperationTag::FindOne,
+                };
+
+                let query = self.derive_read_one_query(&parsed_field, model_op, field_type)?;
+                ResultResolutionStrategy::Dependent(Box::new(query))
+            }
+
+            OperationTag::CoerceResultToOutputType => ResultResolutionStrategy::Serialize(field_type.clone()),
+
+            _ => unreachable!(),
+        })
     }
 
     fn derive_read_one_query(
