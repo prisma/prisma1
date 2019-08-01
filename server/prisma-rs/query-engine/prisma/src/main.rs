@@ -92,7 +92,8 @@ fn main() {
     };
 
     if let Err(err) = result {
-        error!("Encountered error during initialization: {}", err);
+        info!("Encountered error during initialization:");
+        err.pretty_print();
         process::exit(1);
     };
 }
