@@ -1,13 +1,11 @@
+use super::IntrospectionConnection;
 use super::*;
-use ::postgres::Client;
 use log::debug;
-use prisma_query::ast::ParameterizedValue;
-use prisma_query::connector::{PostgreSql, Queryable};
-use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 pub struct IntrospectionConnector {
-    queryable: PostgreSql,
+    conn: Arc<IntrospectionConnection>,
 }
 
 impl super::IntrospectionConnector for IntrospectionConnector {
@@ -34,9 +32,8 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 }
 
 impl IntrospectionConnector {
-    pub fn new(client: Client) -> Result<IntrospectionConnector> {
-        let queryable = PostgreSql::from(client);
-        Ok(IntrospectionConnector { queryable })
+    pub fn new(conn: Arc<dyn IntrospectionConnection>) -> IntrospectionConnector {
+        IntrospectionConnector { conn }
     }
 
     fn get_table_names(&mut self, schema: &str) -> Vec<String> {
@@ -49,7 +46,7 @@ impl IntrospectionConnector {
         ORDER BY table_name",
             schema
         );
-        let rows = self.queryable.query_raw(&sql, &[]).expect("get table names ");
+        let rows = self.conn.query_raw(&sql, schema).expect("get table names ");
         let names = rows
             .into_iter()
             .map(|row| {
@@ -59,7 +56,7 @@ impl IntrospectionConnector {
             })
             .collect();
 
-        debug!("Found table names: {:#?}", names);
+        debug!("Found table names: {:?}", names);
         names
     }
 
@@ -86,11 +83,11 @@ impl IntrospectionConnector {
             ORDER BY column_name",
             schema, table
         );
-        let rows = self.queryable.query_raw(&sql, &[]).expect("querying for columns");
+        let rows = self.conn.query_raw(&sql, schema).expect("querying for columns");
         let cols = rows
             .into_iter()
             .map(|col| {
-                debug!("Got column: {:#?}", col);
+                debug!("Got column: {:?}", col);
                 let udt = col.get("udt_name").and_then(|x| x.to_string()).expect("get udt_name");
                 let is_nullable = col
                     .get("is_nullable")
@@ -120,7 +117,7 @@ impl IntrospectionConnector {
                     default: col
                         .get("column_default")
                         .map(|x| {
-                            debug!("Converting default to string: {:#?}", x);
+                            debug!("Converting default to string: {:?}", x);
                             if x.is_null() {
                                 None
                             } else {
@@ -134,13 +131,14 @@ impl IntrospectionConnector {
             })
             .collect();
 
-        debug!("Found table columns: {:#?}", cols);
+        debug!("Found table columns: {:?}", cols);
         cols
     }
 
     fn get_foreign_keys(&mut self, schema: &str, table: &str) -> Vec<ForeignKey> {
         let sql = format!(
             "select 
+                con.oid as \"con_id\",
                 att2.attname as \"child_column\", 
                 cl.relname as \"parent_table\", 
                 att.attname as \"parent_column\"
@@ -148,6 +146,7 @@ impl IntrospectionConnector {
             (select 
                     unnest(con1.conkey) as \"parent\", 
                     unnest(con1.confkey) as \"child\", 
+                    con1.oid,
                     con1.confrelid, 
                     con1.conrelid,
                     con1.conname
@@ -170,43 +169,60 @@ impl IntrospectionConnector {
             table, schema
         );
         debug!("Introspecting table foreign keys, SQL: '{}'", sql);
-        let result_set = self.queryable.query_raw(&sql, &[]).expect("querying for foreign keys");
-        result_set
-            .into_iter()
-            .map(|row| {
-                debug!("Got row {:#?}", row);
-                // TODO Handle multi-column
-                let column = row
-                    .get("child_column")
-                    .and_then(|x| x.to_string())
-                    .expect("get child_column");
-                let columns = vec![column];
-                // TODO Handle multi-column
-                let referenced_column = row
-                        .get("parent_column")
-                        .and_then(|x| x.to_string())
-                        .expect("get parent_column");
-                let referenced_columns = vec![referenced_column];
-                let fk = ForeignKey {
-                    columns,
-                    referenced_table: row
-                        .get("parent_table")
-                        .and_then(|x| x.to_string())
-                        .expect("get parent_table"),
-                    referenced_columns,
-                };
-                debug!(
-                    "Found foreign key column(s): '{:?}', to table: '{}', to column(s): '{:?}'",
-                    fk.columns, fk.referenced_table, fk.referenced_columns
-                );
-                fk
-            })
-            .collect()
+
+        // One foreign key with multiple columns will be represented here as several
+        // rows with the same ID, which we will have to combine into corresponding foreign key
+        // objects.
+        let result_set = self.conn.query_raw(&sql, schema).expect("querying for foreign keys");
+        let mut intermediate_fks: HashMap<i64, ForeignKey> = HashMap::new();
+        for row in result_set.into_iter() {
+            debug!("Got introspection FK row {:?}", row);
+            let id = row.get("con_id").and_then(|x| x.as_i64()).expect("get con_id");
+            let column = row
+                .get("child_column")
+                .and_then(|x| x.to_string())
+                .expect("get child_column");
+            let referenced_table = row
+                .get("parent_table")
+                .and_then(|x| x.to_string())
+                .expect("get parent_table");
+            let referenced_column = row
+                .get("parent_column")
+                .and_then(|x| x.to_string())
+                .expect("get parent_column");
+            match intermediate_fks.get_mut(&id) {
+                Some(fk) => {
+                    fk.columns.push(column);
+                    fk.referenced_columns.push(referenced_column);
+                }
+                None => {
+                    let fk = ForeignKey {
+                        columns: vec![column],
+                        referenced_table,
+                        referenced_columns: vec![referenced_column],
+                    };
+                    intermediate_fks.insert(id, fk);
+                }
+            };
+        }
+
+        let fks: Vec<ForeignKey> = intermediate_fks
+            .values()
+            .map(|intermediate_fk| intermediate_fk.to_owned())
+            .collect();
+        for fk in fks.iter() {
+            debug!(
+                "Found foreign key - column(s): {:?}, to table: '{}', to column(s): {:?}",
+                fk.columns, fk.referenced_table, fk.referenced_columns
+            );
+        }
+
+        fks
     }
 
     fn get_indices(&mut self, schema: &str, table_name: &str) -> (Vec<Index>, Option<PrimaryKey>) {
         debug!("Getting indices");
-        let sql = "SELECT indexInfos.relname as name,
+        let sql = format!("SELECT indexInfos.relname as name,
             array_agg(columnInfos.attname) as column_names,
             rawIndex.indisunique as is_unique, rawIndex.indisprimary as is_primary_key
             FROM
@@ -230,26 +246,17 @@ impl IntrospectionConnector {
             AND tableInfos.relkind = 'r'
             -- we only consider stuff out of one specific schema
             AND tableInfos.relnamespace = schemaInfo.oid
-            AND schemaInfo.nspname = $1::text
-            AND tableInfos.relname = $2::text
+            AND schemaInfo.nspname = '{}'
+            AND tableInfos.relname = '{}'
             GROUP BY tableInfos.relname, indexInfos.relname, rawIndex.indisunique,
             rawIndex.indisprimary
-        ";
-        let rows = self
-            .queryable
-            .query_raw(
-                &sql,
-                &[
-                    ParameterizedValue::Text(Cow::from(schema)),
-                    ParameterizedValue::Text(Cow::from(table_name)),
-                ],
-            )
-            .expect("querying for indices");
+        ", schema, table_name);
+        let rows = self.conn.query_raw(&sql, schema).expect("querying for indices");
         let mut pk: Option<PrimaryKey> = None;
         let indices = rows
             .into_iter()
             .filter_map(|index| {
-                debug!("Got index: {:#?}", index);
+                debug!("Got index: {:?}", index);
                 let is_pk = index
                     .get("is_primary_key")
                     .and_then(|x| x.as_bool())
@@ -272,7 +279,7 @@ impl IntrospectionConnector {
             })
             .collect();
 
-        debug!("Found table indices: {:#?}, primary key: {:#?}", indices, pk);
+        debug!("Found table indices: {:?}, primary key: {:?}", indices, pk);
         (indices, pk)
     }
 
@@ -285,11 +292,11 @@ impl IntrospectionConnector {
                   ",
             schema
         );
-        let rows = self.queryable.query_raw(&sql, &[]).expect("querying for sequences");
+        let rows = self.conn.query_raw(&sql, schema).expect("querying for sequences");
         let sequences = rows
             .into_iter()
             .map(|seq| {
-                debug!("Got sequence: {:#?}", seq);
+                debug!("Got sequence: {:?}", seq);
                 let initial_value = seq
                     .get("start_value")
                     .and_then(|x| x.to_string())
@@ -308,7 +315,7 @@ impl IntrospectionConnector {
             })
             .collect();
 
-        debug!("Found sequences: {:#?}", sequences);
+        debug!("Found sequences: {:?}", sequences);
         Ok(sequences)
     }
 
@@ -323,10 +330,10 @@ impl IntrospectionConnector {
             ",
             schema
         );
-        let rows = self.queryable.query_raw(&sql, &[]).expect("querying for enums");
+        let rows = self.conn.query_raw(&sql, schema).expect("querying for enums");
         let mut enum_values: HashMap<String, HashSet<String>> = HashMap::new();
         for row in rows.into_iter() {
-            debug!("Got enum row: {:#?}", row);
+            debug!("Got enum row: {:?}", row);
             let name = row.get("name").and_then(|x| x.to_string()).expect("get name");
             let value = row.get("value").and_then(|x| x.to_string()).expect("get value");
             if !enum_values.contains_key(&name) {
@@ -340,7 +347,7 @@ impl IntrospectionConnector {
             .into_iter()
             .map(|(k, v)| Enum { name: k, values: v })
             .collect();
-        debug!("Found enums: {:#?}", enums);
+        debug!("Found enums: {:?}", enums);
         Ok(enums)
     }
 }

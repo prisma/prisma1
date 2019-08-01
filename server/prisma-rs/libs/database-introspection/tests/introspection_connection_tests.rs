@@ -3,12 +3,12 @@
 
 use barrel::{types, Migration};
 use database_introspection::*;
-use log::debug;
+use log::{debug, LevelFilter};
 use prisma_query::connector::{Queryable, Sqlite as SqliteDatabaseClient};
 use std::collections::HashSet;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::{thread, time};
 
 const SCHEMA: &str = "DatabaseInspectorTest";
@@ -17,16 +17,27 @@ static IS_SETUP: AtomicBool = AtomicBool::new(false);
 
 fn setup() {
     let is_setup = IS_SETUP.load(Ordering::Relaxed);
-
     if is_setup {
         return;
     }
 
+    let log_level = match std::env::var("RUST_LOG")
+        .unwrap_or("warn".to_string())
+        .to_lowercase()
+        .as_ref()
+    {
+        "trace" => LevelFilter::Trace,
+        "debug" => LevelFilter::Debug,
+        "info" => LevelFilter::Info,
+        "warn" => LevelFilter::Warn,
+        "error" => LevelFilter::Error,
+        _ => LevelFilter::Warn,
+    };
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!("[{}][{}] {}", record.target(), record.level(), message))
         })
-        .level(log::LevelFilter::Warn)
+        .level(log_level)
         .chain(std::io::stdout())
         .apply()
         .expect("fern configuration");
@@ -485,26 +496,46 @@ fn multi_column_foreign_keys_must_work() {
             migration.create_table("City", |t| {
                 t.add_column("id", types::primary());
                 t.add_column("name", types::text());
+                t.inject_custom("constraint uniq unique (id, name)");
             });
             migration.create_table("User", move |t| {
                 t.add_column("city", types::integer());
                 t.add_column("city_name", types::text());
-                t.inject_custom("FOREIGN KEY(city, city_name) REFERENCES City(id, name)");
+                let relation_prefix = match db_type {
+                    "postgres" => format!("\"{}\".", SCHEMA),
+                    _ => "".to_string()
+                };
+                t.inject_custom(format!(
+                    "FOREIGN KEY(city, city_name) REFERENCES {}\"City\"(id, name)",
+                    relation_prefix
+                ));
             });
         },
         |db_type, inspector| {
-            let schema = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
+            let schema = inspector.introspect(SCHEMA).expect("introspection");
             let user_table = schema.get_table("User").expect("couldn't get User table");
-            let expected_columns = vec![Column {
-                name: "city".to_string(),
-                tpe: ColumnType {
-                    raw: int_type(db_type),
-                    family: ColumnTypeFamily::Int,
+            let expected_columns = vec![
+                Column {
+                    name: "city".to_string(),
+                    tpe: ColumnType {
+                        raw: int_type(db_type),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
                 },
-                arity: ColumnArity::Required,
-                default: None,
-                auto_increment: None,
-            }];
+                Column {
+                    name: "city_name".to_string(),
+                    tpe: ColumnType {
+                        raw: text_type(db_type),
+                        family: ColumnTypeFamily::String,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+            ];
 
             assert_eq!(
                 user_table,
@@ -513,11 +544,13 @@ fn multi_column_foreign_keys_must_work() {
                     columns: expected_columns,
                     indices: vec![],
                     primary_key: None,
-                    foreign_keys: vec![ForeignKey {
-                        columns: vec!["city".to_string(), "city_name".to_string()],
-                        referenced_columns: vec!["id".to_string(), "name".to_string()],
-                        referenced_table: "City".to_string(),
-                    }],
+                    foreign_keys: vec![
+                        ForeignKey {
+                            columns: vec!["city".to_string(), "city_name".to_string()],
+                            referenced_columns: vec!["id".to_string(), "name".to_string()],
+                            referenced_table: "City".to_string(),
+                        },
+                    ],
                 }
             );
         },
@@ -582,15 +615,15 @@ where
 
         testFn("sqlite", &mut inspector);
     }
-    // POSTGRES
-    // {
-    //     let mut migration = Migration::new().schema(SCHEMA);
-    //     migrationFn("postgres", &mut migration);
-    //     let full_sql = migration.make::<barrel::backend::Pg>();
-    //     let mut inspector = get_postgres_connector(&full_sql);
+    // Postgres
+    {
+        let mut migration = Migration::new().schema(SCHEMA);
+        migrationFn("postgres", &mut migration);
+        let full_sql = migration.make::<barrel::backend::Pg>();
+        let mut inspector = get_postgres_connector(&full_sql);
 
-    //     testFn("postgres", &mut inspector);
-    // }
+        testFn("postgres", &mut inspector);
+    }
     // // MySQL
     // {
     //     let mut migration = Migration::new().schema(SCHEMA);
@@ -602,10 +635,21 @@ where
     // }
 }
 
+struct SqliteConnection {
+    client: Mutex<prisma_query::connector::Sqlite>,
+}
+
+impl crate::IntrospectionConnection for SqliteConnection {
+    fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet> {
+        self.client.lock().expect("self.client.lock").query_raw(sql, &[])
+    }
+}
+
 fn get_sqlite_connector(sql: &str) -> sqlite::IntrospectionConnector {
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
-    let database_file_path = dbg!(format!("{}/{}.db", database_folder_path, SCHEMA));
+    let database_file_path = format!("{}/{}.db", database_folder_path, SCHEMA);
+    debug!("Database file path: '{}'", database_file_path);
     if Path::new(&database_file_path).exists() {
         std::fs::remove_file(database_file_path.clone()).expect("remove database file");
     }
@@ -616,10 +660,27 @@ fn get_sqlite_connector(sql: &str) -> sqlite::IntrospectionConnector {
         &vec![database_file_path.clone(), String::from(SCHEMA)],
     )
     .expect("attach SQLite database");
+    debug!("Executing migration: {}", sql);
     conn.execute_batch(sql).expect("executing migration");
     conn.close().expect("closing SQLite connection");
 
-    sqlite::IntrospectionConnector::new(&database_file_path, SCHEMA).expect("creating SQLite connector should work")
+    let mut queryable =
+        prisma_query::connector::Sqlite::new(database_file_path).expect("opening prisma_query::connector::Sqlite");
+    queryable.attach_database(SCHEMA).expect("attaching database");
+    let int_conn = Arc::new(SqliteConnection {
+        client: Mutex::new(queryable),
+    });
+    sqlite::IntrospectionConnector::new(int_conn)
+}
+
+struct PostgresConnection {
+    client: Mutex<prisma_query::connector::PostgreSql>,
+}
+
+impl crate::IntrospectionConnection for PostgresConnection {
+    fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet> {
+        self.client.lock().expect("self.client.lock").query_raw(sql, &[])
+    }
 }
 
 fn get_postgres_connector(sql: &str) -> postgres::IntrospectionConnector {
@@ -651,7 +712,10 @@ fn get_postgres_connector(sql: &str) -> postgres::IntrospectionConnector {
         client.execute(statement, &[]).expect("executing migration statement");
     }
 
-    postgres::IntrospectionConnector::new(client).expect("creating Postgres connector")
+    let conn = Arc::new(PostgresConnection {
+        client: Mutex::new(prisma_query::connector::PostgreSql::from(client)),
+    });
+    postgres::IntrospectionConnector::new(conn)
 }
 
 // fn mysql() -> (Arc<IntrospectionConnector>, Arc<Connectional>) {

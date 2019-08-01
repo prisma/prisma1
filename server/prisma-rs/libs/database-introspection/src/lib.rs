@@ -15,6 +15,11 @@ pub enum IntrospectionError {
 /// The result type.
 pub type Result<T> = core::result::Result<T, Error>;
 
+/// Connection abstraction for the introspection connectors.
+pub trait IntrospectionConnection {
+    fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet>;
+}
+
 /// A database introspection connector.
 pub trait IntrospectionConnector {
     /// List the database's schemas.
@@ -141,7 +146,7 @@ pub enum ColumnArity {
 }
 
 /// A foreign key.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct ForeignKey {
     /// Column names.
     pub columns: Vec<String>,
