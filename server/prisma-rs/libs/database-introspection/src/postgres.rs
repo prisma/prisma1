@@ -171,7 +171,7 @@ impl IntrospectionConnector {
         result_set
             .into_iter()
             .map(|row| {
-                debug!("Got row {:#?}", row);
+                debug!("Got introspection FK row {:#?}", row);
                 // TODO Handle multi-column
                 let column = row
                     .get("child_column")

@@ -3,7 +3,7 @@
 
 use barrel::{types, Migration};
 use database_introspection::*;
-use log::debug;
+use log::{debug, LevelFilter};
 use prisma_query::connector::{Queryable, Sqlite as SqliteDatabaseClient};
 use std::collections::HashSet;
 use std::path::Path;
@@ -17,16 +17,27 @@ static IS_SETUP: AtomicBool = AtomicBool::new(false);
 
 fn setup() {
     let is_setup = IS_SETUP.load(Ordering::Relaxed);
-
     if is_setup {
         return;
     }
 
+    let log_level = match std::env::var("RUST_LOG")
+        .unwrap_or("warn".to_string())
+        .to_lowercase()
+        .as_ref()
+    {
+        "trace" => LevelFilter::Trace,
+        "debug" => LevelFilter::Debug,
+        "info" => LevelFilter::Info,
+        "warn" => LevelFilter::Warn,
+        "error" => LevelFilter::Error,
+        _ => LevelFilter::Warn,
+    };
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!("[{}][{}] {}", record.target(), record.level(), message))
         })
-        .level(log::LevelFilter::Warn)
+        .level(log_level)
         .chain(std::io::stdout())
         .apply()
         .expect("fern configuration");
@@ -467,6 +478,69 @@ fn foreign_keys_must_work() {
                     foreign_keys: vec![ForeignKey {
                         columns: vec!["city".to_string()],
                         referenced_columns: vec!["id".to_string()],
+                        referenced_table: "City".to_string(),
+                    }],
+                }
+            );
+        },
+    );
+}
+
+#[test]
+fn multi_column_foreign_keys_must_work() {
+    setup();
+
+    test_each_backend(
+        |db_type, mut migration| {
+            let db_type = db_type.clone();
+            migration.create_table("City", |t| {
+                t.add_column("id", types::primary());
+                t.add_column("name", types::text());
+                t.inject_custom("constraint uniq unique (id, name)");
+            });
+            migration.create_table("User", move |t| {
+                t.add_column("city", types::integer());
+                t.add_column("city_name", types::text());
+                t.inject_custom(format!(
+                    "FOREIGN KEY(city, city_name) REFERENCES \"{}\".\"City\"(id, name)", SCHEMA));
+            });
+        },
+        |db_type, inspector| {
+            let schema = inspector.introspect(SCHEMA).expect("introspection");
+            let user_table = schema.get_table("User").expect("couldn't get User table");
+            let expected_columns = vec![
+                Column {
+                    name: "city".to_string(),
+                    tpe: ColumnType {
+                        raw: int_type(db_type),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "city_name".to_string(),
+                    tpe: ColumnType {
+                        raw: text_type(db_type),
+                        family: ColumnTypeFamily::String,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+            ];
+
+            assert_eq!(
+                user_table,
+                &Table {
+                    name: "User".to_string(),
+                    columns: expected_columns,
+                    indices: vec![],
+                    primary_key: None,
+                    foreign_keys: vec![ForeignKey {
+                        columns: vec!["city".to_string(), "city_name".to_string()],
+                        referenced_columns: vec!["id".to_string(), "name".to_string()],
                         referenced_table: "City".to_string(),
                     }],
                 }
