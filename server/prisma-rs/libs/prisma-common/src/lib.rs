@@ -10,3 +10,4 @@ extern crate slog_scope;
 pub mod config;
 pub mod error;
 pub mod logger;
+pub mod metrics_recorder;

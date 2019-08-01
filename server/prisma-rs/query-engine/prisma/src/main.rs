@@ -31,10 +31,11 @@ use core::{
     BuildMode,
 };
 use error::*;
-use prisma_common::logger::Logger;
+use prisma_common::{logger::Logger, metrics_recorder::MetricsRecorder};
 use req_handlers::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 use serde_json;
 use std::{env, process, sync::Arc, time::Instant};
+use std::thread;
 
 pub type PrismaResult<T> = Result<T, PrismaError>;
 
@@ -88,6 +89,12 @@ fn main() {
         start_cli(matches.subcommand_matches("cli").unwrap())
     } else {
         let _logger = Logger::build("prisma"); // keep in scope
+
+        let mut metrics = MetricsRecorder::install().unwrap();
+        let _exporter = thread::spawn(move || {
+            metrics.run_exporter();
+        });
+
         start_server(matches)
     };
 
