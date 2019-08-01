@@ -183,9 +183,9 @@ impl IntrospectionConnector {
                 let columns = vec![column];
                 // TODO Handle multi-column
                 let referenced_column = row
-                    .get("parent_column")
-                    .and_then(|x| x.to_string())
-                    .expect("get parent_column");
+                        .get("parent_column")
+                        .and_then(|x| x.to_string())
+                        .expect("get parent_column");
                 let referenced_columns = vec![referenced_column];
                 let fk = ForeignKey {
                     columns,
