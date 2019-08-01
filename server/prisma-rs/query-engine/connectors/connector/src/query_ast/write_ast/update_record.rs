@@ -34,3 +34,15 @@ pub struct NestedUpdateManyRecords {
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
 }
+
+impl From<UpdateRecord> for WriteQuery {
+    fn from(u: UpdateRecord) -> WriteQuery {
+        WriteQuery::Root(RootWriteQuery::UpdateRecord(u))
+    }
+}
+
+impl From<UpdateManyRecords> for WriteQuery {
+    fn from(u: UpdateManyRecords) -> WriteQuery {
+        WriteQuery::Root(RootWriteQuery::UpdateManyRecords(u))
+    }
+}

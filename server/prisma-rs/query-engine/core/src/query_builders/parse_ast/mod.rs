@@ -38,3 +38,13 @@ pub enum ParsedInputValue {
     List(Vec<ParsedInputValue>),
     Map(ParsedInputMap),
 }
+
+pub trait ArgumentListLookup {
+    fn lookup(&mut self, name: &str) -> Option<ParsedArgument>;
+}
+
+impl ArgumentListLookup for Vec<ParsedArgument> {
+    fn lookup(&mut self, name: &str) -> Option<ParsedArgument> {
+        self.iter().position(|arg| arg.name == name).map(|pos| self.remove(pos))
+    }
+}

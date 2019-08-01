@@ -1,6 +1,12 @@
 mod create;
+mod nested;
+mod update;
+mod write_arguments;
 
 pub use create::*;
+pub use nested::*;
+pub use update::*;
+pub use write_arguments::*;
 
 use super::*;
 use connector::write_ast::WriteQuery;

@@ -16,3 +16,9 @@ pub struct NestedUpsertRecord {
     pub create: NestedCreateRecord,
     pub update: NestedUpdateRecord,
 }
+
+impl From<UpsertRecord> for WriteQuery {
+    fn from(u: UpsertRecord) -> WriteQuery {
+        WriteQuery::Root(RootWriteQuery::UpsertRecord(u))
+    }
+}

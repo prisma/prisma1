@@ -4,14 +4,14 @@ use connector::{filter::RecordFinder, QueryArguments};
 use prisma_models::ModelRef;
 use std::convert::TryInto;
 
-/// Attempts to extract a RecordFinder from the given arguments.
+/// Extracts a RecordFinder from the given parsed input.
 /// Expects that, assuming an extraction is possible, arguments are structurally valid, meaning that
 /// previous validation guarantees that unwraps are safe. Panics otherwise.
 ///
-/// Returns Some if the extraction succeeded, None if it was not possible.
+/// Expects the parsed value to be transformable into a ParsedInputMap.
+///
 /// Errors occur if the arguments are structurally correct, but it's semantically impossible
 /// to extract a record finder, e.g. if too many fields are given.
-/// todo ^
 pub fn extract_record_finder(parsed_value: ParsedInputValue, model: &ModelRef) -> QueryBuilderResult<RecordFinder> {
     let values: ParsedInputMap = parsed_value.try_into()?;
     if values.len() != 1 {
