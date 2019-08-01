@@ -1,11 +1,12 @@
 use super::*;
+use crate::IntrospectionConnection;
 use log::debug;
 use prisma_query::ast::ParameterizedValue;
-use prisma_query::connector::{Queryable, Sqlite};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 pub struct IntrospectionConnector {
-    pub queryable: Sqlite,
+    pub conn: Arc<IntrospectionConnection>,
 }
 
 impl super::IntrospectionConnector for IntrospectionConnector {
@@ -31,20 +32,14 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 }
 
 impl IntrospectionConnector {
-    pub fn new(file_path: &str, db_name: &str) -> Result<IntrospectionConnector> {
-        debug!(
-            "Creating SQLite IntrospectionConnector, opening '{}' as '{}",
-            file_path, db_name
-        );
-        let mut queryable = Sqlite::new(file_path)?;
-        queryable.attach_database(db_name)?;
-        Ok(IntrospectionConnector { queryable })
+    pub fn new(conn: Arc<dyn IntrospectionConnection>) -> IntrospectionConnector {
+        IntrospectionConnector { conn }
     }
 
     fn get_table_names(&mut self, schema: &str) -> Vec<String> {
         let sql = format!("SELECT name FROM {}.sqlite_master WHERE type='table'", schema);
         debug!("Introspecting table names with query: '{}'", sql);
-        let result_set = self.queryable.query_raw(&sql, &[]).expect("get table names");
+        let result_set = self.conn.query_raw(&sql, schema).expect("get table names");
         let names = result_set
             .into_iter()
             .map(|row| row.get("name").and_then(|x| x.to_string()).unwrap())
@@ -71,7 +66,7 @@ impl IntrospectionConnector {
     fn get_columns(&mut self, schema: &str, table: &str) -> (Vec<Column>, Option<PrimaryKey>) {
         let sql = format!(r#"Pragma "{}".table_info ("{}")"#, schema, table);
         debug!("Introspecting table columns, query: '{}'", sql);
-        let result_set = self.queryable.query_raw(&sql, &[]).unwrap();
+        let result_set = self.conn.query_raw(&sql, schema).unwrap();
         let mut pk_cols: HashMap<i64, String> = HashMap::new();
         let cols = result_set
             .into_iter()
@@ -141,7 +136,7 @@ impl IntrospectionConnector {
     fn get_foreign_keys(&mut self, schema: &str, table: &str) -> Vec<ForeignKey> {
         let sql = format!(r#"Pragma "{}".foreign_key_list("{}");"#, schema, table);
         debug!("Introspecting table foreign keys, SQL: '{}'", sql);
-        let result_set = self.queryable.query_raw(&sql, &[]).expect("querying for foreign keys");
+        let result_set = self.conn.query_raw(&sql, schema).expect("querying for foreign keys");
         result_set
             .into_iter()
             .map(|row| {

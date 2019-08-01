@@ -1,13 +1,11 @@
+use super::IntrospectionConnection;
 use super::*;
-use ::postgres::Client;
 use log::debug;
-use prisma_query::ast::ParameterizedValue;
-use prisma_query::connector::{PostgreSql, Queryable};
-use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 pub struct IntrospectionConnector {
-    queryable: PostgreSql,
+    conn: Arc<IntrospectionConnection>,
 }
 
 impl super::IntrospectionConnector for IntrospectionConnector {
@@ -34,9 +32,8 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 }
 
 impl IntrospectionConnector {
-    pub fn new(client: Client) -> Result<IntrospectionConnector> {
-        let queryable = PostgreSql::from(client);
-        Ok(IntrospectionConnector { queryable })
+    pub fn new(conn: Arc<dyn IntrospectionConnection>) -> IntrospectionConnector {
+        IntrospectionConnector { conn }
     }
 
     fn get_table_names(&mut self, schema: &str) -> Vec<String> {
@@ -49,7 +46,7 @@ impl IntrospectionConnector {
         ORDER BY table_name",
             schema
         );
-        let rows = self.queryable.query_raw(&sql, &[]).expect("get table names ");
+        let rows = self.conn.query_raw(&sql, schema).expect("get table names ");
         let names = rows
             .into_iter()
             .map(|row| {
@@ -86,7 +83,7 @@ impl IntrospectionConnector {
             ORDER BY column_name",
             schema, table
         );
-        let rows = self.queryable.query_raw(&sql, &[]).expect("querying for columns");
+        let rows = self.conn.query_raw(&sql, schema).expect("querying for columns");
         let cols = rows
             .into_iter()
             .map(|col| {
@@ -170,7 +167,7 @@ impl IntrospectionConnector {
             table, schema
         );
         debug!("Introspecting table foreign keys, SQL: '{}'", sql);
-        let result_set = self.queryable.query_raw(&sql, &[]).expect("querying for foreign keys");
+        let result_set = self.conn.query_raw(&sql, schema).expect("querying for foreign keys");
         result_set
             .into_iter()
             .map(|row| {
@@ -183,9 +180,9 @@ impl IntrospectionConnector {
                 let columns = vec![column];
                 // TODO Handle multi-column
                 let referenced_column = row
-                        .get("parent_column")
-                        .and_then(|x| x.to_string())
-                        .expect("get parent_column");
+                    .get("parent_column")
+                    .and_then(|x| x.to_string())
+                    .expect("get parent_column");
                 let referenced_columns = vec![referenced_column];
                 let fk = ForeignKey {
                     columns,
@@ -206,7 +203,7 @@ impl IntrospectionConnector {
 
     fn get_indices(&mut self, schema: &str, table_name: &str) -> (Vec<Index>, Option<PrimaryKey>) {
         debug!("Getting indices");
-        let sql = "SELECT indexInfos.relname as name,
+        let sql = format!("SELECT indexInfos.relname as name,
             array_agg(columnInfos.attname) as column_names,
             rawIndex.indisunique as is_unique, rawIndex.indisprimary as is_primary_key
             FROM
@@ -230,21 +227,12 @@ impl IntrospectionConnector {
             AND tableInfos.relkind = 'r'
             -- we only consider stuff out of one specific schema
             AND tableInfos.relnamespace = schemaInfo.oid
-            AND schemaInfo.nspname = $1::text
-            AND tableInfos.relname = $2::text
+            AND schemaInfo.nspname = '{}'
+            AND tableInfos.relname = '{}'
             GROUP BY tableInfos.relname, indexInfos.relname, rawIndex.indisunique,
             rawIndex.indisprimary
-        ";
-        let rows = self
-            .queryable
-            .query_raw(
-                &sql,
-                &[
-                    ParameterizedValue::Text(Cow::from(schema)),
-                    ParameterizedValue::Text(Cow::from(table_name)),
-                ],
-            )
-            .expect("querying for indices");
+        ", schema, table_name);
+        let rows = self.conn.query_raw(&sql, schema).expect("querying for indices");
         let mut pk: Option<PrimaryKey> = None;
         let indices = rows
             .into_iter()
@@ -285,7 +273,7 @@ impl IntrospectionConnector {
                   ",
             schema
         );
-        let rows = self.queryable.query_raw(&sql, &[]).expect("querying for sequences");
+        let rows = self.conn.query_raw(&sql, schema).expect("querying for sequences");
         let sequences = rows
             .into_iter()
             .map(|seq| {
@@ -323,7 +311,7 @@ impl IntrospectionConnector {
             ",
             schema
         );
-        let rows = self.queryable.query_raw(&sql, &[]).expect("querying for enums");
+        let rows = self.conn.query_raw(&sql, schema).expect("querying for enums");
         let mut enum_values: HashMap<String, HashSet<String>> = HashMap::new();
         for row in rows.into_iter() {
             debug!("Got enum row: {:#?}", row);
