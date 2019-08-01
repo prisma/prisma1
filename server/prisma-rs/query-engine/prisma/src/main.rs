@@ -84,11 +84,10 @@ fn main() {
         )
         .get_matches();
 
-    let _logger = Logger::build("prisma"); // keep in scope
-
     let result = if matches.is_present("cli") {
         start_cli(matches.subcommand_matches("cli").unwrap())
     } else {
+        let _logger = Logger::build("prisma"); // keep in scope
         start_server(matches)
     };
 
