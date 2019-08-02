@@ -26,6 +26,10 @@ impl Sqlite {
             file_path,
         })
     }
+
+    pub fn file_path(&self) -> &str {
+        self.file_path.as_str()
+    }
 }
 
 impl FromSource for Sqlite {
