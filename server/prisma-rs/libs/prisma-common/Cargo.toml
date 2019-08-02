@@ -22,4 +22,4 @@ slog-json = "2.3"
 slog-scope = "4.1"
 slog-stdlog = "3.0"
 slog-term = "2.4"
-log = { version = "*", features = ["max_level_trace", "release_max_level_info"] }
+log = { version = "0.4", features = ["max_level_trace", "release_max_level_info"] }

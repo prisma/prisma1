@@ -40,7 +40,7 @@ slog-async = "2.3"
 slog-json = "2.3"
 slog-stdlog = "3.0"
 slog-scope = "4.1"
-log = { version = "*", features = ["max_level_trace", "release_max_level_info"] }
+log = { version = "0.4", features = ["max_level_trace", "release_max_level_info"] }
 
 [build-dependencies]
 rustc_version = "0.2.3"

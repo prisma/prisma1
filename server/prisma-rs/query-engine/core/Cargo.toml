@@ -24,7 +24,7 @@ slog = { version = "2.5", features = ["max_level_trace", "release_max_level_info
 slog-async = "2.3"
 slog-json = "2.3"
 slog-stdlog = "3.0"
-log = { version = "*", features = ["max_level_trace", "release_max_level_info"] }
+log = { version = "0.4", features = ["max_level_trace", "release_max_level_info"] }
 
 [dependencies.rust-inflector]
 version = "0.11"
