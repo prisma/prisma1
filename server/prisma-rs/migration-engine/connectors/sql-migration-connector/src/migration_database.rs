@@ -18,7 +18,7 @@ pub struct Sqlite {
 
 impl Sqlite {
     pub fn new(url: &str) -> prisma_query::Result<Self> {
-        let params = SqliteParams::try_from(dbg!(url))?;
+        let params = SqliteParams::try_from(url)?;
         let file_path = params.file_path.clone();
         let conn = connector::Sqlite::new(params.file_path)?;
 

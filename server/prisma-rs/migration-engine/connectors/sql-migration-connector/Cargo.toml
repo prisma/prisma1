@@ -17,3 +17,4 @@ itertools = "0.8"
 url = "1.7.2"
 postgres = { version = "0.16.0-rc.1", features = ["with-serde_json-1", "with-chrono-0_4", "with-uuid-0_7"] }
 mysql = { version = "*" }
+log = { version = "0.4", features = ["max_level_trace", "release_max_level_info"] }

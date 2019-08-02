@@ -144,7 +144,7 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
                 },
 
                 _ => {
-                    dbg!(&db);
+                    debug!("Database: {:?}", db);
                     Err(CommonError::ConfigurationError(format!("Database connector {} for configuration key {} is not supported.", db.connector(), name)))
                 },
             })

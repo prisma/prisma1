@@ -24,6 +24,7 @@ prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 chrono = { version = "0.4", features = ["serde"] }
 failure = "0.1"
 failure_derive = "0.1"
+log = { version = "0.4", features = ["max_level_trace", "release_max_level_info"] }
 
 [build-dependencies]
 prost-build = "0.4"
