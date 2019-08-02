@@ -51,7 +51,7 @@ string_literal = { "\"" ~ string_content ~ "\"" }
 boolean_true  = { "true" }
 boolean_false = { "false" }
 boolean_literal =  @{ boolean_true | boolean_false }
-constant_literal = @{ ASCII_ALPHA+ }
+constant_literal = @{ identifier }
 
 // ######################################
 // Expression support
