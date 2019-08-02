@@ -3,7 +3,7 @@ use crate::{
     query_builder::{DeleteActions, NestedActions, WriteQueryBuilder},
     Transaction,
 };
-use connector::{error::RecordFinderInfo, filter::RecordFinder};
+use connector_interface::{error::RecordFinderInfo, filter::RecordFinder};
 use prisma_models::{GraphqlId, RelationFieldRef, SingleRecord};
 use std::sync::Arc;
 
@@ -48,28 +48,28 @@ pub fn execute_nested(
         conn.find_id(record_finder)?;
     };
 
-    let child_id = conn
-        .find_id_by_parent(Arc::clone(&relation_field), parent_id, record_finder)
-        .map_err(|e| match e {
-            SqlError::RecordsNotConnected {
-                relation_name,
-                parent_name,
-                parent_where: _,
-                child_name,
-                child_where,
-            } => {
-                let model = Arc::clone(&relation_field.model());
+    let find = conn.find_id_by_parent(Arc::clone(&relation_field), parent_id, record_finder);
 
-                SqlError::RecordsNotConnected {
-                    relation_name: relation_name,
-                    parent_name: parent_name,
-                    parent_where: Some(RecordFinderInfo::for_id(model, parent_id)),
-                    child_name: child_name,
-                    child_where: child_where,
-                }
+    let child_id = find.map_err(|e| match e {
+        SqlError::RecordsNotConnected {
+            relation_name,
+            parent_name,
+            parent_where: _,
+            child_name,
+            child_where,
+        } => {
+            let model = Arc::clone(&relation_field.model());
+
+            SqlError::RecordsNotConnected {
+                relation_name: relation_name,
+                parent_name: parent_name,
+                parent_where: Some(RecordFinderInfo::for_id(model, parent_id)),
+                child_name: child_name,
+                child_where: child_where,
             }
-            e => e,
-        })?;
+        }
+        e => e,
+    })?;
 
     {
         let (select, check) = actions.ensure_connected(parent_id, &child_id);

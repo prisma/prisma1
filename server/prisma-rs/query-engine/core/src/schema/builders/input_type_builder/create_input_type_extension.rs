@@ -21,7 +21,7 @@ pub trait CreateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> {
             .fields()
             .scalar()
             .into_iter()
-            .filter(|f| !f.is_created_at() && !f.is_updated_at() && !f.is_hidden && Self::do_filter(&f))
+            .filter(|f| !f.is_hidden && Self::do_filter(&f))
             .collect();
 
         let mut fields = self.scalar_input_fields(
@@ -42,7 +42,8 @@ pub trait CreateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> {
 
                         _ => unreachable!(),
                     }
-
+                    true if f.is_created_at() => self.map_optional_input_type(f),
+                    true if f.is_updated_at() => self.map_optional_input_type(f),
                     true => self.map_required_input_type(f),
                     false => self.map_optional_input_type(f),
                 }

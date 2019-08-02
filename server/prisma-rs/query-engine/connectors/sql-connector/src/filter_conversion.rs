@@ -1,4 +1,4 @@
-use connector::filter::*;
+use connector_interface::filter::*;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 

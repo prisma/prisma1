@@ -1,10 +1,9 @@
 #![allow(non_snake_case)]
 mod test_harness;
 use barrel::{types, Migration, SqlVariant};
-use sql_migration_connector::database_inspector::*;
 use migration_core::MigrationEngine;
-use prisma_query::Connectional;
 use sql_migration_connector::SqlFamily;
+use sql_migration_connector::{database_inspector::*, migration_database::MigrationDatabase};
 use std::sync::Arc;
 use test_harness::*;
 
@@ -307,12 +306,12 @@ where
     // SQLite
     if !ignores.contains(&SqlFamily::Sqlite) {
         println!("Testing with SQLite now");
-        let (inspector, connectional) = sqlite();
+        let (inspector, database) = sqlite();
         println!("Running the test function now");
         let engine = test_engine(&sqlite_test_config());
         let barrel_migration_executor = BarrelMigrationExecutor {
             inspector,
-            connectional,
+            database,
             sql_variant: SqlVariant::Sqlite,
         };
         testFn(&engine, &barrel_migration_executor);
@@ -322,12 +321,12 @@ where
     // POSTGRES
     if !ignores.contains(&SqlFamily::Postgres) {
         println!("Testing with Postgres now");
-        let (inspector, connectional) = postgres();
+        let (inspector, database) = postgres();
         println!("Running the test function now");
         let engine = test_engine(&postgres_test_config());
         let barrel_migration_executor = BarrelMigrationExecutor {
             inspector,
-            connectional,
+            database,
             sql_variant: SqlVariant::Pg,
         };
         testFn(&engine, &barrel_migration_executor);
@@ -336,31 +335,31 @@ where
     }
 }
 
-fn sqlite() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
+fn sqlite() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
     let database_file_path = sqlite_test_file();
     let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
 
     let inspector = DatabaseInspector::sqlite(database_file_path);
-    let connectional = Arc::clone(&inspector.connectional);
+    let database = Arc::clone(&inspector.database);
 
-    (Arc::new(inspector), connectional)
+    (Arc::new(inspector), database)
 }
 
-fn postgres() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
+fn postgres() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
     let url = postgres_url();
     let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA_NAME));
-    let setup_connectional = DatabaseInspector::postgres(url.to_string()).connectional;
-    let _ = setup_connectional.query_on_raw_connection(&SCHEMA_NAME, &drop_schema, &[]);
+    let setup_database = DatabaseInspector::postgres(url.to_string()).database;
+    let _ = setup_database.query_raw(SCHEMA_NAME, &drop_schema, &[]);
 
     let inspector = DatabaseInspector::postgres(url.to_string());
-    let connectional = Arc::clone(&inspector.connectional);
+    let database = Arc::clone(&inspector.database);
 
-    (Arc::new(inspector), connectional)
+    (Arc::new(inspector), database)
 }
 
 struct BarrelMigrationExecutor {
     inspector: Arc<DatabaseInspector>,
-    connectional: Arc<Connectional>,
+    database: Arc<MigrationDatabase>,
     sql_variant: barrel::backend::SqlVariant,
 }
 
@@ -372,7 +371,7 @@ impl BarrelMigrationExecutor {
         let mut migration = Migration::new().schema(SCHEMA_NAME);
         migrationFn(&mut migration);
         let full_sql = dbg!(migration.make_from(self.sql_variant));
-        run_full_sql(&self.connectional, &full_sql);
+        run_full_sql(&self.database, &full_sql);
         let mut result = self.inspector.introspect(&SCHEMA_NAME.to_string());
         // the presence of the _Migration table makes assertions harder. Therefore remove it.
         result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
@@ -380,10 +379,10 @@ impl BarrelMigrationExecutor {
     }
 }
 
-fn run_full_sql(connectional: &Arc<Connectional>, full_sql: &str) {
+fn run_full_sql(database: &Arc<MigrationDatabase>, full_sql: &str) {
     for sql in full_sql.split(";") {
         if sql != "" {
-            connectional.query_on_raw_connection(&SCHEMA_NAME, &sql, &[]).unwrap();
+            database.query_raw(SCHEMA_NAME, &sql, &[]).unwrap();
         }
     }
 }

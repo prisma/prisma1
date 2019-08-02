@@ -1,4 +1,5 @@
-use core::{response_ir, CoreError};
+use crate::utilities;
+use core::{CoreError, response_ir};
 use datamodel::errors::ErrorCollection;
 use failure::{Error, Fail};
 use graphql_parser::query::ParseError as GqlParseError;
@@ -56,10 +57,12 @@ impl PrettyPrint for PrismaError {
     fn pretty_print(&self) {
         match self {
             PrismaError::ConversionError(errors, dml_string) => {
+                let file_name = utilities::get_env("PRISMA_SDL_PATH").unwrap_or_else(|_| "schema.prisma".to_string());
+
                 for error in errors.to_iter() {
                     println!("");
                     error
-                        .pretty_print(&mut std::io::stderr().lock(), "data model, line", &dml_string)
+                        .pretty_print(&mut std::io::stderr().lock(), &file_name, &dml_string)
                         .expect("Failed to write errors to stderr");
                 }
             }

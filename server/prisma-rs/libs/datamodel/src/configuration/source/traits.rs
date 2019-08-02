@@ -16,6 +16,9 @@ pub trait Source {
     fn name(&self) -> &String;
     /// Gets the source config URL.
     fn url(&self) -> &String;
+
+    fn set_url(&mut self, url: &str);
+
     /// Gets all custom configuration attributes.
     // TODO: String is probably a bad choice. Prisma value would be better.
     fn config(&self) -> HashMap<String, String>;

@@ -1,5 +1,5 @@
 use super::*;
-use connector::write_ast::NestedConnect;
+use connector_interface::write_ast::NestedConnect;
 use prisma_models::*;
 use prisma_query::ast::*;
 use std::sync::Arc;

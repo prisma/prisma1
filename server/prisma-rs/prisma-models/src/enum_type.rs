@@ -1,6 +1,9 @@
 use super::{InternalEnum, OrderBy, ScalarField, SortOrder};
+use serde::{
+    de::{self, Visitor},
+    Deserialize, Deserializer, Serialize, Serializer,
+};
 use std::sync::Arc;
-use serde::{Serialize, Serializer, Deserialize, Deserializer, de::{self, Visitor}};
 
 #[derive(Debug, Clone)]
 pub struct EnumType {
@@ -53,6 +56,12 @@ impl EnumValue {
     }
 }
 
+impl From<String> for EnumValue {
+    fn from(s: String) -> Self {
+        EnumValue::string(s.clone(), s)
+    }
+}
+
 impl Serialize for EnumValue {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -65,9 +74,10 @@ impl Serialize for EnumValue {
 impl<'de> Deserialize<'de> for EnumValue {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: Deserializer<'de> {
-            deserializer.deserialize_any(EnumValueVisitor)
-        }
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_any(EnumValueVisitor)
+    }
 }
 
 /// Custom deserialization
@@ -88,7 +98,6 @@ impl<'de> Visitor<'de> for EnumValueVisitor {
     }
 }
 
-
 #[derive(Debug, Clone)]
 pub enum EnumValueWrapper {
     OrderBy(OrderBy),
@@ -100,7 +109,6 @@ impl PartialEq for EnumValueWrapper {
         false // WIP
     }
 }
-
 
 impl From<&InternalEnum> for EnumType {
     fn from(internal_enum: &InternalEnum) -> EnumType {

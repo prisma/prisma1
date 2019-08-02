@@ -50,59 +50,36 @@ impl Standardiser {
 
                 if let dml::FieldType::Relation(rel) = &mut field.field_type {
                     let related_model = schema_copy.find_model(&rel.to).expect(STATE_ERROR);
+                    let related_field = related_model.related_field(model_name, &rel.name, &field.name).unwrap();
+                    let related_model_name = &related_model.name;
 
-                    let related_field = related_model.related_field(model_name, &rel.name, &field.name);
+                    let related_field_rel = if let dml::FieldType::Relation(rel) = &related_field.field_type {
+                        rel
+                    } else {
+                        panic!(STATE_ERROR)
+                    };
 
-                    let we_have_embedding = rel.to_fields.len() > 0;
-                    let we_are_list = field.arity == dml::FieldArity::List;
-
-                    let mut embed_here = false;
-
-                    // If to_fields are already set,
-                    // we continue.
-                    if we_have_embedding {
+                    // If one of the fields has to_fields explicitly set by the user, we continue.
+                    if rel.to_fields.len() > 0 || related_field_rel.to_fields.len() > 0 {
                         continue;
                     }
 
-                    if related_field.is_none() {
-                        // If there is no related field, we always embed.
-                        embed_here = true;
-                    } else {
-                        let related_field = related_field.unwrap();
-                        let rel = if let dml::FieldType::Relation(rel) = &related_field.field_type {
-                            rel
-                        } else {
-                            panic!(STATE_ERROR)
-                        };
-
-                        // If the related field has to_bields set, we continue.
-                        if rel.to_fields.len() > 0 {
-                            continue;
-                        }
-
-                        // Likewise, if this field is generated or a list, and the related one is not a list,
-                        // we continue.
-                        if (field.is_generated || we_are_list) && related_field.arity != dml::FieldArity::List {
-                            continue;
-                        }
-
-                        // Otherise, we embed if...
-
-                        // ... the related field is a list ...
-                        if related_field.arity == dml::FieldArity::List {
-                            embed_here = true;
-                        }
-
-                        // .. or the related field is not a list, but generated ...
-                        if related_field.arity != dml::FieldArity::List && related_field.is_generated {
-                            embed_here = true;
-                        }
-
-                        // .. tie breaker if both are good candiates.
-                        if tie_str(&model_name, &field.name, &rel.to, &related_field.name) {
-                            embed_here = true;
-                        }
-                    }
+                    let embed_here = match (field.arity, related_field.arity) {
+                        // many to many
+                        (dml::FieldArity::List, dml::FieldArity::List) => true,
+                        // one to many
+                        (_, dml::FieldArity::List) => true,
+                        // many to one
+                        (dml::FieldArity::List, _) => false,
+                        // one to one
+                        (_, _) => match (model_name, related_model_name) {
+                            (x, y) if x < y => true,
+                            (x, y) if x > y => false,
+                            // SELF RELATIONS
+                            (x, y) if x == y => &field.name < &related_field.name,
+                            _ => unreachable!(), // no clue why the compiler does not understand it is exhaustive
+                        },
+                    };
 
                     if embed_here {
                         rel.to_fields = related_model.id_field_names().map(|x| x.clone()).collect()

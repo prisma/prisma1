@@ -30,62 +30,158 @@ fn should_add_back_relations() {
 }
 
 #[test]
-#[ignore] // This feature is disabled intentionally, because it causes the generated type to surface in the client.
-fn should_add_a_relation_table_for_many_to_many_relations() {
-    // Equal name for both fields was a bug triggerer.
+fn must_add_to_fields_on_the_right_side_for_one_to_one_relations() {
+    // the to fields are always added to model with the lower name in lexicographic order
     let dml = r#"
-model Blog {
-  id Int @id
-  authors Author[]
-}
-
-model Author {
-  id Int @id
-  authors Blog[]
-}
+    model User1 {
+      id         String @default(cuid()) @id @unique
+      referenceA User2
+    }
+    
+    model User2 {
+      id         String @default(cuid()) @id @unique
+      referenceB User1
+    }
+    
+    model User3 {
+      id         String @default(cuid()) @id @unique
+      referenceB User4
+    }
+    
+    model User4 {
+      id         String @default(cuid()) @id @unique
+      referenceA User3
+    }
     "#;
 
     let schema = parse(dml);
 
-    let author_model = schema.assert_has_model("Author");
-    author_model
-        .assert_has_field("authors")
-        .assert_relation_to("AuthorToBlog")
-        .assert_relation_to_fields(&[])
-        .assert_arity(&datamodel::dml::FieldArity::List);
+    schema
+        .assert_has_model("User1")
+        .assert_has_field("referenceA")
+        .assert_relation_to_fields(&["id"]);
 
-    author_model.assert_has_field("id");
+    schema
+        .assert_has_model("User2")
+        .assert_has_field("referenceB")
+        .assert_relation_to_fields(&[]);
 
-    let blog_model = schema.assert_has_model("Blog");
-    blog_model
-        .assert_has_field("authors")
-        .assert_relation_to("AuthorToBlog")
-        .assert_relation_to_fields(&[])
-        .assert_arity(&datamodel::dml::FieldArity::List);
+    schema
+        .assert_has_model("User3")
+        .assert_has_field("referenceB")
+        .assert_relation_to_fields(&["id"]);
 
-    blog_model.assert_has_field("id");
+    schema
+        .assert_has_model("User4")
+        .assert_has_field("referenceA")
+        .assert_relation_to_fields(&[]);
+}
 
-    // Assert nothing else was generated.
-    // E.g. no erronous back relations.
-    assert_eq!(author_model.fields().count(), 2);
-    assert_eq!(blog_model.fields().count(), 2);
+#[test]
+fn must_add_to_fields_correctly_for_implicit_back_relations_for_one_to_one_relations() {
+    // Post is lower that User. So the to_fields should be stored in Post.
+    let dml = r#"
+    model User {
+        user_id Int  @id
+        post    Post 
+    }
 
-    let link_model = schema.assert_has_model("AuthorToBlog");
-    link_model
-        .assert_has_field("author")
-        .assert_relation_to("Author")
-        .assert_relation_to_fields(&["id"])
-        .assert_arity(&datamodel::dml::FieldArity::Required);
-    link_model
-        .assert_has_field("blog")
-        .assert_relation_to("Blog")
-        .assert_relation_to_fields(&["id"])
-        .assert_arity(&datamodel::dml::FieldArity::Required);
+    model Post {
+        post_id Int @id
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    schema
+        .assert_has_model("User")
+        .assert_has_field("post")
+        .assert_relation_to_fields(&[]);
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("user")
+        .assert_relation_to_fields(&["user_id"]);
+}
+
+#[test]
+fn must_add_to_fields_on_both_sides_for_many_to_many_relations() {
+    let dml = r#"
+    model User {
+        user_id Int    @id
+        posts   Post[] 
+    }
+
+    model Post {
+        post_id Int    @id
+        users   User[]
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    schema
+        .assert_has_model("User")
+        .assert_has_field("posts")
+        .assert_relation_to_fields(&["post_id"]);
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("users")
+        .assert_relation_to_fields(&["user_id"]);
+}
+
+#[test]
+fn must_add_to_fields_on_both_sides_for_one_to_many_relations() {
+    let dml = r#"
+    model User {
+        user_id Int    @id
+        posts   Post[] 
+    }
+
+    model Post {
+        post_id Int    @id
+        user    User
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    schema
+        .assert_has_model("User")
+        .assert_has_field("posts")
+        .assert_relation_to_fields(&[]);
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("user")
+        .assert_relation_to_fields(&["user_id"]);
+
+    // prove that lexicographic order does not have an influence.
+    let dml = r#"
+    model User {
+        user_id Int    @id
+        post    Post 
+    }
+
+    model Post {
+        post_id Int    @id
+        users   User[]
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    schema
+        .assert_has_model("User")
+        .assert_has_field("post")
+        .assert_relation_to_fields(&["post_id"]);
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("users")
+        .assert_relation_to_fields(&[]);
 }
 
 #[test]
 fn should_not_add_back_relation_fields_for_many_to_many_relations() {
-    // Equal name for both fields was a bug triggerer.
+    // Equal name for both fields was a bug trigger.
     let dml = r#"
 model Blog {
   id Int @id
@@ -252,7 +348,7 @@ fn should_add_back_relations_for_more_complex_cases() {
 fn should_add_to_fields_on_the_correct_side_tie_breaker() {
     let dml = r#"
     model User {
-        id Int @id
+        user_id Int @id
         post Post
     }
 
@@ -267,13 +363,13 @@ fn should_add_to_fields_on_the_correct_side_tie_breaker() {
     user_model
         .assert_has_field("post")
         .assert_relation_to("Post")
-        .assert_relation_to_fields(&["post_id"]);
+        .assert_relation_to_fields(&[]);
 
     let post_model = schema.assert_has_model("Post");
     post_model
         .assert_has_field("user")
         .assert_relation_to("User")
-        .assert_relation_to_fields(&[]);
+        .assert_relation_to_fields(&["user_id"]);
 }
 
 #[test]
@@ -325,7 +421,7 @@ fn should_camel_case_back_relation_field_name() {
 }
 
 #[test]
-fn should_add_self_back_relation_fields_on_defined_site() {
+fn should_add_self_back_relation_fields_on_defined_side() {
     let dml = r#"
     model Human {
         id Int @id
@@ -338,12 +434,12 @@ fn should_add_self_back_relation_fields_on_defined_site() {
     model
         .assert_has_field("son")
         .assert_relation_to("Human")
-        .assert_relation_to_fields(&["id"]);
+        .assert_relation_to_fields(&[]);
 
     model
         .assert_has_field("human")
         .assert_relation_to("Human")
-        .assert_relation_to_fields(&[]);
+        .assert_relation_to_fields(&["id"]);
 }
 
 #[test]

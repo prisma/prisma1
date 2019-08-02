@@ -15,9 +15,8 @@ fn main() {
 
     if rust_version.minor < expected_minor_version {
         panic!(
-            "You don't have the right Rust version installed. This build is fixed to: {}.{}.x",
-            expected_major_version,
-            expected_minor_version,
+            "You don't have the right Rust version installed. This build expects at least version {}.{}.x",
+            expected_major_version, expected_minor_version,
         )
     }
 }

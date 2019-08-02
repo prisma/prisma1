@@ -7,8 +7,8 @@ use connector::{error::ConnectorError, filter::RecordFinder, ManagedDatabaseRead
 use prisma_common::config::*;
 use prisma_models::prelude::*;
 use prost::Message;
-use sql_connector::{Mysql, PostgreSql, SqlDatabase, Sqlite};
-use std::{convert::TryFrom, sync::Arc};
+use sql_connector::{LegacyDatabase, Mysql, PostgreSql, SqlDatabase, Sqlite};
+use std::sync::Arc;
 
 pub struct ProtoBufInterface {
     data_resolver: Arc<ManagedDatabaseReader + Send + Sync + 'static>,
@@ -40,7 +40,7 @@ impl ProtoBufInterface {
             }
             Some(database) => match database.connector() {
                 "postgres-native" => {
-                    let postgres = PostgreSql::try_from(database).unwrap();
+                    let postgres = PostgreSql::from_prisma_database(database).unwrap();
                     let connector = Arc::new(SqlDatabase::new(postgres));
 
                     ProtoBufInterface {
@@ -49,7 +49,7 @@ impl ProtoBufInterface {
                     }
                 }
                 "mysql-native" => {
-                    let mysql = Mysql::try_from(database).unwrap();
+                    let mysql = Mysql::from_prisma_database(database).unwrap();
                     let connector = Arc::new(SqlDatabase::new(mysql));
 
                     ProtoBufInterface {

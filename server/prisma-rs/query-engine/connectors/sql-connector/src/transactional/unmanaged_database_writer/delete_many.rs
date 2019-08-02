@@ -2,7 +2,7 @@ use crate::{
     query_builder::{DeleteActions, WriteQueryBuilder},
     Transaction,
 };
-use connector::filter::Filter;
+use connector_interface::filter::Filter;
 use prisma_models::{GraphqlId, ModelRef, RelationFieldRef};
 use std::sync::Arc;
 
@@ -41,6 +41,7 @@ pub fn execute_nested(
     relation_field: RelationFieldRef,
 ) -> crate::Result<usize> {
     let ids = conn.filter_ids_by_parents(Arc::clone(&relation_field), vec![parent_id], filter.clone())?;
+
     let count = ids.len();
 
     if count == 0 {

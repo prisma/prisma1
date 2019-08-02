@@ -1,32 +1,29 @@
+pub mod database_inspector;
 mod database_schema_calculator;
 mod database_schema_differ;
 mod error;
+pub mod migration_database;
 mod sql_database_migration_inferrer;
 mod sql_database_step_applier;
 mod sql_destructive_changes_checker;
 mod sql_migration;
 mod sql_migration_persistence;
-pub mod database_inspector;
 
 use database_inspector::DatabaseInspector;
 pub use error::*;
 use migration_connector::*;
-use postgres::Config as PostgresConfig;
-use prisma_query::connector::{PostgreSql, Sqlite, Mysql};
-use prisma_query::Connectional;
+use migration_database::*;
 use serde_json;
 use sql_database_migration_inferrer::*;
 use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
 pub use sql_migration::*;
 use sql_migration_persistence::*;
-use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::time::Duration;
 use url::Url;
 
 #[allow(unused, dead_code)]
@@ -34,7 +31,7 @@ pub struct SqlMigrationConnector {
     pub file_path: Option<String>,
     pub sql_family: SqlFamily,
     pub schema_name: String,
-    pub connectional: Arc<Connectional>,
+    pub database: Arc<MigrationDatabase>,
     pub migration_persistence: Arc<MigrationPersistence>,
     pub database_migration_inferrer: Arc<DatabaseMigrationInferrer<SqlMigration>>,
     pub database_migration_step_applier: Arc<DatabaseMigrationStepApplier<SqlMigration>>,
@@ -60,27 +57,35 @@ impl SqlFamily {
 }
 
 impl SqlMigrationConnector {
-    #[allow(unused)]
     pub fn exists(sql_family: SqlFamily, url: &str) -> bool {
         match sql_family {
             SqlFamily::Sqlite => {
-                let sqlite = Sqlite::try_from(url).expect("Loading SQLite failed");
-                sqlite.does_file_exist()
+                let file_path = url.trim_start_matches("file:").to_string();
+                PathBuf::from(file_path).exists()
             }
             SqlFamily::Postgres => {
-                let postgres_helper = Self::postgres_helper(&url);
+                let helper = Self::postgres_helper(&url);
                 let check_sql = format!(
                     "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{}';",
-                    postgres_helper.schema
+                    helper.schema
                 );
-                let result_set = postgres_helper
-                    .db_connection
-                    .query_on_raw_connection("", &check_sql, &[]);
+                let result_set = helper.db_connection.query_raw("", &check_sql, &[]);
                 result_set.into_iter().next().is_some()
             }
             SqlFamily::Mysql => {
-                // TODO: implement this actually
-                false
+                let mysql_config = PrismaMysqlConfig::parse(&url);
+                // we check whether the db exists by trying to connect to it
+                match mysql_config.root_connection() {
+                    Ok(connection) => {
+                        let check_sql = format!(
+                            "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{}';",
+                            mysql_config.db_name()
+                        );
+                        let result_set = connection.query_raw("", &check_sql, &[]);
+                        result_set.into_iter().next().is_some()
+                    }
+                    Err(_) => false,
+                }
             }
         }
     }
@@ -88,14 +93,17 @@ impl SqlMigrationConnector {
     pub fn new(sql_family: SqlFamily, url: &str) -> Arc<MigrationConnector<DatabaseMigration = SqlMigration>> {
         match sql_family {
             SqlFamily::Sqlite => {
-                assert!(url.starts_with("file:"), "the url for sqlite must start with 'file:'");
-                let conn = Arc::new(Sqlite::try_from(url).expect("Loading SQLite failed"));
+                let conn = Sqlite::new(url).unwrap();
+                let file_path = conn.file_path.clone();
                 let schema_name = "lift".to_string();
-                let file_path = url.trim_start_matches("file:").to_string();
-                Self::create_connector(conn, sql_family, schema_name, Some(file_path))
+
+                Self::create_connector(Arc::new(conn), sql_family, schema_name, Some(file_path))
             }
             SqlFamily::Postgres => {
-                assert!(url.starts_with("postgresql:"), "the url for postgres must start with 'postgresql:'");
+                assert!(
+                    url.starts_with("postgresql:"),
+                    "the url for postgres must start with 'postgresql:'"
+                );
                 let postgres_helper = Self::postgres_helper(&url);
                 Self::create_connector(postgres_helper.db_connection, sql_family, postgres_helper.schema, None)
             }
@@ -108,80 +116,46 @@ impl SqlMigrationConnector {
     }
 
     pub fn postgres_helper(url: &str) -> DatabaseHelper {
-        let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
-        let mut config = PostgresConfig::new();
-        if let Some(host) = parsed_url.host_str() {
-            config.host(host);
-        }
-        config.user(parsed_url.username());
-        if let Some(password) = parsed_url.password() {
-            config.password(password);
-        }
-        let mut db_name = parsed_url.path().to_string();
-        db_name.replace_range(..1, ""); // strip leading slash
-        config.connect_timeout(Duration::from_secs(5));
+        let postgres_config = PrismaPostgresConfig::parse(&url);
 
-        match PostgreSql::new(config.clone(), 1) {
-            Ok(root_connection) => {
-                let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
-                let _ = root_connection.query_on_raw_connection("", &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
+        match postgres_config.db_connection() {
+            Ok(db_connection) => DatabaseHelper {
+                db_connection: Arc::new(db_connection),
+                schema: postgres_config.schema().to_string(),
+            },
+            Err(prisma_query::error::Error::QueryError(_)) => {
+                // assume that the error is because the database does not exist yet
+                let root_connection = postgres_config
+                    .root_connection()
+                    .expect("The user does not have root privelege and can not create a new database");
+
+                let db_sql = format!("CREATE DATABASE \"{}\";", postgres_config.db_name());
+                let _ = root_connection.query_raw("", &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
+
+                let conn = postgres_config
+                    .db_connection()
+                    .expect("Could not acquire connection to new created database");
+
+                DatabaseHelper {
+                    db_connection: Arc::new(conn),
+                    schema: postgres_config.schema().to_string(),
+                }
             }
-            Err(_) => {
-                // this means that the user did not have access to the root database
-            }
+            Err(err) => panic!("Encountered unrecoverable error: {:?}", err),
         }
-
-        let schema = parsed_url
-            .query_pairs()
-            .into_iter()
-            .find(|qp| qp.0 == Cow::Borrowed("schema"))
-            .map(|pair|pair.1.to_string())
-            .unwrap_or("public".to_string());
-
-        let connection_limit = parsed_url
-            .query_pairs()
-            .into_iter()
-            .find(|qp| qp.0 == Cow::Borrowed("connection_limit"))
-            .map(|pair|{
-                let as_int: u32 =  pair.1.parse().expect("connection_limit parameter was not an int");
-                as_int
-            })
-            .unwrap_or(1);
-
-        config.dbname(&db_name);
-        let db_connection = Arc::new(PostgreSql::new(config, connection_limit).expect("Connecting to Postgres failed"));
-
-        DatabaseHelper { db_connection, schema }
     }
 
     pub fn mysql_helper(url: &str) -> DatabaseHelper {
-        let mut builder = mysql::OptsBuilder::new();
-        let parsed_url = Url::parse(url).expect("url parsing failed");
+        let config = PrismaMysqlConfig::parse(&url);
+        // we acquire a root connection here because the db connection blocks insanely long when the db does not exist
 
-        builder.ip_or_hostname(parsed_url.host_str());
-        builder.tcp_port(parsed_url.port().unwrap_or(3306));
-        builder.user(Some(parsed_url.username()));
-        builder.pass(parsed_url.password());
-        builder.verify_peer(false);
-        builder.stmt_cache_size(Some(1000));
-
-        let db_name = parsed_url.path_segments().and_then(|mut segments| segments.next()).expect("db name must be set");
-
-        let root_connection = Mysql::new(builder);
-        match root_connection {
-            Ok(root_connection) => {
-                let db_sql = format!("CREATE SCHEMA IF NOT EXISTS `{}`;", &db_name);
-                root_connection.query_on_raw_connection("", &db_sql, &[]).expect("Creating the schema failed");
-            }
-            Err(_) => {
-                // this means that the user did not have root access
-            }
-        }
-        let mysql = Mysql::new_from_url(&url).expect("Connecting to MySQL failed");
+        let conn = config
+            .root_connection()
+            .expect("Could not acquire root connection to MySQL");
 
         DatabaseHelper {
-            db_connection: Arc::new(mysql),
-            schema: db_name.to_string(),
+            db_connection: Arc::new(conn),
+            schema: config.db_name().to_string(),
         }
     }
 
@@ -205,15 +179,15 @@ impl SqlMigrationConnector {
     }
 
     fn create_connector(
-        conn: Arc<Connectional>,
+        conn: Arc<MigrationDatabase>,
         sql_family: SqlFamily,
         schema_name: String,
         file_path: Option<String>,
     ) -> Arc<SqlMigrationConnector> {
         let inspector: Arc<DatabaseInspector> = match sql_family {
-            SqlFamily::Sqlite => Arc::new(DatabaseInspector::sqlite_with_connectional(Arc::clone(&conn))),
-            SqlFamily::Postgres => Arc::new(DatabaseInspector::postgres_with_connectional(Arc::clone(&conn))),
-            SqlFamily::Mysql => Arc::new(DatabaseInspector::mysql_with_connectional(Arc::clone(&conn))),
+            SqlFamily::Sqlite => Arc::new(DatabaseInspector::sqlite_with_database(Arc::clone(&conn))),
+            SqlFamily::Postgres => Arc::new(DatabaseInspector::postgres_with_database(Arc::clone(&conn))),
+            SqlFamily::Mysql => Arc::new(DatabaseInspector::mysql_with_database(Arc::clone(&conn))),
         };
         let migration_persistence = Arc::new(SqlMigrationPersistence {
             sql_family,
@@ -236,7 +210,7 @@ impl SqlMigrationConnector {
             file_path,
             sql_family,
             schema_name,
-            connectional: Arc::clone(&conn),
+            database: Arc::clone(&conn),
             migration_persistence,
             database_migration_inferrer,
             database_migration_step_applier,
@@ -246,8 +220,72 @@ impl SqlMigrationConnector {
     }
 }
 
+#[derive(Debug)]
+struct PrismaPostgresConfig {
+    url: Url,
+    params: prisma_query::connector::PostgresParams,
+}
+
+impl PrismaPostgresConfig {
+    fn parse(url: &str) -> Self {
+        let parse_error = "Parsing of the provided connector url failed.";
+        let url = Url::parse(url).expect(parse_error);
+        let params = prisma_query::connector::PostgresParams::try_from(url.clone()).expect(parse_error);
+
+        Self { url, params }
+    }
+
+    fn db_name(&self) -> &str {
+        self.params.dbname.as_str()
+    }
+
+    fn schema(&self) -> &str {
+        self.params.schema.as_str()
+    }
+
+    fn root_connection(&self) -> prisma_query::Result<PostgreSql> {
+        let mut url = self.url.clone();
+        url.set_path("postgres");
+        let params = prisma_query::connector::PostgresParams::try_from(url)?;
+
+        PostgreSql::new(params)
+    }
+
+    fn db_connection(&self) -> prisma_query::Result<PostgreSql> {
+        let params = prisma_query::connector::PostgresParams::try_from(self.url.clone())?;
+        PostgreSql::new(params)
+    }
+}
+
+struct PrismaMysqlConfig {
+    url: Url,
+    params: prisma_query::connector::MysqlParams,
+}
+
+impl PrismaMysqlConfig {
+    fn parse(url: &str) -> Self {
+        let parse_error = "Parsing of the provided connector url failed.";
+        let url = Url::parse(url).expect(parse_error);
+        let params = prisma_query::connector::MysqlParams::try_from(url.clone()).expect(parse_error);
+
+        Self { url, params }
+    }
+
+    fn root_connection(&self) -> prisma_query::Result<Mysql> {
+        let mut url = self.url.clone();
+        url.set_path("");
+        let params = prisma_query::connector::MysqlParams::try_from(url)?;
+
+        Mysql::new(params)
+    }
+
+    fn db_name(&self) -> &str {
+        self.params.dbname.as_str()
+    }
+}
+
 pub struct DatabaseHelper {
-    pub db_connection: Arc<Connectional>,
+    pub db_connection: Arc<MigrationDatabase>,
     pub schema: String,
 }
 
@@ -259,6 +297,7 @@ impl MigrationConnector for SqlMigrationConnector {
     }
 
     fn initialize(&self) -> ConnectorResult<()> {
+        // TODO: this code probably does not ever do anything. The schema/db creation happens already in the helper functions above.
         match self.sql_family {
             SqlFamily::Sqlite => {
                 if let Some(file_path) = &self.file_path {
@@ -273,16 +312,19 @@ impl MigrationConnector for SqlMigrationConnector {
             }
             SqlFamily::Postgres => {
                 let schema_sql = dbg!(format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &self.schema_name));
-                self.connectional
-                    .query_on_raw_connection(&self.schema_name, &schema_sql, &[])
+                self.database
+                    .query_raw("", &schema_sql, &[])
                     .expect("Creation of Postgres Schema failed");
             }
             SqlFamily::Mysql => {
-                let schema_sql = dbg!(format!("CREATE SCHEMA IF NOT EXISTS `{}` DEFAULT CHARACTER SET latin1;", &self.schema_name));
-                self.connectional
-                    .query_on_raw_connection(&self.schema_name, &schema_sql, &[])
+                let schema_sql = dbg!(format!(
+                    "CREATE SCHEMA IF NOT EXISTS `{}` DEFAULT CHARACTER SET latin1;",
+                    &self.schema_name
+                ));
+                self.database
+                    .query_raw("", &schema_sql, &[])
                     .expect("Creation of Mysql Schema failed");
-            },
+            }
         }
         self.migration_persistence.init();
         Ok(())

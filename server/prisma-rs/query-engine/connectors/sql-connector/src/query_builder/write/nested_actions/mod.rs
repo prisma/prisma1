@@ -11,7 +11,7 @@ pub use nested_disconnect::*;
 pub use nested_set::*;
 
 use crate::{error::*, query_builder::ReadQueryBuilder};
-use connector::{error::RecordFinderInfo, filter::RecordFinder};
+use connector_interface::{error::RecordFinderInfo, filter::RecordFinder};
 use prisma_models::*;
 use prisma_query::ast::*;
 

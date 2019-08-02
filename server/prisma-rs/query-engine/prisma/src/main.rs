@@ -1,9 +1,9 @@
-#[macro_use]
 extern crate log;
-
+extern crate slog;
+#[macro_use]
+extern crate slog_scope;
 #[macro_use]
 extern crate rust_embed;
-
 #[macro_use]
 extern crate debug_stub_derive;
 
@@ -28,10 +28,8 @@ use core::{
     BuildMode,
 };
 use error::*;
-use request_handlers::{
-    graphql::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler},
-    PrismaRequest, RequestHandler,
-};
+use prisma_common::logger::Logger;
+use request_handlers::{graphql::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler}, PrismaRequest, RequestHandler};
 use serde_json;
 use std::{env, process, sync::Arc, time::Instant};
 
@@ -83,6 +81,7 @@ fn main() {
     let result = if matches.is_present("cli") {
         start_cli(matches.subcommand_matches("cli").unwrap())
     } else {
+        let _logger = Logger::build("prisma"); // keep in scope
         start_server(matches)
     };
 
@@ -136,7 +135,6 @@ fn start_server(matches: ArgMatches) -> PrismaResult<()> {
         .unwrap_or_else(|| 4466);
 
     let now = Instant::now();
-    env_logger::init();
 
     let context = PrismaContext::new(matches.is_present("legacy"))?;
     let request_context = Arc::new(RequestContext {

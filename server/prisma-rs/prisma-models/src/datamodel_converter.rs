@@ -30,7 +30,7 @@ impl<'a> DatamodelConverter<'a> {
             models: self.convert_models(),
             relations: self.convert_relations(),
             enums: self.convert_enums(),
-            version: Some("prisma2".to_string()),
+            version: Some("v2".to_string()),
         }
     }
 
@@ -131,10 +131,21 @@ impl<'a> DatamodelConverter<'a> {
                             .find_model(&to)
                             .expect(&format!("Related model {} not found", to));
 
-                        // TODO: handle case of implicit back relation field
                         let related_field = related_model
                             .fields()
-                            .find(|f| related_type(f) == Some(model.name.to_string()) && f.name != field.name)
+                            .find(|f| match f.field_type {
+                                dml::FieldType::Relation(ref rel_info) => {
+                                    // TODO: i probably don't need to check the the `to`. The name of the relation should be enough. The parser must guarantee that the relation info is set right.
+                                    if &model.name == &related_model.name {
+                                        // SELF RELATIONS
+                                        &rel_info.to == &model.name && &rel_info.name == name && f.name != field.name
+                                    } else {
+                                        // In a normal relation the related field could be named the same hence we omit the last condition from above.
+                                        &rel_info.to == &model.name && &rel_info.name == name
+                                    }
+                                }
+                                _ => false,
+                            })
                             .expect(&format!(
                                 "Related model for model {} and field {} not found",
                                 model.name, field.name
@@ -297,13 +308,6 @@ impl TempRelationHolder {
     }
 }
 
-fn related_type(field: &dml::Field) -> Option<String> {
-    match &field.field_type {
-        dml::FieldType::Relation(relation_info) => Some(relation_info.to.to_string()),
-        _ => None,
-    }
-}
-
 trait DatamodelFieldExtensions {
     fn type_identifier(&self) -> TypeIdentifier;
     fn is_required(&self) -> bool;
@@ -436,7 +440,9 @@ impl DatamodelFieldExtensions for dml::Field {
             datamodel::common::PrismaValue::String(x) => Some(PrismaValue::String(x.clone())),
             datamodel::common::PrismaValue::DateTime(x) => Some(PrismaValue::DateTime(*x)),
             datamodel::common::PrismaValue::Decimal(x) => Some(PrismaValue::Float(*x as f64)), // TODO: not sure if this mapping is correct
-            datamodel::common::PrismaValue::ConstantLiteral(x) => Some(PrismaValue::Enum(EnumValue::string(x.clone(), x.clone()))),
+            datamodel::common::PrismaValue::ConstantLiteral(x) => {
+                Some(PrismaValue::Enum(EnumValue::string(x.clone(), x.clone())))
+            }
             datamodel::common::PrismaValue::Expression(_, _, _) => None, // expressions are handled in the behaviour function right now
         })
     }

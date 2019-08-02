@@ -1,5 +1,5 @@
 use super::*;
-use connector::write_ast::NestedSet;
+use connector_interface::write_ast::NestedSet;
 use prisma_models::*;
 use prisma_query::ast::*;
 

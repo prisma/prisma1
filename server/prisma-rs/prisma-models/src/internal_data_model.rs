@@ -17,7 +17,7 @@ pub struct InternalDataModelTemplate {
 #[derive(DebugStub)]
 pub struct InternalDataModel {
     pub enums: Vec<InternalEnum>,
-    pub version: Option<String>,
+    version: Option<String>,
 
     /// Todo clarify / rename.
     /// The db name influences how data is queried from the database.

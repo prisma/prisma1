@@ -51,14 +51,14 @@ string_literal = { "\"" ~ string_content ~ "\"" }
 boolean_true  = { "true" }
 boolean_false = { "false" }
 boolean_literal =  @{ boolean_true | boolean_false }
-constant_literal = @{ ASCII_ALPHA+ }
+constant_literal = @{ identifier }
 
 // ######################################
 // Expression support
 // ######################################
 
 function = { identifier ~ "(" ~ (argument_value ~ ("," ~ argument_value)*)? ~ ")" }
-array_expression = { "[" ~ expression ~ ( ", " ~ expression )* ~ "]" }
+array_expression = { "[" ~ expression ~ ( "," ~ expression )* ~ "]" }
 expression = { array_expression | function | numeric_literal | string_literal | boolean_literal | constant_literal }
 
 // ######################################

@@ -388,6 +388,33 @@ fn self_relations() {
     // employee.assert_relation_field("employee");
 }
 
+#[test]
+fn ambiguous_relations() {
+    let datamodel = convert(
+        r#"
+            model Blog {
+                id    Int  @id
+                post1 Post @relation(name: "Relation1")
+                post2 Post @relation(name: "Relation2")
+            }
+            
+            model Post {
+                id    Int  @id
+                blog1 Blog @relation(name: "Relation1")
+                blog2 Blog @relation(name: "Relation2")
+            }
+        "#,
+    );
+
+    let blog = datamodel.assert_model("Blog");
+    blog.assert_relation_field("post1").assert_relation_name("Relation1");
+    blog.assert_relation_field("post2").assert_relation_name("Relation2");
+
+    let post = datamodel.assert_model("Post");
+    post.assert_relation_field("blog1").assert_relation_name("Relation1");
+    post.assert_relation_field("blog2").assert_relation_name("Relation2");
+}
+
 fn convert(datamodel: &str) -> Arc<InternalDataModel> {
     let datamodel = dbg!(datamodel::parse(datamodel).unwrap());
     let template = DatamodelConverter::convert(&datamodel);

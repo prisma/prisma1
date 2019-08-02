@@ -1,10 +1,11 @@
 use crate::{
-    database::SqlDatabase,
+    database::{SqlCapabilities, SqlDatabase},
     error::SqlError,
     query_builder::read::{ManyRelatedRecordsBaseQuery, ManyRelatedRecordsQueryBuilder, ReadQueryBuilder},
     Transactional,
 };
-use connector::{self, error::ConnectorError, filter::RecordFinder, *};
+
+use connector_interface::{self, error::ConnectorError, filter::RecordFinder, *};
 use itertools::Itertools;
 use prisma_models::*;
 use std::convert::TryFrom;
@@ -16,13 +17,13 @@ struct ScalarListElement {
 
 impl<T> ManagedDatabaseReader for SqlDatabase<T>
 where
-    T: Transactional,
+    T: Transactional + SqlCapabilities,
 {
     fn get_single_record(
         &self,
         record_finder: &RecordFinder,
         selected_fields: &SelectedFields,
-    ) -> connector::Result<Option<SingleRecord>> {
+    ) -> connector_interface::Result<Option<SingleRecord>> {
         let db_name = &record_finder.field.model().internal_data_model().db_name;
         let query = ReadQueryBuilder::get_records(record_finder.field.model(), selected_fields, record_finder);
         let field_names = selected_fields.names();
@@ -49,7 +50,7 @@ where
         model: ModelRef,
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> connector::Result<ManyRecords> {
+    ) -> connector_interface::Result<ManyRecords> {
         let db_name = &model.internal_data_model().db_name;
         let field_names = selected_fields.names();
         let idents = selected_fields.type_identifiers();
@@ -71,7 +72,7 @@ where
         from_record_ids: &[GraphqlId],
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> connector::Result<ManyRecords> {
+    ) -> connector_interface::Result<ManyRecords> {
         let db_name = &from_field.model().internal_data_model().db_name;
         let idents = selected_fields.type_identifiers();
         let field_names = selected_fields.names();
@@ -87,7 +88,7 @@ where
             }
         };
 
-        let records: connector::Result<Vec<Record>> = self
+        let records: connector_interface::Result<Vec<Record>> = self
             .executor
             .with_transaction(db_name, |conn| conn.filter(query, idents.as_slice()))?
             .into_iter()
@@ -111,7 +112,7 @@ where
         })
     }
 
-    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> connector::Result<usize> {
+    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> connector_interface::Result<usize> {
         let db_name = &model.internal_data_model().db_name;
         let query = ReadQueryBuilder::count_by_model(model, query_arguments);
 
@@ -123,7 +124,7 @@ where
         Ok(result)
     }
 
-    fn count_by_table(&self, database: &str, table: &str) -> connector::Result<usize> {
+    fn count_by_table(&self, database: &str, table: &str) -> connector_interface::Result<usize> {
         let query = ReadQueryBuilder::count_by_table(database, table);
 
         let result = self
@@ -138,7 +139,7 @@ where
         &self,
         list_field: ScalarFieldRef,
         record_ids: Vec<GraphqlId>,
-    ) -> connector::Result<Vec<ScalarListValues>> {
+    ) -> connector_interface::Result<Vec<ScalarListValues>> {
         let db_name = &list_field.model().internal_data_model().db_name;
         let type_identifier = list_field.type_identifier;
         let query = ReadQueryBuilder::get_scalar_list_values_by_record_ids(list_field, record_ids);
