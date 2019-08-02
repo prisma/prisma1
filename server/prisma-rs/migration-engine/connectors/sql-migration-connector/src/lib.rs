@@ -190,7 +190,10 @@ impl SqlMigrationConnector {
                 let underlying = database_introspection::sqlite::IntrospectionConnector::new(introspection_connection);
                 Arc::new(database_inspector::IntrospectionImpl{inner : Box::new(underlying)})
             },
-            SqlFamily::Postgres => Arc::new(DatabaseInspector::postgres_with_database(Arc::clone(&conn))),
+            SqlFamily::Postgres => {
+                let underlying = database_introspection::postgres::IntrospectionConnector::new(introspection_connection);
+                Arc::new(database_inspector::IntrospectionImpl{inner : Box::new(underlying)})
+            },
             SqlFamily::Mysql => Arc::new(DatabaseInspector::mysql_with_database(Arc::clone(&conn))),
         };
         let migration_persistence = Arc::new(SqlMigrationPersistence {
