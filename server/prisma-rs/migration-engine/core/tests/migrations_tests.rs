@@ -745,3 +745,28 @@ fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
         assert_eq!(node_id_column.tpe, ColumnType::String);
     });
 }
+
+#[test]
+fn reserved_sql_key_words_must_work() {
+    // Group is a reserved keyword
+    test_each_connector(|_, engine| {
+        let dm = r#"
+            model Group {
+                id    String  @default(cuid()) @id
+                parent Group? @relation(name: "ChildGroups")
+                childGroups Group[] @relation(name: "ChildGroups")
+            }
+        "#;
+        let result = infer_and_apply(&engine, &dm);
+
+        let relation_column = result.table_bang("Group").column_bang("parent");
+        assert_eq!(
+            relation_column.foreign_key,
+            Some(ForeignKey {
+                name: None,
+                table: "Group".to_string(),
+                column: "id".to_string(),
+            })
+        )
+    });
+}
