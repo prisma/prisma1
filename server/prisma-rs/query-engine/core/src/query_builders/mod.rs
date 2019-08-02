@@ -6,7 +6,7 @@ mod parse_ast;
 mod query_builder;
 mod read;
 mod utils;
-mod write_new;
+mod write;
 
 pub use error::*;
 pub use filters::*;
@@ -14,7 +14,7 @@ pub use parse_ast::*;
 pub use query_builder::*;
 pub use read::*;
 pub use utils::*;
-pub use write_new::*;
+pub use write::*;
 
 /// Query builder sub-result type.
 pub type QueryBuilderResult<T> = Result<T, QueryValidationError>;

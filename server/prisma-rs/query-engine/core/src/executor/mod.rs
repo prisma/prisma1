@@ -8,13 +8,10 @@ use crate::{
     query_builders::QueryBuilder,
     query_document::QueryDocument,
     response_ir::{Response, ResultIrBuilder},
-    CoreError, CoreResult, OutputType, OutputTypeRef, QueryPair, QuerySchemaRef, ResultPair, ResultResolutionStrategy,
+    CoreError, CoreResult, QueryPair, QuerySchemaRef, ResultPair, ResultResolutionStrategy,
 };
-use connector::{
-    filter::RecordFinder, Identifier, ModelExtractor, Query, QueryResult, ReadQuery, ReadQueryResult, WriteQueryResult,
-};
-use prisma_models::{ModelRef, PrismaValue};
-use std::borrow::Borrow;
+use connector::{filter::RecordFinder, Identifier, ModelExtractor, Query, QueryResult, ReadQuery, WriteQueryResult};
+use prisma_models::ModelRef;
 
 /// Central query executor and main entry point into the query core.
 pub struct QueryExecutor {

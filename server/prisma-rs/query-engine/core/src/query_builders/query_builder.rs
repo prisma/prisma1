@@ -125,6 +125,7 @@ impl QueryBuilder {
                             result_strategy,
                             &field_operation.model,
                         )?;
+
                         let write_query = WriteQueryBuilder::CreateBuilder(CreateBuilder::new(
                             parsed_field,
                             Arc::clone(&field_operation.model),
@@ -141,6 +142,7 @@ impl QueryBuilder {
                             result_strategy,
                             &field_operation.model,
                         )?;
+
                         let write_query = WriteQueryBuilder::UpdateBuilder(UpdateBuilder::new(
                             parsed_field,
                             Arc::clone(&field_operation.model),
@@ -150,7 +152,75 @@ impl QueryBuilder {
                         (write_query, result_strategy)
                     }
 
-                    _ => unimplemented!(),
+                    OperationTag::DeleteOne(ref result_strategy) => {
+                        let result_strategy = self.resolve_result_strategy(
+                            &parsed_field,
+                            &field.field_type,
+                            result_strategy,
+                            &field_operation.model,
+                        )?;
+
+                        let write_query = WriteQueryBuilder::DeleteBuilder(DeleteBuilder::new(
+                            parsed_field,
+                            Arc::clone(&field_operation.model),
+                        ))
+                        .build()?;
+
+                        (write_query, result_strategy)
+                    }
+
+                    OperationTag::UpsertOne(ref result_strategy) => {
+                        let result_strategy = self.resolve_result_strategy(
+                            &parsed_field,
+                            &field.field_type,
+                            result_strategy,
+                            &field_operation.model,
+                        )?;
+
+                        let write_query = WriteQueryBuilder::UpsertBuilder(UpsertBuilder::new(
+                            parsed_field,
+                            Arc::clone(&field_operation.model),
+                        ))
+                        .build()?;
+
+                        (write_query, result_strategy)
+                    }
+
+                    OperationTag::DeleteMany(ref result_strategy) => {
+                        let result_strategy = self.resolve_result_strategy(
+                            &parsed_field,
+                            &field.field_type,
+                            result_strategy,
+                            &field_operation.model,
+                        )?;
+
+                        let write_query = WriteQueryBuilder::DeleteManyBuilder(DeleteManyBuilder::new(
+                            parsed_field,
+                            Arc::clone(&field_operation.model),
+                        ))
+                        .build()?;
+
+                        (write_query, result_strategy)
+                    }
+
+                    OperationTag::UpdateMany(ref result_strategy) => {
+                        let result_strategy = self.resolve_result_strategy(
+                            &parsed_field,
+                            &field.field_type,
+                            result_strategy,
+                            &field_operation.model,
+                        )?;
+
+                        let write_query = WriteQueryBuilder::UpdateManyBuilder(UpdateManyBuilder::new(
+                            parsed_field,
+                            Arc::clone(&field_operation.model),
+                        ))
+                        .build()?;
+
+                        (write_query, result_strategy)
+                    }
+
+                    _ => unreachable!(),
                 };
 
                 Ok((Query::Write(write_query), result_strategy))

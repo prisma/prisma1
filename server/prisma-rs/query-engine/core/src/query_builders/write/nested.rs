@@ -22,7 +22,7 @@ pub fn extract_nested_queries(
                         .for_each(|nested_create| prev.creates.push(nested_create));
                 }
                 "update" => {
-                    nested_update(value, &model, &relation_field, triggered_from_create)?
+                    nested_update(value, &model, &relation_field)?
                         .into_iter()
                         .for_each(|nested_update| prev.updates.push(nested_update));
                 }
@@ -94,7 +94,6 @@ pub fn nested_update(
     value: ParsedInputValue,
     model: &ModelRef,
     relation_field: &RelationFieldRef,
-    triggered_from_create: bool,
 ) -> QueryBuilderResult<Vec<NestedUpdateRecord>> {
     coerce_vec(value)
         .into_iter()
@@ -134,7 +133,7 @@ pub fn nested_upsert(
             let create_arg = map.remove("create").expect("3");
             let update_arg = map.remove("update").expect("4");
             let mut create = nested_create(create_arg, model, relation_field, triggered_from_create)?;
-            let mut update = nested_update(update_arg, model, relation_field, triggered_from_create)?;
+            let mut update = nested_update(update_arg, model, relation_field)?;
 
             let record_finder = if relation_field.is_list {
                 let where_arg = map.remove("where").expect("5");

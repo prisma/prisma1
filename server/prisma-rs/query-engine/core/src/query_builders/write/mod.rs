@@ -1,41 +1,42 @@
-//! Mutation builder module
+mod create;
+mod delete;
+mod delete_many;
+mod nested;
+mod update;
+mod update_many;
+mod upsert;
+mod write_arguments;
 
-mod ast;
-mod look_ahead;
-mod many;
-mod parser;
-mod results;
-mod root;
-mod simple;
+pub use create::*;
+pub use delete::*;
+pub use delete_many::*;
+pub use nested::*;
+pub use update::*;
+pub use update_many::*;
+pub use upsert::*;
+pub use write_arguments::*;
 
-pub use ast::*;
-pub use look_ahead::*;
-pub use parser::*;
-pub use results::*;
+use super::*;
+use connector::write_ast::WriteQuery;
 
-// Mutation builder modules
-pub use many::*;
-pub use root::*;
-pub use simple::*;
+pub enum WriteQueryBuilder {
+    CreateBuilder(CreateBuilder),
+    UpdateBuilder(UpdateBuilder),
+    DeleteBuilder(DeleteBuilder),
+    UpsertBuilder(UpsertBuilder),
+    DeleteManyBuilder(DeleteManyBuilder),
+    UpdateManyBuilder(UpdateManyBuilder),
+}
 
-use prisma_models::{ModelRef, PrismaValue};
-use std::collections::BTreeMap;
-
-/// Extends given BTreeMap with defaults for fields from hte given model if the fields are not
-/// already present in the map.
-pub(crate) fn extend_defaults(model: &ModelRef, args: &mut BTreeMap<String, PrismaValue>) {
-    // Defaults for scalar non-list fields
-    let defaults: Vec<(String, PrismaValue)> = model
-        .fields()
-        .scalar()
-        .into_iter()
-        .filter_map(|sf| dbg!(&sf).default_value.clone().map(|dv| (sf.name.clone(), dv)))
-        .collect();
-
-    // Fold defaults into args, if field is not already set.
-    defaults.into_iter().for_each(|d| {
-        if !args.contains_key(&d.0) {
-            args.insert(d.0, d.1);
+impl Builder<WriteQuery> for WriteQueryBuilder {
+    fn build(self) -> QueryBuilderResult<WriteQuery> {
+        match self {
+            WriteQueryBuilder::CreateBuilder(b) => b.build(),
+            WriteQueryBuilder::UpdateBuilder(b) => b.build(),
+            WriteQueryBuilder::DeleteBuilder(b) => b.build(),
+            WriteQueryBuilder::UpsertBuilder(b) => b.build(),
+            WriteQueryBuilder::DeleteManyBuilder(b) => b.build(),
+            WriteQueryBuilder::UpdateManyBuilder(b) => b.build(),
         }
-    });
+    }
 }
