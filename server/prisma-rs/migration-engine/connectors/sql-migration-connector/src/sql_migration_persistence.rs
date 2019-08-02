@@ -36,7 +36,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
                 barrel::SqlVariant::Mysql
             }
         };
-        let sql_str = dbg!(m.make_from(barrel_variant));
+        let sql_str = m.make_from(barrel_variant);
 
         let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
     }
@@ -49,16 +49,19 @@ impl MigrationPersistence for SqlMigrationPersistence {
         // TODO: this is the wrong place to do that
         match self.sql_family {
             SqlFamily::Postgres => {
-                let sql_str = dbg!(format!(r#"DROP SCHEMA "{}" CASCADE;"#, self.schema_name));
+                let sql_str = format!(r#"DROP SCHEMA "{}" CASCADE;"#, self.schema_name);
+                debug!("{}", sql_str);
+
                 let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
             }
             SqlFamily::Sqlite => {
                 if let Some(ref file_path) = self.file_path {
-                    let _ = dbg!(std::fs::remove_file(file_path)); // ignore potential errors
+                    let _ = std::fs::remove_file(file_path); // ignore potential errors
                 }
             }
             SqlFamily::Mysql => {
-                let sql_str = dbg!(format!(r#"DROP SCHEMA `{}`;"#, self.schema_name));
+                let sql_str = format!(r#"DROP SCHEMA `{}`;"#, self.schema_name);
+                debug!("{}", sql_str);
                 let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
             }
         }

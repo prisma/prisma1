@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate log;
+
 pub mod database_inspector;
 mod database_schema_calculator;
 mod database_schema_differ;
@@ -311,16 +314,22 @@ impl MigrationConnector for SqlMigrationConnector {
                 }
             }
             SqlFamily::Postgres => {
-                let schema_sql = dbg!(format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &self.schema_name));
+                let schema_sql = format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &self.schema_name);
+
+                debug!("{}", schema_sql);
+
                 self.database
                     .query_raw("", &schema_sql, &[])
                     .expect("Creation of Postgres Schema failed");
             }
             SqlFamily::Mysql => {
-                let schema_sql = dbg!(format!(
+                let schema_sql = format!(
                     "CREATE SCHEMA IF NOT EXISTS `{}` DEFAULT CHARACTER SET latin1;",
                     &self.schema_name
-                ));
+                );
+
+                debug!("{}", schema_sql);
+
                 self.database
                     .query_raw("", &schema_sql, &[])
                     .expect("Creation of Mysql Schema failed");

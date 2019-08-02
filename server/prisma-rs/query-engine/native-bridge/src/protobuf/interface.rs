@@ -76,7 +76,8 @@ impl ProtoBufInterface {
                 response_payload
             }
             _ => {
-                let error_response = prisma::RpcResponse::error(dbg!(error));
+                debug!("{:?}", error);
+                let error_response = prisma::RpcResponse::error(error);
                 let mut payload = Vec::new();
 
                 error_response.encode(&mut payload).unwrap();

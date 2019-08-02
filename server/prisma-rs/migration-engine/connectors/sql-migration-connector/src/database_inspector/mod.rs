@@ -55,12 +55,15 @@ impl DatabaseInspector {
         let root_connection = Arc::new(PostgresDriver::new(root_params).unwrap());
 
         let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
+        debug!("{}", db_sql);
+
         let _ = root_connection.query_raw(&schema_name, &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
 
         let params = connector::PostgresParams::try_from(url).expect(Self::PARSE_ERROR);
         let schema_connection = Arc::new(PostgresDriver::new(params).unwrap());
 
-        let schema_sql = dbg!(format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &schema_name));
+        let schema_sql = format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &schema_name);
+        debug!("{}", schema_sql);
 
         schema_connection
             .query_raw(&schema_name, &schema_sql, &[])

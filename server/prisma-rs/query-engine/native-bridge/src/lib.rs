@@ -4,6 +4,9 @@
 #[macro_use]
 extern crate prost_derive;
 
+#[macro_use]
+extern crate log;
+
 mod error;
 mod protobuf;
 
