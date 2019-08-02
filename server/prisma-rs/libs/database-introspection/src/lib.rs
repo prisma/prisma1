@@ -25,7 +25,7 @@ pub trait IntrospectionConnector {
     /// List the database's schemas.
     fn list_schemas(&self) -> Result<Vec<String>>;
     /// Introspect a database schema.
-    fn introspect(&mut self, schema: &str) -> Result<DatabaseSchema>;
+    fn introspect(&self, schema: &str) -> Result<DatabaseSchema>;
 }
 
 /// The result of introspecting a database schema.

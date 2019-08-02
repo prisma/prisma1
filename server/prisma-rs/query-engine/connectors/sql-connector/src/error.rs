@@ -137,8 +137,6 @@ impl From<prisma_query::error::Error> for SqlError {
             prisma_query::error::Error::ColumnReadFailure(e) => SqlError::ColumnReadFailure(e.into()),
             prisma_query::error::Error::ColumnNotFound(_) => SqlError::ColumnDoesNotExist,
 
-            prisma_query::error::Error::InvalidConnectionArguments => SqlError::InvalidConnectionArguments,
-
             e @ prisma_query::error::Error::ConversionError(_) => SqlError::ConversionError(e.into()),
             e @ prisma_query::error::Error::ResultIndexOutOfBounds { .. } => SqlError::QueryError(e.into()),
             e @ prisma_query::error::Error::ResultTypeMismatch { .. } => SqlError::QueryError(e.into()),
