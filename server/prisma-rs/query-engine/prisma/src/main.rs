@@ -33,7 +33,6 @@ use request_handlers::{
 };
 use serde_json;
 use std::{env, process, sync::Arc, time::Instant};
-use std::thread;
 
 pub type PrismaResult<T> = Result<T, PrismaError>;
 

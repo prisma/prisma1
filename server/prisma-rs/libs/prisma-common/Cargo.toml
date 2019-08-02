@@ -16,6 +16,8 @@ failure_derive = "0.1"
 regex = "1.1"
 datamodel = { path = "../datamodel" }
 metrics-runtime = "0.1"
+metrics = "0.11"
+metrics-core = "0.5"
 
 slog = "2.5"
 slog-async = "2.3"
