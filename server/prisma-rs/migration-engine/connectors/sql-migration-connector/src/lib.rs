@@ -184,8 +184,12 @@ impl SqlMigrationConnector {
         schema_name: String,
         file_path: Option<String>,
     ) -> Arc<SqlMigrationConnector> {
+        let introspection_connection = Arc::new(MigrationDatabaseWrapper { database: Arc::clone(&conn) });
         let inspector: Arc<DatabaseInspector> = match sql_family {
-            SqlFamily::Sqlite => Arc::new(DatabaseInspector::sqlite_with_database(Arc::clone(&conn))),
+            SqlFamily::Sqlite => {
+                let underlying = database_introspection::sqlite::IntrospectionConnector::new(introspection_connection);
+                Arc::new(database_inspector::IntrospectionImpl{inner : Box::new(underlying)})
+            },
             SqlFamily::Postgres => Arc::new(DatabaseInspector::postgres_with_database(Arc::clone(&conn))),
             SqlFamily::Mysql => Arc::new(DatabaseInspector::mysql_with_database(Arc::clone(&conn))),
         };

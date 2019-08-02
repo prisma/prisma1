@@ -3,12 +3,23 @@ use prisma_query::{
     connector::{self, Queryable, ResultSet, SqliteParams, PostgresParams, MysqlParams},
 };
 use std::{convert::TryFrom, sync::Mutex};
+use std::sync::Arc;
 
 pub trait MigrationDatabase {
     fn execute(&self, db: &str, q: Query) -> prisma_query::Result<Option<Id>>;
     fn query(&self, db: &str, q: Query) -> prisma_query::Result<ResultSet>;
     fn query_raw(&self, db: &str, sql: &str, params: &[ParameterizedValue]) -> prisma_query::Result<ResultSet>;
     fn execute_raw(&self, db: &str, sql: &str, params: &[ParameterizedValue]) -> prisma_query::Result<u64>;
+}
+
+pub struct MigrationDatabaseWrapper {
+    pub database: Arc<MigrationDatabase>
+}
+
+impl database_introspection::IntrospectionConnection for MigrationDatabaseWrapper {
+    fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet> {
+        self.database.query_raw(schema, sql, &[])
+    }
 }
 
 pub struct Sqlite {

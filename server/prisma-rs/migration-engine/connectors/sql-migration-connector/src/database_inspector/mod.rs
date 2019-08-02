@@ -7,6 +7,7 @@ mod information_schema;
 mod mysql_inspector;
 mod postgres_inspector;
 mod sqlite_inspector;
+mod introspection_wrapper;
 
 use crate::migration_database::{
     MigrationDatabase, Mysql as MysqlDriver, PostgreSql as PostgresDriver, Sqlite as SqliteDriver,
@@ -15,6 +16,7 @@ use prisma_query::connector;
 pub use database_inspector_impl::*;
 pub use database_schema::*;
 pub use empty_impl::*;
+pub use introspection_wrapper::*;
 use mysql_inspector::MysqlInspector;
 use postgres_inspector::Postgres;
 use sqlite_inspector::Sqlite;
