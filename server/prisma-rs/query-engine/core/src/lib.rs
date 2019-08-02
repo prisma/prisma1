@@ -41,5 +41,14 @@ pub enum ResultResolutionStrategy {
 #[derive(Debug)]
 pub enum ResultPair {
     Read(ReadQueryResult, OutputTypeRef),
-    Write(WriteQueryResult, OutputTypeRef),
+    Write(WriteQueryResultWrapper, OutputTypeRef),
+}
+
+/// Purely a workaround to not mess with the internals of the write query and result ASTs for now.
+/// Reason: We need the name information of the query for serialization purposes.
+#[derive(Debug)]
+pub struct WriteQueryResultWrapper {
+    pub name: String,
+    pub alias: Option<String>,
+    pub result: WriteQueryResult,
 }

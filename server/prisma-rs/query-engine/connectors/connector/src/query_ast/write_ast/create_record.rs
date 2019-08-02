@@ -18,9 +18,3 @@ pub struct NestedCreateRecord {
     pub top_is_create: bool,
     pub nested_writes: NestedWriteQueries,
 }
-
-impl From<CreateRecord> for WriteQuery {
-    fn from(cn: CreateRecord) -> WriteQuery {
-        WriteQuery::Root(RootWriteQuery::CreateRecord(cn))
-    }
-}

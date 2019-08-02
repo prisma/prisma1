@@ -72,6 +72,12 @@ impl ResultIrBuilder {
             .into_iter()
             .fold(vec![], |mut vec, res| {
                 match res {
+                    ResultPair::Write(r, typ) => {
+                        let name = r.alias.clone().unwrap_or_else(|| r.name.clone());
+
+                        unimplemented!()
+                    }
+
                     ResultPair::Read(r, typ) => {
                         let name = r.alias.clone().unwrap_or_else(|| r.name.clone());
                         let serialized = serialize_read(r, &typ, false, false);

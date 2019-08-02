@@ -22,10 +22,12 @@ impl Builder<WriteQuery> for DeleteManyBuilder {
             None => None,
         };
 
-        Ok(DeleteManyRecords {
+        let delete_many = RootWriteQuery::DeleteManyRecords(DeleteManyRecords {
             model: self.model,
             filter: filter.unwrap(), // TODO: In the schema that's optional, the db interface expects it, though.
-        }
-        .into())
+        });
+
+
+        Ok(WriteQuery::Root(self.field.name, self.field.alias, delete_many))
     }
 }

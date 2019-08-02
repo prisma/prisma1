@@ -17,15 +17,19 @@ impl UpdateBuilder {
 
 impl Builder<WriteQuery> for UpdateBuilder {
     fn build(mut self) -> QueryBuilderResult<WriteQuery> {
+        let model = self.model;
+        let name = self.field.name;
+        let alias = self.field.alias;
+
         // "where"
         let where_arg = self.field.arguments.lookup("where").unwrap();
-        let record_finder = utils::extract_record_finder(where_arg.value, &self.model)?;
+        let record_finder = utils::extract_record_finder(where_arg.value, &model)?;
 
         // "data"
         let data_argument = self.field.arguments.lookup("data").unwrap();
         let data_map: ParsedInputMap = data_argument.value.try_into()?;
 
-        Self::build_from(self.model, data_map, record_finder).map(|ur| ur.into())
+        Self::build_from(model, data_map, record_finder).map(|ur| WriteQuery::Root(name, alias, RootWriteQuery::UpdateRecord(ur)))
     }
 }
 

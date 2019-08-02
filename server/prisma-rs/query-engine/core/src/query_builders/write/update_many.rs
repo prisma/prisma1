@@ -25,13 +25,14 @@ impl Builder<WriteQuery> for UpdateManyBuilder {
         let data_argument = self.field.arguments.lookup("data").unwrap();
         let data_map: ParsedInputMap = data_argument.value.try_into()?;
         let update_args = WriteArguments::from(&self.model, data_map, true)?;
-
-        Ok(UpdateManyRecords {
+        let update_many = RootWriteQuery::UpdateManyRecords(UpdateManyRecords {
             model: self.model,
             filter: filter.unwrap(), // TODO: In the schema that's optional, the db interface expects it, though.
             non_list_args: update_args.non_list,
             list_args: update_args.list,
-        }
-        .into())
+        });
+
+
+        Ok(WriteQuery::Root(self.field.name, self.field.alias, update_many))
     }
 }

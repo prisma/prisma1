@@ -10,7 +10,7 @@ use crate::{
     response_ir::{Response, ResultIrBuilder},
     CoreError, CoreResult, QueryPair, QuerySchemaRef, ResultPair, ResultResolutionStrategy,
 };
-use connector::{filter::RecordFinder, Identifier, ModelExtractor, Query, QueryResult, ReadQuery, WriteQueryResult};
+use connector::{filter::RecordFinder, Identifier, ModelExtractor, Query, ReadQuery, WriteQueryResult};
 use prisma_models::ModelRef;
 
 /// Central query executor and main entry point into the query core.
@@ -59,48 +59,38 @@ impl QueryExecutor {
     fn execute_query(&self, query: QueryPair) -> CoreResult<ResultPair> {
         let (query, strategy) = query;
         let model_opt = query.extract_model();
-        let query_result = match query {
-            Query::Read(read) => self
-                .read_executor
-                .execute(read, &vec![])
-                .map(|res| QueryResult::Read(res)),
+        match query {
+            Query::Read(read) => {
+                let query_result = self.read_executor.execute(read, &vec![])?;
 
-            Query::Write(write) => self.write_executor.execute(write).map(|res| QueryResult::Write(res)),
-        }?;
+                Ok(match strategy {
+                    ResultResolutionStrategy::Serialize(typ) => ResultPair::Read(query_result, typ),
+                    ResultResolutionStrategy::Dependent(_) => unimplemented!(), // Dependent query exec. from read is not supported in this execution model.
+                })
+            }
 
-        self.resolve_result(query_result, strategy, model_opt)
-    }
+            Query::Write(write) => {
+                let query_result = self.write_executor.execute(write)?;
 
-    fn resolve_result(
-        &self,
-        result: QueryResult,
-        strategy: ResultResolutionStrategy,
-        model: Option<ModelRef>,
-    ) -> CoreResult<ResultPair> {
-        match result {
-            QueryResult::Read(r) => match strategy {
-                ResultResolutionStrategy::Serialize(typ) => Ok(ResultPair::Read(r, typ)),
-                ResultResolutionStrategy::Dependent(_) => unimplemented!(), // Dependent query exec. from read is not supported in this exec. model.
-            },
+                match strategy {
+                    ResultResolutionStrategy::Serialize(typ) => Ok(ResultPair::Write(query_result, typ)),
+                    ResultResolutionStrategy::Dependent(dependent_pair) => match model_opt {
+                        Some(model) => match *dependent_pair {
+                            (Query::Read(ReadQuery::RecordQuery(mut rq)), strategy) => {
+                                // Inject required information into the query and execute
+                                rq.record_finder = Some(Self::to_record_finder(&query_result.result, model)?);
 
-            QueryResult::Write(w) => match strategy {
-                ResultResolutionStrategy::Serialize(typ) => Ok(ResultPair::Write(w, typ)),
-                ResultResolutionStrategy::Dependent(dependent_pair) => match model {
-                    Some(model) => match *dependent_pair {
-                        (Query::Read(ReadQuery::RecordQuery(mut rq)), strategy) => {
-                            // Inject required information into the query and execute
-                            rq.record_finder = Some(Self::to_record_finder(&w, model)?);
-
-                            let dependent_pair = (Query::Read(ReadQuery::RecordQuery(rq)), strategy);
-                            self.execute_query(dependent_pair)
-                        }
-                        _ => unreachable!(), // Invariant for now
+                                let dependent_pair = (Query::Read(ReadQuery::RecordQuery(rq)), strategy);
+                                self.execute_query(dependent_pair)
+                            }
+                            _ => unreachable!(), // Invariant for now
+                        },
+                        None => Err(CoreError::ConversionError(
+                            "Model required for dependent query execution".into(),
+                        )),
                     },
-                    None => Err(CoreError::ConversionError(
-                        "Model required for dependent query execution".into(),
-                    )),
-                },
-            },
+                }
+            }
         }
     }
 

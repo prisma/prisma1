@@ -24,15 +24,3 @@ pub struct NestedDeleteManyRecords {
     pub relation_field: Arc<RelationField>,
     pub filter: Option<Filter>,
 }
-
-impl From<DeleteRecord> for WriteQuery {
-    fn from(u: DeleteRecord) -> WriteQuery {
-        WriteQuery::Root(RootWriteQuery::DeleteRecord(u))
-    }
-}
-
-impl From<DeleteManyRecords> for WriteQuery {
-    fn from(u: DeleteManyRecords) -> WriteQuery {
-        WriteQuery::Root(RootWriteQuery::DeleteManyRecords(u))
-    }
-}

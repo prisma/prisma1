@@ -21,14 +21,15 @@ use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub enum WriteQuery {
-    Root(RootWriteQuery),
+    /// (Name, Alias, Query)
+    Root(String, Option<String>, RootWriteQuery),
     Nested(NestedWriteQuery),
 }
 
 impl ModelExtractor for WriteQuery {
     fn extract_model(&self) -> Option<ModelRef> {
         match self {
-            WriteQuery::Root(r) => r.extract_model(),
+            WriteQuery::Root(_, _, r) => r.extract_model(),
             _ => None,
         }
     }

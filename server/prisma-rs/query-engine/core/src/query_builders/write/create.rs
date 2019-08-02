@@ -17,10 +17,14 @@ impl CreateBuilder {
 
 impl Builder<WriteQuery> for CreateBuilder {
     fn build(mut self) -> QueryBuilderResult<WriteQuery> {
+        let model = self.model;
+        let name = self.field.name;
+        let alias = self.field.alias;
+
         let data_argument = self.field.arguments.lookup("data").unwrap();
         let data_map: ParsedInputMap = data_argument.value.try_into()?;
 
-        Self::build_from(self.model, data_map).map(|cr| cr.into())
+        Self::build_from(model, data_map).map(|cr| WriteQuery::Root(name, alias, RootWriteQuery::CreateRecord(cr)))
     }
 }
 

@@ -18,7 +18,8 @@ impl Builder<WriteQuery> for DeleteBuilder {
     fn build(mut self) -> QueryBuilderResult<WriteQuery> {
         let where_arg = self.field.arguments.lookup("where").unwrap();
         let record_finder = utils::extract_record_finder(where_arg.value, &self.model)?;
+        let delete = RootWriteQuery::DeleteRecord(DeleteRecord { where_: record_finder });
 
-        Ok(DeleteRecord { where_: record_finder }.into())
+        Ok(WriteQuery::Root(self.field.name, self.field.alias, delete))
     }
 }
