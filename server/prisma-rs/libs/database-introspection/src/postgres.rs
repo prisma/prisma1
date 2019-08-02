@@ -13,7 +13,7 @@ impl super::IntrospectionConnector for IntrospectionConnector {
         Ok(vec![])
     }
 
-    fn introspect(&mut self, schema: &str) -> Result<DatabaseSchema> {
+    fn introspect(&self, schema: &str) -> Result<DatabaseSchema> {
         debug!("Introspecting schema '{}'", schema);
         println!("Introspecting schema '{}'", schema);
         let tables = self
@@ -36,7 +36,7 @@ impl IntrospectionConnector {
         IntrospectionConnector { conn }
     }
 
-    fn get_table_names(&mut self, schema: &str) -> Vec<String> {
+    fn get_table_names(&self, schema: &str) -> Vec<String> {
         debug!("Getting table names");
         let sql = format!(
             "SELECT table_name as table_name FROM information_schema.tables
@@ -60,7 +60,7 @@ impl IntrospectionConnector {
         names
     }
 
-    fn get_table(&mut self, schema: &str, name: &str) -> Table {
+    fn get_table(&self, schema: &str, name: &str) -> Table {
         debug!("Getting table '{}'", name);
         let columns = self.get_columns(schema, name);
         let (indices, primary_key) = self.get_indices(schema, name);
@@ -74,7 +74,7 @@ impl IntrospectionConnector {
         }
     }
 
-    fn get_columns(&mut self, schema: &str, table: &str) -> Vec<Column> {
+    fn get_columns(&self, schema: &str, table: &str) -> Vec<Column> {
         let sql = format!(
             "SELECT column_name, udt_name, column_default, is_nullable, 
             'false' as is_auto_increment
@@ -135,7 +135,7 @@ impl IntrospectionConnector {
         cols
     }
 
-    fn get_foreign_keys(&mut self, schema: &str, table: &str) -> Vec<ForeignKey> {
+    fn get_foreign_keys(&self, schema: &str, table: &str) -> Vec<ForeignKey> {
         let sql = format!(
             "select 
                 att2.attname as \"child_column\", 
@@ -201,7 +201,7 @@ impl IntrospectionConnector {
             .collect()
     }
 
-    fn get_indices(&mut self, schema: &str, table_name: &str) -> (Vec<Index>, Option<PrimaryKey>) {
+    fn get_indices(&self, schema: &str, table_name: &str) -> (Vec<Index>, Option<PrimaryKey>) {
         debug!("Getting indices");
         let sql = format!("SELECT indexInfos.relname as name,
             array_agg(columnInfos.attname) as column_names,
@@ -264,7 +264,7 @@ impl IntrospectionConnector {
         (indices, pk)
     }
 
-    fn get_sequences(&mut self, schema: &str) -> Result<Vec<Sequence>> {
+    fn get_sequences(&self, schema: &str) -> Result<Vec<Sequence>> {
         debug!("Getting sequences");
         let sql = format!(
             "SELECT start_value, sequence_name
@@ -300,7 +300,7 @@ impl IntrospectionConnector {
         Ok(sequences)
     }
 
-    fn get_enums(&mut self, schema: &str) -> Result<Vec<Enum>> {
+    fn get_enums(&self, schema: &str) -> Result<Vec<Enum>> {
         debug!("Getting enums");
         let sql = format!(
             "SELECT t.typname as name, e.enumlabel as value

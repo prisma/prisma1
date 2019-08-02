@@ -14,7 +14,7 @@ impl super::IntrospectionConnector for IntrospectionConnector {
         Ok(vec![])
     }
 
-    fn introspect(&mut self, schema: &str) -> Result<DatabaseSchema> {
+    fn introspect(&self, schema: &str) -> Result<DatabaseSchema> {
         debug!("Introspecting schema '{}'", schema);
         let tables = self
             .get_table_names(schema)
@@ -36,7 +36,7 @@ impl IntrospectionConnector {
         IntrospectionConnector { conn }
     }
 
-    fn get_table_names(&mut self, schema: &str) -> Vec<String> {
+    fn get_table_names(&self, schema: &str) -> Vec<String> {
         let sql = format!("SELECT name FROM {}.sqlite_master WHERE type='table'", schema);
         debug!("Introspecting table names with query: '{}'", sql);
         let result_set = self.conn.query_raw(&sql, schema).expect("get table names");
@@ -49,7 +49,7 @@ impl IntrospectionConnector {
         names
     }
 
-    fn get_table(&mut self, schema: &str, name: &str) -> Table {
+    fn get_table(&self, schema: &str, name: &str) -> Table {
         debug!("Introspecting table '{}' in schema '{}", name, schema);
         let (introspected_columns, primary_key) = self.get_columns(schema, name);
         let foreign_keys = self.get_foreign_keys(schema, name);
@@ -63,7 +63,7 @@ impl IntrospectionConnector {
         }
     }
 
-    fn get_columns(&mut self, schema: &str, table: &str) -> (Vec<Column>, Option<PrimaryKey>) {
+    fn get_columns(&self, schema: &str, table: &str) -> (Vec<Column>, Option<PrimaryKey>) {
         let sql = format!(r#"Pragma "{}".table_info ("{}")"#, schema, table);
         debug!("Introspecting table columns, query: '{}'", sql);
         let result_set = self.conn.query_raw(&sql, schema).unwrap();
@@ -133,7 +133,7 @@ impl IntrospectionConnector {
         (cols, primary_key)
     }
 
-    fn get_foreign_keys(&mut self, schema: &str, table: &str) -> Vec<ForeignKey> {
+    fn get_foreign_keys(&self, schema: &str, table: &str) -> Vec<ForeignKey> {
         struct IntermediateForeignKey {
             pub columns: HashMap<i64, String>,
             pub referenced_table: String,
