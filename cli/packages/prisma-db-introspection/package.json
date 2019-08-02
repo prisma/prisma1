@@ -1,6 +1,6 @@
 {
   "name": "prisma-db-introspection",
-  "version": "0.0.7",
+  "version": "1.36.0-test.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
