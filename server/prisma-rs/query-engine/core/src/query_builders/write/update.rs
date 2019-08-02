@@ -29,12 +29,17 @@ impl Builder<WriteQuery> for UpdateBuilder {
         let data_argument = self.field.arguments.lookup("data").unwrap();
         let data_map: ParsedInputMap = data_argument.value.try_into()?;
 
-        Self::build_from(model, data_map, record_finder).map(|ur| WriteQuery::Root(name, alias, RootWriteQuery::UpdateRecord(ur)))
+        Self::build_from(model, data_map, record_finder)
+            .map(|ur| WriteQuery::Root(name, alias, RootWriteQuery::UpdateRecord(ur)))
     }
 }
 
 impl UpdateBuilder {
-    pub fn build_from(model: ModelRef, data: ParsedInputMap, record_finder: RecordFinder) -> QueryBuilderResult<UpdateRecord> {
+    pub fn build_from(
+        model: ModelRef,
+        data: ParsedInputMap,
+        record_finder: RecordFinder,
+    ) -> QueryBuilderResult<UpdateRecord> {
         let update_args = WriteArguments::from(&model, data, false)?;
         Ok(UpdateRecord {
             where_: record_finder,

@@ -74,8 +74,12 @@ impl ResultIrBuilder {
                 match res {
                     ResultPair::Write(r, typ) => {
                         let name = r.alias.clone().unwrap_or_else(|| r.name.clone());
+                        let serialized = serialize_write(r.result, &typ);
 
-                        unimplemented!()
+                        match serialized {
+                            Ok(result) => vec.push(Response::Data(name, result)),
+                            Err(err) => vec.push(Response::Error(format!("{}", err))),
+                        };
                     }
 
                     ResultPair::Read(r, typ) => {
@@ -104,7 +108,6 @@ impl ResultIrBuilder {
                             Err(err) => vec.push(Response::Error(format!("{}", err))),
                         };
                     }
-                    _ => unimplemented!(),
                 };
 
                 vec

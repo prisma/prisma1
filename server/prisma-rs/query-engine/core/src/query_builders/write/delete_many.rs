@@ -27,7 +27,6 @@ impl Builder<WriteQuery> for DeleteManyBuilder {
             filter: filter.unwrap(), // TODO: In the schema that's optional, the db interface expects it, though.
         });
 
-
         Ok(WriteQuery::Root(self.field.name, self.field.alias, delete_many))
     }
 }

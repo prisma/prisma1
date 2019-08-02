@@ -32,7 +32,6 @@ impl Builder<WriteQuery> for UpdateManyBuilder {
             list_args: update_args.list,
         });
 
-
         Ok(WriteQuery::Root(self.field.name, self.field.alias, update_many))
     }
 }

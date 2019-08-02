@@ -1,7 +1,9 @@
 use super::*;
-use crate::query_builders::{extract_filter, utils, ParsedInputMap, ParsedInputValue, QueryBuilderResult};
+use crate::query_builders::{
+    extract_filter, utils, ParsedInputMap, ParsedInputValue, QueryBuilderResult, QueryValidationError,
+};
 use connector::write_ast::*;
-use prisma_models::{ModelRef, RelationFieldRef};
+use prisma_models::{ModelRef, RelationFieldRef, RelationLinkManifestation};
 use std::{convert::TryInto, sync::Arc};
 
 pub fn extract_nested_queries(
@@ -11,7 +13,7 @@ pub fn extract_nested_queries(
 ) -> QueryBuilderResult<NestedWriteQueries> {
     let model = relation_field.related_model();
 
-    field
+    let nested_queries = field
         .into_iter()
         .fold(Ok(NestedWriteQueries::default()), |prev, (name, value)| {
             let mut prev = prev?;
@@ -65,7 +67,33 @@ pub fn extract_nested_queries(
             };
 
             Ok(prev)
-        })
+        });
+
+    // Check if we need to abort due to limitation in the query engine
+    nested_queries.and_then(|nq| {
+        let is_unsupported = match relation_field.relation().manifestation {
+            Some(RelationLinkManifestation::Inline(ref i)) => {
+                i.in_table_of_model_name == relation_field.model().db_name()
+            }
+            _ => false,
+        };
+
+        if triggered_from_create
+            && (nq.creates.len() + nq.connects.len() > 0)
+            && relation_field.is_required
+            && is_unsupported
+        {
+            Err(QueryValidationError::AssertionError(
+                format!(
+                    "A create or connect cannot be performed in this direction. You're first creating a {} and then {}, but only the reverse order is currently supported. This limitation will be lifted for general availability",
+                    relation_field.model().name,
+                    relation_field.related_model().name)
+                )
+            )
+        } else {
+            Ok(nq)
+        }
+    })
 }
 
 pub fn nested_create(
