@@ -695,13 +695,29 @@ fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
             model A {
                 id Int @id
                 strings String[]
+                enums Status[]
+            }
+            
+            enum Status {
+              OK
+              ERROR
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
-        let scalar_list_table = result.table_bang("A_strings");
-        let node_id_column = scalar_list_table.column_bang("nodeId");
+        let scalar_list_table_for_strings = result.table_bang("A_strings");
+        let node_id_column = scalar_list_table_for_strings.column_bang("nodeId");
         assert_eq!(node_id_column.tpe, ColumnType::Int);
-        assert_eq!(scalar_list_table.primary_key_columns, vec!["nodeId", "position"]);
+        assert_eq!(
+            scalar_list_table_for_strings.primary_key_columns,
+            vec!["nodeId", "position"]
+        );
+        let scalar_list_table_for_enums = result.table_bang("A_enums");
+        let node_id_column = scalar_list_table_for_enums.column_bang("nodeId");
+        assert_eq!(node_id_column.tpe, ColumnType::Int);
+        assert_eq!(
+            scalar_list_table_for_enums.primary_key_columns,
+            vec!["nodeId", "position"]
+        );
     });
 }
 
