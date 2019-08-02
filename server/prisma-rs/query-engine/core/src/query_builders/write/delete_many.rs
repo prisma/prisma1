@@ -1,5 +1,5 @@
 use super::*;
-use crate::query_builders::{extract_filter, Builder, ParsedField, ParsedInputMap, QueryBuilderResult};
+use crate::query_builders::{extract_filter, Builder, ParsedField, QueryBuilderResult};
 use connector::write_ast::*;
 use prisma_models::ModelRef;
 use std::convert::TryInto;

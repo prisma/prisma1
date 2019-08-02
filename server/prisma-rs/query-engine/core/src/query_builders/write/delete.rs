@@ -1,8 +1,7 @@
 use super::*;
-use crate::query_builders::{Builder, ParsedField, ParsedInputMap, QueryBuilderResult};
+use crate::query_builders::{Builder, ParsedField, QueryBuilderResult};
 use connector::write_ast::*;
 use prisma_models::ModelRef;
-use std::convert::TryInto;
 
 pub struct DeleteBuilder {
     field: ParsedField,
