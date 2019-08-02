@@ -132,6 +132,14 @@ pub enum ColumnTypeFamily {
     Json,
     /// UUID types.
     Uuid,
+    /// Geometric types.
+    Geometric,
+    /// Log sequence number types.
+    LogSequenceNumber,
+    /// Text search types.
+    TextSearch,
+    /// Transaction ID types.
+    TransactionId,
 }
 
 /// A column's arity.
