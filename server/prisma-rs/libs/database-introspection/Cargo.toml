@@ -16,12 +16,12 @@ itertools = "0.8"
 url = "1.7.2"
 postgres = { version = "0.16.0-rc.2", features = ["runtime", "with-serde_json-1", "with-chrono-0_4", "with-uuid-0_7"] }
 mysql = { version = "*" }
-
 slog = { version = "2.5", features = ["max_level_trace", "release_max_level_info"] }
 slog-async = "2.3"
 slog-json = "2.3"
 slog-stdlog = "3.0"
-log = { version = "*", features = ["max_level_trace", "release_max_level_info"] }
+log = { version = "0.4", features = ["max_level_trace", "release_max_level_info"] }
 
 [dev-dependencies]
 fern = "0.5"
+pretty_assertions = "0.6"
