@@ -33,8 +33,8 @@ fn sqlite(source: &Box<dyn Source>) -> PrismaResult<Executor> {
     trace!("Loading SQLite connector...");
 
     let sqlite = Sqlite::from_source(source)?;
+    let path = PathBuf::from(sqlite.file_path());
     let db = SqlDatabase::new(sqlite);
-    let path = PathBuf::from(source.url());
     let db_name = path.file_stem().unwrap(); // Safe due to previous validations.
 
     trace!("Loaded SQLite connector.");

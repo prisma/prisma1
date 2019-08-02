@@ -68,7 +68,7 @@ impl IntrospectionConnector {
         debug!("Introspecting table columns, query: '{}'", sql);
         let result_set = self.conn.query_raw(&sql, schema).unwrap();
         let mut pk_cols: HashMap<i64, String> = HashMap::new();
-        let cols = result_set
+        let mut cols: Vec<Column> = result_set
             .into_iter()
             .map(|row| {
                 debug!("Got column row {:?}", row);
@@ -112,6 +112,7 @@ impl IntrospectionConnector {
                 col
             })
             .collect();
+        cols.sort_unstable_by_key(|col| col.name.clone());
 
         let primary_key = match pk_cols.is_empty() {
             true => {
@@ -229,8 +230,12 @@ pub struct IntrospectedColumn {
 fn get_column_type(tpe: &str) -> ColumnType {
     let tpe_lower = tpe.to_lowercase();
     let family = match tpe_lower.as_ref() {
+        // SQLite only has a few native data types: https://www.sqlite.org/datatype3.html
+        // It's tolerant though, and you can assign any data type you like to columns
         "integer" => ColumnTypeFamily::Int,
         "real" => ColumnTypeFamily::Float,
+        "float" => ColumnTypeFamily::Float,
+        "serial" => ColumnTypeFamily::Int,
         "boolean" => ColumnTypeFamily::Boolean,
         "text" => ColumnTypeFamily::String,
         s if s.contains("char") => ColumnTypeFamily::String,

@@ -132,6 +132,14 @@ pub enum ColumnTypeFamily {
     Json,
     /// UUID types.
     Uuid,
+    /// Geometric types.
+    Geometric,
+    /// Log sequence number types.
+    LogSequenceNumber,
+    /// Text search types.
+    TextSearch,
+    /// Transaction ID types.
+    TransactionId,
 }
 
 /// A column's arity.
@@ -146,7 +154,7 @@ pub enum ColumnArity {
 }
 
 /// A foreign key.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct ForeignKey {
     /// Column names.
     pub columns: Vec<String>,
