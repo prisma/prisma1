@@ -18,16 +18,20 @@ impl CreateBuilder {
 impl Builder<WriteQuery> for CreateBuilder {
     fn build(mut self) -> QueryBuilderResult<WriteQuery> {
         let data_argument = self.field.arguments.lookup("data").unwrap();
-        let model = self.model;
         let data_map: ParsedInputMap = data_argument.value.try_into()?;
-        let create_args = WriteArguments::from(&model, data_map, true)?;
-        let cr = CreateRecord {
+
+        Self::build_from(self.model, data_map).map(|cr| cr.into())
+    }
+}
+
+impl CreateBuilder {
+    pub fn build_from(model: ModelRef, data: ParsedInputMap) -> QueryBuilderResult<CreateRecord> {
+        let create_args = WriteArguments::from(&model, data, true)?;
+        Ok(CreateRecord {
             model: model,
             non_list_args: create_args.non_list,
             list_args: create_args.list,
             nested_writes: create_args.nested,
-        };
-
-        Ok(cr.into())
+        })
     }
 }
