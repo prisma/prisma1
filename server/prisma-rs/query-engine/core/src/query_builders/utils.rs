@@ -16,7 +16,7 @@ pub fn extract_record_finder(parsed_value: ParsedInputValue, model: &ModelRef) -
     let values: ParsedInputMap = parsed_value.try_into()?;
     if values.len() != 1 {
         Err(QueryValidationError::AssertionError(format!(
-            "Expected exactly one value for 'where' argument, got: {}",
+            "Expected exactly one key-value pair for 'where' argument, got: '{}'",
             values.iter().map(|v| v.0.as_str()).collect::<Vec<&str>>().join(", ")
         )))
     } else {

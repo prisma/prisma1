@@ -78,17 +78,23 @@ fn main() {
         )
         .get_matches();
 
-    let result = if matches.is_present("cli") {
-        start_cli(matches.subcommand_matches("cli").unwrap())
+    if matches.is_present("cli") {
+        let result = start_cli(matches.subcommand_matches("cli").unwrap());
+
+        if let Err(err) = result {
+            info!("Encountered error during initialization:");
+            err.pretty_print();
+            process::exit(1);
+        };
     } else {
         let _logger = Logger::build("prisma"); // keep in scope
-        start_server(matches)
-    };
+        let result = start_server(matches);
 
-    if let Err(err) = result {
-        info!("Encountered error during initialization:");
-        err.pretty_print();
-        process::exit(1);
+        if let Err(err) = result {
+            info!("Encountered error during initialization:");
+            err.pretty_print();
+            process::exit(1);
+        };
     };
 }
 
