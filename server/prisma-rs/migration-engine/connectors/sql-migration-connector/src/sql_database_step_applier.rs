@@ -325,6 +325,8 @@ fn render_column_type_mysql(t: ColumnType) -> String {
         ColumnType::DateTime => format!("datetime(3)"),
         ColumnType::Float => format!("Decimal(65,30)"),
         ColumnType::Int => format!("int"),
-        ColumnType::String => format!("varchar(1000)"), // we use varchar right now as mediumtext doesn't allow default values
+        // we use varchar right now as mediumtext doesn't allow default values
+        // a bigger length would not allow to use such a column as primary key
+        ColumnType::String => format!("varchar(767)"),
     }
 }

@@ -39,7 +39,7 @@ impl ManyRelatedRecordsQueryBuilder for ManyRelatedRecordsWithUnionAll {
                 .clone()
                 .and(from_field.relation_column().table(Relation::TABLE_ALIAS).equals(id));
 
-            acc.add(base_query.clone().so_that(conditions))
+            acc.union_all(base_query.clone().so_that(conditions))
         });
 
         Query::from(union)
