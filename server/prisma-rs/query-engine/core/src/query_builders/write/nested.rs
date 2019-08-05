@@ -3,7 +3,7 @@ use crate::query_builders::{
     extract_filter, utils, ParsedInputMap, ParsedInputValue, QueryBuilderResult, QueryValidationError,
 };
 use connector::write_ast::*;
-use prisma_models::{ModelRef, RelationFieldRef, RelationLinkManifestation};
+use prisma_models::{ModelRef, PrismaValue, RelationFieldRef, RelationLinkManifestation};
 use std::{convert::TryInto, sync::Arc};
 
 pub fn extract_nested_queries(
@@ -123,29 +123,37 @@ pub fn nested_update(
     model: &ModelRef,
     relation_field: &RelationFieldRef,
 ) -> QueryBuilderResult<Vec<NestedUpdateRecord>> {
-    coerce_vec(value)
-        .into_iter()
-        .map(|value| {
+    let mut vec = vec![];
+
+    for value in coerce_vec(value) {
+        if relation_field.is_list {
             let mut map: ParsedInputMap = value.try_into()?;
             let data_arg = map.remove("data").expect("1");
             let write_args = WriteArguments::from(&model, data_arg.try_into()?, false)?;
+            let where_arg = map.remove("where").expect("2");
+            let record_finder = Some(utils::extract_record_finder(where_arg, &model)?);
 
-            let record_finder = if relation_field.is_list {
-                let where_arg = map.remove("where").expect("2");
-                Some(utils::extract_record_finder(where_arg, &model)?)
-            } else {
-                None
-            };
-
-            Ok(NestedUpdateRecord {
+            vec.push(NestedUpdateRecord {
                 relation_field: Arc::clone(&relation_field),
                 where_: record_finder,
                 non_list_args: write_args.non_list,
                 list_args: write_args.list,
                 nested_writes: write_args.nested,
-            })
-        })
-        .collect::<QueryBuilderResult<Vec<_>>>()
+            });
+        } else {
+            let write_args = WriteArguments::from(&model, value.try_into()?, false)?;
+
+            vec.push(NestedUpdateRecord {
+                relation_field: Arc::clone(&relation_field),
+                where_: None,
+                non_list_args: write_args.non_list,
+                list_args: write_args.list,
+                nested_writes: write_args.nested,
+            });
+        }
+    }
+
+    Ok(vec)
 }
 
 pub fn nested_upsert(
@@ -158,11 +166,6 @@ pub fn nested_upsert(
         .into_iter()
         .map(|value| {
             let mut map: ParsedInputMap = value.try_into()?;
-            let create_arg = map.remove("create").expect("3");
-            let update_arg = map.remove("update").expect("4");
-            let mut create = nested_create(create_arg, model, relation_field, triggered_from_create)?;
-            let mut update = nested_update(update_arg, model, relation_field)?;
-
             let record_finder = if relation_field.is_list {
                 let where_arg = map.remove("where").expect("5");
                 Some(utils::extract_record_finder(where_arg, &model)?)
@@ -170,11 +173,33 @@ pub fn nested_upsert(
                 None
             };
 
+            let create_arg = map.remove("create").expect("3");
+            let create_args = WriteArguments::from(&model, create_arg.try_into()?, triggered_from_create)?;
+
+            let update_arg = map.remove("update").expect("4");
+            let update_args = WriteArguments::from(&model, update_arg.try_into()?, triggered_from_create)?;
+
+            let create = NestedCreateRecord {
+                relation_field: Arc::clone(relation_field),
+                non_list_args: create_args.non_list,
+                list_args: create_args.list,
+                nested_writes: create_args.nested,
+                top_is_create: triggered_from_create,
+            };
+
+            let update = NestedUpdateRecord {
+                relation_field: Arc::clone(&relation_field),
+                where_: record_finder.clone(),
+                non_list_args: update_args.non_list,
+                list_args: update_args.list,
+                nested_writes: update_args.nested,
+            };
+
             Ok(NestedUpsertRecord {
                 relation_field: Arc::clone(&relation_field),
                 where_: record_finder,
-                create: create.pop().unwrap(),
-                update: update.pop().unwrap(),
+                create,
+                update,
             })
         })
         .collect::<QueryBuilderResult<Vec<_>>>()
@@ -185,23 +210,33 @@ pub fn nested_delete(
     model: &ModelRef,
     relation_field: &RelationFieldRef,
 ) -> QueryBuilderResult<Vec<NestedDeleteRecord>> {
-    coerce_vec(value)
-        .into_iter()
-        .map(|value| {
-            let mut map: ParsedInputMap = value.try_into()?;
+    let mut vec = vec![];
+
+    for value in coerce_vec(value) {
+        if relation_field.is_list {
             let record_finder = if relation_field.is_list {
-                let where_arg = map.remove("where").expect("7");
-                Some(utils::extract_record_finder(where_arg, &model)?)
+                Some(utils::extract_record_finder(value, &model)?)
             } else {
                 None
             };
 
-            Ok(NestedDeleteRecord {
+            vec.push(NestedDeleteRecord {
                 relation_field: Arc::clone(&relation_field),
                 where_: record_finder,
             })
-        })
-        .collect::<QueryBuilderResult<Vec<_>>>()
+        } else {
+            let val: PrismaValue = value.try_into()?;
+            match val {
+                PrismaValue::Boolean(b) if b => vec.push(NestedDeleteRecord {
+                    relation_field: Arc::clone(&relation_field),
+                    where_: None,
+                }),
+                _ => (),
+            };
+        }
+    }
+
+    Ok(vec)
 }
 
 pub fn nested_connect(
@@ -245,23 +280,33 @@ pub fn nested_disconnect(
     model: &ModelRef,
     relation_field: &RelationFieldRef,
 ) -> QueryBuilderResult<Vec<NestedDisconnect>> {
-    coerce_vec(value)
-        .into_iter()
-        .map(|value| {
-            let mut map: ParsedInputMap = value.try_into()?;
+    let mut vec = vec![];
+
+    for value in coerce_vec(value) {
+        if relation_field.is_list {
             let record_finder = if relation_field.is_list {
-                let where_arg = map.remove("where").expect("asd");
-                Some(utils::extract_record_finder(where_arg, &model)?)
+                Some(utils::extract_record_finder(value, &model)?)
             } else {
                 None
             };
 
-            Ok(NestedDisconnect {
+            vec.push(NestedDisconnect {
                 relation_field: Arc::clone(&relation_field),
                 where_: record_finder,
             })
-        })
-        .collect::<QueryBuilderResult<Vec<_>>>()
+        } else {
+            let val: PrismaValue = value.try_into()?;
+            match val {
+                PrismaValue::Boolean(b) if b => vec.push(NestedDisconnect {
+                    relation_field: Arc::clone(&relation_field),
+                    where_: None,
+                }),
+                _ => (),
+            };
+        }
+    }
+
+    Ok(vec)
 }
 
 pub fn nested_update_many(
@@ -322,6 +367,6 @@ pub fn coerce_vec(val: ParsedInputValue) -> Vec<ParsedInputValue> {
     match val {
         ParsedInputValue::List(l) => l,
         m @ ParsedInputValue::Map(_) => vec![m],
-        _ => unreachable!(),
+        single => vec![single],
     }
 }
