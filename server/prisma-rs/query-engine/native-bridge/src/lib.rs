@@ -12,7 +12,7 @@ mod protobuf;
 
 use error::*;
 use lazy_static::lazy_static;
-use prisma_common::{config::{self, PrismaConfig}, logger::Logger};
+use prisma_common::config::{self, PrismaConfig};
 use protobuf::{ProtoBufEnvelope, ProtoBufInterface};
 use std::{ffi::CStr, os::raw::c_char, slice};
 
@@ -56,7 +56,6 @@ macro_rules! data_interface {
         $(
             #[no_mangle]
             pub unsafe extern "C" fn $function(pbi: *mut ProtoBufInterface, data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
-                let _logger = Logger::build("native-bridge");
                 let pbi = Box::from_raw(pbi);
                 let payload = slice::from_raw_parts_mut(data, len);
                 let response_payload = pbi.$function(payload);
