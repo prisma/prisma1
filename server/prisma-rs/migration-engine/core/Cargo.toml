@@ -16,6 +16,7 @@ serde_derive = "1.0"
 boolinator = "2.4.0"
 url = "1.7"
 sql-migration-connector = { path = "../connectors/sql-migration-connector" }
+log = "0.4"
 
 [dev-dependencies]
 prisma-query = { git = "https://github.com/prisma/prisma-query.git" }

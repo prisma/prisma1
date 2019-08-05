@@ -17,6 +17,7 @@ impl Logger {
             Ok("devel") => {
                 let decorator = TermDecorator::new().build();
                 let drain = FullFormat::new(decorator).build().fuse();
+                let drain = slog_envlogger::new(drain);
                 let drain = Async::new(drain).build().fuse();
 
                 let log = slog::Logger::root(drain, o!("application" => application));
