@@ -1,5 +1,5 @@
 use super::filter::IntoFilter;
-use connector::{filter::RecordFinder, write_query::*};
+use connector::{filter::RecordFinder, write_ast::*, WriteQueryResult, WriteQueryResultType};
 use prisma_models::prelude::*;
 use std::sync::Arc;
 

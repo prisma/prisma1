@@ -26,10 +26,6 @@ pub enum SelectedField {
 #[derive(Debug, Clone)]
 pub struct SelectedScalarField {
     pub field: Arc<ScalarField>,
-
-    /// Denotes whether or not a field was selected implicitly,
-    /// meaning it needs to be selected from the database, but not shown in the actual result set.
-    pub implicit: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -42,7 +38,6 @@ impl From<Arc<ScalarField>> for SelectedField {
     fn from(sf: Arc<ScalarField>) -> SelectedField {
         SelectedField::Scalar(SelectedScalarField {
             field: sf,
-            implicit: false,
         })
     }
 }
@@ -102,14 +97,9 @@ impl SelectedFields {
         Self::from(model.fields().id())
     }
 
-    #[deprecated]
-    pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
-        self.scalar.iter().filter(|sf| sf.implicit).collect()
-    }
-
-    pub fn add_scalar(&mut self, field: Arc<ScalarField>, implicit: bool) {
+    pub fn add_scalar(&mut self, field: Arc<ScalarField>) {
         self.columns = OnceCell::new();
-        self.scalar.push(SelectedScalarField { field, implicit });
+        self.scalar.push(SelectedScalarField { field});
     }
 
     pub fn columns(&self) -> &[Column<'static>] {

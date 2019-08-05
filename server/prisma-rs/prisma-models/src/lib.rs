@@ -7,6 +7,7 @@ extern crate serde_derive;
 extern crate debug_stub_derive;
 
 mod datamodel_converter;
+mod enum_type;
 mod error;
 mod field;
 mod fields;
@@ -24,6 +25,7 @@ mod selected_fields;
 pub mod prelude;
 
 pub use datamodel_converter::*;
+pub use enum_type::*;
 pub use error::*;
 pub use field::*;
 pub use fields::*;

@@ -1,7 +1,8 @@
 use crate::utilities;
-use core::CoreError;
+use core::{CoreError, response_ir};
 use datamodel::errors::ErrorCollection;
 use failure::{Error, Fail};
+use graphql_parser::query::ParseError as GqlParseError;
 use prisma_common::error::CommonError;
 use serde_json;
 
@@ -10,9 +11,6 @@ use sql_connector::SqlError;
 
 #[derive(Debug, Fail)]
 pub enum PrismaError {
-    #[fail(display = "{}", _0)]
-    QueryParsingError(String),
-
     #[fail(display = "{}", _0)]
     QueryValidationError(String),
 
@@ -36,6 +34,18 @@ pub enum PrismaError {
 
     #[fail(display = "{}", _0)]
     InvocationError(String),
+
+    /// (Feature name, additional error text)
+    #[fail(display = "Unsupported feature: {}. {}", _0, _1)]
+    UnsupportedFeatureError(&'static str, String),
+}
+
+/// Helps to handle gracefully handle errors as a response.
+impl Into<response_ir::Response> for PrismaError {
+    fn into(self) -> response_ir::Response {
+        let error_msg = format!("{}", self);
+        response_ir::Response::Error(error_msg)
+    }
 }
 
 /// Pretty print helper errors.
@@ -100,6 +110,12 @@ impl From<std::string::FromUtf8Error> for PrismaError {
 impl From<base64::DecodeError> for PrismaError {
     fn from(e: base64::DecodeError) -> PrismaError {
         PrismaError::ConfigurationError(format!("Invalid base64: {}", e))
+    }
+}
+
+impl From<GqlParseError> for PrismaError {
+    fn from(e: GqlParseError) -> PrismaError {
+        PrismaError::QueryValidationError(format!("Error parsing GraphQL query: {}", e))
     }
 }
 

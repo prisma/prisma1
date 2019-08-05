@@ -106,15 +106,16 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         in_table_of_model,
                         column,
                     } if in_table_of_model == &model_table.model.name => {
-                        let related_model = if model_table.model == relation.model_a {
-                            &relation.model_b
+                        let (model, related_model) = if model_table.model == relation.model_a {
+                            (&relation.model_a, &relation.model_b)
                         } else {
-                            &relation.model_a
+                            (&relation.model_b, &relation.model_a)
                         };
+                        let field = model.fields().find(|f|&f.db_name() == column).unwrap();
                         let column = Column::with_foreign_key(
                             column.to_string(),
                             column_type(related_model.id_field()?),
-                            relation.field_a.is_required() || relation.field_b.is_required(),
+                            field.is_required(),
                             ForeignKey::new(related_model.db_name(), related_model.id_field()?.db_name()),
                         );
                         model_table.table.columns.push(column);
