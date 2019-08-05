@@ -108,7 +108,7 @@ fn main() {
             }
         }
     } else {
-        let _logger = Logger::build("prisma"); // keep in scope
+        let _logger = Logger::build("prisma", std::io::stdout()); // keep in scope
         let result = start_server(matches);
 
         if let Err(err) = result {

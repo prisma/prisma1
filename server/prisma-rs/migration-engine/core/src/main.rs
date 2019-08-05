@@ -1,9 +1,11 @@
 use clap::{App, Arg};
 use migration_core::api::RpcApi;
+use prisma_common::{logger::Logger, metrics_recorder::StupidLogRecorder};
 use std::{fs, io::Read};
 
 fn main() {
-    env_logger::init();
+    let _logger = Logger::build("migration-engine", std::io::stderr());
+    StupidLogRecorder::install().unwrap();
 
     let matches = App::new("Prisma Migration Engine")
         .version(env!("CARGO_PKG_VERSION"))

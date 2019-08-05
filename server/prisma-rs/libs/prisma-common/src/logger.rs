@@ -3,6 +3,7 @@ use slog_async::Async;
 use slog_json::Json;
 use slog_scope::{logger, GlobalLoggerGuard};
 use slog_term::{FullFormat, TermDecorator};
+use std::io::Write;
 
 pub struct Logger {
     _scope_guard: GlobalLoggerGuard,
@@ -12,7 +13,10 @@ pub struct Logger {
 impl Logger {
     /// Builds a new logger. Depending on `LOG_FORMAT` environment variable,
     /// either produces colorful text or JSON.
-    pub fn build(application: &'static str) -> Logger {
+    pub fn build<T>(application: &'static str, output: T) -> Logger
+    where
+        T: Write + Send + 'static,
+    {
         match std::env::var("RUST_LOG_FORMAT").as_ref().map(|s| s.as_str()) {
             Ok("devel") => {
                 let decorator = TermDecorator::new().build();
@@ -28,7 +32,7 @@ impl Logger {
                 }
             }
             _ => {
-                let drain = Json::new(std::io::stdout()).add_default_keys().build().fuse();
+                let drain = Json::new(output).add_default_keys().build().fuse();
                 let drain = slog_envlogger::new(drain);
                 let drain = Async::new(drain).chan_size(16384).overflow_strategy(slog_async::OverflowStrategy::Block).build().fuse();
 
