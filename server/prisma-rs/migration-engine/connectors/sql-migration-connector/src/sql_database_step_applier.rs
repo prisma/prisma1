@@ -237,15 +237,16 @@ fn render_column(
     let column_name = quote(&column_description.name, sql_family);
     let tpe_str = render_column_type(sql_family, column_description.tpe);
     let nullability_str = if column_description.required { "NOT NULL" } else { "" };
-    let default_str = match &column_description.default {
-        Some(value) => {
+    let default_or_auto_inc_str = match (&column_description.default, &column_description.auto_increment) {
+        (Some(value), _) => {
             match render_value(value) {
                 Some(ref default) if column_description.required => format!("DEFAULT {}", default),
                 Some(_) => "".to_string(), // we use the default value right now only to smoothen migrations. So we only use it when absolutely needed.
                 None => "".to_string(),
             }
         }
-        None => "".to_string(),
+        (None, Some(auto_inc)) if *auto_inc => "AUTO_INCREMENT".to_string(),
+        (None, None) => "".to_string(),
     };
     let references_str = match (sql_family, &column_description.foreign_key) {
         (SqlFamily::Postgres, Some(fk)) => {
@@ -261,12 +262,12 @@ fn render_column(
             let fk_line = format!("{} FOREIGN KEY ({}) {}", add, column_name, references_str);
             format!(
                 "{} {} {} {},{}",
-                column_name, tpe_str, nullability_str, default_str, fk_line
+                column_name, tpe_str, nullability_str, default_or_auto_inc_str, fk_line
             )
         }
         _ => format!(
             "{} {} {} {} {}",
-            column_name, tpe_str, nullability_str, default_str, references_str
+            column_name, tpe_str, nullability_str, default_or_auto_inc_str, references_str
         ),
     }
 }

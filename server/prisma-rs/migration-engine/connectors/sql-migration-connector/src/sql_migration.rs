@@ -88,6 +88,7 @@ pub struct ColumnDescription {
     pub required: bool,
     pub foreign_key: Option<ForeignKey>,
     pub default: Option<Value>,
+    pub auto_increment: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
