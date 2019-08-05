@@ -1,6 +1,5 @@
 use crate::{DomainError, DomainResult, EnumValue};
 use chrono::prelude::*;
-use graphql_parser::query::{Number, Value as GraphqlValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{convert::TryFrom, fmt, string::FromUtf8Error};
@@ -25,16 +24,6 @@ impl From<Id> for GraphqlId {
             Id::String(s) => GraphqlId::String(s),
             Id::Int(i) => GraphqlId::Int(i),
             Id::UUID(u) => GraphqlId::UUID(u),
-        }
-    }
-}
-
-impl GraphqlId {
-    pub fn to_value(&self) -> GraphqlValue {
-        match self {
-            GraphqlId::String(s) => GraphqlValue::String(s.clone()),
-            GraphqlId::Int(i) => GraphqlValue::Int(Number::from((*i) as i32)), // This could cause issues!
-            GraphqlId::UUID(u) => GraphqlValue::String(u.to_string()),
         }
     }
 }
