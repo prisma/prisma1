@@ -8,6 +8,7 @@ edition = "2018"
 migration-connector = { path = "../connectors/migration-connector" }
 datamodel = { path = "../../libs/datamodel" }
 prisma-models = { path = "../../prisma-models" }
+prisma-common = { path = "../../libs/prisma-common" }
 chrono = { version = "0.4", features = ["serde"] }
 jsonrpc-core = "11.0.0"
 serde = "1.0"

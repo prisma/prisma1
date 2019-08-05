@@ -31,6 +31,7 @@ impl RpcApi {
     fn add_command_handler<T: MigrationCommand>(&mut self, name: &str) {
         self.io_handler.add_method(name, |params: Params| {
             let input: T::Input = params.clone().parse()?;
+
             let engine = if T::has_source_config() {
                 let source_config: SourceConfigInput = params.parse()?;
                 let engine = MigrationEngine::new(&source_config.source_config, T::underlying_database_must_exist());
@@ -40,6 +41,7 @@ impl RpcApi {
                 // FIXME: this is ugly
                 MigrationEngine::new("", T::underlying_database_must_exist())
             };
+
             let cmd = T::new(input);
             let result = &cmd.execute(&engine).map_err(convert_error)?;
             let response_json = serde_json::to_value(result).expect("Rendering of RPC response failed");
@@ -50,10 +52,12 @@ impl RpcApi {
     pub fn handle(&self) {
         let mut json_is_complete = false;
         let mut input = String::new();
+
         while !json_is_complete {
             io::stdin().read_line(&mut input).expect("Reading from stdin failed.");
             json_is_complete = serde_json::from_str::<serde_json::Value>(&input).is_ok();
         }
+
         println!("{}", self.handle_input(&input));
     }
 

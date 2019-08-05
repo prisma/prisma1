@@ -87,8 +87,7 @@ fn main() {
     let result = if matches.is_present("cli") {
         start_cli(matches.subcommand_matches("cli").unwrap())
     } else {
-        let _logger = Logger::build("prisma"); // keep in scope
-
+        let _logger = Logger::build("prisma", std::io::stdout()); // keep in scope
         StupidLogRecorder::install().unwrap();
 
         start_server(matches)
