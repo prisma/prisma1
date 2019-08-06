@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 pub struct SqlDatabaseMigrationInferrer {
     pub sql_family: SqlFamily,
-    pub inspector: Arc<DatabaseInspector>,
+    pub inspector: Arc<DatabaseInspector + Send + Sync + 'static>,
     pub schema_name: String,
 }
 
@@ -21,31 +21,6 @@ impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
         steps: &Vec<MigrationStep>,
     ) -> ConnectorResult<SqlMigration> {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
-        let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
-        infer(
-            &current_database_schema,
-            &expected_database_schema,
-            &self.schema_name,
-            self.sql_family,
-            previous,
-            next,
-            steps,
-        )
-    }
-}
-
-pub struct VirtualSqlDatabaseMigrationInferrer {
-    pub sql_family: SqlFamily,
-    pub schema_name: String,
-}
-impl DatabaseMigrationInferrer<SqlMigration> for VirtualSqlDatabaseMigrationInferrer {
-    fn infer(
-        &self,
-        previous: &Datamodel,
-        next: &Datamodel,
-        steps: &Vec<MigrationStep>,
-    ) -> ConnectorResult<SqlMigration> {
-        let current_database_schema = DatabaseSchemaCalculator::calculate(previous)?;
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
         infer(
             &current_database_schema,

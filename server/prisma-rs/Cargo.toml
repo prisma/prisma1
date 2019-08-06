@@ -13,4 +13,5 @@ members = [
   "libs/datamodel",
   "libs/prisma-inflector",
   "libs/database-introspection",
+  "libs/prisma-common",
 ]

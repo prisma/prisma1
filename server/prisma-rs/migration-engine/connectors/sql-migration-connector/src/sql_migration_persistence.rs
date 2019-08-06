@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 pub struct SqlMigrationPersistence {
     pub sql_family: SqlFamily,
-    pub connection: Arc<MigrationDatabase>,
+    pub connection: Arc<MigrationDatabase + Send + Sync + 'static>,
     pub schema_name: String,
     pub file_path: Option<String>,
 }
@@ -19,7 +19,6 @@ pub struct SqlMigrationPersistence {
 #[allow(unused, dead_code)]
 impl MigrationPersistence for SqlMigrationPersistence {
     fn init(&self) {
-        println!("SqlMigrationPersistence.init()");
         let mut m = barrel::Migration::new().schema(self.schema_name.clone());
 
         let barrel_variant = match self.sql_family {
@@ -42,7 +41,6 @@ impl MigrationPersistence for SqlMigrationPersistence {
     }
 
     fn reset(&self) {
-        println!("SqlMigrationPersistence.reset()");
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name); // TODO: this is not vendor agnostic yet
         let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
 
@@ -244,8 +242,6 @@ fn parse_rows_new(result_set: ResultSet) -> Vec<Migration> {
 
             let database_migration_json = serde_json::from_str(&database_migration_string).unwrap();
             let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
-
-            println!("{:?}", row.get(STARTED_AT_COLUMN).unwrap());
 
             Migration {
                 name: row[NAME_COLUMN].to_string().unwrap(),
