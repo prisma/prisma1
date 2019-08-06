@@ -9,29 +9,29 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiSpecBas
 
   "a P1! to C1! relation " should "error when deleting the parent2" in {
     val testDataModels = {
-      val dm1 = """type Parent {
-                  |  id: ID! @id
-                  |  p: String! @unique
-                  |  child: Child! @relation(link: INLINE)
+      val dm1 = """model Parent {
+                  |  id    String @id @default(cuid())
+                  |  p     String @unique
+                  |  child Child  @relation(references: [id])
                   |}
                   |
-                  |type Child {
-                  |  id: ID! @id
-                  |  c: String! @unique
-                  |  parentReq: Parent!
+                  |model Child {
+                  |  id        String @id @default(cuid())
+                  |  c         String @unique
+                  |  parentReq Parent
                   |}
                 """.stripMargin
 
-      val dm2 = """type Parent {
-                  |  id: ID! @id
-                  |  p: String! @unique
-                  |  child: Child!
+      val dm2 = """model Parent {
+                  |  id    String @id @default(cuid())
+                  |  p     String @unique
+                  |  child Child
                   |}
                   |
-                  |type Child {
-                  |  id: ID! @id
-                  |  c: String! @unique
-                  |  parentReq: Parent! @relation(link: INLINE)
+                  |model Child {
+                  |  id        String @id @default(cuid())
+                  |  c         String @unique
+                  |  parentReq Parent @relation(references: [id])
                   |}
                 """.stripMargin
 
@@ -706,83 +706,83 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiSpecBas
 
   "a PM to CM  relation" should "delete the parent from other relations as well" in {
     val testDataModels = {
-      val dm1 = """type Parent {
-                  | id: ID! @id
-                  | p: String! @unique
-                  | childrenOpt: [Child] @relation(link: INLINE)
-                  | stepChildOpt: StepChild @relation(link: INLINE)
+      val dm1 = """model Parent {
+                  | id           String     @id @default(cuid())
+                  | p            String     @unique
+                  | childrenOpt  Child[]    @relation(references: [id])
+                  | stepChildOpt StepChild? @relation(references: [id])
                   |}
                   |
-                  |type Child {
-                  | id: ID! @id
-                  | c: String! @unique
-                  | parentsOpt: [Parent]
+                  |model Child {
+                  | id         String   @id @default(cuid())
+                  | c          String   @unique
+                  | parentsOpt Parent[]
                   |}
                   |
-                  |type StepChild {
-                  | id: ID! @id
-                  | s: String! @unique
-                  | parentOpt: Parent
+                  |model StepChild {
+                  | id        String  @id @default(cuid())
+                  | s         String  @unique
+                  | parentOpt Parent?
                   |}
                 """.stripMargin
 
-      val dm2 = """type Parent {
-                  | id: ID! @id
-                  | p: String! @unique
-                  | childrenOpt: [Child]
-                  | stepChildOpt: StepChild
+      val dm2 = """model Parent {
+                  | id           String  @id @default(cuid())
+                  | p            String  @unique
+                  | childrenOpt  Child[]
+                  | stepChildOpt StepChild?
                   |}
                   |
-                  |type Child {
-                  | id: ID! @id
-                  | c: String! @unique
-                  | parentsOpt: [Parent] @relation(link: INLINE)
+                  |model Child {
+                  | id         String   @id @default(cuid())
+                  | c          String   @unique
+                  | parentsOpt Parent[] @relation(references: [id])
                   |}
                   |
-                  |type StepChild {
-                  | id: ID! @id
-                  | s: String! @unique
-                  | parentOpt: Parent @relation(link: INLINE)
+                  |model StepChild {
+                  | id        String  @id @default(cuid())
+                  | s         String  @unique
+                  | parentOpt Parent? @relation(references: [id])
                   |}
                 """.stripMargin
 
-      val dm3 = """type Parent {
-                  | id: ID! @id
-                  | p: String! @unique
-                  | childrenOpt: [Child]
-                  | stepChildOpt: StepChild
+      val dm3 = """model Parent {
+                  | id           String     @id @default(cuid())
+                  | p            String     @unique
+                  | childrenOpt  Child[]
+                  | stepChildOpt StepChild?
                   |}
                   |
-                  |type Child {
-                  | id: ID! @id
-                  | c: String! @unique
-                  | parentsOpt: [Parent]
+                  |model Child {
+                  | id         String @id @default(cuid())
+                  | c          String @unique
+                  | parentsOpt Parent[]
                   |}
                   |
-                  |type StepChild {
-                  | id: ID! @id
-                  | s: String! @unique
-                  | parentOpt: Parent @relation(link: INLINE)
+                  |model StepChild {
+                  | id        String  @id @default(cuid())
+                  | s         String  @unique
+                  | parentOpt Parent? @relation(references: [id])
                   |}
                 """.stripMargin
 
-      val dm4 = """type Parent {
-                  | id: ID! @id
-                  | p: String! @unique
-                  | childrenOpt: [Child]
-                  | stepChildOpt: StepChild @relation(link: INLINE)
+      val dm4 = """model Parent {
+                  | id           String    @id @default(cuid())
+                  | p            String     @unique
+                  | childrenOpt  Child[]
+                  | stepChildOpt StepChild? @relation(references: [id])
                   |}
                   |
-                  |type Child {
-                  | id: ID! @id
-                  | c: String! @unique
-                  | parentsOpt: [Parent]
+                  |model Child {
+                  | id         String   @id @default(cuid())
+                  | c          String   @unique
+                  | parentsOpt Parent[]
                   |}
                   |
-                  |type StepChild {
-                  | id: ID! @id
-                  | s: String! @unique
-                  | parentOpt: Parent
+                  |model StepChild {
+                  | id        String  @id @default(cuid())
+                  | s         String  @unique
+                  | parentOpt Parent?
                   |}
                 """.stripMargin
 

@@ -8,131 +8,125 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability, ScalarListsCapability)
   //region top level upserts
 
-  val scalarListStrategy = if (capabilities.has(NonEmbeddedScalarListCapability)) {
-    "@scalarList(strategy: RELATION)"
-  } else {
-    ""
-  }
-
   val dmP1ToC1 = {
-    val dm1 = s"""type List{
-                 |   id: ID! @id
-                 |   uList: String @unique
-                 |   listInts: [Int] $scalarListStrategy
-                 |   todo: Todo @relation(link: INLINE)
+    val dm1 = s"""model List{
+                 |   id String @id @default(cuid())
+                 |   uList String? @unique
+                 |   listInts Int[] $scalarListDirective
+                 |   todo Todo? @relation(references: [id])
                  |}
                  |
-                 |type Todo{
-                 |   id: ID! @id
-                 |   uTodo: String @unique
-                 |   todoInts: [Int] $scalarListStrategy
-                 |   list: List
+                 |model Todo{
+                 |   id String @id @default(cuid())
+                 |   uTodo String? @unique
+                 |   todoInts Int[] $scalarListDirective
+                 |   list List?
                  |}"""
 
-    val dm2 = s"""type List{
-                 |   id: ID! @id
-                 |   uList: String @unique
-                 |   listInts: [Int] $scalarListStrategy
-                 |   todo: Todo
+    val dm2 = s"""model List{
+                 |   id String @id @default(cuid())
+                 |   uList String? @unique
+                 |   listInts Int[] $scalarListDirective
+                 |   todo Todo?
                  |}
                  |
-                 |type Todo{
-                 |   id: ID! @id
-                 |   uTodo: String @unique
-                 |   todoInts: [Int] $scalarListStrategy
-                 |   list: List @relation(link: INLINE)
+                 |model Todo{
+                 |   id String @id @default(cuid())
+                 |   uTodo String? @unique
+                 |   todoInts Int[] $scalarListDirective
+                 |   list List? @relation(references: [id])
                  |}"""
 
     TestDataModels(mongo = Vector(dm1, dm2), sql = Vector(dm1, dm2))
   }
 
   val dmPMToCM = {
-    val dm1 = s"""type List{
-                     id: ID! @id
-                     uList: String @unique
-                     listInts: [Int] $scalarListStrategy
-                     todoes: [Todo] @relation(link: INLINE)
+    val dm1 = s"""model List{
+                     id String @id @default(cuid())
+                     uList String? @unique
+                     listInts Int[] $scalarListDirective
+                     todoes Todo[] @relation(references: [id])
                   }
 
-                  type Todo{
-                     id: ID! @id
-                     uTodo: String @unique
-                     todoInts: [Int] $scalarListStrategy
-                     lists: [List]
+                  model Todo{
+                     id String @id @default(cuid())
+                     uTodo String? @unique
+                     todoInts Int[] $scalarListDirective
+                     lists List[]
                   }"""
 
-    val dm2 = s"""type List{
-                     id: ID! @id
-                     uList: String @unique
-                     listInts: [Int] $scalarListStrategy
-                     todoes: [Todo]
+    val dm2 = s"""model List{
+                     id String @id @default(cuid())
+                     uList String? @unique
+                     listInts Int[] $scalarListDirective
+                     todoes Todo[]
                   }
 
-                  type Todo{
-                     id: ID! @id
-                     uTodo: String @unique
-                     todoInts: [Int] $scalarListStrategy
-                     lists: [List] @relation(link: INLINE)
+                  model Todo{
+                     id String @id @default(cuid())
+                     uTodo String? @unique
+                     todoInts Int[] $scalarListDirective
+                     lists List[] @relation(references: [id])
                   }"""
 
-    val dm3 = s"""type List{
-                     id: ID! @id
-                     uList: String @unique
-                     listInts: [Int] $scalarListStrategy
-                     todoes: [Todo]
+    val dm3 = s"""model List{
+                     id String @id @default(cuid())
+                     uList String? @unique
+                     listInts Int[] $scalarListDirective
+                     todoes Todo[]
                   }
 
-                  type Todo{
-                     id: ID! @id
-                     uTodo: String @unique
-                     todoInts: [Int] $scalarListStrategy
-                     lists: [List]
+                  model Todo{
+                     id String @id @default(cuid())
+                     uTodo String? @unique
+                     todoInts Int[] $scalarListDirective
+                     lists List[]
                   }"""
 
     TestDataModels(mongo = Vector(dm1, dm2), sql = Vector(dm3))
   }
 
   val dmPMToC1 = {
-    val dm1 = s"""type List{
-                     id: ID! @id
-                     uList: String @unique
-                     listInts: [Int] $scalarListStrategy
-                     todoes: [Todo] @relation(link: INLINE)
+    val dm1 = s"""model List{
+                     id String @id @default(cuid())
+                     uList String? @unique
+                     listInts Int[] $scalarListDirective
+                     todoes Todo[] @relation(references: [id])
                   }
 
-                  type Todo{
-                     id: ID! @id
-                     uTodo: String @unique
-                     todoInts: [Int] $scalarListStrategy
-                     list: List
+                  model Todo{
+                     id String @id @default(cuid())
+                     uTodo String? @unique
+                     todoInts Int[] $scalarListDirective
+                     list List?
                   }"""
 
-    val dm2 = s"""type List{
-                     id: ID! @id
-                     uList: String @unique
-                     listInts: [Int] $scalarListStrategy
-                     todoes: [Todo]
+    val dm2 = s"""model List{
+                     id String @id @default(cuid())
+                     uList String? @unique
+                     listInts Int[] $scalarListDirective
+                     todoes Todo[]
                   }
 
-                  type Todo{
-                     id: ID! @id
-                     uTodo: String @unique
-                     todoInts: [Int] $scalarListStrategy
-                     list: List @relation(link: INLINE)
+                  model Todo{
+                     id String @id @default(cuid())
+                     uTodo String? @unique
+                     todoInts Int[] $scalarListDirective
+                     list List? @relation(references: [id])
                   }"""
 
-    val dm3 = s"""type List{
-                     id: ID! @id
-                     uList: String @unique
-                     listInts: [Int] $scalarListStrategy
-                     todoes: [Todo]
+    val dm3 = s"""model List{
+                     id String @id @default(cuid())
+                     uList String? @unique
+                     listInts Int[] $scalarListDirective
+                     todoes Todo[]
                   }
 
-                  type Todo{
-                     id: ID! @id
-                     uTodo: String @unique
-                     todoInts: [Int] $scalarListStrategy
-                     list: List
+                  model Todo{
+                     id String @id @default(cuid())
+                     uTodo String? @unique
+                     todoInts Int[] $scalarListDirective
+                     list List?
                   }"""
 
     TestDataModels(mongo = Vector(dm1, dm2), sql = Vector(dm3))

@@ -16,16 +16,16 @@ class NonEmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSp
   "A nested delete  mutation" should "also delete ListTable entries" in {
 
     val project: Project = SchemaDsl.fromStringV11() {
-      s"""type Top {
-        | id: ID! @id
-        | name: String! @unique
-        | bottom: Bottom @relation(link: INLINE)
+      s"""model Top {
+        | id     String  @id @default(cuid())
+        | name   String  @unique
+        | bottom Bottom? @relation(references: [id])
         |}
         |
-        |type Bottom {
-        | id: ID! @id
-        | name: String! @unique
-        | list: [Int] $scalarListStrategy
+        |model Bottom {
+        | id   String @id @default(cuid())
+        | name String @unique
+        | list Int[]  $scalarListStrategy
         |}"""
     }
 
@@ -52,17 +52,17 @@ class NonEmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSp
   "A cascading delete  mutation" should "also delete ListTable entries" taggedAs (IgnoreMongo, IgnoreSQLite, IgnorePostgres, IgnoreMySql) in { // TODO: Remove ignore when cascading again
 
     val project: Project = SchemaDsl.fromStringV11() {
-      s"""type Top {
-        | id: ID! @id
-        | name: String! @unique
-        | bottom: Bottom @relation(name: "Test", onDelete: CASCADE, link: INLINE)
+      s"""model Top {
+        |  id     String  @id @default(cuid())
+        |  name   String  @unique
+        |  bottom Bottom? @relation(name: "Test", onDelete: CASCADE, references: [id])
         |}
         |
-        |type Bottom {
-        | id: ID! @id
-        | name: String! @unique
-        | list: [Int] $scalarListStrategy
-        | top: Top! @relation(name: "Test")
+        |model Bottom {
+        |  id   String @id @default(cuid())
+        |  name String @unique
+        |  list Int[]  $scalarListStrategy
+        |  top  Top    @relation(name: "Test")
         |}"""
     }
 

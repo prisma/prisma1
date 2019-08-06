@@ -10,16 +10,16 @@ class NonEmbeddedSettingNodeSelectorToNullSpec extends FlatSpec with Matchers wi
   "Setting a where value to null " should "should only update one if there are several nulls for the specified node selector" in {
     val project = SchemaDsl.fromStringV11() {
       """
-        |type A {
-        |  id: ID! @id
-        |  b: String @unique
-        |  key: String! @unique
-        |  c: C @relation(link: INLINE)
+        |model A {
+        |  id  String  @id @default(cuid())
+        |  b   String? @unique
+        |  key String  @unique
+        |  c   C?      @relation(references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
-        |  c: String
+        |model C {
+        |  id String  @id @default(cuid())
+        |  c  String?
         |}
       """
     }

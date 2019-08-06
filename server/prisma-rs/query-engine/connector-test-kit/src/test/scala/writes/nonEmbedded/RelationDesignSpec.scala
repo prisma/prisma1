@@ -9,16 +9,16 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   val schema =
-    """type List{
-        |   id: ID! @id
-        |   uList: String @unique
-        |   todo: Todo @relation(link: INLINE)
+    """model List{
+        |   id    String  @id @default(cuid())
+        |   uList String? @unique
+        |   todo  Todo?   @relation(references: [id])
         |}
         |
-        |type Todo{
-        |   id: ID! @id
-        |   uTodo: String @unique
-        |   list: List
+        |model Todo{
+        |   id    String  @id @default(cuid())
+        |   uTodo String? @unique
+        |   list  List?
         |}"""
 
   val project = SchemaDsl.fromStringV11() { schema }

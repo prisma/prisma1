@@ -9,28 +9,28 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "One2One relations" should "only allow one item per side" in {
     val dms = {
-      val dm1 = """type Owner{
-                     id: ID! @id
-                     ownerName: String @unique
-                     cat: Cat @relation(link: INLINE)
+      val dm1 = """model Owner{
+                     id        String  @id @default(cuid())
+                     ownerName String? @unique
+                     cat       Cat?    @relation(references: [id])
                   }
                   
-                  type Cat{
-                     id: ID! @id
-                     catName: String @unique
-                     owner: Owner
+                  model Cat{
+                     id       String  @id @default(cuid())
+                     catName  String? @unique
+                     owner    Owner?
                   }"""
 
-      val dm2 = """type Owner{
-                     id: ID! @id
-                     ownerName: String @unique
-                     cat: Cat
+      val dm2 = """model Owner{
+                     id        String  @id @default(cuid())
+                     ownerName String? @unique
+                     cat       Cat?
                   }
                   
-                  type Cat{
-                     id: ID! @id
-                     catName: String @unique
-                     owner: Owner @relation(link: INLINE)
+                  model Cat{
+                     id      String  @id @default(cuid())
+                     catName String? @unique
+                     owner   Owner?  @relation(references: [id])
                   }"""
 
       TestDataModels(mongo = Vector(dm1, dm2), sql = Vector(dm1, dm2))
@@ -90,28 +90,28 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
   //Fixme this tests transactionality as well
   "Required One2One relations" should "throw an error if an update would leave one item without a partner" taggedAs (IgnoreMongo, IgnoreSQLite) in { // TODO: Remove when transactions are back
     val dms = {
-      val dm1 = """type Owner{
-                     id: ID! @id
+      val dm1 = """model Owner{
+                     id String @id @default(cuid())
                      ownerName: String @unique
-                     cat: Cat! @relation(link: INLINE)
+                     cat: Cat! @relation(references: [id])
                   }
 
-                  type Cat{
-                     id: ID! @id
+                  model Cat{
+                     id String @id @default(cuid())
                      catName: String @unique
                      owner: Owner!
                   }"""
 
-      val dm2 = """type Owner{
-                     id: ID! @id
+      val dm2 = """model Owner{
+                     id String @id @default(cuid())
                      ownerName: String @unique
                      cat: Cat!
                   }
 
-                  type Cat{
-                     id: ID! @id
+                  model Cat{
+                     id String @id @default(cuid())
                      catName: String @unique
-                     owner: Owner! @relation(link: INLINE)
+                     owner: Owner! @relation(references: [id])
                   }"""
 
       TestDataModels(mongo = Vector(dm1, dm2), sql = Vector(dm1, dm2))

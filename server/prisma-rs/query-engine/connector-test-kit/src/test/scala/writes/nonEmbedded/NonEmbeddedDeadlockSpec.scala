@@ -70,10 +70,10 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
     }
     val project = SchemaDsl.fromStringV11() {
       s"""
-        |type Todo {
-        |   id: ID! @id
-        |   a: String
-        |   tags: [String] $scalarListStrategy
+        |model Todo {
+        |   id   String @id @default(cuid())
+        |   a    String?
+        |   tags String[] $scalarListStrategy
         |}
         """
     }
@@ -234,58 +234,58 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
 
   val testDataModels = {
     val dm1 = """
-        type Todo {
-           id: ID! @id
-           a: String
-           comments: [Comment] @relation(link: INLINE)
+        model Todo {
+           id String @id @default(cuid())
+           a String?
+           comments Comment[] @relation(references: [id])
         }
         
-        type Comment {
-           id: ID! @id
-           text: String
-           todo: Todo
+        model Comment {
+           id String @id @default(cuid())
+           text String?
+           todo Todo?
         }
       """
 
     val dm2 = """
-        type Todo {
-           id: ID! @id
-           a: String
-           comments: [Comment]
+        model Todo {
+           id String @id @default(cuid())
+           a String?
+           comments Comment[]
         }
         
-        type Comment {
-           id: ID! @id
-           text: String
-           todo: Todo @relation(link: INLINE)
+        model Comment {
+           id String @id @default(cuid())
+           text String?
+           todo Todo? @relation(references: [id])
         }
       """
 
     val dm3 = """
-        type Todo {
-           id: ID! @id
-           a: String
-           comments: [Comment]
+        model Todo {
+           id String @id @default(cuid())
+           a String?
+           comments Comment[]
         }
         
-        type Comment {
-           id: ID! @id
-           text: String
-           todo: Todo
+        model Comment {
+           id String @id @default(cuid())
+           text String?
+           todo Todo?
         }
       """
 
     val dm4 = """
-        type Todo {
-           id: ID! @id
-           a: String
-           comments: [Comment] @relation(link: TABLE)
+        model Todo {
+           id String @id @default(cuid())
+           a String?
+           comments Comment[] @relation(link: TABLE)
         }
         
-        type Comment {
-           id: ID! @id
-           text: String
-           todo: Todo
+        model Comment {
+           id String @id @default(cuid())
+           text String?
+           todo Todo?
         }
       """
 

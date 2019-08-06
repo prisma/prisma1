@@ -10,15 +10,15 @@ class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with Ap
   "Nested Updates" should "work for models with missing backrelations " in {
     val project = SchemaDsl.fromStringV11() {
       """
-        |type Owner {
-        |  id: ID! @id
-        |  ownerName: String! @unique
-        |  cat: Cat @relation(link: INLINE)
+        |model Owner {
+        |  id        String @id @default(cuid())
+        |  ownerName String @unique
+        |  cat       Cat    @relation(references: [id])
         |}
         |
-        |type Cat {
-        |  id: ID! @id
-        |  catName: String! @unique
+        |model Cat {
+        |  id      String @id @default(cuid())
+        |  catName String @unique
         |}
         |
       """.stripMargin
@@ -54,15 +54,15 @@ class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with Ap
   "Nested Upsert" should "work for models with missing backrelations for update " in {
     val project = SchemaDsl.fromStringV11() {
       s"""
-        |type Owner {
-        |  id: ID! @id
-        |  ownerName: String! @unique
-        |  cats: [Cat] $listInlineDirective
+        |model Owner {
+        |  id        String @id @default(cuid())
+        |  ownerName String @unique
+        |  cats      Cat[]  $listInlineDirective
         |}
         |
-        |type Cat {
-        |  id: ID! @id
-        |  catName: String! @unique
+        |model Cat {
+        |  id      String @id @default(cuid())
+        |  catName String @unique
         |}
         |
       """.stripMargin
@@ -103,15 +103,15 @@ class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with Ap
   "Nested Upsert" should "work for models with missing backrelations for create" in {
     val project = SchemaDsl.fromStringV11() {
       s"""
-        |type Owner {
-        |  id: ID! @id
-        |  ownerName: String! @unique
-        |  cats: [Cat] $listInlineDirective
+        |model Owner {
+        |  id        String @id @default(cuid())
+        |  ownerName String @unique
+        |  cats      Cat[]  $listInlineDirective
         |}
         |
-        |type Cat {
-        |  id: ID! @id
-        |  catName: String! @unique
+        |model Cat {
+        |  id      String @id @default(cuid())
+        |  catName String @unique
         |}
         |
       """.stripMargin

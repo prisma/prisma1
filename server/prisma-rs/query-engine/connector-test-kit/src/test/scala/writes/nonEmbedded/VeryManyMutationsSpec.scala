@@ -14,15 +14,15 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
   "The delete many Mutation" should "delete the items matching the where clause" in {
     val project: Project = SchemaDsl.fromStringV11() {
       s"""
-      |type Top {
-      |   id: ID! @id
-      |   int: Int!
-      |   middles:[Middle] $listInlineDirective
+      |model Top {
+      |   id      String   @id @default(cuid())
+      |   int     Int
+      |   middles Middle[] $listInlineDirective
       |}
       |
-      |type Middle {
-      |   id: ID! @id
-      |   int: Int!
+      |model Middle {
+      |   id  String @id @default(cuid())
+      |   int Int
       |}
     """
     }
@@ -94,23 +94,23 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val project: Project = SchemaDsl.fromStringV11() {
       s"""
-        |type Top {
-        |   id: ID! @id
-        |   int: Int @unique
-        |   middles:[Middle] @relation(name: "TopToMiddle", onDelete: CASCADE, $listInlineArgument)
+        |model Top {
+        |   id      String   @id @default(cuid())
+        |   int     Int      @unique
+        |   middles Middle[] @relation(name: "TopToMiddle", onDelete: CASCADE, $listInlineArgument)
         |}
         |
-        |type Middle {
-        |   id: ID! @id
-        |   int: Int! @unique
-        |   top: Top @relation(name: "TopToMiddle")
-        |   bottom: [Bottom] @relation(name: "MiddleToBottom", onDelete: CASCADE, $listInlineArgument)
+        |model Middle {
+        |   id     String   @id @default(cuid())
+        |   int    Int      @unique
+        |   top    Top?     @relation(name: "TopToMiddle")
+        |   bottom Bottom[] @relation(name: "MiddleToBottom", onDelete: CASCADE, $listInlineArgument)
         |}
         |
-        |type Bottom {
-        |   id: ID! @id
-        |   middle: Middle @relation(name: "MiddleToBottom")
-        |   int: Int!
+        |model Bottom {
+        |   id     String  @id @default(cuid())
+        |   middle Middle? @relation(name: "MiddleToBottom")
+        |   int    Int
         |}
       """
     }
@@ -164,33 +164,33 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val project: Project = SchemaDsl.fromStringV11() {
       s"""
-        |type Top{
-        |   id: ID! @id
-        |   int: Int @unique
-        |   as: [A] @relation(name: "Top" onDelete: CASCADE $listInlineArgument)
+        |model Top{
+        |   id  String @id @default(cuid())
+        |   int Int? @unique
+        |   as  A[]  @relation(name: "Top" onDelete: CASCADE $listInlineArgument)
         |}
         |
-        |type A {
-        |   id: ID! @id
-        |   int: Int @unique
-        |   bs:[B]  @relation(name: "A" onDelete: CASCADE $listInlineArgument)
+        |model A {
+        |   id  String @id @default(cuid())
+        |   int Int?   @unique
+        |   bs  B[]    @relation(name: "A" onDelete: CASCADE $listInlineArgument)
         |}
         |
-        |type B {
-        |   id: ID! @id
-        |   int: Int
-        |   cs: [C] @relation(name: "B" onDelete: CASCADE $listInlineArgument)
+        |model B {
+        |   id  String @id @default(cuid())
+        |   int Int?
+        |   cs  C[]    @relation(name: "B" onDelete: CASCADE $listInlineArgument)
         |}
         |
-        |type C {
-        |   id: ID! @id
-        |   int: Int
-        |   ds: [D] @relation(name: "C" onDelete: CASCADE $listInlineArgument)
+        |model C {
+        |   id  String @id @default(cuid())
+        |   int Int?
+        |   ds  D[]    @relation(name: "C" onDelete: CASCADE $listInlineArgument)
         |}
         |
-        |type D {
-        |   id: ID! @id
-        |   int: Int
+        |model D {
+        |   id  String @id @default(cuid())
+        |   int Int?
         |}
       """
     }

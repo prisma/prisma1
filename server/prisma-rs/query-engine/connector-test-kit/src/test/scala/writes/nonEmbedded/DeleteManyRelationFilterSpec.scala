@@ -8,23 +8,23 @@ class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBa
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   val schema =
-    """type Top{
-      |   id: ID! @id
-      |   top: String!
-      |   bottom: Bottom @relation(link: INLINE)
+    """model Top{
+      |   id     String  @id @default(cuid())
+      |   top    String
+      |   bottom Bottom? @relation(references: [id])
       |}
       |
-      |type Bottom{
-      |   id: ID! @id
-      |   bottom: String!
-      |   top: Top
-      |   veryBottom: VeryBottom @relation(link: INLINE)
+      |model Bottom{
+      |   id         String @id @default(cuid())
+      |   bottom     String
+      |   top        Top?
+      |   veryBottom VeryBottom? @relation(references: [id])
       |}
       |
-      |type VeryBottom{
-      |   id: ID! @id
-      |   veryBottom: String!
-      |   bottom: Bottom
+      |model VeryBottom{
+      |   id         String @id @default(cuid())
+      |   veryBottom String
+      |   bottom     Bottom?
       |}""".stripMargin
 
   lazy val project: Project = SchemaDsl.fromStringV11() { schema }

@@ -8,74 +8,74 @@ class NonEmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBas
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
   //region top level upserts
 
-  val dmP1ToC1 = """type List{
-        |   id: ID! @id
-        |   uList: String @unique
-        |   todo: Todo @relation(link: INLINE)
+  val dmP1ToC1 = """model List{
+        |   id    String  @id @default(cuid())
+        |   uList String? @unique
+        |   todo  Todo?   @relation(references: [id])
         |}
         |
-        |type Todo{
-        |   id: ID! @id
-        |   uTodo: String @unique
-        |   list: List
+        |model Todo{
+        |   id    String  @id @default(cuid())
+        |   uTodo String? @unique
+        |   list  List?
         |}"""
 
   val dmPMToCm = {
-    val dm1 = """type List{
-                   id: ID! @id
-                   uList: String @unique
-                   todoes: [Todo] @relation(link: INLINE)
+    val dm1 = """model List{
+                   id String @id @default(cuid())
+                   uList String? @unique
+                   todoes Todo[] @relation(references: [id])
                 }
 
-                type Todo{
-                   id: ID! @id
-                   uTodo: String @unique
-                   lists: [List]
-                   tags: [Tag] @relation(link: INLINE)
+                model Todo{
+                   id String @id @default(cuid())
+                   uTodo String? @unique
+                   lists List[]
+                   tags Tag[] @relation(references: [id])
                 }
 
-                type Tag{
-                   id: ID! @id
-                   uTag: String @unique
-                   todoes: [Todo]
+                model Tag{
+                   id String @id @default(cuid())
+                   uTag String @unique
+                   todoes Todo[]
                 }"""
 
-    val dm2 = """type List{
-                   id: ID! @id
-                   uList: String @unique
-                   todoes: [Todo]
+    val dm2 = """model List{
+                   id String @id @default(cuid())
+                   uList String? @unique
+                   todoes Todo[]
                 }
 
-                type Todo{
-                   id: ID! @id
-                   uTodo: String @unique
-                   lists: [List] @relation(link: INLINE)
-                   tags: [Tag]
+                model Todo{
+                   id String @id @default(cuid())
+                   uTodo String? @unique
+                   lists List[] @relation(references: [id])
+                   tags Tag[]
                 }
 
-                type Tag{
-                   id: ID! @id
-                   uTag: String @unique
-                   todoes: [Todo] @relation(link: INLINE)
+                model Tag{
+                   id String @id @default(cuid())
+                   uTag String @unique
+                   todoes Todo[] @relation(references: [id])
                 }"""
 
-    val dm3 = """type List{
-                   id: ID! @id
-                   uList: String @unique
-                   todoes: [Todo]
+    val dm3 = """model List{
+                   id String @id @default(cuid())
+                   uList String? @unique
+                   todoes Todo[]
                 }
 
-                type Todo{
-                   id: ID! @id
-                   uTodo: String @unique
-                   lists: [List]
-                   tags: [Tag]
+                model Todo{
+                   id String @id @default(cuid())
+                   uTodo String? @unique
+                   lists List[]
+                   tags Tag[]
                 }
 
-                type Tag{
-                   id: ID! @id
-                   uTag: String @unique
-                   todoes: [Todo]
+                model Tag{
+                   id String @id @default(cuid())
+                   uTag String @unique
+                   todoes Todo[]
                 }"""
 
     TestDataModels(mongo = Vector(dm1, dm2), sql = Vector(dm3))

@@ -8,18 +8,18 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   val project = SchemaDsl.fromStringV11() {
-    s"""type Note{
-      |   id: ID! @id
-      |   outerString: String!
-      |   outerDateTime: DateTime! @unique
-      |   todos: [Todo] $listInlineDirective
+    s"""model Note{
+      |   id            String   @id @default(cuid())
+      |   outerString   String
+      |   outerDateTime DateTime @unique
+      |   todos         Todo[]   $listInlineDirective
       |}
       |
-      |type Todo{
-      |   id: ID! @id
-      |   innerString: String!
-      |   innerDateTime: DateTime! @unique
-      |   notes: [Note]
+      |model Todo{
+      |   id            String   @id @default(cuid())
+      |   innerString   String
+      |   innerDateTime DateTime @unique
+      |   notes         Note[]
       |}"""
   }
 

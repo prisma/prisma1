@@ -9,20 +9,20 @@ class NonEmbeddedUpdatedAtShouldChangeSpec extends FlatSpec with Matchers with A
 
   val project = SchemaDsl.fromStringV11() {
 
-    """type Top {
-      |  id: ID! @id
-      |  top: String! @unique
-      |  bottom: Bottom @relation(link: INLINE)
-      |  createdAt: DateTime! @createdAt
-      |  updatedAt: DateTime! @updatedAt
+    """model Top {
+      |  id        String   @id @default(cuid())
+      |  top       String   @unique
+      |  bottom    Bottom?  @relation(references: [id])
+      |  createdAt DateTime @default(now())
+      |  updatedAt DateTime @updatedAt
       |}
       |
-      |type Bottom {
-      |  id: ID! @id
-      |  bottom: String! @unique
-      |  top: Top
-      |  createdAt: DateTime! @createdAt
-      |  updatedAt: DateTime! @updatedAt
+      |model Bottom {
+      |  id        String   @id @default(cuid())
+      |  bottom    String   @unique
+      |  top       Top?
+      |  createdAt DateTime @default(now())
+      |  updatedAt DateTime @updatedAt
       |}
       |"""
   }

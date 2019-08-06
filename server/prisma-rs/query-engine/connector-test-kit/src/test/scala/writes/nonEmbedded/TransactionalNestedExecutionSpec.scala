@@ -16,18 +16,18 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
   //Test the parsing of the exception for different datatypes -> DateTime, Json problematic
   def projectFn(tpe: String) = SchemaDsl.fromStringV11() {
     s"""
-        |type Todo {
-        |  id: ID! @id
-        |  innerString: String!
-        |  innerUnique: $tpe @unique
-        |  notes: [Note]
+        |model Todo {
+        |  id          String @id @default(cuid())
+        |  innerString String
+        |  innerUnique $tpe?  @unique
+        |  notes       Note[]
         |}
         |
-        |type Note {
-        |  id: ID! @id
-        |  outerString: String
-        |  outerUnique: $tpe @unique
-        |  todos: [Todo]
+        |model Note {
+        |  id          String @id @default(cuid())
+        |  outerString String
+        |  outerUnique $tpe?  @unique
+        |  todos       Todo[]
         |}
         |
         |enum SomeEnum {
@@ -104,7 +104,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhere        = """"Some False ID""""
     val falseWhereInError = "Some False ID"
 
-    val project = projectFn("ID")
+    val project = projectFn("String")
     database.setup(project)
 
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
@@ -134,18 +134,6 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
-  "a many to many relation" should "fail gracefully on wrong JSON where and assign error correctly and not execute partially" in {
-    val outerWhere        = """"{\"a\":\"a\"}""""
-    val innerWhere        = """"{\"a\":\"b\"}""""
-    val falseWhere        = """"{\"a\":\"c\"}""""
-    val falseWhereInError = """{\"a\":\"c\"}"""
-
-    val project = projectFn("Json")
-    database.setup(project)
-
-    verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
-  }
-
   "a many2many relation" should "fail gracefully on wrong GRAPHQLID for multiple nested wheres" in {
     val outerWhere         = """"Some Outer ID""""
     val innerWhere         = """"Some Inner ID""""
@@ -155,7 +143,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhereInError  = "Some False ID"
     val falseWhereInError2 = "Some False ID2"
 
-    val project = projectFn("ID")
+    val project = projectFn("String")
     database.setup(project)
 
     val createResult = server.query(
@@ -240,7 +228,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val innerWhere  = """"Some Inner ID""""
     val innerWhere2 = """"Some Inner ID2""""
 
-    val project = projectFn("ID")
+    val project = projectFn("String")
     database.setup(project)
 
     server.query(
