@@ -1,15 +1,15 @@
 #![allow(non_snake_case)]
 mod test_harness;
 use barrel::{types, Migration, SqlVariant};
-use migration_core::MigrationEngine;
+use migration_core::api::GenericApi;
 use sql_migration_connector::SqlFamily;
-use sql_migration_connector::{database_inspector::*, migration_database::MigrationDatabase};
+use sql_migration_connector::{database_inspector::*, migration_database::MigrationDatabase, SqlMigrationConnector};
 use std::sync::Arc;
 use test_harness::*;
 
 #[test]
 fn adding_a_model_for_an_existing_table_must_work() {
-    test_each_backend(|engine, barrel| {
+    test_each_backend(|api, barrel| {
         let initial_result = barrel.execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
@@ -20,7 +20,7 @@ fn adding_a_model_for_an_existing_table_must_work() {
                 id Int @id
             }
         "#;
-        let result = infer_and_apply(&engine, &dm);
+        let result = infer_and_apply(api, &dm);
         assert_eq!(initial_result, result);
     });
 }
@@ -32,7 +32,7 @@ fn bigint_columns_must_work() {
 
 #[test]
 fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
-    test_each_backend(|engine, barrel| {
+    test_each_backend(|api, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
@@ -42,7 +42,7 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
                 id Int @id
             }
         "#;
-        let initial_result = infer_and_apply(&engine, &dm1);
+        let initial_result = infer_and_apply(api, &dm1);
         assert!(initial_result.has_table("Post"));
 
         let result = barrel.execute(|migration| {
@@ -55,14 +55,14 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
                 id Int @id
             }
         "#;
-        let final_result = infer_and_apply(&engine, &dm2);
+        let final_result = infer_and_apply(api, &dm2);
         assert_eq!(result, final_result);
     });
 }
 
 #[test]
 fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
-    test_each_backend(|engine, barrel| {
+    test_each_backend(|api, barrel| {
         let initial_result = barrel.execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
@@ -75,14 +75,14 @@ fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
                 title String
             }
         "#;
-        let result = infer_and_apply(&engine, &dm);
+        let result = infer_and_apply(api, &dm);
         assert_eq!(initial_result, result);
     });
 }
 
 #[test]
 fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
-    test_each_backend(|engine, barrel| {
+    test_each_backend(|api, barrel| {
         let initial_result = barrel.execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
@@ -99,7 +99,7 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
                 title String @unique
             }
         "#;
-        let result = infer_and_apply(&engine, &dm);
+        let result = infer_and_apply(api, &dm);
         let column = result.table_bang("Blog").column_bang("title");
         assert_eq!(column.tpe, ColumnType::String);
         assert_eq!(column.is_required, true);
@@ -109,7 +109,7 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
 
 #[test]
 fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional() {
-    test_each_backend(|engine, barrel| {
+    test_each_backend(|api, barrel| {
         let initial_result = barrel.execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
@@ -125,7 +125,7 @@ fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional
                 title String?
             }
         "#;
-        let result = infer_and_apply(&engine, &dm);
+        let result = infer_and_apply(api, &dm);
         let column = result.table_bang("Blog").column_bang("title");
         assert_eq!(column.is_required, false);
     });
@@ -133,13 +133,13 @@ fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional
 
 #[test]
 fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
-    test_each_backend(|engine, barrel| {
+    test_each_backend(|api, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
             }
         "#;
-        let initial_result = infer_and_apply(&engine, &dm1);
+        let initial_result = infer_and_apply(api, &dm1);
         assert!(!initial_result.has_table("Blog_tags"));
 
         let result = barrel.execute(|migration| {
@@ -157,7 +157,7 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
                 tags String[]
             }
         "#;
-        let final_result = infer_and_apply(&engine, &dm2);
+        let final_result = infer_and_apply(api, &dm2);
         // TODO: this assertion fails because of an odering problem within the tables :shrug:
         //assert_eq!(result, final_result);
     });
@@ -165,14 +165,14 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
 
 #[test]
 fn delete_a_field_for_a_non_existent_column_must_work() {
-    test_each_backend(|engine, barrel| {
+    test_each_backend(|api, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
                 title String
             }
         "#;
-        let initial_result = infer_and_apply(&engine, &dm1);
+        let initial_result = infer_and_apply(api, &dm1);
         assert_eq!(initial_result.table_bang("Blog").column("title").is_some(), true);
 
         let result = barrel.execute(|migration| {
@@ -189,21 +189,21 @@ fn delete_a_field_for_a_non_existent_column_must_work() {
                 id Int @id
             }
         "#;
-        let final_result = infer_and_apply(&engine, &dm2);
+        let final_result = infer_and_apply(api, &dm2);
         assert_eq!(result, final_result);
     });
 }
 
 #[test]
 fn deleting_a_scalar_list_field_for_a_non_existent_list_table_must_work() {
-    test_each_backend(|engine, barrel| {
+    test_each_backend(|api, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
                 tags String[]
             }
         "#;
-        let initial_result = infer_and_apply(&engine, &dm1);
+        let initial_result = infer_and_apply(api, &dm1);
         assert!(initial_result.has_table("Blog_tags"));
 
         let result = barrel.execute(|migration| {
@@ -216,21 +216,21 @@ fn deleting_a_scalar_list_field_for_a_non_existent_list_table_must_work() {
                 id Int @id
             }
         "#;
-        let final_result = infer_and_apply(&engine, &dm2);
+        let final_result = infer_and_apply(api, &dm2);
         assert_eq!(result, final_result);
     });
 }
 
 #[test]
 fn updating_a_field_for_a_non_existent_column() {
-    test_each_backend(|engine, barrel| {
+    test_each_backend(|api, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
                 title String
             }
         "#;
-        let initial_result = infer_and_apply(&engine, &dm1);
+        let initial_result = infer_and_apply(api, &dm1);
         let initial_column = initial_result.table_bang("Blog").column_bang("title");
         assert_eq!(initial_column.tpe, ColumnType::String);
 
@@ -249,7 +249,7 @@ fn updating_a_field_for_a_non_existent_column() {
                 title Int @unique
             }
         "#;
-        let final_result = infer_and_apply(&engine, &dm2);
+        let final_result = infer_and_apply(api, &dm2);
         let final_column = final_result.table_bang("Blog").column_bang("title");
         assert_eq!(final_column.tpe, ColumnType::Int);
         // TODO: assert uniqueness
@@ -258,14 +258,14 @@ fn updating_a_field_for_a_non_existent_column() {
 
 #[test]
 fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
-    test_each_backend(|engine, barrel| {
+    test_each_backend(|api, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
                 title String
             }
         "#;
-        let initial_result = infer_and_apply(&engine, &dm1);
+        let initial_result = infer_and_apply(api, &dm1);
         let initial_column = initial_result.table_bang("Blog").column_bang("title");
         assert_eq!(initial_column.tpe, ColumnType::String);
 
@@ -285,37 +285,43 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
                 title Float @map(name: "new_title")
             }
         "#;
-        let final_result = infer_and_apply(&engine, &dm2);
+
+        let final_result = infer_and_apply(api, &dm2);
         let final_column = final_result.table_bang("Blog").column_bang("new_title");
+
         assert_eq!(final_column.tpe, ColumnType::Float);
         assert_eq!(final_result.table_bang("Blog").column("title").is_some(), false);
         // TODO: assert uniqueness
     })
 }
 
-fn test_each_backend<TestFn>(testFn: TestFn)
+fn test_each_backend<F>(test_fn: F)
 where
-    TestFn: Fn(&MigrationEngine, &BarrelMigrationExecutor) -> () + std::panic::RefUnwindSafe,
+    F: Fn(&dyn GenericApi, &BarrelMigrationExecutor) -> () + std::panic::RefUnwindSafe,
 {
-    test_each_backend_with_ignores(Vec::new(), testFn);
+    test_each_backend_with_ignores(Vec::new(), test_fn);
 }
 
-fn test_each_backend_with_ignores<TestFn>(ignores: Vec<SqlFamily>, testFn: TestFn)
+fn test_each_backend_with_ignores<F>(ignores: Vec<SqlFamily>, test_fn: F)
 where
-    TestFn: Fn(&MigrationEngine, &BarrelMigrationExecutor) -> () + std::panic::RefUnwindSafe,
+    F: Fn(&dyn GenericApi, &BarrelMigrationExecutor) -> () + std::panic::RefUnwindSafe,
 {
     // SQLite
     if !ignores.contains(&SqlFamily::Sqlite) {
         println!("Testing with SQLite now");
         let (inspector, database) = sqlite();
+
         println!("Running the test function now");
-        let engine = test_engine(&sqlite_test_config());
+        let connector = SqlMigrationConnector::sqlite(&sqlite_test_file()).unwrap();
+        let api = test_api(connector);
+
         let barrel_migration_executor = BarrelMigrationExecutor {
             inspector,
             database,
             sql_variant: SqlVariant::Sqlite,
         };
-        testFn(&engine, &barrel_migration_executor);
+
+        test_fn(&api, &barrel_migration_executor);
     } else {
         println!("Ignoring SQLite")
     }
@@ -323,14 +329,18 @@ where
     if !ignores.contains(&SqlFamily::Postgres) {
         println!("Testing with Postgres now");
         let (inspector, database) = postgres();
+
         println!("Running the test function now");
-        let engine = test_engine(&postgres_test_config());
+        let connector = SqlMigrationConnector::postgres(&postgres_url()).unwrap();
+        let api = test_api(connector);
+
         let barrel_migration_executor = BarrelMigrationExecutor {
             inspector,
             database,
             sql_variant: SqlVariant::Pg,
         };
-        testFn(&engine, &barrel_migration_executor);
+
+        test_fn(&api, &barrel_migration_executor);
     } else {
         println!("Ignoring Postgres")
     }

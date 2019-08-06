@@ -4,20 +4,24 @@ use crate::migration_engine::MigrationEngine;
 use datamodel::Datamodel;
 use migration_connector::*;
 
-pub struct CalculateDatabaseStepsCommand {
-    input: CalculateDatabaseStepsInput,
+pub struct CalculateDatabaseStepsCommand<'a> {
+    input: &'a CalculateDatabaseStepsInput,
 }
 
-impl MigrationCommand for CalculateDatabaseStepsCommand {
+impl<'a> MigrationCommand<'a> for CalculateDatabaseStepsCommand<'a> {
     type Input = CalculateDatabaseStepsInput;
     type Output = MigrationStepsResultOutput;
 
-    fn new(input: Self::Input) -> Box<Self> {
+    fn new(input: &'a Self::Input) -> Box<Self> {
         Box::new(CalculateDatabaseStepsCommand { input })
     }
 
-    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
-        println!("{:?}", self.input);
+    fn execute<C, D>(&self, engine: &MigrationEngine<C, D>) -> CommandResult<Self::Output>
+    where
+        C: MigrationConnector<DatabaseMigration = D>,
+        D: DatabaseMigrationMarker + 'static,
+    {
+        debug!("{:?}", self.input);
 
         let connector = engine.connector();
 

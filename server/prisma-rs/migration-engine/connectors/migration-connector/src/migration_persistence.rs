@@ -2,7 +2,7 @@ use crate::steps::*;
 use chrono::{DateTime, Utc};
 use datamodel::Datamodel;
 
-pub trait MigrationPersistence {
+pub trait MigrationPersistence: Send + Sync + 'static {
     fn init(&self);
     fn reset(&self);
 

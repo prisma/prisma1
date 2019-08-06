@@ -13,6 +13,7 @@ members = [
   "libs/datamodel",
   "libs/prisma-inflector",
   "libs/database-introspection",
+  "libs/prisma-common",
 ]
 
 [patch.crates-io]

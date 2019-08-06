@@ -1,6 +1,6 @@
 use crate::*;
 
-pub trait DatabaseMigrationStepApplier<T> {
+pub trait DatabaseMigrationStepApplier<T>: Send + Sync + 'static {
     // applies the step to the database
     // returns true to signal to the caller that there are more steps to apply
     fn apply_step(&self, database_migration: &T, step: usize) -> ConnectorResult<bool>;

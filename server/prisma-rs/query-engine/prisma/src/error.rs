@@ -38,6 +38,15 @@ pub enum PrismaError {
     /// (Feature name, additional error text)
     #[fail(display = "Unsupported feature: {}. {}", _0, _1)]
     UnsupportedFeatureError(&'static str, String),
+
+    #[fail(display = "Error in data model: {}", _0)]
+    DatamodelError(ErrorCollection),
+}
+
+impl From<ErrorCollection> for PrismaError {
+    fn from(e: ErrorCollection) -> Self {
+        PrismaError::DatamodelError(e)
+    }
 }
 
 /// Helps to handle gracefully handle errors as a response.

@@ -1,5 +1,7 @@
 package util
 
+import java.io.{File, PrintWriter}
+
 import org.scalatest.Suite
 
 case class Project(
@@ -20,6 +22,20 @@ case class Project(
 
   val dataModelWithDataSourceConfig = {
     dataSourceConfig + "\n" + dataModel
+  }
+
+  val dataModelPath: String = {
+    val pathName = s"${EnvVars.serverRoot}/db/$id.prisma"
+    val file = new File(pathName)
+    val writer = new PrintWriter(file)
+
+    try {
+      dataModelWithDataSourceConfig.foreach(writer.print)
+    } finally {
+      writer.close()
+    }
+
+    pathName
   }
 }
 

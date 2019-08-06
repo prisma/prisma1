@@ -4,20 +4,25 @@ use crate::migration_engine::MigrationEngine;
 use datamodel::Datamodel;
 use migration_connector::*;
 
-pub struct ApplyMigrationCommand {
-    input: ApplyMigrationInput,
+pub struct ApplyMigrationCommand<'a> {
+    input: &'a ApplyMigrationInput,
 }
 
-impl MigrationCommand for ApplyMigrationCommand {
+impl<'a> MigrationCommand<'a> for ApplyMigrationCommand<'a> {
     type Input = ApplyMigrationInput;
     type Output = MigrationStepsResultOutput;
 
-    fn new(input: Self::Input) -> Box<Self> {
+    fn new(input: &'a Self::Input) -> Box<Self> {
         Box::new(ApplyMigrationCommand { input })
     }
 
-    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
-        println!("{:?}", self.input);
+    fn execute<C, D>(&self, engine: &MigrationEngine<C, D>) -> CommandResult<Self::Output>
+    where
+        C: MigrationConnector<DatabaseMigration = D>,
+        D: DatabaseMigrationMarker + 'static,
+    {
+        debug!("{:?}", self.input);
+
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
 
@@ -28,17 +33,17 @@ impl MigrationCommand for ApplyMigrationCommand {
             _ => self.handle_normal_migration(&engine),
         }
     }
-
-    fn underlying_database_must_exist() -> bool {
-        true
-    }
 }
 
-impl ApplyMigrationCommand {
-    fn handle_transition_out_of_watch_mode(
+impl<'a> ApplyMigrationCommand<'a> {
+    fn handle_transition_out_of_watch_mode<C, D>(
         &self,
-        engine: &MigrationEngine,
-    ) -> CommandResult<MigrationStepsResultOutput> {
+        engine: &MigrationEngine<C, D>,
+    ) -> CommandResult<MigrationStepsResultOutput>
+    where
+        C: MigrationConnector<DatabaseMigration = D>,
+        D: DatabaseMigrationMarker + 'static,
+    {
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
 
@@ -51,7 +56,14 @@ impl ApplyMigrationCommand {
         self.handle_migration(&engine, current_datamodel, next_datamodel)
     }
 
-    fn handle_normal_migration(&self, engine: &MigrationEngine) -> CommandResult<MigrationStepsResultOutput> {
+    fn handle_normal_migration<C, D>(
+        &self,
+        engine: &MigrationEngine<C, D>,
+    ) -> CommandResult<MigrationStepsResultOutput>
+    where
+        C: MigrationConnector<DatabaseMigration = D>,
+        D: DatabaseMigrationMarker + 'static,
+    {
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
         let current_datamodel = migration_persistence.current_datamodel();
@@ -63,12 +75,16 @@ impl ApplyMigrationCommand {
         self.handle_migration(&engine, current_datamodel, next_datamodel)
     }
 
-    fn handle_migration(
+    fn handle_migration<C, D>(
         &self,
-        engine: &MigrationEngine,
+        engine: &MigrationEngine<C, D>,
         current_datamodel: Datamodel,
         next_datamodel: Datamodel,
-    ) -> CommandResult<MigrationStepsResultOutput> {
+    ) -> CommandResult<MigrationStepsResultOutput>
+    where
+        C: MigrationConnector<DatabaseMigration = D>,
+        D: DatabaseMigrationMarker + 'static,
+    {
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
 
