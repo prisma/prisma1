@@ -349,10 +349,8 @@ pub fn nested_delete_many(
         .into_iter()
         .map(|value| {
             // Note: how can a *_many nested mutation be without a list?
-            let mut map: ParsedInputMap = value.try_into()?;
             let filter = if relation_field.is_list {
-                let where_arg = map.remove("where").expect("asdasda");
-                Some(extract_filter(where_arg.try_into()?, &model)?)
+                Some(extract_filter(value.try_into()?, &model)?)
             } else {
                 None
             };
