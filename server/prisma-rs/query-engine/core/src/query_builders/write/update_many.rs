@@ -1,5 +1,6 @@
 use super::*;
 use crate::query_builders::{Builder, ParsedField, ParsedInputMap, QueryBuilderResult};
+use connector::filter::Filter;
 use connector::write_ast::*;
 use prisma_models::ModelRef;
 use std::convert::TryInto;
@@ -18,8 +19,8 @@ impl UpdateManyBuilder {
 impl Builder<WriteQuery> for UpdateManyBuilder {
     fn build(mut self) -> QueryBuilderResult<WriteQuery> {
         let filter = match self.field.arguments.lookup("where") {
-            Some(where_arg) => Some(extract_filter(where_arg.value.try_into()?, &self.model)?),
-            None => None,
+            Some(where_arg) => extract_filter(where_arg.value.try_into()?, &self.model)?,
+            None => Filter::empty(),
         };
 
         let data_argument = self.field.arguments.lookup("data").unwrap();
@@ -27,7 +28,7 @@ impl Builder<WriteQuery> for UpdateManyBuilder {
         let update_args = WriteArguments::from(&self.model, data_map, true)?;
         let update_many = RootWriteQuery::UpdateManyRecords(UpdateManyRecords {
             model: self.model,
-            filter: filter.unwrap(), // TODO: In the schema that's optional, the db interface expects it, though.
+            filter: filter,
             non_list_args: update_args.non_list,
             list_args: update_args.list,
         });
