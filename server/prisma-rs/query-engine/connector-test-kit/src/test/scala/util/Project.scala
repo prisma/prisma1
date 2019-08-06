@@ -32,7 +32,8 @@ trait Dsl {
     Project(id = projectId(suite), dataModel = sdlString.stripMargin)
   }
 
-  def fromStringV11(sdlString: String)(implicit suite: Suite): Project = {
+  // this exists only for backwards compatibility to ease test conversion
+  def fromStringV11()(sdlString: String)(implicit suite: Suite): Project = {
     fromString(sdlString)
   }
 
@@ -45,4 +46,4 @@ trait Dsl {
 }
 
 object ProjectDsl extends Dsl
-object SchemaDsl  extends Dsl
+object SchemaDsl  extends Dsl // this exists only for backwards compatibility to ease test conversion
