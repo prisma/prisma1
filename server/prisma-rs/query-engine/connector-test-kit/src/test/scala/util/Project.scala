@@ -21,7 +21,7 @@ case class Project(
   }
 }
 
-object ProjectDsl {
+trait Dsl {
   val testProjectId = "default@default"
 
   def fromStringWithId(id: String)(sdlString: String): Project = {
@@ -32,6 +32,10 @@ object ProjectDsl {
     Project(id = projectId(suite), dataModel = sdlString.stripMargin)
   }
 
+  def fromStringV11(sdlString: String)(implicit suite: Suite): Project = {
+    fromString(sdlString)
+  }
+
   private def projectId(suite: Suite): String = {
     // GetFieldFromSQLUniqueException blows up if we generate longer names, since we then exceed the postgres limits for constraint names
     // todo: actually fix GetFieldFromSQLUniqueException instead
@@ -39,3 +43,6 @@ object ProjectDsl {
     nameThatMightBeTooLong.substring(0, Math.min(32, nameThatMightBeTooLong.length))
   }
 }
+
+object ProjectDsl extends Dsl
+object SchemaDsl  extends Dsl

@@ -12,3 +12,6 @@ Foo[]
 
 id: ID! @id
 id String @id @default(cuid())
+
+ProjectDsl.fromString
+ProjectDsl.fromString

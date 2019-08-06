@@ -1,24 +1,26 @@
-package com.prisma.api.mutations
+package writes
 
-import com.prisma.api.{ApiSpecBase, TestDataModels}
-import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import org.scalatest.{FlatSpec, Matchers}
+import util.ConnectorCapability.JoinRelationLinksCapability
+import util._
 
 class SameModelSelfRelationWithoutBackRelationSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "A Many to Many Self Relation" should "be accessible from only one side" in {
     val testDataModels = {
-      val dm1 = """type Post {
-                    id: ID! @id
-                    identifier: Int @unique
-                    related: [Post] @relation(name: "RelatedPosts" link: INLINE)
+      val dm1 = """model Post {
+                    id         String @id @default(cuid())
+                    identifier Int?   @unique
+                    related    Post[] @relation(name: "RelatedPosts", references: [id])
+                    parents    Post[] @relation(name: "RelatedPosts")
                   }"""
 
-      val dm2 = """type Post {
-                    id: ID! @id
-                    identifier: Int @unique
-                    related: [Post] @relation(name: "RelatedPosts")
+      val dm2 = """model Post {
+                    id         String @id @default(cuid())
+                    identifier Int?   @unique
+                    related    Post[] @relation(name: "RelatedPosts")
+                    parents   Post[] @relation(name: "RelatedPosts")
                   }"""
       TestDataModels(mongo = dm1, sql = dm2)
     }
@@ -56,16 +58,18 @@ class SameModelSelfRelationWithoutBackRelationSpec extends FlatSpec with Matcher
 
   "A One to One Self Relation" should "be accessible from only one side" in {
     val testDataModels = {
-      val dm1 = """type Post {
-                    id: ID! @id
-                    identifier: Int @unique
-                    related: Post @relation(name: "RelatedPosts" link: INLINE)
+      val dm1 = """model Post {
+                    id         String @id @default(cuid())
+                    identifier Int?   @unique
+                    related    Post?  @relation(name: "RelatedPosts" references: [id])
+                    parents    Post[] @relation(name: "RelatedPosts")
                   }"""
 
-      val dm2 = """type Post {
-                    id: ID! @id
-                    identifier: Int @unique
-                    related: Post @relation(name: "RelatedPosts")
+      val dm2 = """model Post {
+                    id         String @id @default(cuid())
+                    identifier Int?   @unique
+                    related    Post?  @relation(name: "RelatedPosts")
+                    parents    Post[] @relation(name: "RelatedPosts")
                   }"""
 
       TestDataModels(mongo = dm1, sql = dm2)
