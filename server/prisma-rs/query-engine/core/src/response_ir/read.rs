@@ -197,7 +197,7 @@ fn write_nested_items(
                             Item::Value(PrismaValue::Null)
                         }
                     }
-                    _ => unreachable!(),
+                    x => panic!("received invalid output type {:?} on field name {}", x, &field_name),
                 };
 
                 into.insert(field_name.to_owned(), Item::Ref(ItemRef::new(default)));
