@@ -1,0 +1,11 @@
+@relation(link: INLINE)
+@relation(references: [id])
+
+type 
+model 
+
+[Foo]
+Foo[]
+
+id: ID! @id
+id String @id @default(cuid())
