@@ -2,7 +2,7 @@ package util
 
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString
-import util.ConnectorCapability.RelationLinkListCapability
+import util.ConnectorCapability.{Prisma2Capability, RelationLinkListCapability}
 
 import scala.concurrent.ExecutionContext
 
@@ -17,7 +17,7 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
   def capabilities = {
     // TODO: implement Capabilities resolution
 //    testDependencies.apiConnector.capabilities
-    ConnectorCapabilities.empty
+    ConnectorCapabilities(Prisma2Capability)
   }
 
   override protected def beforeAll(): Unit = {
