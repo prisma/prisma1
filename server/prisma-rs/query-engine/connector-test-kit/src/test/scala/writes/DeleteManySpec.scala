@@ -6,9 +6,9 @@ import org.scalatest.{FlatSpec, Matchers}
 class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   val project = ProjectDsl.fromString {
-    """type Todo {
-      |  id: ID! @id
-      |  title: String!
+    """model Todo {
+      |  id    String @id @default(cuid())
+      |  title String
       |}
     """.stripMargin
   }
@@ -180,17 +180,17 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val project = ProjectDsl.fromString {
       """
-        |type ZChild{
-        |    id: ID! @id
-        |    name: String @unique
-        |    test: String
-        |    parent: Parent @relation(link: INLINE)
+        |model ZChild{
+        |    id     String  @id @default(cuid())
+        |    name   String? @unique
+        |    test   String?
+        |    parent Parent? @relation(references: [id])
         |}
         |
-        |type Parent{
-        |    id: ID! @id
-        |    name: String @unique
-        |    children: [ZChild]
+        |model Parent{
+        |    id       String  @id @default(cuid())
+        |    name     String? @unique
+        |    children ZChild[]
         |}"""
     }
 

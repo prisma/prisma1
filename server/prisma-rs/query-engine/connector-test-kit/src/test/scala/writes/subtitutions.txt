@@ -1,4 +1,7 @@
-@relation(link: INLINE)
+references: [id]
+references: [id]
+
+@relation(references: [id])
 @relation(references: [id])
 
 type 

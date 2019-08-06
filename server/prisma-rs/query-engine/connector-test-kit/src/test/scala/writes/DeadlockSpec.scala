@@ -19,9 +19,9 @@ class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase 
   "creating many items" should "not cause deadlocks" in {
     val project = ProjectDsl.fromString {
       """
-        |type Todo {
-        |   id: ID! @id
-        |   a: String
+        |model Todo {
+        |   id String  @id @default(cuid())
+        |   a  String?
         |}"""
     }
     database.setup(project)
@@ -49,17 +49,17 @@ class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase 
   "creating many node with scalar list values" should "not cause deadlocks" in {
     val testDataModels = {
       val dm1 = """
-        |type Todo {
-        |   id: ID! @id
-        |   a: String
-        |   tags: [String]
+        |model Todo {
+        |   id   String   @id @default(cuid())
+        |   a    String?
+        |   tags String[]
         |}"""
 
       val dm2 = """
-        |type Todo {
-        |   id: ID! @id
-        |   a: String
-        |   tags: [String] @scalarList(strategy: RELATION)
+        |model Todo {
+        |   id   String  @id @default(cuid())
+        |   a    String?
+        |   tags String[] // @scalarList(strategy: RELATION)
         |}"""
 
       TestDataModels(mongo = dm1, sql = dm2)
