@@ -280,15 +280,15 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
 
   "a one to many relation should be creatable through a nested mutation" in {
     val project = SchemaDsl.fromStringV11() {
-      s"""type Todo{
-        |   id: ID! @id
-        |   comments: [Comment] $listInlineDirective
+      s"""model Todo{
+        |   id        String    @id @default(cuid())
+        |   comments  Comment[] $listInlineDirective
         |}
         |
-        |type Comment{
-        |   id: ID! @id
-        |   text: String!
-        |   todo: Todo
+        |model Comment{
+        |   id    String @id @default(cuid())
+        |   text  String
+        |   todo  Todo?
         |}"""
     }
 
@@ -316,16 +316,16 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
 
   "a many to one relation should be creatable through a nested mutation" in {
     val project = SchemaDsl.fromStringV11() {
-      """type Todo{
-        |   id: ID! @id
-        |   title: String!
-        |   comments: Comment @relation(link: INLINE)
+      """model Todo{
+        |   id       String   @id @default(cuid())
+        |   title    String
+        |   comments Comment? @relation(references: [id])
         |}
         |
-        |type Comment{
-        |   id: ID! @id
-        |   text: String!
-        |   todo: Todo
+        |model Comment{
+        |   id   String @id @default(cuid())
+        |   text String
+        |   todo Todo?
         |}"""
     }
 
@@ -354,16 +354,16 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
 
   "a many to many relation should be creatable through a nested mutation" in {
     val project = SchemaDsl.fromStringV11() {
-      s"""type Todo{
-        |   id: ID! @id
-        |   title: String!
-        |   tags: [Tag] $listInlineDirective
+      s"""model Todo{
+        |   id     String @id @default(cuid())
+        |   title  String
+        |   tags   Tag[] $listInlineDirective
         |}
         |
-        |type Tag{
-        |   id: ID! @id
-        |   name: String!
-        |   todos: [Todo]
+        |model Tag{
+        |   id    String @id @default(cuid())
+        |   name  String
+        |   todos Todo[]
         |}"""
     }
 
@@ -414,18 +414,18 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
 
   "A nested create on a one to one relation should correctly assign violations to offending model and not partially execute first direction" in {
     val project = SchemaDsl.fromStringV11() {
-      """type User{
-        |   id: ID! @id
-        |   name: String!
-        |   unique: String @unique
-        |   post: Post @relation(link: INLINE)
+      """model User{
+        |   id     String  @id @default(cuid())
+        |   name   String
+        |   unique String? @unique
+        |   post   Post?   @relation(references: [id])
         |}
         |
-        |type Post{
-        |   id: ID! @id
-        |   title: String!
-        |   uniquePost: String @unique
-        |   user: User
+        |model Post{
+        |   id         String @id @default(cuid())
+        |   title      String
+        |   uniquePost String? @unique
+        |   user       User?
         |}"""
     }
 
@@ -470,18 +470,18 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
 
   "A nested create on a one to one relation should correctly assign violations to offending model and not partially execute second direction" in {
     val project = SchemaDsl.fromStringV11() {
-      """type User{
-        |   id: ID! @id
-        |   name: String!
-        |   unique: String @unique
-        |   post: Post @relation(link: INLINE)
+      """model User{
+        |   id      String  @id @default(cuid())
+        |   name    String
+        |   unique  String? @unique
+        |   post    Post?   @relation(references: [id])
         |}
         |
-        |type Post{
-        |   id: ID! @id
-        |   title: String!
-        |   uniquePost: String @unique
-        |   user: User
+        |model Post{
+        |   id         String @id @default(cuid())
+        |   title      String
+        |   uniquePost String? @unique
+        |   user       User?
         |}"""
     }
 
@@ -526,23 +526,23 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
 
   "a deeply nested mutation should execute all levels of the mutation" in {
     val project = SchemaDsl.fromStringV11() {
-      s"""type List{
-        |   id: ID! @id
-        |   name: String!
-        |   todos: [Todo] $listInlineDirective
+      s"""model List{
+        |   id    String @id @default(cuid())
+        |   name  String
+        |   todos Todo[] $listInlineDirective
         |}
         |
-        |type Todo{
-        |   id: ID! @id
-        |   title: String!
-        |   list: List
-        |   tag: Tag @relation(link: INLINE)
+        |model Todo{
+        |   id     String @id @default(cuid())
+        |   title  String
+        |   list   List?
+        |   tag    Tag?   @relation(references: [id])
         |}
         |
-        |type Tag{
-        |   id: ID! @id
-        |   name: String!
-        |   todo: Todo
+        |model Tag{
+        |   id    String @id @default(cuid())
+        |   name  String
+        |   todo  Todo?
         |}"""
     }
 
@@ -586,18 +586,18 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
   "a required one2one relation should be creatable through a nested create mutation" in {
 
     val project = SchemaDsl.fromStringV11() {
-      """type Comment{
-        |   id: ID! @id
-        |   reqOnComment: String!
-        |   optOnComment: String
-        |   todo: Todo! @relation(link: INLINE)
+      """model Comment{
+        |   id           String  @id @default(cuid())
+        |   reqOnComment String
+        |   optOnComment String?
+        |   todo         Todo    @relation(references: [id])
         |}
         |
-        |type Todo{
-        |   id: ID! @id
-        |   reqOnTodo: String!
-        |   optOnTodo: String
-        |   comment: Comment!
+        |model Todo{
+        |   id        String @id @default(cuid())
+        |   reqOnTodo String
+        |   optOnTodo String?
+        |   comment   Comment
         |}"""
     }
 
@@ -637,25 +637,25 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
       """.stripMargin,
       project,
       errorCode = 3032,
-      errorContains = "The field 'todo' on type 'Comment' is required. Performing this mutation would violate that constraint"
+      errorContains = "The field 'todo' on model 'Comment' is required. Performing this mutation would violate that constraint"
     )
   }
 
   "a required one2one relation should be creatable through a nested connected mutation" in {
 
     val project = SchemaDsl.fromStringV11() {
-      """type Comment{
-        |   id: ID! @id
-        |   reqOnComment: String!
-        |   optOnComment: String
-        |   todo: Todo! @relation(link: INLINE)
+      """model Comment{
+        |   id           String @id @default(cuid())
+        |   reqOnComment String
+        |   optOnComment String?
+        |   todo         Todo    @relation(references: [id])
         |}
         |
-        |type Todo{
-        |   id: ID! @id
-        |   reqOnTodo: String!
-        |   optOnTodo: String
-        |   comment: Comment
+        |model Todo{
+        |   id        String @id @default(cuid())
+        |   reqOnTodo String
+        |   optOnTodo String?
+        |   comment   Comment?
         |}"""
     }
 
@@ -700,7 +700,7 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
       """.stripMargin,
       project,
       errorCode = 3032,
-      errorContains = "The field 'todo' on type 'Comment' is required. Performing this mutation would violate that constraint"
+      errorContains = "The field 'todo' on model 'Comment' is required. Performing this mutation would violate that constraint"
     )
 
     server.query("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(1)
@@ -748,17 +748,17 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
 
   }
 
-  "creating a nested item with an id of type UUID should work" taggedAs (IgnoreMySql, IgnoreMongo, IgnoreSQLite) in {
+  "creating a nested item with an id of model UUID should work" taggedAs (IgnoreMySql, IgnoreMongo, IgnoreSQLite) in {
     val project = SchemaDsl.fromStringV11() {
       s"""
-         |type List {
-         |  id: ID! @id
-         |  todos: [Todo]
+         |model List {
+         |  id     String @id @default(cuid())
+         |  todos  Todo[]
          |}
          |
-         |type Todo {
-         |  id: UUID! @id
-         |  title: String!
+         |model Todo {
+         |  id    String @id @default(uuid())
+         |  title String
          |}
        """.stripMargin
     }
@@ -791,24 +791,24 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
 
     val project = SchemaDsl.fromStringV11() {
       s"""
-        |type User {
-        |  id: ID! @id
-        |  nick: String! @unique
-        |  memberships: [ListMembership]
+        |model User {
+        |  id          String           @id @default(cuid())
+        |  nick        String           @unique
+        |  memberships ListMembership[]
         |}
         |
-        |type List {
-        |  id: ID! @id
-        |  createdAt: DateTime! @createdAt
-        |  updatedAt: DateTime! @updatedAt
-        |  name: String!
-        |  memberships: [ListMembership]
+        |model List {
+        |  id          String   @id @default(cuid())
+        |  createdAt   DateTime @default(now())
+        |  updatedAt   DateTime @updatedAt
+        |  name        String
+        |  memberships ListMembership[]
         |}
         |
-        |type ListMembership {
-        |  id: ID! @id
-        |  user: User! @relation(link: INLINE)
-        |  list: List! @relation(link: INLINE)
+        |model ListMembership {
+        |  id   String @id @default(cuid())
+        |  user User   @relation(references: [id])
+        |  list List   @relation(references: [id])
         |}"""
     }
 

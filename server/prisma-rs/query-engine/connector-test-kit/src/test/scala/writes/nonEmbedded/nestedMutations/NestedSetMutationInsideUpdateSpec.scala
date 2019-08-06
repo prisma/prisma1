@@ -395,15 +395,15 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
 
   "a one to many relation" should "be setable by id through a nested mutation" in {
     val project = SchemaDsl.fromStringV11() {
-      """type Comment {
-        | id: ID! @id
-        | text: String
-        | todo: Todo @relation(link: INLINE)
+      """model Comment {
+        | id   String  @id @default(cuid())
+        | text String?
+        | todo Todo?   @relation(references: [id])
         |}
         |
-        |type Todo {
-        | id: ID! @id
-        | comments: [Comment]
+        |model Todo {
+        | id       String    @id @default(cuid())
+        | comments Comment[]
         |}
       """.stripMargin
     }
@@ -439,16 +439,16 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
 
   "a one to many relation" should "be setable by unique through a nested mutation" in {
     val project = SchemaDsl.fromStringV11() {
-      """type Comment {
-        | id: ID! @id
-        | text: String @unique
-        | todo: Todo @relation(link: INLINE)
+      """model Comment {
+        | id   String  @id @default(cuid())
+        | text String? @unique
+        | todo Todo?   @relation(references: [id])
         |}
         |
-        |type Todo {
-        | id: ID! @id
-        | title: String @unique
-        | comments: [Comment]
+        |model Todo {
+        | id       String    @id @default(cuid())
+        | title    String?   @unique
+        | comments Comment[]
         |}
       """.stripMargin
     }
@@ -484,11 +484,11 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
 
   "a PM to CM  self relation with the child not already in a relation" should "be setable through a nested mutation by unique" in {
     val project = SchemaDsl.fromStringV11() {
-      s"""type Technology {
-         |  id: ID! @id
-         |  name: String! @unique
-         |  childTechnologies: [Technology] @relation(name: "ChildTechnologies" $listInlineArgument)
-         |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
+      s"""model Technology {
+         |  id                 String       @id @default(cuid())
+         |  name               String       @unique
+         |  childTechnologies  Technology[] @relation(name: "ChildTechnologies" $listInlineArgument)
+         |  parentTechnologies Technology[] @relation(name: "ChildTechnologies")
         |}
       """.stripMargin
     }
@@ -529,16 +529,16 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
 
   "Setting two nodes twice" should "not error" in {
     val project = SchemaDsl.fromStringV11() {
-      s"""type Child {
-        | id: ID! @id
-        | c: String! @unique
-        | parents: [Parent] $listInlineDirective
+      s"""model Child {
+        | id      String   @id @default(cuid())
+        | c       String   @unique
+        | parents Parent[] $listInlineDirective
         |}
         |
-        |type Parent {
-        | id: ID! @id
-        | p: String! @unique
-        | children: [Child]
+        |model Parent {
+        | id       String  @id @default(cuid())
+        | p        String  @unique
+        | children Child[]
         |}
       """.stripMargin
     }
@@ -619,16 +619,16 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
 
     val project = SchemaDsl.fromStringV11() {
       s"""
-        |type Post {
-        |  id: ID! @id
-        |  authors: [AUser] $listInlineDirective
-        |  title: String! @unique
+        |model Post {
+        |  id      String  @id @default(cuid())
+        |  authors AUser[] $listInlineDirective
+        |  title   String  @unique
         |}
         |
-        |type AUser {
-        |  id: ID! @id
-        |  name: String! @unique
-        |  posts: [Post]
+        |model AUser {
+        |  id    String @id @default(cuid())
+        |  name  String @unique
+        |  posts Post[]
         |}"""
     }
 

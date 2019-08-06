@@ -43,7 +43,7 @@ class NestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       """.stripMargin,
         project,
         errorCode = 0,
-        errorContains = """ Reason: 'childOpt.deleteMany' Field 'deleteMany' is not defined in the input type 'ChildUpdateOneWithoutParentOptInput'."""
+        errorContains = """ Reason: 'childOpt.deleteMany' Field 'deleteMany' is not defined in the input model 'ChildUpdateOneWithoutParentOptInput'."""
       )
     }
   }

@@ -45,7 +45,7 @@ class NestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       """.stripMargin,
         project,
         errorCode = 0,
-        errorContains = """ Reason: 'childOpt.updateMany' Field 'updateMany' is not defined in the input type 'ChildUpdateOneWithoutParentOptInput'."""
+        errorContains = """ Reason: 'childOpt.updateMany' Field 'updateMany' is not defined in the input model 'ChildUpdateOneWithoutParentOptInput'."""
       )
     }
   }

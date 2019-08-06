@@ -362,16 +362,16 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a one to many relation" should "be disconnectable by id through a nested mutation" in {
-    val schema = s"""type Comment{
-                            id: ID! @id
-                            text: String
-                            todo: Todo
+    val schema = s"""model Comment{
+                            id   String  @id @default(cuid())
+                            text String?
+                            todo Todo?
                         }
 
-                        type Todo{
-                            id: ID! @id
-                            text: String
-                            comments: [Comment] $listInlineDirective
+                        model Todo{
+                            id       String    @id @default(cuid())
+                            text     String?
+                            comments Comment[] $listInlineDirective
                         }"""
 
     val project = SchemaDsl.fromStringV11() { schema }
@@ -425,17 +425,17 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a one to many relation" should "be disconnectable by any unique argument through a nested mutation" in {
-    val schema = s"""type Comment{
-                            id: ID! @id
-                            text: String
-                            alias: String! @unique
-                            todo: Todo
+    val schema = s"""model Comment{
+                            id    String  @id @default(cuid())
+                            text  String?
+                            alias String  @unique
+                            todo  Todo?
                         }
 
-                        type Todo{
-                            id: ID! @id
-                            text: String
-                            comments: [Comment] $listInlineDirective
+                        model Todo{
+                            id       String    @id @default(cuid())
+                            text     String?
+                            comments Comment[] $listInlineDirective
                         }"""
 
     val project = SchemaDsl.fromStringV11() { schema }
@@ -488,16 +488,16 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a many to one relation" should "be disconnectable by id through a nested mutation" in {
-    val schema = s"""type Comment{
-                            id: ID! @id
-                            text: String
-                            todo: Todo
+    val schema = s"""model Comment{
+                            id   String  @id @default(cuid())
+                            text String?
+                            todo Todo?
                         }
 
-                        type Todo{
-                            id: ID! @id
-                            text: String
-                            comments: [Comment] $listInlineDirective
+                        model Todo{
+                            id       String    @id @default(cuid())
+                            text     String?
+                            comments Comment[] $listInlineDirective
                         }"""
 
     val project = SchemaDsl.fromStringV11() { schema }
@@ -548,16 +548,16 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a one to one relation" should "be disconnectable by id through a nested mutation" in {
-    val schema = """type Note{
-                            id: ID! @id
-                            text: String
-                            todo: Todo @relation(link: INLINE)
+    val schema = """model Note{
+                            id   String  @id @default(cuid())
+                            text String?
+                            todo Todo?   @relation(references: [id])
                         }
 
-                        type Todo{
-                            id: ID! @id
-                            title: String!
-                            note: Note
+                        model Todo{
+                            id    String @id @default(cuid())
+                            title String
+                            note  Note?
                         }"""
 
     val project = SchemaDsl.fromStringV11() { schema }
@@ -606,16 +606,16 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a one to many relation" should "be disconnectable by unique through a nested mutation" in {
-    val schema = s"""type Comment{
-                            id: ID! @id
-                            text: String @unique
-                            todo: Todo
+    val schema = s"""model Comment{
+                            id   String  @id @default(cuid())
+                            text String? @unique
+                            todo Todo?
                         }
 
-                        type Todo{
-                            id: ID! @id
-                            title: String @unique
-                            comments: [Comment] $listInlineDirective
+                        model Todo{
+                            id       String    @id @default(cuid())
+                            title    String?   @unique
+                            comments Comment[] $listInlineDirective
                         }"""
 
     val project = SchemaDsl.fromStringV11() { schema }
@@ -678,14 +678,17 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "A PM CM self relation" should "be disconnectable by unique through a nested mutation" in {
-    val project = SchemaDsl.fromStringV11() { s"""|type User {
-                                              |  id: ID! @id
-                                              |  banned: Boolean! @default(value: false)
-                                              |  username: String! @unique
-                                              |  password: String!
-                                              |  salt: String!
-                                              |  followers: [User] @relation(name: "UserFollowers" $listInlineArgument)
-                                              |  follows: [User] @relation(name: "UserFollows" $listInlineArgument)
+    val project = SchemaDsl.fromStringV11() { s"""|
+                                              |model User {
+                                              |  id            String  @id @default(cuid())
+                                              |  banned        Boolean @default(value: false)
+                                              |  username      String  @unique
+                                              |  password      String
+                                              |  salt          String
+                                              |  followers     User[]  @relation(name: "UserFollowers" $listInlineArgument)
+                                              |  followersBack User[]  @relation(name: "UserFollowers")
+                                              |  follows       User[]  @relation(name: "UserFollows" $listInlineArgument)
+                                              |  followsBack   User[]  @relation(name: "UserFollows")
                                               |}""" }
     database.setup(project)
 
@@ -751,14 +754,16 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "A PM CM self relation" should "should throw a correct error for disconnect on invalid unique" in {
-    val project = SchemaDsl.fromStringV11() { s"""|type User {
-                                              |  id: ID! @id
-                                              |  banned: Boolean! @default(value: false)
-                                              |  username: String! @unique
-                                              |  password: String!
-                                              |  salt: String!
-                                              |  followers: [User] @relation(name: "UserFollowers" $listInlineArgument)
-                                              |  follows: [User] @relation(name: "UserFollows" $listInlineArgument)
+    val project = SchemaDsl.fromStringV11() { s"""|model User {
+                                              |  id            String  @id @default(cuid())
+                                              |  banned        Boolean @default(value: false)
+                                              |  username      String  @unique
+                                              |  password      String
+                                              |  salt          String
+                                              |  followers     User[] @relation(name: "UserFollowers" $listInlineArgument)
+                                              |  followersBack User[] @relation(name: "UserFollowers")
+                                              |  follows       User[] @relation(name: "UserFollows" $listInlineArgument)
+                                              |  followsBack   User[] @relation(name: "UserFollows")
                                               |}""" }
     database.setup(project)
 
@@ -823,23 +828,23 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only node edges on the path" in {
-    val project = SchemaDsl.fromStringV11() { s"""type Top {
-                                             |  id: ID! @id
-                                             |  nameTop: String! @unique
-                                             |  middles: [Middle] $listInlineDirective
+    val project = SchemaDsl.fromStringV11() { s"""model Top {
+                                             |  id      String   @id @default(cuid())
+                                             |  nameTop String   @unique
+                                             |  middles Middle[] $listInlineDirective
                                              |}
                                              |
-                                             |type Middle {
-                                             |  id: ID! @id
-                                             |  nameMiddle: String! @unique
-                                             |  tops: [Top]
-                                             |  bottoms: [Bottom] $listInlineDirective
+                                             |model Middle {
+                                             |  id         String   @id @default(cuid())
+                                             |  nameMiddle String   @unique
+                                             |  tops       Top[]
+                                             |  bottoms    Bottom[] $listInlineDirective
                                              |}
                                              |
-                                             |type Bottom {
-                                             |  id: ID! @id
-                                             |  nameBottom: String! @unique
-                                             |  middles: [Middle]
+                                             |model Bottom {
+                                             |  id          String   @id @default(cuid())
+                                             |  nameBottom  String   @unique
+                                             |  middles     Middle[]
                                              |}""" }
     database.setup(project)
 
@@ -908,21 +913,21 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only node edges on the path and there are no backrelations" in {
-    val project = SchemaDsl.fromStringV11() { s"""type Top {
-                                             |  id: ID! @id
-                                             |  nameTop: String! @unique
-                                             |  middles: [Middle] $listInlineDirective
+    val project = SchemaDsl.fromStringV11() { s"""model Top {
+                                             |  id      String   @id @default(cuid())
+                                             |  nameTop String   @unique
+                                             |  middles Middle[] $listInlineDirective
                                              |}
                                              |
-                                             |type Middle {
-                                             |  id: ID! @id
-                                             |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom] $listInlineDirective
+                                             |model Middle {
+                                             |  id         String @id @default(cuid())
+                                             |  nameMiddle String @unique
+                                             |  bottoms    Bottom[] $listInlineDirective
                                              |}
                                              |
-                                             |type Bottom {
-                                             |  id: ID! @id
-                                             |  nameBottom: String! @unique
+                                             |model Bottom {
+                                             |  id         String @id @default(cuid())
+                                             |  nameBottom String @unique
                                              |}""" }
     database.setup(project)
 
@@ -990,23 +995,23 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path " in {
-    val project = SchemaDsl.fromStringV11() { s"""type Top {
-                                             |  id: ID! @id
-                                             |  nameTop: String! @unique
-                                             |  middles: [Middle] $listInlineDirective
+    val project = SchemaDsl.fromStringV11() { s"""model Top {
+                                             |  id      String   @id @default(cuid())
+                                             |  nameTop String   @unique
+                                             |  middles Middle[] $listInlineDirective
                                              |}
                                              |
-                                             |type Middle {
-                                             |  id: ID! @id
-                                             |  nameMiddle: String! @unique
-                                             |  tops: [Top]
-                                             |  bottom: Bottom @relation(link: INLINE)
+                                             |model Middle {
+                                             |  id         String @id @default(cuid())
+                                             |  nameMiddle String @unique
+                                             |  tops       Top[]
+                                             |  bottom     Bottom? @relation(references: [id])
                                              |}
                                              |
-                                             |type Bottom {
-                                             |  id: ID! @id
-                                             |  nameBottom: String! @unique
-                                             |  middle: Middle
+                                             |model Bottom {
+                                             |  id         String  @id @default(cuid())
+                                             |  nameBottom String  @unique
+                                             |  middle     Middle?
                                              |}""" }
     database.setup(project)
 
@@ -1070,27 +1075,27 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges" in {
-    val project = SchemaDsl.fromStringV11() { s"""type Top {
-                                             |  id: ID! @id
-                                             |  nameTop: String! @unique
-                                             |  middle: Middle @relation(link: INLINE)
+    val project = SchemaDsl.fromStringV11() { s"""model Top {
+                                             |  id      String  @id @default(cuid())
+                                             |  nameTop String  @unique
+                                             |  middle  Middle? @relation(references: [id])
                                              |}
                                              |
-                                             |type Middle {
-                                             |  id: ID! @id
-                                             |  nameMiddle: String! @unique
-                                             |  bottom: Bottom @relation(link: INLINE)
+                                             |model Middle {
+                                             |  id         String  @id @default(cuid())
+                                             |  nameMiddle String  @unique
+                                             |  bottom     Bottom? @relation(references: [id])
                                              |}
                                              |
-                                             |type Bottom {
-                                             |  id: ID! @id
-                                             |  nameBottom: String! @unique
-                                             |  below: [Below] $listInlineDirective
+                                             |model Bottom {
+                                             |  id         String  @id @default(cuid())
+                                             |  nameBottom String  @unique
+                                             |  below      Below[] $listInlineDirective
                                              |}
                                              |
-                                             |type Below {
-                                             |  id: ID! @id
-                                             |  nameBelow: String! @unique
+                                             |model Below {
+                                             |  id        String @id @default(cuid())
+                                             |  nameBelow String @unique
                                              |}""" }
     database.setup(project)
 
@@ -1158,23 +1163,23 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path" in {
-    val project = SchemaDsl.fromStringV11() { """type Top {
-                                             |  id: ID! @id
-                                             |  nameTop: String! @unique
-                                             |  middle: Middle @relation(link: INLINE)
+    val project = SchemaDsl.fromStringV11() { """model Top {
+                                             |  id      String  @id @default(cuid())
+                                             |  nameTop String  @unique
+                                             |  middle  Middle? @relation(references: [id])
                                              |}
                                              |
-                                             |type Middle {
-                                             |  id: ID! @id
-                                             |  nameMiddle: String! @unique
-                                             |  top: Top
-                                             |  bottom: Bottom @relation(link: INLINE)
+                                             |model Middle {
+                                             |  id         String  @id @default(cuid())
+                                             |  nameMiddle String  @unique
+                                             |  top        Top?
+                                             |  bottom     Bottom? @relation(references: [id])
                                              |}
                                              |
-                                             |type Bottom {
-                                             |  id: ID! @id
-                                             |  middle: Middle
-                                             |  nameBottom: String! @unique
+                                             |model Bottom {
+                                             |  id         String  @id @default(cuid())
+                                             |  middle     Middle?
+                                             |  nameBottom String  @unique
                                              |}""" }
     database.setup(project)
 
@@ -1236,21 +1241,21 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path and there are no backrelations" in {
-    val project = SchemaDsl.fromStringV11() { """type Top {
-                                             |  id: ID! @id
-                                             |  nameTop: String! @unique
-                                             |  middle: Middle @relation(link: INLINE)
+    val project = SchemaDsl.fromStringV11() { """model Top {
+                                             |  id      String  @id @default(cuid())
+                                             |  nameTop String  @unique
+                                             |  middle  Middle? @relation(references: [id])
                                              |}
                                              |
-                                             |type Middle {
-                                             |  id: ID! @id
-                                             |  nameMiddle: String! @unique
-                                             |  bottom: Bottom @relation(link: INLINE)
+                                             |model Middle {
+                                             |  id         String  @id @default(cuid())
+                                             |  nameMiddle String  @unique
+                                             |  bottom     Bottom? @relation(references: [id])
                                              |}
                                              |
-                                             |type Bottom {
-                                             |  id: ID! @id
-                                             |  nameBottom: String! @unique
+                                             |model Bottom {
+                                             |  id         String @id @default(cuid())
+                                             |  nameBottom String @unique
                                              |}""" }
     database.setup(project)
 

@@ -1307,15 +1307,15 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
   "A PM to C1 relation" should "be connectable by id through a nested mutation" in {
     val project = SchemaDsl.fromStringV11() {
       """
-        |type Todo {
-        | id: ID! @id
-        | comments: [Comment]
+        |model Todo {
+        | id       String    @id @default(cuid())
+        | comments Comment[]
         |}
         |
-        |type Comment {
-        | id: ID! @id
-        | text: String
-        | todo: Todo @relation(link:INLINE)
+        |model Comment {
+        | id   String  @id @default(cuid())
+        | text String?
+        | todo Todo?   @relation(references: [id])
         |}
       """.stripMargin
     }
@@ -1352,16 +1352,16 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
   "A PM to C1 relation" should "be connectable by any unique argument through a nested mutation" in {
     val project = SchemaDsl.fromStringV11() {
       """
-        |type Todo {
-        | id: ID! @id
-        | comments: [Comment]
+        |model Todo {
+        | id       String    @id @default(cuid())
+        | comments Comment[]
         |}
         |
-        |type Comment {
-        | id: ID! @id
-        | text: String
-        | alias: String! @unique
-        | todo: Todo @relation(link:INLINE)
+        |model Comment {
+        | id    String  @id @default(cuid())
+        | text  String?
+        | alias String  @unique
+        | todo  Todo?   @relation(references: [id])
         |}
       """.stripMargin
     }
@@ -1397,16 +1397,16 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
 
   "A P1 to CM relation" should "be connectable by id through a nested mutation" in {
     val project = SchemaDsl.fromStringV11() {
-      """type Comment {
-        | id: ID! @id
-        | text: String
-        | todo: Todo @relation(link:INLINE)
+      """model Comment {
+        | id   String  @id @default(cuid())
+        | text String?
+        | todo Todo?   @relation(references: [id])
         |}
         |
-        |type Todo {
-        | id: ID! @id
-        | title: String!
-        | comments: [Comment]
+        |model Todo {
+        | id       String @id @default(cuid())
+        | title    String
+        | comments Comment[]
         |}
       """.stripMargin
     }
@@ -1442,16 +1442,16 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
 
   "A P1 to C1 relation" should "be connectable by id through a nested mutation" in {
     val project = SchemaDsl.fromStringV11() {
-      """type Note {
-        | id: ID! @id
-        | text: String
-        | todo: Todo @relation(link:INLINE)
+      """model Note {
+        | id    String  @id @default(cuid())
+        | text  String?
+        | todo  Todo?   @relation(references: [id])
         |}
         |
-        |type Todo {
-        | id: ID! @id
-        | title: String!
-        | note: Note
+        |model Todo {
+        | id     String @id @default(cuid())
+        | title  String
+        | note   Note?
         |}
       """.stripMargin
     }
@@ -1487,16 +1487,16 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
 
   "A P1 to C1 relation" should "connecting nodes by id through a nested mutation should not error when items are already connected" in {
     val project = SchemaDsl.fromStringV11() {
-      """type Note {
-        | id: ID! @id
-        | text: String
-        | todo: Todo
+      """model Note {
+        | id    String @id @default(cuid())
+        | text  String?
+        | todo  Todo?
         |}
         |
-        |type Todo {
-        | id: ID! @id
-        | title: String!
-        | note: Note @relation(link:INLINE)
+        |model Todo {
+        | id     String  @id @default(cuid())
+        | title  String
+        | note   Note?   @relation(references: [id])
         |}
       """.stripMargin
     }
@@ -1556,16 +1556,16 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
   "A PM to C1 relation" should "be connectable by unique through a nested mutation" in {
     val project = SchemaDsl.fromStringV11() {
       """
-        |type Todo {
-        | id: ID! @id
-        | title: String @unique
-        | comments: [Comment]
+        |model Todo {
+        | id       String    @id @default(cuid())
+        | title    String?   @unique
+        | comments Comment[]
         |}
         |
-        |type Comment {
-        | id: ID! @id
-        | text: String @unique
-        | todo: Todo @relation(link:INLINE)
+        |model Comment {
+        | id   String  @id @default(cuid())
+        | text String? @unique
+        | todo Todo?   @relation(references: [id])
         |}
       """.stripMargin
     }
@@ -1602,29 +1602,29 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
   "a PM to CM  self relation with the child not already in a relation" should "be connectable through a nested mutation by unique" in {
     val testDataModels = {
       val s1 =
-        """type Technology {
-          | id: ID! @id
-          | name: String! @unique
-          | childTechnologies: [Technology] @relation(name: "ChildTechnologies", link: INLINE)
-          | parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
+        """model Technology {
+          | id                 String       @id @default(cuid())
+          | name               String       @unique
+          | childTechnologies  Technology[] @relation(name: "ChildTechnologies", references: [id])
+          | parentTechnologies Technology[] @relation(name: "ChildTechnologies")
           |}
         """
 
       val s2 =
-        """type Technology {
-          | id: ID! @id
-          | name: String! @unique
-          | childTechnologies: [Technology] @relation(name: "ChildTechnologies")
-          | parentTechnologies: [Technology] @relation(name: "ChildTechnologies", link: INLINE)
+        """model Technology {
+          | id                 String       @id @default(cuid())
+          | name               String       @unique
+          | childTechnologies  Technology[] @relation(name: "ChildTechnologies")
+          | parentTechnologies Technology[] @relation(name: "ChildTechnologies", references: [id])
           |}
         """
 
       val s3 =
-        """type Technology {
-          | id: ID! @id
-          | name: String! @unique
-          | childTechnologies: [Technology] @relation(name: "ChildTechnologies")
-          | parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
+        """model Technology {
+          | id                 String       @id @default(cuid())
+          | name               String       @unique
+          | childTechnologies  Technology[] @relation(name: "ChildTechnologies")
+          | parentTechnologies Technology[] @relation(name: "ChildTechnologies")
           |}
         """
       TestDataModels(mongo = Vector(s1, s2), sql = Vector(s3))
