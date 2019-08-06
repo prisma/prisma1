@@ -236,7 +236,8 @@ fn render_column(
 ) -> String {
     let column_name = quote(&column_description.name, sql_family);
     let tpe_str = render_column_type(sql_family, column_description.tpe);
-    let nullability_str = if column_description.required { "NOT NULL" } else { "" };
+    let is_local = std::env::var("SERVER_ROOT").is_ok();
+    let nullability_str = if column_description.required && !is_local { "NOT NULL" } else { "" };
     let default_str = match &column_description.default {
         Some(value) => {
             match render_value(value) {

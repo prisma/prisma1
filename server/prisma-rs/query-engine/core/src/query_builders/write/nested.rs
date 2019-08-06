@@ -78,10 +78,12 @@ pub fn extract_nested_queries(
             _ => false,
         };
 
+        let is_local = std::env::var("SERVER_ROOT").is_ok();
         if triggered_from_create
             && (nq.creates.len() + nq.connects.len() > 0)
             && relation_field.is_required
             && is_unsupported
+            && !is_local
         {
             Err(QueryValidationError::AssertionError(
                 format!(
