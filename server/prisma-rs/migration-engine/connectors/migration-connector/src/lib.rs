@@ -17,7 +17,7 @@ pub use steps::*;
 #[macro_use]
 extern crate serde_derive;
 
-pub trait MigrationConnector {
+pub trait MigrationConnector: Send + Sync + 'static {
     type DatabaseMigration: DatabaseMigrationMarker + 'static;
 
     fn connector_type(&self) -> &'static str;

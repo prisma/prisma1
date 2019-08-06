@@ -276,6 +276,7 @@ impl<'a> From<ParameterizedValue<'a>> for PrismaValue {
             ParameterizedValue::Json(val) => PrismaValue::Json(val),
             ParameterizedValue::Uuid(uuid) => PrismaValue::Uuid(uuid),
             ParameterizedValue::DateTime(dt) => PrismaValue::DateTime(dt),
+            _ => unimplemented!()
         }
     }
 }

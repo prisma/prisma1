@@ -1,6 +1,9 @@
 use std::marker::PhantomData;
 
-pub trait DestructiveChangesChecker<T> {
+pub trait DestructiveChangesChecker<T>: Send + Sync + 'static
+where
+    T: Send + Sync + 'static,
+{
     fn check(&self, database_migration: &T) -> Vec<MigrationErrorOrWarning>;
 }
 
@@ -26,6 +29,7 @@ pub struct MigrationError {
 pub struct EmptyDestructiveChangesChecker<T> {
     database_migration: PhantomData<T>,
 }
+
 impl<T> EmptyDestructiveChangesChecker<T> {
     pub fn new() -> EmptyDestructiveChangesChecker<T> {
         EmptyDestructiveChangesChecker {
@@ -34,7 +38,10 @@ impl<T> EmptyDestructiveChangesChecker<T> {
     }
 }
 
-impl<T> DestructiveChangesChecker<T> for EmptyDestructiveChangesChecker<T> {
+impl<T> DestructiveChangesChecker<T> for EmptyDestructiveChangesChecker<T>
+where
+    T: Send + Sync + 'static,
+{
     fn check(&self, _database_migration: &T) -> Vec<MigrationErrorOrWarning> {
         Vec::new()
     }

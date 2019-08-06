@@ -3,35 +3,40 @@ use crate::migration_engine::MigrationEngine;
 use migration_connector::steps::*;
 use migration_connector::*;
 
-pub struct ListMigrationStepsCommand {
-    input: ListMigrationStepsInput,
-}
+pub struct ListMigrationStepsCommand;
 
-#[allow(unused)]
-impl MigrationCommand for ListMigrationStepsCommand {
+impl<'a> MigrationCommand<'a> for ListMigrationStepsCommand {
     type Input = ListMigrationStepsInput;
     type Output = Vec<ListMigrationStepsOutput>;
 
-    fn new(input: Self::Input) -> Box<Self> {
-        Box::new(ListMigrationStepsCommand { input })
+    fn new(_: &'a Self::Input) -> Box<Self> {
+        Box::new(ListMigrationStepsCommand {})
     }
 
-    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
-        println!("{:?}", self.input);
-        let connector = engine.connector();
+    fn execute<C, D>(&self, engine: &MigrationEngine<C, D>) -> CommandResult<Self::Output>
+    where
+        C: MigrationConnector<DatabaseMigration = D>,
+        D: DatabaseMigrationMarker + 'static,
+    {
         let migration_persistence = engine.connector().migration_persistence();
         let mut result = Vec::new();
+
         for migration in migration_persistence.load_all().into_iter() {
             result.push(convert_migration_to_list_migration_steps_output(&engine, migration)?);
         }
+
         Ok(result)
     }
 }
 
-pub fn convert_migration_to_list_migration_steps_output(
-    engine: &MigrationEngine,
+pub fn convert_migration_to_list_migration_steps_output<C, D>(
+    engine: &MigrationEngine<C, D>,
     migration: Migration,
-) -> CommandResult<ListMigrationStepsOutput> {
+) -> CommandResult<ListMigrationStepsOutput>
+where
+    C: MigrationConnector<DatabaseMigration = D>,
+    D: DatabaseMigrationMarker + 'static,
+{
     let connector = engine.connector();
     let database_migration = connector.deserialize_database_migration(migration.database_migration);
     let database_steps_json = connector

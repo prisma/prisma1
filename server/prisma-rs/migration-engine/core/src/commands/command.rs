@@ -1,15 +1,20 @@
 use crate::migration_engine::MigrationEngine;
+use migration_connector::*;
+use failure::Fail;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::convert::From;
 
-pub trait MigrationCommand {
-    type Input: DeserializeOwned;
+pub trait MigrationCommand<'a> {
+    type Input: DeserializeOwned + 'a;
     type Output: Serialize;
 
-    fn new(input: Self::Input) -> Box<Self>;
+    fn new(input: &'a Self::Input) -> Box<Self>;
 
-    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output>;
+    fn execute<C, D>(&self, engine: &MigrationEngine<C, D>) -> CommandResult<Self::Output>
+    where
+        C: MigrationConnector<DatabaseMigration = D>,
+        D: DatabaseMigrationMarker + 'static;
 
     fn has_source_config() -> bool {
         true
@@ -28,11 +33,16 @@ pub struct SourceConfigInput {
 
 pub type CommandResult<T> = Result<T, CommandError>;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Fail)]
 #[serde(tag = "type")]
 pub enum CommandError {
+    #[fail(display = "Errors in datamodel. (code: {}, errors: {:?})", code, errors)]
     DataModelErrors { code: i64, errors: Vec<String> },
+
+    #[fail(display = "Initialization error. (code: {}, error: {})", code, error)]
     InitializationError { code: i64, error: String },
+
+    #[fail(display = "Generic error. (code: {}, error: {})", code, error)]
     Generic { code: i64, error: String },
 }
 

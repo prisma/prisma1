@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 pub struct SqlMigrationPersistence {
     pub sql_family: SqlFamily,
-    pub connection: Arc<MigrationDatabase>,
+    pub connection: Arc<MigrationDatabase + Send + Sync + 'static>,
     pub schema_name: String,
     pub file_path: Option<String>,
 }

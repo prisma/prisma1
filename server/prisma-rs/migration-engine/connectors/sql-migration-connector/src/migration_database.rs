@@ -1,67 +1,55 @@
 use prisma_query::{
     ast::*,
-    connector::{self, Queryable, ResultSet, SqliteParams, PostgresParams, MysqlParams},
+    connector::{MysqlParams, PostgresParams, Queryable, ResultSet, SqliteParams},
+    pool::{mysql::*, postgres::*, sqlite::*, PrismaConnectionManager},
 };
-use std::{convert::TryFrom, sync::Mutex};
+use std::{convert::TryFrom, ops::DerefMut};
 
-pub trait MigrationDatabase {
+pub trait MigrationDatabase: Send + Sync + 'static {
     fn execute(&self, db: &str, q: Query) -> prisma_query::Result<Option<Id>>;
     fn query(&self, db: &str, q: Query) -> prisma_query::Result<ResultSet>;
     fn query_raw(&self, db: &str, sql: &str, params: &[ParameterizedValue]) -> prisma_query::Result<ResultSet>;
     fn execute_raw(&self, db: &str, sql: &str, params: &[ParameterizedValue]) -> prisma_query::Result<u64>;
 }
 
+type SqlitePool = r2d2::Pool<PrismaConnectionManager<SqliteConnectionManager>>;
+type PostgresPool = r2d2::Pool<PrismaConnectionManager<PostgresManager>>;
+type MysqlPool = r2d2::Pool<PrismaConnectionManager<MysqlConnectionManager>>;
+
 pub struct Sqlite {
-    inner: Mutex<Box<dyn Queryable>>,
+    pool: SqlitePool,
     pub(crate) file_path: String,
 }
 
 impl Sqlite {
     pub fn new(url: &str) -> prisma_query::Result<Self> {
         let params = SqliteParams::try_from(url)?;
-        let file_path = params.file_path.clone();
-        let conn = connector::Sqlite::new(params.file_path)?;
+        let file_path = params.file_path.to_str().unwrap().to_string();
+        let manager = PrismaConnectionManager::sqlite(&file_path)?;
+        let pool = r2d2::Pool::builder().max_size(params.connection_limit).build(manager)?;
 
-        Ok(Self {
-            inner: Mutex::new(Box::new(conn)),
-            file_path: file_path.to_str().unwrap().to_string(),
-        })
-    }
-
-    fn attach_database(&self, db: &str) {
-        self.inner
-            .lock()
-            .unwrap()
-            .execute_raw(
-                "ATTACH DATABASE ? AS ?",
-                &[
-                    ParameterizedValue::from(self.file_path.as_str()),
-                    ParameterizedValue::from(db),
-                ],
-            )
-            .unwrap();
-    }
-
-    fn detach_database(&self, db: &str) {
-        self.inner
-            .lock()
-            .unwrap()
-            .execute_raw("DETACH DATABASE ?", &[ParameterizedValue::from(db)])
-            .unwrap();
+        Ok(Self { pool, file_path })
     }
 
     fn with_connection<F, T>(&self, db: &str, f: F) -> T
     where
         F: FnOnce(&mut Queryable) -> T,
     {
-        self.attach_database(db);
+        let mut conn = self.pool.get().unwrap();
 
-        let res = {
-            let mut conn = self.inner.lock().unwrap();
-            f(&mut **conn)
-        };
+        conn.execute_raw(
+            "ATTACH DATABASE ? AS ?",
+            &[
+                ParameterizedValue::from(self.file_path.as_str()),
+                ParameterizedValue::from(db),
+            ],
+        )
+        .unwrap();
 
-        self.detach_database(db);
+        let res = f(conn.deref_mut());
+
+        conn.execute_raw("DETACH DATABASE ?", &[ParameterizedValue::from(db)])
+            .unwrap();
 
         res
     }
@@ -86,65 +74,75 @@ impl MigrationDatabase for Sqlite {
 }
 
 pub struct PostgreSql {
-    inner: Mutex<Box<dyn Queryable>>,
+    pool: PostgresPool,
 }
 
 impl PostgreSql {
     pub fn new(params: PostgresParams) -> prisma_query::Result<Self> {
-        let conn = connector::PostgreSql::new(params.config, Some(params.schema.clone()))?;
+        let pool = r2d2::Pool::try_from(params).unwrap();
+        Ok(Self { pool })
+    }
 
-        Ok(Self {
-            inner: Mutex::new(Box::new(conn)),
-        })
+    fn with_connection<F, T>(&self, f: F) -> T
+    where
+        F: FnOnce(&mut Queryable) -> T,
+    {
+        let mut conn = self.pool.get().unwrap();
+        f(conn.deref_mut())
     }
 }
 
 impl MigrationDatabase for PostgreSql {
     fn execute(&self, _: &str, q: Query) -> prisma_query::Result<Option<Id>> {
-        self.inner.lock().unwrap().execute(q)
+        self.with_connection(|conn| conn.execute(q))
     }
 
     fn query(&self, _: &str, q: Query) -> prisma_query::Result<ResultSet> {
-        self.inner.lock().unwrap().query(q)
+        self.with_connection(|conn| conn.query(q))
     }
 
     fn query_raw(&self, _: &str, sql: &str, params: &[ParameterizedValue]) -> prisma_query::Result<ResultSet> {
-        self.inner.lock().unwrap().query_raw(sql, params)
+        self.with_connection(|conn| conn.query_raw(sql, params))
     }
 
     fn execute_raw(&self, _: &str, sql: &str, params: &[ParameterizedValue]) -> prisma_query::Result<u64> {
-        self.inner.lock().unwrap().execute_raw(sql, params)
+        self.with_connection(|conn| conn.execute_raw(sql, params))
     }
 }
 
 pub struct Mysql {
-    inner: Mutex<Box<dyn Queryable>>,
+    pool: MysqlPool,
 }
 
 impl Mysql {
     pub fn new(params: MysqlParams) -> prisma_query::Result<Self> {
-        let conn = connector::Mysql::new(params.config)?;
+        let pool = r2d2::Pool::try_from(params).unwrap();
+        Ok(Self { pool })
+    }
 
-        Ok(Self {
-            inner: Mutex::new(Box::new(conn)),
-        })
+    fn with_connection<F, T>(&self, f: F) -> T
+    where
+        F: FnOnce(&mut Queryable) -> T,
+    {
+        let mut conn = self.pool.get().unwrap();
+        f(conn.deref_mut())
     }
 }
 
 impl MigrationDatabase for Mysql {
     fn execute(&self, _: &str, q: Query) -> prisma_query::Result<Option<Id>> {
-        self.inner.lock().unwrap().execute(q)
+        self.with_connection(|conn| conn.execute(q))
     }
 
     fn query(&self, _: &str, q: Query) -> prisma_query::Result<ResultSet> {
-        self.inner.lock().unwrap().query(q)
+        self.with_connection(|conn| conn.query(q))
     }
 
     fn query_raw(&self, _: &str, sql: &str, params: &[ParameterizedValue]) -> prisma_query::Result<ResultSet> {
-        self.inner.lock().unwrap().query_raw(sql, params)
+        self.with_connection(|conn| conn.query_raw(sql, params))
     }
 
     fn execute_raw(&self, _: &str, sql: &str, params: &[ParameterizedValue]) -> prisma_query::Result<u64> {
-        self.inner.lock().unwrap().execute_raw(sql, params)
+        self.with_connection(|conn| conn.execute_raw(sql, params))
     }
 }
