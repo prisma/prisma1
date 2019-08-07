@@ -688,7 +688,7 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
       """
         |mutation {
         |  createComment(data: {
-        |    reqOnComment: "comment1"
+        |    reqOnComment: "comment2"
         |    todo: {}
         |  }){
         |    id
@@ -712,9 +712,10 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
         |mutation {
         |  createTodo(data: {
         |       reqOnTodo: "todo2"
-        |       }
-        |       )
-        |  {id}
+        |  })
+        |  {
+        |    id
+        |  }
         |}
       """.stripMargin,
         project
@@ -728,7 +729,7 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
       s"""
         |mutation {
         |  createComment(data: {
-        |    reqOnComment: "comment1"
+        |    reqOnComment: "comment3"
         |    todo: {
         |      connect: {id: "$todoId"}
         |    }
