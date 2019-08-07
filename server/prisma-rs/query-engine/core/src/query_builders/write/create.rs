@@ -3,6 +3,7 @@ use crate::query_builders::{Builder, ParsedField, ParsedInputMap, QueryBuilderRe
 use connector::write_ast::*;
 use prisma_models::ModelRef;
 use std::convert::TryInto;
+use std::sync::Arc;
 
 pub struct CreateBuilder {
     field: ParsedField,
@@ -31,9 +32,11 @@ impl Builder<WriteQuery> for CreateBuilder {
 impl CreateBuilder {
     pub fn build_from(model: ModelRef, data: ParsedInputMap) -> QueryBuilderResult<CreateRecord> {
         let create_args = WriteArguments::from(&model, data, true)?;
+        let mut non_list_args = create_args.non_list;
+        non_list_args.add_datetimes(Arc::clone(&model));
         Ok(CreateRecord {
             model: model,
-            non_list_args: create_args.non_list,
+            non_list_args: non_list_args,
             list_args: create_args.list,
             nested_writes: create_args.nested,
         })
