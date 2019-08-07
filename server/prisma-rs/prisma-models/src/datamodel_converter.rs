@@ -170,12 +170,15 @@ impl<'a> DatamodelConverter<'a> {
                                 related_field.clone(),
                                 field.clone(),
                             ),
-                            _ => (
-                                model.clone(),
-                                related_model.clone(),
-                                field.clone(),
-                                related_field.clone(),
-                            ),
+                            // SELF RELATION CASE
+                            _ => {
+                                let (field_a, field_b) = if field.name < related_field.name {
+                                    (field.clone(), related_field.clone())
+                                } else {
+                                    (related_field.clone(), field.clone())
+                                };
+                                (model.clone(), related_model.clone(), field_a, field_b)
+                            }
                         };
                         let inline_on_model_a = TempManifestationHolder::Inline {
                             in_table_of_model: model_a.name.clone(),
