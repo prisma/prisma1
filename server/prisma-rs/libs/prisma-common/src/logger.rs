@@ -1,8 +1,8 @@
+use slog::Drain;
 use slog_async::Async;
 use slog_json::Json;
-use slog_scope::{GlobalLoggerGuard, logger};
+use slog_scope::{logger, GlobalLoggerGuard};
 use slog_term::{FullFormat, TermDecorator};
-use slog::Drain;
 
 pub struct Logger {
     _scope_guard: GlobalLoggerGuard,
@@ -29,7 +29,7 @@ impl Logger {
             }
             _ => {
                 let drain = Json::new(std::io::stdout()).add_default_keys().build().fuse();
-                let drain = Async::new(drain).build().fuse();
+                let drain = Async::new(drain).chan_size(1024).build().fuse();
 
                 let log = slog::Logger::root(drain, o!("application" => application));
 
