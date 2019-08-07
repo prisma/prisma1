@@ -1,0 +1,103 @@
+{
+  "tables": [
+    {
+      "name": "table1",
+      "columns": [
+        {
+          "name": "column1",
+          "tpe": {
+            "raw": "integer",
+            "family": "Int"
+          },
+          "arity": "Required",
+          "default": null,
+          "auto_increment": true
+        },
+        {
+          "name": "column2",
+          "tpe": {
+            "raw": "varchar(255)",
+            "family": "String"
+          },
+          "arity": "Nullable",
+          "default": "default value",
+          "auto_increment": false
+        },
+        {
+          "name": "column3",
+          "tpe": {
+            "raw": "integer",
+            "family": "Int"
+          },
+          "arity": "Required",
+          "default": null,
+          "auto_increment": false
+        }
+      ],
+      "indices": [
+        {
+          "name": "column2",
+          "columns": [
+            "column2"
+          ],
+          "unique": false
+        }
+      ],
+      "primary_key": {
+        "columns": [
+          "column1"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "column3"
+          ],
+          "referenced_table": "table2",
+          "referenced_columns": [
+            "id"
+          ],
+          "on_delete_action": "NoAction"
+        }
+      ]
+    },
+    {
+      "name": "table2",
+      "columns": [
+        {
+          "name": "id",
+          "tpe": {
+            "raw": "integer",
+            "family": "Int"
+          },
+          "arity": "Required",
+          "default": null,
+          "auto_increment": true
+        }
+      ],
+      "indices": [],
+      "primary_key": {
+        "columns": [
+          "id"
+        ]
+      },
+      "foreign_keys": []
+    }
+  ],
+  "enums": [
+    {
+      "name": "enum1",
+      "values": [
+        "option2",
+        "option1"
+      ]
+    }
+  ],
+  "sequences": [
+    {
+      "name": "sequence1",
+      "initial_value": 1,
+      "allocation_size": 32
+    }
+  ]
+}
