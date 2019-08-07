@@ -235,6 +235,11 @@ version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "barrel"
+version = "0.6.3-alpha.0"
+source = "git+https://github.com/aknuds1/barrel.git?branch=bugfix/fix-index-creation#49fceb2ed9e1b9ebd5f06158053f02d7e9f90ae1"
+
+[[package]]
 name = "base64"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -613,7 +618,7 @@ dependencies = [
 name = "database-introspection"
 version = "0.1.0"
 dependencies = [
- "barrel 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "barrel 0.6.3-alpha.0 (git+https://github.com/aknuds1/barrel.git?branch=bugfix/fix-index-creation)",
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "fern 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3252,7 +3257,7 @@ name = "twox-hash"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "rand 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -3558,6 +3563,7 @@ dependencies = [
 "checksum backtrace 0.3.34 (registry+https://github.com/rust-lang/crates.io-index)" = "b5164d292487f037ece34ec0de2fcede2faa162f085dd96d2385ab81b12765ba"
 "checksum backtrace-sys 0.1.31 (registry+https://github.com/rust-lang/crates.io-index)" = "82a830b4ef2d1124a711c71d263c5abdc710ef8e907bd508c88be475cebc422b"
 "checksum barrel 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "5497422862a693058ae19670b3e99e999ef048cd3f26f9ffceca2ed103ccc0ad"
+"checksum barrel 0.6.3-alpha.0 (git+https://github.com/aknuds1/barrel.git?branch=bugfix/fix-index-creation)" = "<none>"
 "checksum base64 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0b25d992356d2eb0ed82172f5248873db5560c4721f564b13cb5193bda5e668e"
 "checksum base64 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)" = "489d6c0ed21b11d038c31b6ceccca973e65d73ba3bd8ecb9a2babf5546164643"
 "checksum bit-vec 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f59bbe95d4e52a6398ec21238d31577f2b28a9d86807f06ca59d191d8440d0bb"
