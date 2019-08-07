@@ -7,8 +7,8 @@ edition = "2018"
 [dependencies]
 failure = "0.1"
 chrono = { version = "0.4" }
+serde = {version = "1.0", features = ["derive"]}
 serde_json = "1.0"
-serde = "1.0"
 rusqlite = { version = "0.19", features = ["chrono", "bundled"] }
 prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 barrel = { version = "0.6.3-alpha.0", features = ["sqlite3", "mysql", "pg"] }
