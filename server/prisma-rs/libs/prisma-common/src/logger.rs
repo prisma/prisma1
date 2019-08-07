@@ -29,7 +29,7 @@ impl Logger {
             }
             _ => {
                 let drain = Json::new(std::io::stdout()).add_default_keys().build().fuse();
-                let drain = Async::new(drain).chan_size(1024).build().fuse();
+                let drain = Async::new(drain).chan_size(16384).overflow_strategy(slog_async::OverflowStrategy::Block).build().fuse();
 
                 let log = slog::Logger::root(drain, o!("application" => application));
 
