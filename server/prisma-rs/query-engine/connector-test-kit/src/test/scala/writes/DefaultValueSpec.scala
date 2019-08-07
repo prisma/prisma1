@@ -74,8 +74,8 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiSpecBase {
         |model Service {
         |  id           String    @id @default(cuid())
         |  name         String
-        |  description  String
-        |  unit         String
+        |  description  String?
+        |  unit         String?
         |  active       IsActive? @default(value: Yes)
         |}
       """.stripMargin

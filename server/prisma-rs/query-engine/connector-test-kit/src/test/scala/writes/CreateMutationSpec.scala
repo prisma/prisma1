@@ -130,12 +130,12 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A Create Mutation" should "fail when an Int is invalid" in {
-    val result = server.queryThatMustFail(
+    server.queryThatMustFail(
       s"""mutation {createScalarModel(data: {optString: "test", optInt: B, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z" }){optString, optInt, optFloat, optBoolean, optEnum, optDateTime }}""",
       project = project,
-      0
+      0,
+      errorContains = """Value types mismatch. Have: Enum("B"), want: Scalar(Int)"""
     )
-    result.toString should include("Int value expected")
   }
 
   "A Create Mutation" should "gracefully fail when a unique violation occurs" in {
