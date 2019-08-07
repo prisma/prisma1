@@ -783,7 +783,6 @@ fn is_required_must_work() {
         },
         |db_type, inspector| {
             let result = inspector.introspect(&SCHEMA.to_string()).expect("introspecting");
-
             let user_table = result.get_table("User").expect("getting User table");
             let expected_columns = vec![
                 Column {
@@ -972,6 +971,73 @@ fn postgres_sequences_must_work() {
             name: "test".to_string(),
             initial_value: 1,
             allocation_size: 1,
+        },
+    );
+}
+
+#[test]
+fn indices_must_work() {
+    setup();
+
+    test_each_backend(
+        |db_type, mut migration| {
+            migration.create_table("User", move |t| {
+                t.add_column("id", types::primary());
+                t.add_column("name", types::text());
+                // TODO: Fix barrel for making SQLite indices
+                if db_type == DbType::Sqlite {
+                    return;
+                }
+
+                t.add_index("name", types::index(vec!["name"]));
+            });
+        },
+        |db_type, inspector| {
+            // TODO: Fix barrel for making SQLite indices
+            if db_type == DbType::Sqlite {
+                return;
+            }
+
+            let result = inspector.introspect(&SCHEMA.to_string()).expect("introspecting");
+            let user_table = result.get_table("User").expect("getting User table");
+            let expected_columns = vec![
+                Column {
+                    name: "id".to_string(),
+                    tpe: ColumnType {
+                        raw: int_type(db_type),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Required,
+                    default: Some(format!("nextval('\"{}\".\"User_id_seq\"'::regclass)", SCHEMA)),
+                    auto_increment: None,
+                },
+                Column {
+                    name: "name".to_string(),
+                    tpe: ColumnType {
+                        raw: text_type(db_type),
+                        family: ColumnTypeFamily::String,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+            ];
+            assert_eq!(
+                user_table,
+                &Table {
+                    name: "User".to_string(),
+                    columns: expected_columns,
+                    indices: vec![Index {
+                        name: "name".to_string(),
+                        columns: vec!["name".to_string()],
+                        unique: false,
+                    },],
+                    primary_key: Some(PrimaryKey {
+                        columns: vec!["id".to_string()],
+                    }),
+                    foreign_keys: vec![],
+                }
+            );
         },
     );
 }
