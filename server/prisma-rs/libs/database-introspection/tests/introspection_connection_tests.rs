@@ -1581,11 +1581,7 @@ fn indices_must_work() {
             });
         },
         |db_type, inspector| {
-            if db_type == DbType::Sqlite {
-                return;
-            }
-
-            let result = inspector.introspect(SCHEMA).expect("introspecting");
+            let result = inspector.introspect(&SCHEMA.to_string()).expect("introspecting");
             let user_table = result.get_table("User").expect("getting User table");
             let default = match db_type {
                 DbType::Postgres => Some(format!("nextval('\"{}\".\"User_id_seq\"'::regclass)", SCHEMA)),
