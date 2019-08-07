@@ -16,8 +16,7 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
 
   def capabilities = {
     // TODO: implement Capabilities resolution
-//    testDependencies.apiConnector.capabilities
-    ConnectorCapabilities(Prisma2Capability)
+    ConnectorCapabilities.sqliteNative
   }
 
   override protected def beforeAll(): Unit = {
