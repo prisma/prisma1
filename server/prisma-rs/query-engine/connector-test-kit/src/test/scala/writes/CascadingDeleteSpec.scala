@@ -748,14 +748,14 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       """
         |model P {
         |  id String @id @default(cuid())
-        |  p: String! @unique
-        |  c: C! @relation(onDelete: CASCADE references: [id])
+        |  p  String @unique
+        |  c  C      @relation(onDelete: CASCADE, references: [id])
         |}
         |
         |model C {
         |  id String @id @default(cuid())
-        |  c: String! @unique
-        |  p: P! 
+        |  c  String @unique
+        |  p  P
         |}
       """.stripMargin
     }
@@ -817,21 +817,21 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       """
         |model P {
         |  id String @id @default(cuid())
-        |  p: String! @unique
-        |  c: C! @relation(references: [id])
+        |  p  String @unique
+        |  c  C      @relation(references: [id])
         |}
         |
         |model C {
         |  id String @id @default(cuid())
-        |  c: String! @unique
-        |  p: P!
-        |  gc: GC! @relation(onDelete: CASCADE, references: [id])
+        |  c  String @unique
+        |  p  P
+        |  gc GC @relation(onDelete: CASCADE, references: [id])
         |}
         |
         |model GC {
         |  id String @id @default(cuid())
-        |  gc: String! @unique
-        |  c: C!
+        |  gc String @unique
+        |  c  C
         |}
       """.stripMargin
     }
