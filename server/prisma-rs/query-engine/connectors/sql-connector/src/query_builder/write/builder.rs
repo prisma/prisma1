@@ -8,16 +8,20 @@ impl WriteQueryBuilder {
     const PARAMETER_LIMIT: usize = 10000;
 
     pub fn create_record(model: ModelRef, mut args: PrismaArgs) -> (Insert<'static>, Option<GraphqlId>) {
-        let model_id = model.fields().id();
+        let id_field = model.fields().id();
 
-        let return_id = match args.get_field_value(&model_id.name) {
-            _ if model_id.is_auto_generated => None,
+        let return_id = match args.get_field_value(&id_field.name) {
+            _ if id_field.is_auto_generated => None,
             Some(PrismaValue::Null) | None => {
                 let id = model.generate_id();
-                args.insert(model_id.name.as_str(), id.clone());
+                args.insert(id_field.name.as_str(), id.clone());
                 Some(id)
             }
-            Some(PrismaValue::GraphqlId(id)) => Some(id.clone()),
+            Some(prisma_value) => Some(
+                prisma_value
+                    .as_graphql_id()
+                    .expect("Could not convert prisma value to graphqlid"),
+            ),
             _ => None,
         };
 
@@ -38,7 +42,7 @@ impl WriteQueryBuilder {
             .into_iter()
             .fold(base, |acc, (name, value)| acc.value(name.into_owned(), value));
 
-        (Insert::from(insert).returning(vec![model_id.as_column()]), return_id)
+        (Insert::from(insert).returning(vec![id_field.as_column()]), return_id)
     }
 
     pub fn create_relation(field: RelationFieldRef, parent_id: &GraphqlId, child_id: &GraphqlId) -> Query<'static> {
