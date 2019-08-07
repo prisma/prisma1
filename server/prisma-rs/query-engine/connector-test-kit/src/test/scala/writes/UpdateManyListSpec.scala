@@ -78,10 +78,9 @@ class UpdateManyListSpec extends FlatSpec with Matchers with ApiSpecBase {
   "The updateMany Mutation" should "update Lists of DateTimes" in {
     test { project =>
       server
-        .query("""mutation a {updateManyMyObjects(data:{datetimes: { set: ["2019","2018-12-05T12:34:23.000Z"] }}){count}}""", project)
+        .query("""mutation a {updateManyMyObjects(data:{datetimes: { set: ["2018-12-05T12:34:23.000Z"] }}){count}}""", project)
         .pathAsLong("data.updateManyMyObjects.count") should be(1)
-      server.query("""{myObjects{datetimes}}""", project).toString should be(
-        """{"data":{"myObjects":[{"datetimes":["2019-01-01T00:00:00.000Z","2018-12-05T12:34:23.000Z"]}]}}""")
+      server.query("""{myObjects{datetimes}}""", project).toString should be("""{"data":{"myObjects":[{"datetimes":["2018-12-05T12:34:23.000Z"]}]}}""")
       server
         .query("""mutation a {updateManyMyObjects(data:{datetimes: { set: [] }}){count}}""", project)
         .pathAsLong("data.updateManyMyObjects.count") should be(1)
