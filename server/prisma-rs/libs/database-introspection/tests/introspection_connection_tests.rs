@@ -1131,7 +1131,7 @@ fn get_postgres_connector(sql: &str) -> postgres::IntrospectionConnector {
         Err(_) => "127.0.0.1",
     };
     let mut client = ::postgres::Config::new()
-        .user("prisma")
+        .user("postgres")
         .password("prisma")
         .host(host)
         .port(5432)
