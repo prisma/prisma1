@@ -253,7 +253,7 @@ fn render_column(
             format!("REFERENCES \"{}\".\"{}\"(\"{}\")", schema_name, fk.table, fk.column)
         }
         (SqlFamily::Mysql, Some(fk)) => format!("REFERENCES `{}`.`{}`(`{}`)", schema_name, fk.table, fk.column),
-        (SqlFamily::Sqlite, Some(fk)) => format!("REFERENCES \"{}\"({})", fk.table, fk.column),
+        (SqlFamily::Sqlite, Some(fk)) => format!("REFERENCES \"{}\"({}) ON DELETE SET NULL", fk.table, fk.column),
         (_, None) => "".to_string(),
     };
     match (sql_family, &column_description.foreign_key) {
