@@ -500,7 +500,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """.stripMargin,
       project,
       errorCode = 3040,
-      errorContains = "You provided an invalid argument for the where selector on Todo."
+      errorContains = "You provided a null value for the where clause on Todo."
     )
   }
 
