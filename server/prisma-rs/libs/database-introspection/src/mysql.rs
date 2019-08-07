@@ -14,7 +14,6 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 
     fn introspect(&self, schema: &str) -> Result<DatabaseSchema> {
         debug!("Introspecting schema '{}'", schema);
-        println!("Introspecting schema '{}'", schema);
         let tables = self
             .get_table_names(schema)
             .into_iter()
