@@ -1135,7 +1135,7 @@ fn get_postgres_connector(sql: &str) -> postgres::IntrospectionConnector {
         .password("prisma")
         .host(host)
         .port(5432)
-        .dbname("prisma-test")
+        .dbname("postgres")
         .connect(::postgres::NoTls)
         .expect("connecting to Postgres");
 
