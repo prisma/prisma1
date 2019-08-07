@@ -250,10 +250,10 @@ fn render_column(
     };
     let references_str = match (sql_family, &column_description.foreign_key) {
         (SqlFamily::Postgres, Some(fk)) => {
-            format!("REFERENCES \"{}\".\"{}\"(\"{}\")", schema_name, fk.table, fk.column)
+            format!("REFERENCES \"{}\".\"{}\"(\"{}\") {}", schema_name, fk.table, fk.column, render_on_delete(&fk.on_delete))
         }
-        (SqlFamily::Mysql, Some(fk)) => format!("REFERENCES `{}`.`{}`(`{}`)", schema_name, fk.table, fk.column),
-        (SqlFamily::Sqlite, Some(fk)) => format!("REFERENCES \"{}\"({}) ON DELETE SET NULL", fk.table, fk.column),
+        (SqlFamily::Mysql, Some(fk)) => format!("REFERENCES `{}`.`{}`(`{}`) {}", schema_name, fk.table, fk.column, render_on_delete(&fk.on_delete)),
+        (SqlFamily::Sqlite, Some(fk)) => format!("REFERENCES \"{}\"({}) {}", fk.table, fk.column, render_on_delete(&fk.on_delete)),
         (_, None) => "".to_string(),
     };
     match (sql_family, &column_description.foreign_key) {
@@ -269,6 +269,14 @@ fn render_column(
             "{} {} {} {} {}",
             column_name, tpe_str, nullability_str, default_str, references_str
         ),
+    }
+}
+
+fn render_on_delete(on_delete: &OnDelete) -> &'static str {
+    match on_delete {
+        OnDelete::NoAction => "",
+        OnDelete::SetNull => "ON DELETE SET NULL",
+        OnDelete::Cascade => "ON DELETE CASCADE",
     }
 }
 

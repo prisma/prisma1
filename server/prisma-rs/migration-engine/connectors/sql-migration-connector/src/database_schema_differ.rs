@@ -143,6 +143,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         let fk = column.foreign_key.as_ref().map(|fk| ForeignKey {
             table: fk.table.clone(),
             column: fk.column.clone(),
+            on_delete: Self::convert_on_delete(fk.on_delete),
         });
         ColumnDescription {
             name: column.name.clone(),
@@ -150,6 +151,14 @@ impl<'a> DatabaseSchemaDiffer<'a> {
             required: column.is_required,
             foreign_key: fk,
             default: column.default.clone(),
+        }
+    }
+
+    fn convert_on_delete(on_delete: database_inspector::OnDelete) -> OnDelete {
+        match on_delete {
+            database_inspector::OnDelete::NoAction => OnDelete::NoAction,
+            database_inspector::OnDelete::SetNull => OnDelete::SetNull,
+            database_inspector::OnDelete::Cascade => OnDelete::Cascade,
         }
     }
 

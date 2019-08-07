@@ -15,6 +15,7 @@ pub fn convert_introspected_columns(
                     name: Some(fk.name.clone()),
                     table: fk.referenced_table.clone(),
                     column: fk.referenced_column.clone(),
+                    on_delete: OnDelete::NoAction, // TODO:: fix this hardcoded value
                 });
             Column {
                 name: c.name.clone(),
