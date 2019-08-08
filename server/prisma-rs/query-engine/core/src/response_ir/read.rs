@@ -197,7 +197,7 @@ fn write_nested_items(
                             Item::Value(PrismaValue::Null)
                         }
                     }
-                    x => panic!("received invalid output type {:?} on field name {}", x, &field_name),
+                    x => panic!("Application logic invariant error: received null value for field {} which may not be null", &field_name),
                 };
 
                 into.insert(field_name.to_owned(), Item::Ref(ItemRef::new(default)));

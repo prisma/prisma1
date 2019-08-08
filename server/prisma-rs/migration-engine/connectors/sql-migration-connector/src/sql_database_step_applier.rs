@@ -236,7 +236,7 @@ fn render_column(
 ) -> String {
     let column_name = quote(&column_description.name, sql_family);
     let tpe_str = render_column_type(sql_family, column_description.tpe);
-//    let is_local = std::env::var("SERVER_ROOT").is_ok();
+    // TODO: bring back when the query planning for writes is done
     let nullability_str = if column_description.required && column_description.foreign_key.is_none() { "NOT NULL" } else { "" };
     let default_str = match &column_description.default {
         Some(value) => {

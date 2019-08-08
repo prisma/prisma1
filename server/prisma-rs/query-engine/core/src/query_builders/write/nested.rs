@@ -78,23 +78,23 @@ pub fn extract_nested_queries(
             _ => false,
         };
 
-        let is_local = std::env::var("SERVER_ROOT").is_ok();
-        if triggered_from_create
-            && (nq.creates.len() + nq.connects.len() > 0)
-            && relation_field.is_required
-            && is_unsupported
-            && !is_local
-        {
-            Err(QueryValidationError::AssertionError(
-                format!(
-                    "A create or connect cannot be performed in this direction. You're first creating a {} and then {}, but only the reverse order is currently supported. This limitation will be lifted for general availability",
-                    relation_field.model().name,
-                    relation_field.related_model().name)
-                )
-            )
-        } else {
-            Ok(nq)
-        }
+        // TODO: probably we don't need the check anymore. Remove when the query planning for writes is done.
+//        if triggered_from_create
+//            && (nq.creates.len() + nq.connects.len() > 0)
+//            && relation_field.is_required
+//            && is_unsupported
+//        {
+//            Err(QueryValidationError::AssertionError(
+//                format!(
+//                    "A create or connect cannot be performed in this direction. You're first creating a {} and then {}, but only the reverse order is currently supported. This limitation will be lifted for general availability",
+//                    relation_field.model().name,
+//                    relation_field.related_model().name)
+//                )
+//            )
+//        } else {
+//            Ok(nq)
+//        }
+        Ok(nq)
     })
 }
 
