@@ -136,35 +136,37 @@ impl IntrospectionConnector {
 
     fn get_foreign_keys(&self, schema: &str, table: &str) -> Vec<ForeignKey> {
         let sql = format!(
-            "select 
+            "SELECT 
                 con.oid as \"con_id\",
                 att2.attname as \"child_column\", 
                 cl.relname as \"parent_table\", 
-                att.attname as \"parent_column\"
-            from
-            (select 
+                att.attname as \"parent_column\",
+                con.confdeltype
+            FROM
+            (SELECT 
                     unnest(con1.conkey) as \"parent\", 
                     unnest(con1.confkey) as \"child\", 
                     con1.oid,
                     con1.confrelid, 
                     con1.conrelid,
-                    con1.conname
-                from 
+                    con1.conname,
+                    con1.confdeltype
+                FROM 
                     pg_class cl
                     join pg_namespace ns on cl.relnamespace = ns.oid
                     join pg_constraint con1 on con1.conrelid = cl.oid
-                where
+                WHERE
                     cl.relname = '{}'
                     and ns.nspname = '{}'
                     and con1.contype = 'f'
             ) con
-            join pg_attribute att on
+            JOIN pg_attribute att on
                 att.attrelid = con.confrelid and att.attnum = con.child
-            join pg_class cl on
+            JOIN pg_class cl on
                 cl.oid = con.confrelid
-            join pg_attribute att2 on
+            JOIN pg_attribute att2 on
                 att2.attrelid = con.conrelid and att2.attnum = con.parent
-            ORDER BY child_column
+            ORDER BY con_id
             ",
             table, schema
         );
@@ -190,6 +192,18 @@ impl IntrospectionConnector {
                 .get("parent_column")
                 .and_then(|x| x.to_string())
                 .expect("get parent_column");
+            let confdeltype = row
+                .get("confdeltype")
+                .and_then(|x| x.as_char())
+                .expect("get confdeltype");
+            let on_delete_action = match confdeltype {
+                'a' => ForeignKeyAction::NoAction,
+                'r' => ForeignKeyAction::Restrict,
+                'c' => ForeignKeyAction::Cascade,
+                'n' => ForeignKeyAction::SetNull,
+                'd' => ForeignKeyAction::SetDefault,
+                _ => panic!(format!("unrecognized foreign key action '{}'", confdeltype)),
+            };
             match intermediate_fks.get_mut(&id) {
                 Some(fk) => {
                     fk.columns.push(column);
@@ -200,7 +214,7 @@ impl IntrospectionConnector {
                         columns: vec![column],
                         referenced_table,
                         referenced_columns: vec![referenced_column],
-                        on_delete_action: ForeignKeyAction::NoAction,
+                        on_delete_action,
                     };
                     intermediate_fks.insert(id, fk);
                 }

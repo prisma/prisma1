@@ -222,7 +222,7 @@ fn all_postgres_column_types_must_work() {
 
     let full_sql = migration.make::<barrel::backend::Pg>();
     let mut inspector = get_postgres_connector(&full_sql);
-    let result = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
+    let result = inspector.introspect(SCHEMA).expect("introspection");
     let mut table = result.get_table("User").expect("couldn't get User table").to_owned();
     // Ensure columns are sorted as expected when comparing
     table.columns.sort_unstable_by_key(|c| c.name.to_owned());
@@ -711,7 +711,7 @@ fn sqlite_column_types_must_work() {
 
     let full_sql = migration.make::<barrel::backend::Pg>();
     let mut inspector = get_sqlite_connector(&full_sql);
-    let result = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
+    let result = inspector.introspect(SCHEMA).expect("introspection");
     let table = result.get_table("User").expect("couldn't get User table");
     let db_type = DbType::Sqlite;
     let mut expected_columns = vec![
@@ -784,7 +784,7 @@ fn is_required_must_work() {
             });
         },
         |db_type, inspector| {
-            let result = inspector.introspect(&SCHEMA.to_string()).expect("introspecting");
+            let result = inspector.introspect(SCHEMA).expect("introspecting");
             let user_table = result.get_table("User").expect("getting User table");
             let expected_columns = vec![
                 Column {
@@ -834,7 +834,7 @@ fn foreign_keys_must_work() {
             });
         },
         |db_type, inspector| {
-            let schema = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
+            let schema = inspector.introspect(SCHEMA).expect("introspection");
             let user_table = schema.get_table("User").expect("couldn't get User table");
             let expected_columns = vec![Column {
                 name: "city".to_string(),
@@ -1095,7 +1095,7 @@ fn postgres_sequences_must_work() {
 
     let mut inspector = get_postgres_connector(&format!("CREATE SEQUENCE \"{}\".\"test\"", SCHEMA));
 
-    let schema = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
+    let schema = inspector.introspect(SCHEMA).expect("introspection");
     let got_seq = schema.get_sequence("test").expect("get sequence");
 
     assert_eq!(
@@ -1131,7 +1131,7 @@ fn indices_must_work() {
                 return;
             }
 
-            let result = inspector.introspect(&SCHEMA.to_string()).expect("introspecting");
+            let result = inspector.introspect(SCHEMA).expect("introspecting");
             let user_table = result.get_table("User").expect("getting User table");
             let expected_columns = vec![
                 Column {
