@@ -1220,7 +1220,8 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     }
   }
 
-  "A PM to PM relation connecting two nodes twice" should "not error" in {
+  // TODO: @Marcus bring this back after migration engine fix
+  "A PM to PM relation connecting two nodes twice" should "not error" ignore {
     schemaPMToCM.test { dataModel =>
       val project = SchemaDsl.fromStringV11() {
         dataModel
