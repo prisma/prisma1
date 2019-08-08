@@ -200,6 +200,7 @@ impl IntrospectionConnector {
                     columns,
                     referenced_table: intermediate_fk.referenced_table.to_owned(),
                     referenced_columns,
+                    on_delete_action: ForeignKeyAction::NoAction,
                 };
                 debug!("Detected foreign key {:?}", fk);
                 fk

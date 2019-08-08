@@ -164,6 +164,7 @@ impl IntrospectionConnector {
                 cl.oid = con.confrelid
             join pg_attribute att2 on
                 att2.attrelid = con.conrelid and att2.attnum = con.parent
+            ORDER BY child_column
             ",
             table, schema
         );
@@ -199,6 +200,7 @@ impl IntrospectionConnector {
                         columns: vec![column],
                         referenced_table,
                         referenced_columns: vec![referenced_column],
+                        on_delete_action: ForeignKeyAction::NoAction,
                     };
                     intermediate_fks.insert(id, fk);
                 }

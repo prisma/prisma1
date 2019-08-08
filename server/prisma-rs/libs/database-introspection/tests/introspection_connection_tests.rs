@@ -858,6 +858,7 @@ fn foreign_keys_must_work() {
                         columns: vec!["city".to_string()],
                         referenced_columns: vec!["id".to_string()],
                         referenced_table: "City".to_string(),
+                        on_delete_action: ForeignKeyAction::NoAction,
                     }],
                 }
             );
@@ -926,10 +927,140 @@ fn multi_column_foreign_keys_must_work() {
                         columns: vec!["city".to_string(), "city_name".to_string()],
                         referenced_columns: vec!["id".to_string(), "name".to_string()],
                         referenced_table: "City".to_string(),
+                        on_delete_action: ForeignKeyAction::NoAction,
                     },],
                 }
             );
         },
+    );
+}
+
+#[test]
+fn postgres_foreign_key_on_delete_must_be_handled() {
+    setup();
+
+    let sql = format!(
+        "CREATE TABLE \"{0}\".\"City\" (id INT PRIMARY KEY);
+         CREATE TABLE \"{0}\".\"User\" (
+            id INT PRIMARY KEY, 
+            city INT REFERENCES \"{0}\".\"City\" (id) ON DELETE NO ACTION,
+            city_cascade INT REFERENCES \"{0}\".\"City\" (id) ON DELETE CASCADE,
+            city_restrict INT REFERENCES \"{0}\".\"City\" (id) ON DELETE RESTRICT,
+            city_set_null INT REFERENCES \"{0}\".\"City\" (id) ON DELETE SET NULL,
+            city_set_default INT REFERENCES \"{0}\".\"City\" (id) ON DELETE SET DEFAULT
+        );
+        ",
+        SCHEMA
+    );
+    let mut inspector = get_postgres_connector(&sql);
+
+    let schema = inspector.introspect(SCHEMA).expect("introspection");
+    let mut table = schema.get_table("User").expect("get User table").to_owned();
+    table.foreign_keys.sort_unstable_by_key(|fk| fk.columns.clone());
+
+    assert_eq!(
+        table,
+        Table {
+            name: "User".to_string(),
+            columns: vec![
+                Column {
+                    name: "city".to_string(),
+                    tpe: ColumnType {
+                        raw: "int4".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "city_cascade".to_string(),
+                    tpe: ColumnType {
+                        raw: "int4".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "city_restrict".to_string(),
+                    tpe: ColumnType {
+                        raw: "int4".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "city_set_default".to_string(),
+                    tpe: ColumnType {
+                        raw: "int4".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "city_set_null".to_string(),
+                    tpe: ColumnType {
+                        raw: "int4".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: None,
+                },
+                Column {
+                    name: "id".to_string(),
+                    tpe: ColumnType {
+                        raw: "int4".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: None,
+                },
+            ],
+            indices: vec![],
+            primary_key: Some(PrimaryKey {
+                columns: vec!["id".to_string()],
+            }),
+            foreign_keys: vec![
+                ForeignKey {
+                    columns: vec!["city".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::NoAction,
+                },
+                ForeignKey {
+                    columns: vec!["city_cascade".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::Cascade,
+                },
+                ForeignKey {
+                    columns: vec!["city_restrict".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::Restrict,
+                },
+                ForeignKey {
+                    columns: vec!["city_set_default".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::SetDefault,
+                },
+                ForeignKey {
+                    columns: vec!["city_set_null".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::SetNull,
+                },
+            ],
+        }
     );
 }
 
@@ -942,7 +1073,7 @@ fn postgres_enums_must_work() {
         SCHEMA
     ));
 
-    let schema = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
+    let schema = inspector.introspect(SCHEMA).expect("introspection");
     let got_enum = schema.get_enum("mood").expect("get enum");
 
     let values: HashSet<String> = ["happy".to_string(), "ok".to_string(), "sad".to_string()]
@@ -1144,6 +1275,7 @@ fn get_postgres_connector(sql: &str) -> postgres::IntrospectionConnector {
     let drop_schema = format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA);
     client.execute(drop_schema.as_str(), &[]).expect("dropping schema");
 
+    debug!("Creating Postgres schema '{}'", SCHEMA);
     client
         .execute(format!("CREATE SCHEMA \"{}\";", SCHEMA).as_str(), &[])
         .expect("creating schema");
