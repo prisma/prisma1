@@ -59,14 +59,13 @@ impl Validator {
             // Extempt from the id rule, we have an relation table.
         }
 
-        if model.id_fields().count() == 0 {
-            Err(ValidationError::new_model_validation_error(
-                "One field must be marked as the id field with the `@id` directive.",
+        match model.id_fields().count() {
+            1 => Ok(()),
+            _ => Err(ValidationError::new_model_validation_error(
+                "Exactly one field must be marked as the id field with the `@id` directive.",
                 &model.name,
                 &ast_model.span,
-            ))
-        } else {
-            Ok(())
+            )),
         }
     }
 
