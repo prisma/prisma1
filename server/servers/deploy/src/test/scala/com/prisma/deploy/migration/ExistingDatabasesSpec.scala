@@ -460,4 +460,36 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     column.typeIdentifier should be(TI.Float)
     column.isRequired should be(false)
   }
+
+  "Encountering an unsupported type should not error and just ignore the column" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY,  -- implicit primary key constraint
+         |   test DATE
+         |);
+       """.stripMargin
+
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL,
+         |   PRIMARY KEY(id),
+         |   test DATE
+         | );
+       """.stripMargin
+
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |}
+       """.stripMargin
+
+    val result = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+
+    result should equal(initialResult)
+  }
 }
