@@ -14,16 +14,16 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
-        |  p: String! @unique
-        |  c: C! @relation(onDelete: CASCADE link: INLINE)
+        |model P {
+        |  id String @id @default(cuid())
+        |  p  String @unique
+        |  c  C @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
-        |  c: String! @unique
-        |  p: P!
+        |model C {
+        |  id String @id @default(cuid())
+        |  c  String @unique
+        |  p  P
         |}
       """.stripMargin
     }
@@ -42,16 +42,16 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
-        |  p: String! @unique
-        |  c: [C] @relation(onDelete: CASCADE)
+        |model P {
+        |  id String @id @default(cuid())
+        |  p  String @unique
+        |  c  C[]    @relation(onDelete: CASCADE)
         |}
         |
-        |type C {
-        |  id: ID! @id
-        |  c: String! @unique
-        |  p: [P]
+        |model C {
+        |  id String @id @default(cuid())
+        |  c  String @unique
+        |  p  P[]
         |}
       """.stripMargin
     }
@@ -71,16 +71,16 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
-        |  p: String! @unique
-        |  c: [C] @relation(onDelete: CASCADE)
+        |model P {
+        |  id String @id @default(cuid())
+        |  p  String @unique
+        |  c  C[]    @relation(onDelete: CASCADE)
         |}
         |
-        |type C {
-        |  id: ID! @id
-        |  c: String! @unique
-        |  p: [P] @relation(onDelete: CASCADE)
+        |model C {
+        |  id String @id @default(cuid())
+        |  c  String @unique
+        |  p  P[]    @relation(onDelete: CASCADE)
         |}
       """.stripMargin
     }
@@ -98,16 +98,16 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
-        |  p: String! @unique
-        |  c: C! @relation(onDelete: CASCADE link: INLINE)
+        |model P {
+        |  id String @id @default(cuid())
+        |  p  String @unique
+        |  c  C      @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
-        |  c: String! @unique
-        |  p: P! @relation(onDelete: CASCADE)
+        |model C {
+        |  id String @id @default(cuid())
+        |  c  String @unique
+        |  p  P      @relation(onDelete: CASCADE)
         |}
       """.stripMargin
     }
@@ -125,16 +125,16 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
-        |  p: String! @unique
-        |  c: C! @relation(link: INLINE)
+        |model P {
+        |  id String @id @default(cuid())
+        |  p  String @unique
+        |  c  C      @relation(references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
-        |  c: String! @unique
-        |  p: P! @relation(onDelete: CASCADE)
+        |model C {
+        |  id String @id @default(cuid())
+        |  c  String @unique
+        |  p  P      @relation(onDelete: CASCADE)
         |}
       """.stripMargin
     }
@@ -153,23 +153,23 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C-GC
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
-        |  p: String! @unique
-        |  c: C! @relation(onDelete: CASCADE link: INLINE)
+        |model P {
+        |  id String @id @default(cuid())
+        |  p  String @unique
+        |  c  C      @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
-        |  c: String! @unique
-        |  p: P!
-        |  gc: GC! @relation(onDelete: CASCADE link: INLINE)
+        |model C {
+        |  id String @id @default(cuid())
+        |  c  String @unique
+        |  p  P
+        |  gc GC     @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type GC {
-        |  id: ID! @id
-        |  gc: String! @unique
-        |  c: C!
+        |model GC {
+        |  id String @id @default(cuid())
+        |  gc String @unique
+        |  c  C
         |}
       """.stripMargin
     }
@@ -190,23 +190,23 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C-GC
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
-        |  p: String! @unique
-        |  c: C! @relation(onDelete: CASCADE link: INLINE)
+        |model P {
+        |  id String @id @default(cuid())
+        |  p  String @unique
+        |  c  C      @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
-        |  c: String! @unique
-        |  p: P!
-        |  gc: GC @relation(link: INLINE)
+        |model C {
+        |  id String @id @default(cuid())
+        |  c  String @unique
+        |  p  P
+        |  gc GC?    @relation(references: [id])
         |}
         |
-        |type GC {
-        |  id: ID! @id
-        |  gc: String! @unique
-        |  c: C
+        |model GC {
+        |  id String  @id @default(cuid())
+        |  gc String! @unique
+        |  c  C
         |}
       """.stripMargin
     }
@@ -229,23 +229,23 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C-GC
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
-        |  p: String! @unique
-        |  c: C! @relation(onDelete: CASCADE link: INLINE)
+        |model P {
+        |  id String @id @default(cuid())
+        |  p  String @unique
+        |  c  C      @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
-        |  c: String! @unique
-        |  p: P!
-        |  gc: GC! @relation(link: INLINE)
+        |model C {
+        |  id String @id @default(cuid())
+        |  c  String @unique
+        |  p  P
+        |  gc GC @relation(references: [id])
         |}
         |
-        |type GC {
-        |  id: ID! @id
-        |  gc: String! @unique
-        |  c: C!
+        |model GC {
+        |  id String @id @default(cuid())
+        |  gc String @unique
+        |  c  C
         |}
       """.stripMargin
     }
@@ -264,23 +264,23 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C-GC
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
-        |  p: String! @unique
-        |  c: C
+        |model P {
+        |  id String @id @default(cuid())
+        |  p  String @unique
+        |  c  C?
         |}
         |
-        |type C {
-        |  id: ID! @id
-        |  c: String! @unique
-        |  p: P @relation(onDelete: CASCADE link: INLINE)
-        |  gc: GC @relation(link: INLINE)
+        |model C {
+        |  id String @id @default(cuid())
+        |  c  String @unique
+        |  p  P?     @relation(onDelete: CASCADE references: [id])
+        |  gc GC?    @relation(references: [id])
         |}
         |
-        |type GC {
-        |  id: ID! @id
-        |  gc: String! @unique
-        |  c: C
+        |model GC {
+        |  id String @id @default(cuid())
+        |  gc String @unique
+        |  c  C
         |}
       """.stripMargin
     }
@@ -301,21 +301,21 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //      C     SC
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
+        |model P {
+        |  id String @id @default(cuid())
         |  p: String! @unique
-        |  c: C @relation(onDelete: CASCADE link: INLINE)
+        |  c: C @relation(onDelete: CASCADE references: [id])
         |  scs: [SC] @relation(onDelete: CASCADE)
         |}
         |
-        |type C {
-        |  id: ID! @id
+        |model C {
+        |  id String @id @default(cuid())
         |  c: String! @unique
         |  p: P
         |}
         |
-        |type SC {
-        |  id: ID! @id
+        |model SC {
+        |  id String @id @default(cuid())
         |  sc: String! @unique
         |  p:P!
         |}
@@ -342,22 +342,22 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //      C  -  SC
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
+        |model P {
+        |  id String @id @default(cuid())
         |  p: String! @unique
-        |  c: C! @relation(onDelete: CASCADE link: INLINE)
+        |  c: C! @relation(onDelete: CASCADE references: [id])
         |  scs: [SC] @relation(onDelete: CASCADE)
         |}
         |
-        |type C {
-        |  id: ID! @id
+        |model C {
+        |  id String @id @default(cuid())
         |  c: String! @unique
         |  p: P
-        |  sc: SC @relation(onDelete: CASCADE link: INLINE)
+        |  sc: SC @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type SC {
-        |  id: ID! @id
+        |model SC {
+        |  id String @id @default(cuid())
         |  sc: String! @unique
         |  p:P
         |  c: C
@@ -383,35 +383,35 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C-GC-|-D-E
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
+        |model P {
+        |  id String @id @default(cuid())
         |  p: String! @unique
-        |  c: C! @relation(onDelete: CASCADE link: INLINE)
+        |  c: C! @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
+        |model C {
+        |  id String @id @default(cuid())
         |  c: String! @unique
         |  p: P!
-        |  gc: GC! @relation(onDelete: CASCADE link: INLINE)
+        |  gc: GC! @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type GC {
-        |  id: ID! @id
+        |model GC {
+        |  id String @id @default(cuid())
         |  gc: String! @unique
         |  c: C!
         |  d: [D] @relation(onDelete: CASCADE)
         |}
         |
-        |type D {
-        |  id: ID! @id
+        |model D {
+        |  id String @id @default(cuid())
         |  d: String! @unique
         |  gc: [GC]
         |  e: [E] @relation(onDelete: CASCADE)
         |}
         |
-        |type E {
-        |  id: ID! @id
+        |model E {
+        |  id String @id @default(cuid())
         |  e: String! @unique
         |  d: [D]
         |}
@@ -437,35 +437,35 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C-GC-D-E
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
+        |model P {
+        |  id String @id @default(cuid())
         |  p: String! @unique
-        |  c: C! @relation(onDelete: CASCADE link: INLINE)
+        |  c: C! @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
+        |model C {
+        |  id String @id @default(cuid())
         |  c: String! @unique
         |  p: P!
-        |  gc: GC! @relation(onDelete: CASCADE link: INLINE)
+        |  gc: GC! @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type GC {
-        |  id: ID! @id
+        |model GC {
+        |  id String @id @default(cuid())
         |  gc: String! @unique
         |  c: C!
         |  d: [D] @relation(onDelete: CASCADE)
         |}
         |
-        |type D {
-        |  id: ID! @id
+        |model D {
+        |  id String @id @default(cuid())
         |  d: String! @unique
         |  gc: [GC]
         |  e: [E] @relation(onDelete: CASCADE)
         |}
         |
-        |type E {
-        |  id: ID! @id
+        |model E {
+        |  id String @id @default(cuid())
         |  e: String! @unique
         |  d: [D]
         |}
@@ -491,42 +491,42 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C-GC-D-E-F!
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
+        |model P {
+        |  id String @id @default(cuid())
         |  p: String! @unique
-        |  c: C! @relation(onDelete: CASCADE link: INLINE)
+        |  c: C! @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
+        |model C {
+        |  id String @id @default(cuid())
         |  c: String! @unique
         |  p: P!
-        |  gc: GC! @relation(onDelete: CASCADE link: INLINE)
+        |  gc: GC! @relation(onDelete: CASCADE references: [id])
         |}
         |
-        |type GC {
-        |  id: ID! @id
+        |model GC {
+        |  id String @id @default(cuid())
         |  gc: String! @unique
         |  c: C!
         |  d: [D] @relation(onDelete: CASCADE)
         |}
         |
-        |type D {
-        |  id: ID! @id
+        |model D {
+        |  id String @id @default(cuid())
         |  d: String! @unique
         |  gc: [GC]
         |  e: [E] @relation(onDelete: CASCADE)
         |}
         |
-        |type E {
-        |  id: ID! @id
+        |model E {
+        |  id String @id @default(cuid())
         |  e: String! @unique
         |  d: [D]
-        |  f: F! @relation(link: INLINE)
+        |  f: F! @relation(references: [id])
         |}
         |
-        |type F {
-        |  id: ID! @id
+        |model F {
+        |  id String @id @default(cuid())
         |  f: String! @unique
         |  e: E!
         |}
@@ -567,35 +567,35 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       */
     val project = ProjectDsl.fromString {
       """
-        |type A {
-        |  id: ID! @id
+        |model A {
+        |  id String @id @default(cuid())
         |  a: DateTime! @unique
-        |  b: B! @relation(onDelete: CASCADE, link: INLINE)
+        |  b: B! @relation(onDelete: CASCADE, references: [id])
         |}
         |
-        |type B {
-        |  id: ID! @id
+        |model B {
+        |  id String @id @default(cuid())
         |  b: DateTime! @unique
         |  a: A!
-        |  c: C! @relation(onDelete: CASCADE, link: INLINE)
+        |  c: C! @relation(onDelete: CASCADE, references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
+        |model C {
+        |  id String @id @default(cuid())
         |  c: DateTime! @unique
         |  b: B!
         |  d: [D] @relation(onDelete: CASCADE)
-        |  e: E! @relation(link: INLINE)
+        |  e: E! @relation(references: [id])
         |}
         |
-        |type D {
-        |  id: ID! @id
+        |model D {
+        |  id String @id @default(cuid())
         |  d: DateTime! @unique
         |  c: [C]
         |}
         |
-        |type E {
-        |  id: ID! @id
+        |model E {
+        |  id String @id @default(cuid())
         |  e: DateTime! @unique
         |  c: C!
         |}
@@ -627,35 +627,35 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       */
     val project = ProjectDsl.fromString {
       """
-        |type A {
-        |  id: ID! @id
+        |model A {
+        |  id String @id @default(cuid())
         |  a: String! @unique
-        |  d: D! @relation(link: INLINE)
-        |  b: B! @relation(onDelete: CASCADE, link: INLINE)
+        |  d: D! @relation(references: [id])
+        |  b: B! @relation(onDelete: CASCADE, references: [id])
         |  c: [C] @relation(onDelete: CASCADE)
         |}
         |
-        |type B {
-        |  id: ID! @id
+        |model B {
+        |  id String @id @default(cuid())
         |  b: String! @unique
         |  a: A!
         |}
         |
-        |type C {
-        |  id: ID! @id
+        |model C {
+        |  id String @id @default(cuid())
         |  c: String! @unique
         |  a: [A]
-        |  e: E! @relation(onDelete: CASCADE, link: INLINE)
+        |  e: E! @relation(onDelete: CASCADE, references: [id])
         |}
         |
-        |type D {
-        |  id: ID! @id
+        |model D {
+        |  id String @id @default(cuid())
         |  d: String! @unique
         |  a: A!
         |}
         |
-        |type E {
-        |  id: ID! @id
+        |model E {
+        |  id String @id @default(cuid())
         |  e: String! @unique
         |  c: C!
         |}
@@ -693,29 +693,29 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       */
     val project = ProjectDsl.fromString {
       """
-        |type A {
-        |  id: ID! @id
+        |model A {
+        |  id String @id @default(cuid())
         |  a: Float! @unique
-        |  b: B @relation(onDelete: CASCADE, link: INLINE)
+        |  b: B @relation(onDelete: CASCADE, references: [id])
         |}
         |
-        |type B {
-        |  id: ID! @id
+        |model B {
+        |  id String @id @default(cuid())
         |  b: Float! @unique
         |  cs: [C] @relation(onDelete: CASCADE, name:"Relation1")
-        |  c: C @relation(name: "Relation2" link: INLINE)
+        |  c: C @relation(name: "Relation2" references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
+        |model C {
+        |  id String @id @default(cuid())
         |  c: Float! @unique
         |  bs: [B] @relation(name: "Relation1")
         |  b: B @relation(name: "Relation2")
         |  d: [D] @relation(onDelete: CASCADE)
         |}
         |
-        |type D {
-        |  id: ID! @id
+        |model D {
+        |  id String @id @default(cuid())
         |  d: Float! @unique
         |  c: [C]
         |}
@@ -746,16 +746,16 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
-        |  p: String! @unique
-        |  c: C! @relation(onDelete: CASCADE link: INLINE)
+        |model P {
+        |  id String @id @default(cuid())
+        |  p  String @unique
+        |  c  C      @relation(onDelete: CASCADE, references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
-        |  c: String! @unique
-        |  p: P! 
+        |model C {
+        |  id String @id @default(cuid())
+        |  c  String @unique
+        |  p  P
         |}
       """.stripMargin
     }
@@ -769,7 +769,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       """mutation{updateC(where: {c:"c"} data: {p: {delete: true}}){id}}""",
       project,
       errorCode = 0,
-      errorContains = "Argument 'data' expected type 'CUpdateInput!'"
+      errorContains = "Argument 'data' expected model 'CUpdateInput!'"
     )
   }
 
@@ -777,21 +777,21 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C-GC
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
+        |model P {
+        |  id String @id @default(cuid())
         |  p: String! @unique
-        |  c: C @relation(link: INLINE)
+        |  c: C @relation(references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
+        |model C {
+        |  id String @id @default(cuid())
         |  c: String! @unique
         |  p: P
-        |  gc: GC! @relation(onDelete: CASCADE, link: INLINE)
+        |  gc: GC! @relation(onDelete: CASCADE, references: [id])
         |}
         |
-        |type GC {
-        |  id: ID! @id
+        |model GC {
+        |  id String @id @default(cuid())
         |  gc: String! @unique
         |  c: C!
         |}
@@ -815,23 +815,23 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     //         P-C-GC
     val project = ProjectDsl.fromString {
       """
-        |type P {
-        |  id: ID! @id
-        |  p: String! @unique
-        |  c: C! @relation(link: INLINE)
+        |model P {
+        |  id String @id @default(cuid())
+        |  p  String @unique
+        |  c  C      @relation(references: [id])
         |}
         |
-        |type C {
-        |  id: ID! @id
-        |  c: String! @unique
-        |  p: P!
-        |  gc: GC! @relation(onDelete: CASCADE, link: INLINE)
+        |model C {
+        |  id String @id @default(cuid())
+        |  c  String @unique
+        |  p  P
+        |  gc GC @relation(onDelete: CASCADE, references: [id])
         |}
         |
-        |type GC {
-        |  id: ID! @id
-        |  gc: String! @unique
-        |  c: C!
+        |model GC {
+        |  id String @id @default(cuid())
+        |  gc String @unique
+        |  c  C
         |}
       """.stripMargin
     }
@@ -844,14 +844,14 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       """mutation{updateP(where: {p:"p"}, data: { c: {delete: true}}){id}}""",
       project,
       errorCode = 0,
-      errorContains = "Argument 'data' expected type 'PUpdateInput!'"
+      errorContains = "Argument 'data' expected model 'PUpdateInput!'"
     )
   }
   //endregion
 
   "Self Relations" should "work" taggedAs (IgnoreSQLite, IgnorePostgres, IgnoreMySql) in {
-    val project = ProjectDsl.fromString { """type Folder {
-                                             |  id: ID! @id
+    val project = ProjectDsl.fromString { """model Folder {
+                                             |  id String @id @default(cuid())
                                              |  name: String! @unique
                                              |  parent: Folder @relation(name: "FolderOnFolder", onDelete: SET_NULL)
                                              |  children: [Folder] @relation(name: "FolderOnFolder", onDelete: CASCADE)
@@ -883,8 +883,8 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "Self Relations" should "work 2" taggedAs (IgnoreSQLite, IgnorePostgres, IgnoreMySql) in { // FIXME: Eats all the RAM // TODO: Remove SQLite ignore when cascading again
-    val project = ProjectDsl.fromString { """type Folder  {
-                                             |  id: ID! @id
+    val project = ProjectDsl.fromString { """model Folder  {
+                                             |  id String @id @default(cuid())
                                              |  name: String! @unique
                                              |  children: [Folder] @relation(name: "FolderOnFolder", onDelete: CASCADE)
                                              |  parent: Folder @relation(name: "FolderOnFolder", onDelete: SET_NULL)
@@ -916,8 +916,8 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "Self Relations" should "work 3" taggedAs (IgnoreSQLite, IgnorePostgres, IgnoreMySql) in { // TODO: Remove SQLite ignore when cascading again
-    val project = ProjectDsl.fromString { """type Folder  {
-                                             |  id: ID! @id
+    val project = ProjectDsl.fromString { """model Folder  {
+                                             |  id String @id @default(cuid())
                                              |  name: String! @unique
                                              |  parent: Folder @relation(name: "FolderOnFolder", onDelete: SET_NULL)
                                              |  children: [Folder] @relation(name: "FolderOnFolder", onDelete: CASCADE)
@@ -947,21 +947,21 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "Cascade on both sides" should "halt" taggedAs (IgnoreSQLite, IgnorePostgres, IgnoreMySql) in { // TODO: Remove SQLite ignore when cascading again
-    val project = ProjectDsl.fromString { """type User {
-                                             |  id: ID! @id
+    val project = ProjectDsl.fromString { """model User {
+                                             |  id String @id @default(cuid())
                                              |  name: String! @unique
                                              |  a: [A] @relation(name: "A", onDelete: CASCADE)
                                              |  b: [B] @relation(name: "B", onDelete: CASCADE)
                                              |}
                                              |
-                                             |type A{
-                                             |  id: ID! @id
+                                             |model A{
+                                             |  id String @id @default(cuid())
                                              |  name: String! @unique
                                              |  user: User! @relation(name: "A", onDelete: CASCADE)
                                              |}
                                              |
-                                             |type B{
-                                             |  id: ID! @id
+                                             |model B{
+                                             |  id String @id @default(cuid())
                                              |  name: String! @unique
                                              |  user: User! @relation(name: "B", onDelete: CASCADE)
                                              |}""" }
@@ -1012,21 +1012,21 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
   private def setupForDeleteManys = {
     val project: Project = ProjectDsl.fromString {
       """
-        |type Top {
-        |   id: ID! @id
+        |model Top {
+        |   id String @id @default(cuid())
         |   int: Int @unique
         |   middles:[Middle]   @relation(name: "TopToMiddle", onDelete: CASCADE)
         |}
         |
-        |type Middle {
-        |   id: ID! @id
+        |model Middle {
+        |   id String @id @default(cuid())
         |   int: Int! @unique
         |   top: Top @relation(name: "TopToMiddle")
         |   bottom: [Bottom] @relation(name: "MiddleToBottom", onDelete: CASCADE)
         |}
         |
-        |type Bottom {
-        |   id: ID! @id
+        |model Bottom {
+        |   id String @id @default(cuid())
         |   middle: Middle @relation(name: "MiddleToBottom")
         |   int: Int!
         |}

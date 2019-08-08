@@ -2,6 +2,7 @@ package util
 
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString
+import util.ConnectorCapability.{Prisma2Capability, RelationLinkListCapability}
 
 import scala.concurrent.ExecutionContext
 
@@ -15,8 +16,7 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
 
   def capabilities = {
     // TODO: implement Capabilities resolution
-//    testDependencies.apiConnector.capabilities
-    ConnectorCapabilities.empty
+    ConnectorCapabilities.sqliteNative
   }
 
   override protected def beforeAll(): Unit = {
@@ -31,18 +31,17 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
     TestDataModelsWrapper(testDataModel, connectorTag, connector, database)
   }
 
-//  val listInlineDirective = if (capabilities.has(RelationLinkListCapability)) {
-//    "@relation(link: INLINE)"
-//  } else {
-//    ""
-//  }
-//
-//  val listInlineArgument = if (capabilities.has(RelationLinkListCapability)) {
-//    "link: INLINE"
-//  } else {
-//    ""
-//  }
-//
+  val listInlineArgument = if (capabilities.has(RelationLinkListCapability)) {
+    "references: [id]"
+  } else {
+    ""
+  }
+
+  val listInlineDirective = if (capabilities.has(RelationLinkListCapability)) {
+    s"@relation($listInlineArgument)"
+  } else {
+    ""
+  }
 
   val scalarListDirective = ""
 //  val scalarListDirective = if (capabilities.hasNot(EmbeddedScalarListsCapability)) {

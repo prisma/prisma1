@@ -197,7 +197,7 @@ fn write_nested_items(
                             Item::Value(PrismaValue::Null)
                         }
                     }
-                    _ => unreachable!(),
+                    x => panic!("Application logic invariant error: received null value for field {} which may not be null", &field_name),
                 };
 
                 into.insert(field_name.to_owned(), Item::Ref(ItemRef::new(default)));

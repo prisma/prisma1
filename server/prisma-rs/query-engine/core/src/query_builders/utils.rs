@@ -1,7 +1,7 @@
 use super::*;
 use crate::query_builders::{ParsedArgument, ParsedInputValue, QueryBuilderResult};
 use connector::{filter::RecordFinder, QueryArguments};
-use prisma_models::ModelRef;
+use prisma_models::{ModelRef, PrismaValue};
 use std::convert::TryInto;
 
 /// Extracts a RecordFinder from the given parsed input.
@@ -23,10 +23,16 @@ pub fn extract_record_finder(parsed_value: ParsedInputValue, model: &ModelRef) -
         let field_selector: (String, ParsedInputValue) = values.into_iter().next().unwrap();
         let model_field = model.fields().find_from_scalar(&field_selector.0).unwrap();
 
-        Ok(RecordFinder {
-            field: model_field,
-            value: field_selector.1.try_into()?,
-        })
+        match field_selector.1.try_into()? {
+            PrismaValue::Null => Err(QueryValidationError::AssertionError(format!(
+                "You provided a null value for the where clause on {}. Please provide a non null value.",
+                &model.name
+            ))),
+            x => Ok(RecordFinder {
+                field: model_field,
+                value: x,
+            }),
+        }
     }
 }
 

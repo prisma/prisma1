@@ -145,7 +145,7 @@ fn foreign_keys_must_work() {
                 name: "city".to_string(),
                 tpe: ColumnType::Int,
                 is_required: true,
-                foreign_key: Some(ForeignKey::new("City".to_string(), "id".to_string())),
+                foreign_key: Some(ForeignKey::new("City".to_string(), "id".to_string(), OnDelete::NoAction)),
                 sequence: None,
                 default: None,
             }];

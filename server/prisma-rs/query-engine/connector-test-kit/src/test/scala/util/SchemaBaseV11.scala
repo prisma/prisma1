@@ -129,43 +129,43 @@ trait SchemaBaseV11 {
     val s1 = """
     model Parent {
         id          String  @id @default(cuid())
-        p           String? @unique
-        childrenOpt [Child] @relation(references: [id])
+        p           String  @unique
+        childrenOpt Child[] @relation(references: [id])
     }
 
     model Child {
         id        String @id @default(cuid())
         c         String @unique
         parentReq Parent
-        test      String
+        test      String?
     }"""
 
     val s2 = """
     model Parent {
         id          String  @id @default(cuid())
-        p           String? @unique
-        childrenOpt [Child]
+        p           String  @unique
+        childrenOpt Child[]
     }
 
     model Child {
-        id        String @id @default(cuid())
-        c         String @unique
-        parentReq Parent @relation(references: [id])
-        test      String
+        id        String  @id @default(cuid())
+        c         String  @unique
+        parentReq Parent  @relation(references: [id])
+        test      String?
     }"""
 
     val s3 = """
     model Parent {
         id          String  @id @default(cuid())
-        p           String? @unique
-        childrenOpt [Child]
+        p           String  @unique
+        childrenOpt Child[]
     }
 
     model Child {
         id        String @id @default(cuid())
         c         String @unique
         parentReq Parent
-        test      String
+        test      String?
     }"""
 
     TestDataModels(mongo = Vector(s1, s2), sql = Vector(s2, s3))
@@ -175,8 +175,8 @@ trait SchemaBaseV11 {
     val s1 = """
     model Parent {
         id          String  @id @default(cuid())
-        p           String? @unique
-        childrenOpt [Child] @relation(references: [id])
+        p           String  @unique
+        childrenOpt Child[] @relation(references: [id])
     }
 
     model Child {
@@ -189,29 +189,29 @@ trait SchemaBaseV11 {
     val s2 = """
     model Parent {
         id          String  @id @default(cuid())
-        p           String? @unique
-        childrenOpt [Child]
+        p           String  @unique
+        childrenOpt Child[]
     }
 
     model Child {
         id        String  @id @default(cuid())
         c         String  @unique
         parentOpt Parent? @relation(references: [id])
-        test      String
+        test      String?
     }"""
 
     val s3 = """
     model Parent {
         id          String  @id @default(cuid())
-        p           String? @unique
-        childrenOpt [Child]
+        p           String  @unique
+        childrenOpt Child[]
     }
 
     model Child {
         id        String  @id @default(cuid())
         c         String  @unique
         parentOpt Parent?
-        test      String
+        test      String?
     }"""
 
     TestDataModels(mongo = Vector(s1, s2), sql = Vector(s2, s3))
@@ -221,40 +221,40 @@ trait SchemaBaseV11 {
     val s1 = """
     model Parent {
         id       String  @id @default(cuid())
-        p        String? @unique
+        p        String  @unique
         childReq Child   @relation(references: [id])
     }
 
     model Child {
         id         String  @id @default(cuid())
         c          String  @unique
-        parentsOpt [Parent]
+        parentsOpt Parent[]
     }"""
 
     val s2 = """
     model Parent {
         id       String  @id @default(cuid())
-        p        String? @unique
+        p        String  @unique
         childReq Child
     }
 
     model Child {
         id         String   @id @default(cuid())
         c          String   @unique
-        parentsOpt [Parent] @relation(references: [id])
+        parentsOpt Parent[] @relation(references: [id])
     }"""
 
     val s3 = """
     model Parent {
         id       String  @id @default(cuid())
-        p        String? @unique
+        p        String  @unique
         childReq Child
     }
 
     model Child {
         id         String  @id @default(cuid())
         c          String  @unique
-        parentsOpt [Parent]
+        parentsOpt Parent[]
     }"""
 
     TestDataModels(mongo = Vector(s1, s2), sql = Vector(s1, s3))
@@ -264,14 +264,14 @@ trait SchemaBaseV11 {
     val s1 = """
     model Parent {
         id       String  @id @default(cuid())
-        p        String? @unique
+        p        String  @unique
         childOpt Child?  @relation(references: [id])
     }
 
     model Child {
         id         String   @id @default(cuid())
         c          String   @unique
-        parentsOpt [Parent]
+        parentsOpt Parent[]
     }"""
 
     val s2 = """
@@ -284,20 +284,20 @@ trait SchemaBaseV11 {
     model Child {
         id         String   @id @default(cuid())
         c          String   @unique
-        parentsOpt [Parent] @relation(references: [id])
+        parentsOpt Parent[] @relation(references: [id])
     }"""
 
     val s3 = """
     model Parent {
         id       String  @id @default(cuid())
-        p        String? @unique
+        p        String  @unique
         childOpt Child?
     }
 
     model Child {
         id         String   @id @default(cuid())
         c          String   @unique
-        parentsOpt [Parent]
+        parentsOpt Parent[]
     }"""
 
     TestDataModels(mongo = Vector(s1, s2), sql = Vector(s1, s3))
@@ -308,42 +308,42 @@ trait SchemaBaseV11 {
     model Parent {
         id          String  @id @default(cuid())
         p           String? @unique
-        childrenOpt [Child] @relation(references: [id])
+        childrenOpt Child[] @relation(references: [id])
     }
 
     model Child {
         id         String   @id @default(cuid())
         c          String   @unique
-        parentsOpt [Parent]
-        test       String
+        parentsOpt Parent[]
+        test       String?
     }"""
 
     val s2 = """
     model Parent {
         id          String  @id @default(cuid())
-        p           String? @unique
-        childrenOpt [Child]
+        p           String  @unique
+        childrenOpt Child[]
     }
 
     model Child {
         id         String   @id @default(cuid())
         c          String   @unique
-        parentsOpt [Parent] @relation(references: [id])
-        test       String
+        parentsOpt Parent[] @relation(references: [id])
+        test       String?
     }"""
 
     val s3 = """
     model Parent {
         id          String  @id @default(cuid())
-        p           String? @unique
-        childrenOpt [Child]
+        p           String  @unique
+        childrenOpt Child[]
     }
 
     model Child {
         id         String   @id @default(cuid())
         c          String   @unique
-        parentsOpt [Parent]
-        test       String
+        parentsOpt Parent[]
+        test       String?
     }"""
 
     TestDataModels(mongo = Vector(s1, s2), sql = Vector(s3))
@@ -353,7 +353,7 @@ trait SchemaBaseV11 {
 
   val embeddedP1req = """model Parent {
                             id       String  @id @default(cuid())
-                            p        String? @unique
+                            p        String  @unique
                             childReq Child
                         }
 
@@ -363,7 +363,7 @@ trait SchemaBaseV11 {
 
   val embeddedP1opt = """model Parent {
                             id       String  @id @default(cuid())
-                            p        String? @unique
+                            p        String  @unique
                             childOpt Child?
                         }
 
@@ -373,14 +373,14 @@ trait SchemaBaseV11 {
 
   val embeddedPM = """model Parent {
                             id          String  @id @default(cuid())
-                            p           String? @unique
-                            childrenOpt [Child]
+                            p           String  @unique
+                            childrenOpt Child[]
                         }
 
                         model Child @embedded{
                             id   String @id @default(cuid())
                             c    String
-                            test String
+                            test String?
                         }"""
 
   //EMBEDDED TO NON-EMBEDDED
@@ -388,12 +388,12 @@ trait SchemaBaseV11 {
                             |model Parent {
                             |    id       String  @id @default(cuid())
                             |    p        String? @unique
-                            |    children [Child]
+                            |    children Child[]
                             |}
                             |
                             |model Child @embedded {
-                            |    id        String @id @default(cuid())
-                            |    c         String
+                            |    id        String  @id @default(cuid())
+                            |    c         String?
                             |    friendReq Friend
                             |}
                             |
@@ -406,12 +406,12 @@ trait SchemaBaseV11 {
                                |model Parent {
                                |    id       String  @id @default(cuid())
                                |    p        String? @unique
-                               |    children [Child]
+                               |    children Child[]
                                |}
                                |
                                |model Child @embedded {
                                |    id        String  @id @default(cuid())
-                               |    c         String
+                               |    c         String?
                                |    friendOpt Friend?
                                |}
                                |
@@ -424,19 +424,19 @@ trait SchemaBaseV11 {
                         |model Parent {
                         |    id       String  @id @default(cuid())
                         |    p        String? @unique
-                        |    children [Child]
+                        |    children Child[]
                         |}
                         |
                         |model Child @embedded {
-                        |    id         String @id @default(cuid())
-                        |    c          String
-                        |    friendsOpt [Friend]
+                        |    id         String  @id @default(cuid())
+                        |    c          String?
+                        |    friendsOpt Friend[]
                         |}
                         |
                         |model Friend{
-                        |    id   String @id @default(cuid())
-                        |    f    String @unique
-                        |    test String
+                        |    id   String  @id @default(cuid())
+                        |    f    String? @unique
+                        |    test String?
                         |}"""
 
 }

@@ -72,6 +72,17 @@ impl PrismaValue {
             _ => false,
         }
     }
+
+    // todo: this conversion can be removed if we get rid of enum GraphqlId completely
+    pub fn as_graphql_id(&self) -> DomainResult<GraphqlId> {
+        // todo: must handle uuid
+        match self {
+            PrismaValue::String(x) => Ok(GraphqlId::String(x.clone())),
+            PrismaValue::Int(x) => Ok(GraphqlId::Int(x.clone() as usize)),
+            PrismaValue::GraphqlId(x) => Ok(x.clone()),
+            _ => Err(DomainError::ConversionFailure("PrismaValue", "PrismaValue::GraphqlId")),
+        }
+    }
 }
 
 impl fmt::Display for PrismaValue {

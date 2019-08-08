@@ -110,32 +110,23 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A Create Mutation" should "fail when a DateTime is invalid" in {
-    val result = server.queryThatMustFail(
+    server.queryThatMustFail(
       s"""mutation { createScalarModel(data:
          |  { optString: "test", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-0B-31T23:59:01.000Z" }
          |  ){optString, optInt, optFloat, optBoolean, optEnum, optDateTime}}""".stripMargin,
       project = project,
-      0
+      0,
+      errorContains = "Invalid DateTime: input contains invalid characters DateTime must adhere to format"
     )
-    result.toString should include("Reason: 'optDateTime' Date value expected")
-  }
-
-  "A Create Mutation" should "support simplified DateTime" in {
-    val result = server.query(
-      s"""mutation {createScalarModel(data: {optString: "test", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016" }){optString, optInt, optFloat, optBoolean, optEnum, optDateTime }}""",
-      project = project
-    )
-    result.toString should be(
-      """{"data":{"createScalarModel":{"optInt":1337,"optBoolean":true,"optDateTime":"2016-01-01T00:00:00.000Z","optString":"test","optEnum":"A","optFloat":1.234}}}""")
   }
 
   "A Create Mutation" should "fail when an Int is invalid" in {
-    val result = server.queryThatMustFail(
+    server.queryThatMustFail(
       s"""mutation {createScalarModel(data: {optString: "test", optInt: B, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z" }){optString, optInt, optFloat, optBoolean, optEnum, optDateTime }}""",
       project = project,
-      0
+      0,
+      errorContains = """Value types mismatch. Have: Enum("B"), want: Scalar(Int)"""
     )
-    result.toString should include("Int value expected")
   }
 
   "A Create Mutation" should "gracefully fail when a unique violation occurs" in {

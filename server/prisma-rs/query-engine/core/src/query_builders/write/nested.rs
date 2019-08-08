@@ -78,21 +78,23 @@ pub fn extract_nested_queries(
             _ => false,
         };
 
-        if triggered_from_create
-            && (nq.creates.len() + nq.connects.len() > 0)
-            && relation_field.is_required
-            && is_unsupported
-        {
-            Err(QueryValidationError::AssertionError(
-                format!(
-                    "A create or connect cannot be performed in this direction. You're first creating a {} and then {}, but only the reverse order is currently supported. This limitation will be lifted for general availability",
-                    relation_field.model().name,
-                    relation_field.related_model().name)
-                )
-            )
-        } else {
-            Ok(nq)
-        }
+        // TODO: probably we don't need the check anymore. Remove when the query planning for writes is done.
+//        if triggered_from_create
+//            && (nq.creates.len() + nq.connects.len() > 0)
+//            && relation_field.is_required
+//            && is_unsupported
+//        {
+//            Err(QueryValidationError::AssertionError(
+//                format!(
+//                    "A create or connect cannot be performed in this direction. You're first creating a {} and then {}, but only the reverse order is currently supported. This limitation will be lifted for general availability",
+//                    relation_field.model().name,
+//                    relation_field.related_model().name)
+//                )
+//            )
+//        } else {
+//            Ok(nq)
+//        }
+        Ok(nq)
     })
 }
 
@@ -106,10 +108,12 @@ pub fn nested_create(
         .into_iter()
         .map(|value| {
             let args = WriteArguments::from(&model, value.try_into()?, true)?;
+            let mut non_list_args = args.non_list;
+            non_list_args.add_datetimes(Arc::clone(&model));
 
             Ok(NestedCreateRecord {
                 relation_field: Arc::clone(relation_field),
-                non_list_args: args.non_list,
+                non_list_args: non_list_args,
                 list_args: args.list,
                 nested_writes: args.nested,
                 top_is_create: triggered_from_create,
@@ -133,20 +137,27 @@ pub fn nested_update(
             let where_arg = map.remove("where").expect("2");
             let record_finder = Some(utils::extract_record_finder(where_arg, &model)?);
 
+            let list_causes_update = write_args.list.len() > 0;
+            let mut non_list_args = write_args.non_list;
+            non_list_args.update_datetimes(Arc::clone(&model), list_causes_update);
+
             vec.push(NestedUpdateRecord {
                 relation_field: Arc::clone(&relation_field),
                 where_: record_finder,
-                non_list_args: write_args.non_list,
+                non_list_args: non_list_args,
                 list_args: write_args.list,
                 nested_writes: write_args.nested,
             });
         } else {
             let write_args = WriteArguments::from(&model, value.try_into()?, false)?;
+            let list_causes_update = write_args.list.len() > 0;
+            let mut non_list_args = write_args.non_list;
+            non_list_args.update_datetimes(Arc::clone(&model), list_causes_update);
 
             vec.push(NestedUpdateRecord {
                 relation_field: Arc::clone(&relation_field),
                 where_: None,
-                non_list_args: write_args.non_list,
+                non_list_args: non_list_args,
                 list_args: write_args.list,
                 nested_writes: write_args.nested,
             });
@@ -175,13 +186,18 @@ pub fn nested_upsert(
 
             let create_arg = map.remove("create").expect("3");
             let create_args = WriteArguments::from(&model, create_arg.try_into()?, triggered_from_create)?;
+            let mut create_non_list_args = create_args.non_list;
+            create_non_list_args.add_datetimes(Arc::clone(&model));
 
             let update_arg = map.remove("update").expect("4");
             let update_args = WriteArguments::from(&model, update_arg.try_into()?, triggered_from_create)?;
+            let list_causes_update = update_args.list.len() > 0;
+            let mut update_non_list_args = update_args.non_list;
+            update_non_list_args.update_datetimes(Arc::clone(&model), list_causes_update);
 
             let create = NestedCreateRecord {
                 relation_field: Arc::clone(relation_field),
-                non_list_args: create_args.non_list,
+                non_list_args: create_non_list_args,
                 list_args: create_args.list,
                 nested_writes: create_args.nested,
                 top_is_create: triggered_from_create,
@@ -190,7 +206,7 @@ pub fn nested_upsert(
             let update = NestedUpdateRecord {
                 relation_field: Arc::clone(&relation_field),
                 where_: record_finder.clone(),
-                non_list_args: update_args.non_list,
+                non_list_args: update_non_list_args,
                 list_args: update_args.list,
                 nested_writes: update_args.nested,
             };
@@ -347,10 +363,8 @@ pub fn nested_delete_many(
         .into_iter()
         .map(|value| {
             // Note: how can a *_many nested mutation be without a list?
-            let mut map: ParsedInputMap = value.try_into()?;
             let filter = if relation_field.is_list {
-                let where_arg = map.remove("where").expect("asdasda");
-                Some(extract_filter(where_arg.try_into()?, &model)?)
+                Some(extract_filter(value.try_into()?, &model)?)
             } else {
                 None
             };
