@@ -9,6 +9,7 @@ import collection.JavaConverters._
 
 case class CombinedPullDefinition(keys: Vector[String], value: BsonValue)
 
+//Mongo will just silently ignore it if more than one pull is defined for the same field
 object CustomUpdateCombiner {
 
   def customCombine(updates: Vector[conversions.Bson]): conversions.Bson = {
@@ -17,14 +18,19 @@ object CustomUpdateCombiner {
     val pulls  = rawUpdates.filter(_._1.getFirstKey == "$pull")
     val others = rawUpdates.filter(_._1.getFirstKey != "$pull")
 
-    val convertedPulls                                                    = pulls.map(x => documentToCombinedPullDefinition(x._1))
-    val groupedPulls: Map[Vector[String], Vector[CombinedPullDefinition]] = convertedPulls.groupBy(_.keys)
+    if (pulls.length > 1) {
 
-    val changedPulls = groupedPulls.map { group =>
-      bsonDocumentFilter(group._1.toList, BsonArray(group._2.map(_.value)))
+      val convertedPulls: Vector[CombinedPullDefinition]                    = pulls.map(x => documentToCombinedPullDefinition(x._1))
+      val groupedPulls: Map[Vector[String], Vector[CombinedPullDefinition]] = convertedPulls.groupBy(_.keys)
+
+      val changedPulls = groupedPulls.map { group =>
+        bsonDocumentFilter(group._1.toList, BsonArray(group._2.map(_.value)))
+      }
+
+      combine(others.map(_._2) ++ changedPulls: _*)
+    } else {
+      combine(others.map(_._2) ++ pulls.map(_._2): _*)
     }
-
-    combine(others.map(_._2) ++ changedPulls: _*)
   }
 
   private def removeDuplicates(elements: List[(BsonDocument, Bson)]): List[(BsonDocument, Bson)] = elements match {
