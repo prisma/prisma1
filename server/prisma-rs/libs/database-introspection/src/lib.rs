@@ -55,7 +55,7 @@ impl DatabaseSchema {
 }
 
 /// A table found in a schema.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Table {
     /// The table's name.
     pub name: String,
@@ -70,7 +70,7 @@ pub struct Table {
 }
 
 /// An index of a table.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Index {
     /// Index name.
     pub name: String,
@@ -81,7 +81,7 @@ pub struct Index {
 }
 
 /// The primary key of a table.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct PrimaryKey {
     /// Columns.
     pub columns: Vec<String>,

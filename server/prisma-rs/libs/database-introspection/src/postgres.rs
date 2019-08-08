@@ -76,8 +76,7 @@ impl IntrospectionConnector {
 
     fn get_columns(&self, schema: &str, table: &str) -> Vec<Column> {
         let sql = format!(
-            "SELECT column_name, udt_name, column_default, is_nullable, 
-            'false' as is_auto_increment
+            "SELECT column_name, udt_name, column_default, is_nullable
             FROM information_schema.columns
             WHERE table_schema = '{}' AND table_name  = '{}'
             ORDER BY column_name",

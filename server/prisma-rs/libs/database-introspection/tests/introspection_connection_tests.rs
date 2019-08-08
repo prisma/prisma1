@@ -223,7 +223,9 @@ fn all_postgres_column_types_must_work() {
     let full_sql = migration.make::<barrel::backend::Pg>();
     let mut inspector = get_postgres_connector(&full_sql);
     let result = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
-    let table = result.get_table("User").expect("couldn't get User table");
+    let mut table = result.get_table("User").expect("couldn't get User table").to_owned();
+    // Ensure columns are sorted as expected when comparing
+    table.columns.sort_unstable_by_key(|c| c.name.to_owned());
     let db_type = DbType::Postgres;
     let mut expected_columns = vec![
         Column {
@@ -683,7 +685,7 @@ fn all_postgres_column_types_must_work() {
 
     assert_eq!(
         table,
-        &Table {
+        Table {
             name: "User".to_string(),
             columns: expected_columns,
             indices: vec![],
