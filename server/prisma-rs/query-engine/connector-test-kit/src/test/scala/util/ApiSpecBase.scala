@@ -15,6 +15,7 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
   val database                    = TestDatabase()
 
   override protected def beforeAll(): Unit = {
+    println(s"!!!!!!!!!!!!!!!!!!!!!!!!!!!!! starting ${this.getClass.getSimpleName}")
     super.beforeAll()
     // TODO: does the migration-engine need to perform an initialize before the tests?
 //    testDependencies.deployConnector.initialize().await()
