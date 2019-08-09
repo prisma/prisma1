@@ -113,9 +113,9 @@ case class TestServer() extends PlayJsonExtensions {
     try {
       val status = con.getResponseCode
       val streamReader = if (status > 299) {
-        new InputStreamReader(con.getErrorStream)
+        new InputStreamReader(con.getErrorStream, "utf8")
       } else {
-        new InputStreamReader(con.getInputStream)
+        new InputStreamReader(con.getInputStream, "utf8")
       }
 
       val in     = new BufferedReader(streamReader)

@@ -55,14 +55,14 @@ case class MigrationEngine(project: Project) {
 
   private def sendRpcCallInternal[B](method: String, params: JsObject)(implicit reads: Reads[B]): B = {
     val rpcCall = envelope(method, params)
-    println(s"sending to MigrationEngine: $rpcCall")
+//    println(s"sending to MigrationEngine: $rpcCall")
     val cmd         = List(EnvVars.migrationEngineBinaryPath)
     val inputStream = new ByteArrayInputStream(rpcCall.toString.getBytes("UTF-8"))
     val output: String = {
       import scala.sys.process._
       (cmd #< inputStream).!!
     }
-    println(s"MigrationEngine responded: $output")
+//    println(s"MigrationEngine responded: $output")
     val lastLine  = output.lines.foldLeft("")((_, line) => line)
     val rpcResult = Json.parse(lastLine).as[RpcResult]
     rpcResult.result.as[B]
