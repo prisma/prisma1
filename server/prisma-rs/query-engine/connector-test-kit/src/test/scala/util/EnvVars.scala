@@ -14,4 +14,6 @@ object EnvVars {
     "MIGRATION_ENGINE_BINARY_PATH",
     sys.error("Required MIGRATION_ENGINE_BINARY_PATH env var not found")
   )
+
+  val isBuildkite = sys.env.get("IS_BUILDKITE").isDefined
 }
