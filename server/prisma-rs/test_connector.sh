@@ -1,4 +1,5 @@
 #!/bin/bash
+# TODO: abort if connector argument is missing
 set -e
 export CONNECTOR_TO_TEST=$1
 export PRISMA_BINARY_PATH=`pwd`/target/release/prisma
