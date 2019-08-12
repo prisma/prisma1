@@ -118,10 +118,11 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
                 lines.push(format!("PRIMARY KEY ({})", column_names.join(",")))
             }
             format!(
-                "CREATE TABLE {}.{}({});",
+                "CREATE TABLE {}.{}({})\n{};",
                 quote(&schema_name, sql_family),
                 quote(name, sql_family),
-                lines.join(",")
+                lines.join(","),
+                create_table_suffix(sql_family),
             )
         }
         SqlMigrationStep::DropTable(DropTable { name }) => format!(
@@ -228,6 +229,14 @@ fn quote(name: &str, sql_family: SqlFamily) -> String {
     }
 }
 
+fn create_table_suffix(sql_family: SqlFamily) -> String {
+    match sql_family {
+        SqlFamily::Sqlite => "".to_string(),
+        SqlFamily::Postgres => "".to_string(),
+        SqlFamily::Mysql => "DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci".to_string(),
+    }
+}
+
 fn render_column(
     sql_family: SqlFamily,
     schema_name: String,
@@ -237,7 +246,11 @@ fn render_column(
     let column_name = quote(&column_description.name, sql_family);
     let tpe_str = render_column_type(sql_family, column_description.tpe);
     // TODO: bring back when the query planning for writes is done
-    let nullability_str = if column_description.required && column_description.foreign_key.is_none() { "NOT NULL" } else { "" };
+    let nullability_str = if column_description.required && column_description.foreign_key.is_none() {
+        "NOT NULL"
+    } else {
+        ""
+    };
     let default_str = match &column_description.default {
         Some(value) => {
             match render_value(value) {
@@ -249,11 +262,26 @@ fn render_column(
         None => "".to_string(),
     };
     let references_str = match (sql_family, &column_description.foreign_key) {
-        (SqlFamily::Postgres, Some(fk)) => {
-            format!("REFERENCES \"{}\".\"{}\"(\"{}\") {}", schema_name, fk.table, fk.column, render_on_delete(&fk.on_delete))
-        }
-        (SqlFamily::Mysql, Some(fk)) => format!("REFERENCES `{}`.`{}`(`{}`) {}", schema_name, fk.table, fk.column, render_on_delete(&fk.on_delete)),
-        (SqlFamily::Sqlite, Some(fk)) => format!("REFERENCES \"{}\"({}) {}", fk.table, fk.column, render_on_delete(&fk.on_delete)),
+        (SqlFamily::Postgres, Some(fk)) => format!(
+            "REFERENCES \"{}\".\"{}\"(\"{}\") {}",
+            schema_name,
+            fk.table,
+            fk.column,
+            render_on_delete(&fk.on_delete)
+        ),
+        (SqlFamily::Mysql, Some(fk)) => format!(
+            "REFERENCES `{}`.`{}`(`{}`) {}",
+            schema_name,
+            fk.table,
+            fk.column,
+            render_on_delete(&fk.on_delete)
+        ),
+        (SqlFamily::Sqlite, Some(fk)) => format!(
+            "REFERENCES \"{}\"({}) {}",
+            fk.table,
+            fk.column,
+            render_on_delete(&fk.on_delete)
+        ),
         (_, None) => "".to_string(),
     };
     match (sql_family, &column_description.foreign_key) {
@@ -336,6 +364,6 @@ fn render_column_type_mysql(t: ColumnType) -> String {
         ColumnType::Int => format!("int"),
         // we use varchar right now as mediumtext doesn't allow default values
         // a bigger length would not allow to use such a column as primary key
-        ColumnType::String => format!("varchar(767)"),
+        ColumnType::String => format!("varchar(191)"),
     }
 }
