@@ -14,11 +14,8 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
 
   object NodeQueryCapability extends ConnectorCapability
 
-  object EmbeddedTypesCapability       extends ConnectorCapability
-  object JoinRelationsFilterCapability extends ConnectorCapability
-
-  object ImportExportCapability extends ConnectorCapability
-
+  object EmbeddedTypesCapability          extends ConnectorCapability
+  object JoinRelationsFilterCapability    extends ConnectorCapability
   object TransactionalExecutionCapability extends ConnectorCapability
 
   object SupportsExistingDatabasesCapability extends ConnectorCapability
@@ -58,28 +55,20 @@ object ConnectorCapabilities {
   val empty: ConnectorCapabilities                                     = ConnectorCapabilities(Set.empty[ConnectorCapability])
   def apply(capabilities: ConnectorCapability*): ConnectorCapabilities = ConnectorCapabilities(Set(capabilities: _*))
 
-  lazy val sqliteNative: ConnectorCapabilities = {
-    val filteredCapas = sqliteJdbcPrototype.capabilities
-      .filter(_ != TransactionalExecutionCapability)
-      .filter(_ != NodeQueryCapability)
-    ConnectorCapabilities(Set(Prisma2Capability) ++ filteredCapas)
+  lazy val sqlite: ConnectorCapabilities = {
+    ConnectorCapabilities(sqlShared)
   }
 
-  lazy val sqliteJdbcPrototype: ConnectorCapabilities = {
-    val actualCapas = sqlPrototype.filter(_ != ImportExportCapability)
-    ConnectorCapabilities(actualCapas)
-  }
-
-  lazy val postgresPrototype: ConnectorCapabilities = {
-    val capas = sqlPrototype ++ Set(UuidIdCapability)
+  lazy val postgres: ConnectorCapabilities = {
+    val capas = sqlShared ++ Set(UuidIdCapability)
     ConnectorCapabilities(capas)
   }
 
-  lazy val mysqlPrototype: ConnectorCapabilities = {
-    ConnectorCapabilities(sqlPrototype)
+  lazy val mysql: ConnectorCapabilities = {
+    ConnectorCapabilities(sqlShared)
   }
 
-  private lazy val sqlPrototype: Set[ConnectorCapability] = {
+  private lazy val sqlShared: Set[ConnectorCapability] = {
     Set(
       TransactionalExecutionCapability,
       JoinRelationsFilterCapability,
@@ -87,14 +76,14 @@ object ConnectorCapabilities {
       RelationLinkTableCapability,
       MigrationsCapability,
       NonEmbeddedScalarListCapability,
-      NodeQueryCapability,
-      ImportExportCapability,
+//      NodeQueryCapability,
       IntrospectionCapability,
       SupportsExistingDatabasesCapability,
       IntIdCapability,
       NonEmbeddedScalarListCapability,
       RawAccessCapability,
-      IdSequenceCapability
+      IdSequenceCapability,
+      Prisma2Capability
     )
   }
 

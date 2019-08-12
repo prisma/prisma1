@@ -6,9 +6,9 @@ case class ConnectorConfig(
 ) {
   def capabilities = {
     provider match {
-      case "sqlite"     => ConnectorCapabilities.sqliteNative
-      case "postgresql" => ConnectorCapabilities.postgresPrototype
-      case "mysql"      => ConnectorCapabilities.mysqlPrototype
+      case "sqlite"     => ConnectorCapabilities.sqlite
+      case "postgresql" => ConnectorCapabilities.postgres
+      case "mysql"      => ConnectorCapabilities.mysql
     }
 
   }
