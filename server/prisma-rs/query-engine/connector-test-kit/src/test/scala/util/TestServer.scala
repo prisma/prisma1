@@ -65,7 +65,7 @@ case class TestServer() extends PlayJsonExtensions {
   ): Future[JsValue] = {
     val (port, queryEngineProcess) = startQueryEngine(project)
     println(s"query engine started on port $port")
-
+    println(s"Query: $query")
     Future {
       queryPrismaProcess(query, port)
     }.map(r => r.jsonBody.get)

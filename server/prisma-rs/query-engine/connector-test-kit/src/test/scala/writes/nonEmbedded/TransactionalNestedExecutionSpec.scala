@@ -123,10 +123,10 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
   }
 
   "a many to many relation" should "fail gracefully on wrong DateTime where and assign error correctly and not execute partially" in {
-    val outerWhere        = """"2018""""
-    val innerWhere        = """"2019""""
-    val falseWhere        = """"2020""""
-    val falseWhereInError = new DateTime("2020", DateTimeZone.UTC)
+    val outerWhere        = """"2018-01-01T00:00:00.000Z""""
+    val innerWhere        = """"2019-01-01T00:00:00.000Z""""
+    val falseWhere        = """"2020-01-01T00:00:00.000Z""""
+    val falseWhereInError = new DateTime("2020-01-01T00:00:00.000Z", DateTimeZone.UTC)
 
     val project = projectFn("DateTime")
     database.setup(project)
