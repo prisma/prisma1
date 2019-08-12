@@ -41,17 +41,17 @@ object ConnectorTag extends Enum[ConnectorTag] {
 trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   import IgnoreSet._
 
-  lazy val connectorConfig = ConnectorConfig.load()
+  lazy val connectorConfig = ConnectorConfig.instance
   lazy val connector       = connectorConfig.provider
   // TODO: cleanup those providers once we have moved everything
   lazy val connectorTag = connector match {
     case "mongo"                                                 => ConnectorTag.MongoConnectorTag
     case "mysql" | "mysql-native"                                => ConnectorTag.MySqlConnectorTag
-    case "postgres" | "postgres-native"                          => ConnectorTag.PostgresConnectorTag
+    case "postgres" | "postgres-native" | "postgresql"           => ConnectorTag.PostgresConnectorTag
     case "sqlite" | "sqlite-native" | "native-integration-tests" => ConnectorTag.SQLiteConnectorTag
   }
 
-  def capabilities: ConnectorCapabilities
+  def capabilities: ConnectorCapabilities               = connectorConfig.capabilities
   def runOnlyForConnectors: Set[ConnectorTag]           = ConnectorTag.values.toSet
   def doNotRunForConnectors: Set[ConnectorTag]          = Set.empty
   def runOnlyForCapabilities: Set[ConnectorCapability]  = Set.empty

@@ -14,13 +14,10 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
   val server                      = TestServer()
   val database                    = TestDatabase()
 
-  def capabilities = {
-    // TODO: implement Capabilities resolution
-    ConnectorCapabilities.sqliteNative
-  }
-
   override protected def beforeAll(): Unit = {
+    println(s"!!!!!!!!!!!!!!!!!!!!!!!!!!!!! starting ${this.getClass.getSimpleName}")
     super.beforeAll()
+    PrismaRsBuild()
     // TODO: does the migration-engine need to perform an initialize before the tests?
 //    testDependencies.deployConnector.initialize().await()
   }

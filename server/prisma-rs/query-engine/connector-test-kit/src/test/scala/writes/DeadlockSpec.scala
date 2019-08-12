@@ -8,6 +8,7 @@ import scala.concurrent.Future
 import util._
 
 class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
+
   override def runOnlyForCapabilities = Set(ScalarListsCapability)
   override def doNotRunForConnectors  = Set(ConnectorTag.SQLiteConnectorTag)
 

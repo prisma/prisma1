@@ -62,10 +62,14 @@ case class MigrationEngine(project: Project) {
       import scala.sys.process._
       (cmd #< inputStream).!!
     }
-//    println(s"MigrationEngine responded: $output")
-    val lastLine  = output.lines.foldLeft("")((_, line) => line)
-    val rpcResult = Json.parse(lastLine).as[RpcResult]
-    rpcResult.result.as[B]
+    val lastLine = output.lines.foldLeft("")((_, line) => line)
+    Json.parse(lastLine).validate[RpcResult] match {
+      case JsSuccess(rpcResult, _) => rpcResult.result.as[B]
+      case e: JsError => {
+        println(s"MigrationEngine responded: $output")
+        sys.error(e.toString)
+      }
+    }
   }
 
   private def envelope(method: String, params: JsObject): JsValue = {

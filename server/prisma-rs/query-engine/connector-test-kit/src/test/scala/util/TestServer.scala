@@ -4,6 +4,7 @@ import java.io.{BufferedReader, InputStreamReader}
 import java.net.{HttpURLConnection, URL}
 import java.nio.charset.StandardCharsets
 import java.util.Base64
+import java.util.concurrent.atomic.AtomicInteger
 
 import play.api.libs.json._
 
@@ -62,20 +63,22 @@ case class TestServer() extends PlayJsonExtensions {
       query: String,
       project: Project
   ): Future[JsValue] = {
-    val prismaProcess = startPrismaProcess(project)
-
+    val (port, queryEngineProcess) = startQueryEngine(project)
+    println(s"query engine started on port $port")
+    println(s"Query: $query")
     Future {
-      println(prismaProcess.isAlive)
-      queryPrismaProcess(query)
+      queryPrismaProcess(query, port)
     }.map(r => r.jsonBody.get)
       .transform { r =>
         println(s"Query result: $r")
-        prismaProcess.destroyForcibly().waitFor()
+        queryEngineProcess.destroyForcibly().waitFor()
         r
       }
   }
 
-  private def startPrismaProcess(project: Project): java.lang.Process = {
+  val nextPort = new AtomicInteger(4000)
+
+  private def startQueryEngine(project: Project): (Int, java.lang.Process) = {
     import java.lang.ProcessBuilder.Redirect
 
     // TODO: discuss with Dom whether we want to keep the legacy mode
@@ -86,20 +89,22 @@ case class TestServer() extends PlayJsonExtensions {
     // Important: Rust requires UTF-8 encoding (encodeToString uses Latin-1)
     val encoded = Base64.getEncoder.encode(fullDataModel.getBytes(StandardCharsets.UTF_8))
     val envVar  = new String(encoded, StandardCharsets.UTF_8)
+    val port    = nextPort.incrementAndGet()
 
     pb.environment.put("PRISMA_DML", envVar)
+    pb.environment.put("PORT", port.toString)
 
     pb.directory(workingDir)
     pb.redirectErrorStream(true)
     pb.redirectOutput(Redirect.INHERIT)
 
-    val p = pb.start
+    val process = pb.start
     Thread.sleep(100) // Offsets process startup latency
-    p
+    (port, process)
   }
 
-  private def queryPrismaProcess(query: String): QueryEngineResponse = {
-    val url = new URL("http://127.0.0.1:4466")
+  private def queryPrismaProcess(query: String, port: Int): QueryEngineResponse = {
+    val url = new URL(s"http://127.0.0.1:$port")
     val con = url.openConnection().asInstanceOf[HttpURLConnection]
 
     con.setDoOutput(true)

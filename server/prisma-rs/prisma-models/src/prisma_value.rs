@@ -239,7 +239,7 @@ impl<'a> From<GraphqlId> for DatabaseValue<'a> {
         match id {
             GraphqlId::String(s) => s.into(),
             GraphqlId::Int(i) => (i as i64).into(),
-            GraphqlId::UUID(u) => u.into(),
+            GraphqlId::UUID(u) => u.to_string().into(),
         }
     }
 }
@@ -263,7 +263,7 @@ impl<'a> From<PrismaValue> for DatabaseValue<'a> {
             PrismaValue::Json(j) => j.to_string().into(),
             PrismaValue::Int(i) => (i as i64).into(),
             PrismaValue::Null => DatabaseValue::Parameterized(ParameterizedValue::Null),
-            PrismaValue::Uuid(u) => u.into(),
+            PrismaValue::Uuid(u) => u.to_string().into(),
             PrismaValue::GraphqlId(id) => id.into(),
             PrismaValue::List(Some(l)) => l.into(),
             PrismaValue::List(_) => panic!("List values are not supported here"),

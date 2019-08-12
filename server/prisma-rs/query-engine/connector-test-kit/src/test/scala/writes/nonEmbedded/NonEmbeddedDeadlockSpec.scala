@@ -8,6 +8,7 @@ import util._
 import scala.concurrent.Future
 
 class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
+
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability, ScalarListsCapability)
   override def doNotRunForConnectors  = Set(ConnectorTag.SQLiteConnectorTag)
 
@@ -235,13 +236,13 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
   val testDataModels = {
     val dm1 = """
         model Todo {
-           id String @id @default(cuid())
-           a String?
+           id       String    @id @default(cuid())
+           a        String?
            comments Comment[] @relation(references: [id])
         }
         
         model Comment {
-           id String @id @default(cuid())
+           id   String @id @default(cuid())
            text String?
            todo Todo?
         }
@@ -249,46 +250,46 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
 
     val dm2 = """
         model Todo {
-           id String @id @default(cuid())
-           a String?
+           id       String   @id @default(cuid())
+           a        String?
            comments Comment[]
         }
         
         model Comment {
-           id String @id @default(cuid())
+           id   String  @id @default(cuid())
            text String?
-           todo Todo? @relation(references: [id])
+           todo Todo?   @relation(references: [id])
         }
       """
 
     val dm3 = """
         model Todo {
-           id String @id @default(cuid())
-           a String?
+           id       String @id @default(cuid())
+           a        String?
            comments Comment[]
         }
         
         model Comment {
-           id String @id @default(cuid())
+           id   String @id @default(cuid())
            text String?
            todo Todo?
         }
       """
 
-    val dm4 = """
-        model Todo {
-           id String @id @default(cuid())
-           a String?
-           comments Comment[] @relation(link: TABLE)
-        }
-        
-        model Comment {
-           id String @id @default(cuid())
-           text String?
-           todo Todo?
-        }
-      """
+//    val dm4 = """
+//        model Todo {
+//           id       String @id @default(cuid())
+//           a        String?
+//           comments Comment[] @relation(link: TABLE)
+//        }
+//
+//        model Comment {
+//           id   String @id @default(cuid())
+//           text String?
+//           todo Todo?
+//        }
+//      """
 
-    TestDataModels(mongo = Vector(dm1, dm2), sql = Vector(dm3, dm4))
+    TestDataModels(mongo = Vector(dm1, dm2), sql = Vector(dm3))
   }
 }
