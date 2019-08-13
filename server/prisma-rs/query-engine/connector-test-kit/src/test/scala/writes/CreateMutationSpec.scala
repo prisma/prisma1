@@ -17,6 +17,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     |   optEnum     MyEnum?
     |   optDateTime DateTime?
     |   optUnique   String? @unique
+    |   createdAt   DateTime @default(now())
     |}
     |
     |enum MyEnum {
@@ -93,9 +94,10 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     res.pathAs[JsValue]("data.b") should be("""{"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}""".parseJson)
   }
 
-  "A Create Mutation" should "create and return item with implicit null attributes" in {
+  "A Create Mutation" should "create and return item with implicit null attributes and createdAt should be set" in {
     val res = server.query("""mutation {createScalarModel(data:{}){ optString, optInt, optFloat, optBoolean, optEnum }}""", project)
 
+    // if the query succeeds createdAt did work. If would not have been set we would get a NullConstraintViolation.
     res should be("""{"data":{"createScalarModel":{"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}}}""".parseJson)
   }
 
