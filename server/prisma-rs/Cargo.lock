@@ -1953,7 +1953,7 @@ dependencies = [
 [[package]]
 name = "prisma-query"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-query.git#aabcd3863824b430d810f7041b8fc35a23bd6b5d"
+source = "git+https://github.com/prisma/prisma-query.git#7c79ce91ac1f880b3a5763036e989f1234f6c5ae"
 dependencies = [
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3252,7 +3252,7 @@ name = "twox-hash"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "rand 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

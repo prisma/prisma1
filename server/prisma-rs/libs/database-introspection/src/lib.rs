@@ -153,6 +153,27 @@ pub enum ColumnArity {
     List,
 }
 
+/// Foreign key action types (for ON DELETE|ON UPDATE) constraints.
+#[derive(PartialEq, Debug, Clone)]
+pub enum ForeignKeyAction {
+    /// Produce an error indicating that the deletion or update would create a foreign key
+    /// constraint violation. If the constraint is deferred, this error will be produced at
+    /// constraint check time if there still exist any referencing rows. This is the default action.
+    NoAction,
+    /// Produce an error indicating that the deletion or update would create a foreign key
+    /// constraint violation. This is the same as NO ACTION except that the check is not deferrable.
+    Restrict,
+    /// Delete any rows referencing the deleted row, or update the values of the referencing
+    /// column(s) to the new values of the referenced columns, respectively.
+    Cascade,
+    /// Set the referencing column(s) to null.
+    SetNull,
+    /// Set the referencing column(s) to their default values. (There must be a row in the
+    /// referenced table matching the default values, if they are not null, or the operation
+    /// will fail).
+    SetDefault,
+}
+
 /// A foreign key.
 #[derive(PartialEq, Debug, Clone)]
 pub struct ForeignKey {
@@ -162,6 +183,7 @@ pub struct ForeignKey {
     pub referenced_table: String,
     /// Referenced columns.
     pub referenced_columns: Vec<String>,
+    pub on_delete_action: ForeignKeyAction,
 }
 
 /// A SQL enum.
