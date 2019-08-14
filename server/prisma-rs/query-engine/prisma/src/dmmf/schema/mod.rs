@@ -11,6 +11,7 @@ use core::schema::*;
 use enum_renderer::*;
 use field_renderer::*;
 use object_renderer::*;
+use prisma_models::EnumType;
 use schema_renderer::*;
 use std::{
     cell::RefCell,
@@ -89,7 +90,7 @@ impl RenderContext {
     pub fn add_mapping(&self, name: String, operation: Option<&ModelOperation>) {
         operation.into_iter().for_each(|op| {
             let model_name = op.model.name.clone();
-            let operation_str = camel_case(format!("{:?}", op.operation));
+            let operation_str = format!("{}", op.operation);
             let mut mappings = self.mappings.borrow_mut();
             let mapping = mappings.iter().find(|mapping| mapping.model_name == model_name);
 
@@ -138,9 +139,9 @@ impl<'a> IntoRenderer<'a, ()> for EnumType {
     }
 }
 
-impl<'a> IntoRenderer<'a, DMMFFieldWrapper> for InputField {
+impl<'a> IntoRenderer<'a, DMMFFieldWrapper> for InputFieldRef {
     fn into_renderer(&'a self) -> Box<Renderer<'a, DMMFFieldWrapper> + 'a> {
-        Box::new(DMMFFieldRenderer::Input(self))
+        Box::new(DMMFFieldRenderer::Input(Arc::clone(self)))
     }
 }
 

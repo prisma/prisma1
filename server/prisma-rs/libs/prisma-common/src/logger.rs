@@ -21,6 +21,7 @@ impl Logger {
             Ok("devel") => {
                 let decorator = TermDecorator::new().build();
                 let drain = FullFormat::new(decorator).build().fuse();
+                let drain = slog_envlogger::new(drain);
                 let drain = Async::new(drain).build().fuse();
 
                 let log = slog::Logger::root(drain, o!("application" => application));
@@ -32,7 +33,8 @@ impl Logger {
             }
             _ => {
                 let drain = Json::new(output).add_default_keys().build().fuse();
-                let drain = Async::new(drain).build().fuse();
+                let drain = slog_envlogger::new(drain);
+                let drain = Async::new(drain).chan_size(16384).overflow_strategy(slog_async::OverflowStrategy::Block).build().fuse();
 
                 let log = slog::Logger::root(drain, o!("application" => application));
 

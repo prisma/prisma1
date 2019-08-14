@@ -1,5 +1,7 @@
 use super::*;
-use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, ScalarField, SortOrder, TypeIdentifier};
+use prisma_models::{
+    EnumType, EnumValue, Field as ModelField, InternalDataModelRef, ModelRef, ScalarField, SortOrder, TypeIdentifier,
+};
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -48,10 +50,12 @@ impl<'a> ObjectTypeBuilder<'a> {
     /// Initializes model object type cache on the query schema builder.
     fn compute_model_object_types(self) -> Self {
         // Compute initial cache.
-        self.internal_data_model
-            .models()
-            .iter()
-            .for_each(|m| self.cache(m.name.clone(), Arc::new(init_object_type(m.name.clone()))));
+        self.internal_data_model.models().iter().for_each(|m| {
+            self.cache(
+                m.name.clone(),
+                Arc::new(init_object_type(m.name.clone(), Some(Arc::clone(&m)))),
+            )
+        });
 
         // Compute fields on all cached object types.
         self.internal_data_model.models().iter().for_each(|m| {
@@ -143,11 +147,11 @@ impl<'a> ObjectTypeBuilder<'a> {
         vec![
             self.where_argument(&model),
             self.order_by_argument(&model),
-            argument("skip", InputType::opt(InputType::int())),
-            argument("after", InputType::opt(InputType::string())),
-            argument("before", InputType::opt(InputType::string())),
-            argument("first", InputType::opt(InputType::int())),
-            argument("last", InputType::opt(InputType::int())),
+            argument("skip", InputType::opt(InputType::int()), None),
+            argument("after", InputType::opt(InputType::string()), None),
+            argument("before", InputType::opt(InputType::string()), None),
+            argument("first", InputType::opt(InputType::int()), None),
+            argument("last", InputType::opt(InputType::int()), None),
         ]
     }
 
@@ -158,7 +162,7 @@ impl<'a> ObjectTypeBuilder<'a> {
             .into_arc()
             .filter_object_type(Arc::clone(model));
 
-        argument("where", InputType::opt(InputType::object(where_object)))
+        argument("where", InputType::opt(InputType::object(where_object)), None)
     }
 
     // Builds "orderBy" argument.
@@ -187,7 +191,7 @@ impl<'a> ObjectTypeBuilder<'a> {
         let enum_name = format!("{}OrderByInput", model.name);
         let enum_type = enum_type(enum_name, enum_values);
 
-        argument("orderBy", InputType::opt(enum_type.into()))
+        argument("orderBy", InputType::opt(enum_type.into()), None)
     }
 
     pub fn map_enum_field(scalar_field: &Arc<ScalarField>) -> EnumType {
@@ -209,6 +213,7 @@ impl<'a> ObjectTypeBuilder<'a> {
         let object_type = Arc::new(object_type(
             "BatchPayload",
             vec![field("count", vec![], OutputType::int(), None)],
+            None,
         ));
 
         self.cache("BatchPayload".into(), Arc::clone(&object_type));

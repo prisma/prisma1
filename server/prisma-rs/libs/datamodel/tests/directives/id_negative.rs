@@ -40,20 +40,37 @@ fn id_should_error_if_an_unknown_strategy_is_used() {
 
 // DISABLED until we decide on this.
 #[test]
-#[ignore]
 fn id_should_error_on_model_without_id() {
     let dml = r#"
     model Model {
-        id ID
+        id String
     }
     "#;
 
     let errors = parse_error(dml);
 
     errors.assert_is(ValidationError::new_model_validation_error(
-        "One field must be marked as the id field with the `@id` directive.",
+        "Exactly one field must be marked as the id field with the `@id` directive.",
         "Model",
-        &Span::new(5, 44),
+        &Span::new(5, 42),
+    ));
+}
+
+#[test]
+fn id_should_error_multiple_ids_are_provided() {
+    let dml = r#"
+    model Model {
+        id         Int      @id
+        internalId String   @id @default(uuid())
+    }
+    "#;
+
+    let errors = parse_error(dml);
+
+    errors.assert_is(ValidationError::new_model_validation_error(
+        "Exactly one field must be marked as the id field with the `@id` directive.",
+        "Model",
+        &Span::new(5, 105),
     ));
 }
 

@@ -1,7 +1,8 @@
 use failure::{Error, Fail};
+use std::collections::HashSet;
 
-pub mod sqlite;
 pub mod postgres;
+pub mod sqlite;
 
 /// Introspection errors.
 #[derive(Debug, Fail)]
@@ -14,12 +15,17 @@ pub enum IntrospectionError {
 /// The result type.
 pub type Result<T> = core::result::Result<T, Error>;
 
+/// Connection abstraction for the introspection connectors.
+pub trait IntrospectionConnection {
+    fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet>;
+}
+
 /// A database introspection connector.
 pub trait IntrospectionConnector {
     /// List the database's schemas.
     fn list_schemas(&self) -> Result<Vec<String>>;
     /// Introspect a database schema.
-    fn introspect(&mut self, schema: &str) -> Result<DatabaseSchema>;
+    fn introspect(&self, schema: &str) -> Result<DatabaseSchema>;
 }
 
 /// The result of introspecting a database schema.
@@ -34,20 +40,29 @@ pub struct DatabaseSchema {
 
 impl DatabaseSchema {
     /// Get a table.
-    pub fn table(&self, name: &str) -> Option<&Table> {
+    pub fn get_table(&self, name: &str) -> Option<&Table> {
         self.tables.iter().find(|x| x.name == name)
+    }
+
+    /// Get an enum.
+    pub fn get_enum(&self, name: &str) -> Option<&Enum> {
+        self.enums.iter().find(|x| x.name == name)
+    }
+
+    pub fn get_sequence(&self, name: &str) -> Option<&Sequence> {
+        self.sequences.iter().find(|x| x.name == name)
     }
 }
 
 /// A table found in a schema.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Table {
     /// The table's name.
     pub name: String,
     /// The table's columns.
     pub columns: Vec<Column>,
     /// The table's indices.
-    pub indexes: Vec<Index>,
+    pub indices: Vec<Index>,
     /// The table's primary key, if there is one.
     pub primary_key: Option<PrimaryKey>,
     /// The table's foreign keys.
@@ -55,7 +70,7 @@ pub struct Table {
 }
 
 /// An index of a table.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Index {
     /// Index name.
     pub name: String,
@@ -66,7 +81,7 @@ pub struct Index {
 }
 
 /// The primary key of a table.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct PrimaryKey {
     /// Columns.
     pub columns: Vec<String>,
@@ -113,6 +128,18 @@ pub enum ColumnTypeFamily {
     DateTime,
     /// Binary types.
     Binary,
+    /// JSON types.
+    Json,
+    /// UUID types.
+    Uuid,
+    /// Geometric types.
+    Geometric,
+    /// Log sequence number types.
+    LogSequenceNumber,
+    /// Text search types.
+    TextSearch,
+    /// Transaction ID types.
+    TransactionId,
 }
 
 /// A column's arity.
@@ -127,25 +154,27 @@ pub enum ColumnArity {
 }
 
 /// A foreign key.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct ForeignKey {
-    /// Column name.
-    pub column: String,
+    /// Column names.
+    pub columns: Vec<String>,
     /// Referenced table.
     pub referenced_table: String,
-    /// Referenced column.
-    pub referenced_column: String,
+    /// Referenced columns.
+    pub referenced_columns: Vec<String>,
 }
 
 /// A SQL enum.
+#[derive(PartialEq, Debug)]
 pub struct Enum {
     /// Enum name.
     pub name: String,
     /// Possible enum values.
-    pub values: Vec<String>,
+    pub values: HashSet<String>,
 }
 
 /// A SQL sequence.
+#[derive(PartialEq, Debug)]
 pub struct Sequence {
     /// Sequence name.
     pub name: String,

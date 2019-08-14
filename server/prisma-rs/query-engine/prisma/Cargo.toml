@@ -36,12 +36,12 @@ serde_json = { version = "1.0", features = [ "preserve_order" ] }
 sql-connector = { path = "../connectors/sql-connector", optional = true }
 prisma-query = { git = "https://github.com/prisma/prisma-query", optional = true }
 
-slog = { version = "2.5", features = ["max_level_trace", "release_max_level_info"] }
+slog = "2.5"
 slog-async = "2.3"
 slog-json = "2.3"
 slog-stdlog = "3.0"
 slog-scope = "4.1"
-log = { version = "0.4", features = ["max_level_trace", "release_max_level_info"] }
+log = "0.4"
 
 [build-dependencies]
 rustc_version = "0.2.3"

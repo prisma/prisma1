@@ -107,6 +107,14 @@ pub struct ForeignKey {
     pub name: Option<String>,
     pub table: String,
     pub column: String,
+    pub on_delete: OnDelete,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum OnDelete {
+    NoAction,
+    SetNull,
+    Cascade
 }
 
 impl PartialEq for ForeignKey {
@@ -116,19 +124,21 @@ impl PartialEq for ForeignKey {
 }
 
 impl ForeignKey {
-    pub fn new(table: String, column: String) -> ForeignKey {
+    pub fn new(table: String, column: String, on_delete: OnDelete) -> ForeignKey {
         ForeignKey {
             name: None,
             table,
             column,
+            on_delete,
         }
     }
 
-    pub fn with_foreign_key(name: String, table: String, column: String) -> ForeignKey {
+    pub fn with_name(name: String, table: String, column: String, on_delete: OnDelete) -> ForeignKey {
         ForeignKey {
             name: Some(name),
             table,
             column,
+            on_delete
         }
     }
 }

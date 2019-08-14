@@ -1,6 +1,5 @@
-use crate::{DomainError, DomainResult, ScalarFieldRef, TypeIdentifier};
+use crate::{DomainError, DomainResult, EnumValue};
 use chrono::prelude::*;
-use graphql_parser::query::{Number, Value as GraphqlValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{convert::TryFrom, fmt, string::FromUtf8Error};
@@ -29,39 +28,39 @@ impl From<Id> for GraphqlId {
     }
 }
 
-impl GraphqlId {
-    pub fn to_value(&self) -> GraphqlValue {
-        match self {
-            GraphqlId::String(s) => GraphqlValue::String(s.clone()),
-            GraphqlId::Int(i) => GraphqlValue::Int(Number::from((*i) as i32)), // This could cause issues!
-            GraphqlId::UUID(u) => GraphqlValue::String(u.to_string()),
-        }
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(tag = "gcValueType", content = "value")]
 pub enum PrismaValue {
     #[serde(rename = "string")]
     String(String),
+
     #[serde(rename = "float")]
     Float(f64),
+
     #[serde(rename = "bool")]
     Boolean(bool),
+
     #[serde(rename = "datetime")]
     DateTime(DateTime<Utc>),
+
     #[serde(rename = "enum")]
-    Enum(String),
+    Enum(EnumValue),
+
     #[serde(rename = "json")]
     Json(Value),
+
     #[serde(rename = "int")]
     Int(i64),
+
     #[serde(rename = "null")]
     Null,
+
     #[serde(rename = "uuid")]
     Uuid(Uuid),
+
     #[serde(rename = "graphQlId")]
     GraphqlId(GraphqlId),
+
     #[serde(rename = "list")]
     List(PrismaListValue),
 }
@@ -74,63 +73,15 @@ impl PrismaValue {
         }
     }
 
-    // this function is broken because it does not operate on the type identifier of a field. It is just guessing.
-    pub fn from_value_broken(v: &GraphqlValue) -> Self {
-        match v {
-            GraphqlValue::Boolean(b) => PrismaValue::Boolean(b.clone()),
-            GraphqlValue::Enum(e) => PrismaValue::Enum(e.clone()),
-            GraphqlValue::Float(f) => PrismaValue::Float(f.clone()),
-            GraphqlValue::Int(i) => PrismaValue::Int(i.as_i64().unwrap()),
-            GraphqlValue::Null => PrismaValue::Null,
-            GraphqlValue::String(s) => Self::str_as_json(s)
-                .or_else(|| Self::str_as_datetime(s))
-                .unwrap_or(PrismaValue::String(s.clone())),
-            GraphqlValue::List(l) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value_broken(i)).collect())),
-            GraphqlValue::Object(obj) if obj.contains_key("set") => Self::from_value_broken(obj.get("set").unwrap()),
-            value => panic!(format!("Unable to make {:?} to PrismaValue", value)),
+    // todo: this conversion can be removed if we get rid of enum GraphqlId completely
+    pub fn as_graphql_id(&self) -> DomainResult<GraphqlId> {
+        // todo: must handle uuid
+        match self {
+            PrismaValue::String(x) => Ok(GraphqlId::String(x.clone())),
+            PrismaValue::Int(x) => Ok(GraphqlId::Int(x.clone() as usize)),
+            PrismaValue::GraphqlId(x) => Ok(x.clone()),
+            _ => Err(DomainError::ConversionFailure("PrismaValue", "PrismaValue::GraphqlId")),
         }
-    }
-
-    pub fn from_value(value: &GraphqlValue, field: &ScalarFieldRef) -> Self {
-        match (value, field.type_identifier) {
-            (GraphqlValue::Boolean(b), TypeIdentifier::Boolean) => PrismaValue::Boolean(b.clone()),
-            (GraphqlValue::Enum(e), TypeIdentifier::Enum) => PrismaValue::Enum(e.clone()),
-            (GraphqlValue::Float(f), TypeIdentifier::Float) => PrismaValue::Float(f.clone()),
-            (GraphqlValue::Int(i), TypeIdentifier::Int) => PrismaValue::Int(i.as_i64().unwrap()),
-            (GraphqlValue::Null, _) => PrismaValue::Null,
-            (GraphqlValue::String(s), TypeIdentifier::String) => PrismaValue::String(s.clone()),
-            (GraphqlValue::String(s), TypeIdentifier::GraphQLID) => {
-                PrismaValue::GraphqlId(GraphqlId::String(s.clone()))
-            }
-            //            (GraphqlValue::Int(s), TypeIdentifier::GraphQLID) => PrismaValue::GraphqlId(GraphqlId::Int(s)),
-            (GraphqlValue::String(s), TypeIdentifier::Json) => Self::str_as_json(s).expect("received invalid json"),
-            (GraphqlValue::String(s), TypeIdentifier::DateTime) => {
-                Self::str_as_datetime(s).expect("received invalid datetime")
-            }
-            (GraphqlValue::List(l), _) => {
-                PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i, &field)).collect()))
-            }
-            (GraphqlValue::Object(obj), _) if obj.contains_key("set") => {
-                Self::from_value_broken(obj.get("set").unwrap())
-            }
-            (value, _) => panic!(format!(
-                "Unable to make {:?} to PrismaValue. Field was {} with type identifier {:?}",
-                value, field.name, field.type_identifier
-            )),
-        }
-    }
-
-    fn str_as_json(s: &str) -> Option<PrismaValue> {
-        serde_json::from_str(s).ok().map(|j| PrismaValue::Json(j))
-    }
-
-    // If you look at this and think: "What's up with Z?" then you're asking the right question.
-    // Feel free to try and fix it for cases with AND without Z.
-    fn str_as_datetime(s: &str) -> Option<PrismaValue> {
-        let fmt = "%Y-%m-%dT%H:%M:%S%.3f";
-        Utc.datetime_from_str(s.trim_end_matches("Z"), fmt)
-            .ok()
-            .map(|dt| PrismaValue::DateTime(DateTime::<Utc>::from_utc(dt.naive_utc(), Utc)))
     }
 }
 
@@ -141,7 +92,7 @@ impl fmt::Display for PrismaValue {
             PrismaValue::Float(x) => x.fmt(f),
             PrismaValue::Boolean(x) => x.fmt(f),
             PrismaValue::DateTime(x) => x.fmt(f),
-            PrismaValue::Enum(x) => x.fmt(f),
+            PrismaValue::Enum(x) => x.as_string().fmt(f),
             PrismaValue::Json(x) => x.fmt(f),
             PrismaValue::Int(x) => x.fmt(f),
             PrismaValue::Null => "null".fmt(f),
@@ -172,32 +123,38 @@ impl From<String> for PrismaValue {
 }
 
 impl From<f64> for PrismaValue {
-    fn from(s: f64) -> Self {
-        PrismaValue::Float(s)
+    fn from(f: f64) -> Self {
+        PrismaValue::Float(f)
     }
 }
 
 impl From<f32> for PrismaValue {
-    fn from(s: f32) -> Self {
-        PrismaValue::Float(s as f64)
+    fn from(f: f32) -> Self {
+        PrismaValue::Float(f as f64)
     }
 }
 
 impl From<bool> for PrismaValue {
-    fn from(s: bool) -> Self {
-        PrismaValue::Boolean(s)
+    fn from(b: bool) -> Self {
+        PrismaValue::Boolean(b)
     }
 }
 
 impl From<i32> for PrismaValue {
-    fn from(s: i32) -> Self {
-        PrismaValue::Int(s as i64)
+    fn from(i: i32) -> Self {
+        PrismaValue::Int(i as i64)
     }
 }
 
 impl From<i64> for PrismaValue {
-    fn from(s: i64) -> Self {
-        PrismaValue::Int(s)
+    fn from(i: i64) -> Self {
+        PrismaValue::Int(i)
+    }
+}
+
+impl From<usize> for PrismaValue {
+    fn from(u: usize) -> Self {
+        PrismaValue::Int(u as i64)
     }
 }
 
@@ -282,7 +239,7 @@ impl<'a> From<GraphqlId> for DatabaseValue<'a> {
         match id {
             GraphqlId::String(s) => s.into(),
             GraphqlId::Int(i) => (i as i64).into(),
-            GraphqlId::UUID(u) => u.into(),
+            GraphqlId::UUID(u) => u.to_string().into(),
         }
     }
 }
@@ -302,11 +259,11 @@ impl<'a> From<PrismaValue> for DatabaseValue<'a> {
             PrismaValue::Float(f) => (f as f64).into(),
             PrismaValue::Boolean(b) => b.into(),
             PrismaValue::DateTime(d) => d.into(),
-            PrismaValue::Enum(e) => e.into(),
+            PrismaValue::Enum(e) => e.as_string().into(),
             PrismaValue::Json(j) => j.to_string().into(),
             PrismaValue::Int(i) => (i as i64).into(),
             PrismaValue::Null => DatabaseValue::Parameterized(ParameterizedValue::Null),
-            PrismaValue::Uuid(u) => u.into(),
+            PrismaValue::Uuid(u) => u.to_string().into(),
             PrismaValue::GraphqlId(id) => id.into(),
             PrismaValue::List(Some(l)) => l.into(),
             PrismaValue::List(_) => panic!("List values are not supported here"),

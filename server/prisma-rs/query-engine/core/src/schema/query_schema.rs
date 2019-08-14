@@ -1,10 +1,14 @@
 use super::*;
 use once_cell::sync::OnceCell;
-use prisma_models::{InternalDataModelRef, ModelRef, OrderBy, ScalarField, SortOrder};
+use prisma_models::{EnumType, InternalDataModelRef, ModelRef, PrismaValue};
 use std::{
+    borrow::Borrow,
     boxed::Box,
+    fmt,
     sync::{Arc, Weak},
 };
+
+pub type OutputTypeRef = Arc<OutputType>;
 
 pub type ObjectTypeStrongRef = Arc<ObjectType>;
 pub type ObjectTypeRef = Weak<ObjectType>;
@@ -14,6 +18,8 @@ pub type InputObjectTypeRef = Weak<InputObjectType>;
 
 pub type QuerySchemaRef = Arc<QuerySchema>;
 pub type FieldRef = Arc<Field>;
+pub type InputFieldRef = Arc<InputField>;
+pub type EnumTypeRef = Arc<EnumType>;
 
 /// The query schema.
 /// Defines which operations (query/mutations) are possible on a database, based on the (internal) data model.
@@ -30,8 +36,8 @@ pub type FieldRef = Arc<Field>;
 /// Using a QuerySchema should never involve dealing with the strong references.
 #[derive(Debug)]
 pub struct QuerySchema {
-    pub query: OutputType,
-    pub mutation: OutputType,
+    pub query: OutputTypeRef,
+    pub mutation: OutputTypeRef,
 
     /// Stores all strong refs to the input object types.
     input_object_types: Vec<InputObjectTypeStrongRef>,
@@ -44,8 +50,8 @@ pub struct QuerySchema {
 
 impl QuerySchema {
     pub fn new(
-        query: OutputType,
-        mutation: OutputType,
+        query: OutputTypeRef,
+        mutation: OutputTypeRef,
         input_object_types: Vec<InputObjectTypeStrongRef>,
         output_object_types: Vec<ObjectTypeStrongRef>,
         internal_data_model: InternalDataModelRef,
@@ -79,15 +85,15 @@ impl QuerySchema {
         self.query().get_fields().into_iter().find(|f| f.name == name).cloned()
     }
 
-    fn mutation(&self) -> ObjectTypeStrongRef {
-        match self.mutation {
+    pub fn mutation(&self) -> ObjectTypeStrongRef {
+        match self.mutation.borrow() {
             OutputType::Object(ref o) => o.into_arc(),
             _ => unreachable!(),
         }
     }
 
-    fn query(&self) -> ObjectTypeStrongRef {
-        match self.query {
+    pub fn query(&self) -> ObjectTypeStrongRef {
+        match self.query.borrow() {
             OutputType::Object(ref o) => o.into_arc(),
             _ => unreachable!(),
         }
@@ -135,6 +141,9 @@ pub struct ObjectType {
 
     #[debug_stub = "#Fields Cell#"]
     pub fields: OnceCell<Vec<FieldRef>>,
+
+    // Object types can directly map to models.
+    pub model: Option<ModelRef>,
 }
 
 impl ObjectType {
@@ -148,6 +157,10 @@ impl ObjectType {
             .unwrap();
     }
 
+    pub fn find_field(&self, name: &str) -> Option<FieldRef> {
+        self.get_fields().into_iter().find(|f| &f.name == name).cloned()
+    }
+
     /// True if fields are empty, false otherwise.
     pub fn is_empty(&self) -> bool {
         self.get_fields().is_empty()
@@ -158,7 +171,7 @@ impl ObjectType {
 pub struct Field {
     pub name: String,
     pub arguments: Vec<Argument>,
-    pub field_type: OutputType,
+    pub field_type: OutputTypeRef,
     pub operation: Option<ModelOperation>,
 }
 
@@ -175,25 +188,51 @@ impl ModelOperation {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+/// Designates which operation is intended for a query and in case of non-read
+/// operations, which appropriate operation should be used to query the output.
+#[derive(Debug, Clone, PartialEq)]
 pub enum OperationTag {
+    /// Read operations.
     FindOne,
     FindMany,
-    CreateOne,
-    CreateMany,
-    UpdateOne,
-    UpdateMany,
-    DeleteOne,
-    DeleteMany,
-    UpsertOne,
+
+    /// Write operations with associated result operations.
+    CreateOne(Box<OperationTag>),
+    UpdateOne(Box<OperationTag>),
+    UpdateMany(Box<OperationTag>),
+    DeleteOne(Box<OperationTag>),
+    DeleteMany(Box<OperationTag>),
+    UpsertOne(Box<OperationTag>),
+
+    /// Marks an operation to write the result of the previous query directly
+    /// as map shaped as the defined output type of a query.
+    /// This is a temporary workaround until the serialization has been reworked.
+    CoerceResultToOutputType,
+}
+
+impl fmt::Display for OperationTag {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s = match self {
+            OperationTag::FindOne => "findOne",
+            OperationTag::FindMany => "findMany",
+            OperationTag::CreateOne(_) => "createOne",
+            OperationTag::UpdateOne(_) => "updateOne",
+            OperationTag::UpdateMany(_) => "updateMany",
+            OperationTag::DeleteOne(_) => "deleteOne",
+            OperationTag::DeleteMany(_) => "deleteMany",
+            OperationTag::UpsertOne(_) => "upsertOne",
+            OperationTag::CoerceResultToOutputType => unreachable!(), // Only top-level ops are reached.
+        };
+
+        s.fmt(f)
+    }
 }
 
 #[derive(Debug)]
 pub struct Argument {
     pub name: String,
     pub argument_type: InputType,
-    // pub default_value: Option<>... todo: Do we need that?
-    // FromInput conversion -> Take a look at that.
+    pub default_value: Option<PrismaValue>,
 }
 
 #[derive(DebugStub)]
@@ -201,21 +240,31 @@ pub struct InputObjectType {
     pub name: String,
 
     #[debug_stub = "#Input Fields Cell#"]
-    pub fields: OnceCell<Vec<InputField>>,
+    pub fields: OnceCell<Vec<InputFieldRef>>,
 }
 
 impl InputObjectType {
-    pub fn get_fields(&self) -> &Vec<InputField> {
+    pub fn get_fields(&self) -> &Vec<InputFieldRef> {
         self.fields.get().unwrap()
     }
 
     pub fn set_fields(&self, fields: Vec<InputField>) {
-        self.fields.set(fields).unwrap();
+        self.fields
+            .set(fields.into_iter().map(|f| Arc::new(f)).collect())
+            .unwrap();
     }
 
     /// True if fields are empty, false otherwise.
     pub fn is_empty(&self) -> bool {
         self.get_fields().is_empty()
+    }
+
+    pub fn find_field<T>(&self, name: T) -> Option<InputFieldRef>
+    where
+        T: Into<String>,
+    {
+        let name = name.into();
+        self.get_fields().into_iter().find(|f| f.name == name).cloned()
     }
 }
 
@@ -223,13 +272,12 @@ impl InputObjectType {
 pub struct InputField {
     pub name: String,
     pub field_type: InputType,
-    // pub default_value: Option<>... todo: Do we need that?
-    // FromInput conversion -> Take a look at that.
+    pub default_value: Option<PrismaValue>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum InputType {
-    Enum(EnumType),
+    Enum(EnumTypeRef),
     List(Box<InputType>),
     Object(InputObjectTypeRef),
     Opt(Box<InputType>),
@@ -265,10 +313,6 @@ impl InputType {
         InputType::Scalar(ScalarType::Boolean)
     }
 
-    pub fn scalar_enum(referencing: EnumType) -> InputType {
-        InputType::Scalar(ScalarType::Enum(referencing))
-    }
-
     pub fn date_time() -> InputType {
         InputType::Scalar(ScalarType::DateTime)
     }
@@ -288,20 +332,20 @@ impl InputType {
 
 #[derive(Debug)]
 pub enum OutputType {
-    Enum(EnumType),
-    List(Box<OutputType>),
+    Enum(EnumTypeRef),
+    List(OutputTypeRef),
     Object(ObjectTypeRef),
-    Opt(Box<OutputType>),
+    Opt(OutputTypeRef),
     Scalar(ScalarType),
 }
 
 impl OutputType {
     pub fn list(containing: OutputType) -> OutputType {
-        OutputType::List(Box::new(containing))
+        OutputType::List(Arc::new(containing))
     }
 
     pub fn opt(containing: OutputType) -> OutputType {
-        OutputType::Opt(Box::new(containing))
+        OutputType::Opt(Arc::new(containing))
     }
 
     pub fn object(containing: ObjectTypeRef) -> OutputType {
@@ -339,71 +383,57 @@ impl OutputType {
     pub fn id() -> OutputType {
         OutputType::Scalar(ScalarType::ID)
     }
+
+    /// Attempts to recurse through the type until an object type is found.
+    /// Returns Some(ObjectTypeStrongRef) if ab object type is found, None otherwise.
+    pub fn as_object_type(&self) -> Option<ObjectTypeStrongRef> {
+        match self {
+            OutputType::Enum(_) => None,
+            OutputType::List(inner) => inner.as_object_type(),
+            OutputType::Object(obj) => Some(obj.into_arc()),
+            OutputType::Opt(inner) => inner.as_object_type(),
+            OutputType::Scalar(_) => None,
+        }
+    }
+
+    pub fn is_list(&self) -> bool {
+        match self {
+            OutputType::Opt(inner) => inner.is_list(),
+            OutputType::List(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_object(&self) -> bool {
+        match self {
+            OutputType::Opt(inner) => inner.is_object(),
+            OutputType::Object(_) => true,
+            _ => false,
+        }
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ScalarType {
     String,
     Int,
     Float,
     Boolean,
-    Enum(EnumType),
+    Enum(EnumTypeRef),
     DateTime,
     Json,
     UUID,
     ID,
 }
 
-#[derive(Debug)]
-pub struct EnumType {
-    pub name: String,
-    pub values: Vec<EnumValue>,
-}
-
-/// Values in enums are solved with an enum rather than a trait or generic
-/// to avoid cluttering all type defs in this file, essentially.
-#[derive(Debug)]
-pub struct EnumValue {
-    pub name: String,
-    pub value: EnumValueWrapper,
-}
-
-impl EnumValue {
-    pub fn order_by<T>(name: T, field: Arc<ScalarField>, sort_order: SortOrder) -> Self
-    where
-        T: Into<String>,
-    {
-        EnumValue {
-            name: name.into(),
-            value: EnumValueWrapper::OrderBy(OrderBy { field, sort_order }),
-        }
-    }
-
-    pub fn string<T>(name: T, value: String) -> Self
-    where
-        T: Into<String>,
-    {
-        EnumValue {
-            name: name.into(),
-            value: EnumValueWrapper::String(value),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum EnumValueWrapper {
-    OrderBy(OrderBy),
-    String(String),
-}
-
 impl From<EnumType> for OutputType {
     fn from(e: EnumType) -> Self {
-        OutputType::Enum(e)
+        OutputType::Enum(Arc::new(e))
     }
 }
 
 impl From<EnumType> for InputType {
     fn from(e: EnumType) -> Self {
-        InputType::Enum(e)
+        InputType::Enum(Arc::new(e))
     }
 }

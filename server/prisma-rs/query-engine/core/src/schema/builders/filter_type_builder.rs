@@ -29,7 +29,6 @@ impl<'a> FilterObjectTypeBuilder<'a> {
         }
     }
 
-    ///
     pub fn scalar_filter_object_type(&self, model: ModelRef) -> InputObjectTypeRef {
         let object_name = format!("{}ScalarWhereInput", model.name);
         return_cached!(self.get_cache(), &object_name);
@@ -42,14 +41,17 @@ impl<'a> FilterObjectTypeBuilder<'a> {
             input_field(
                 "AND",
                 InputType::opt(InputType::list(InputType::object(Weak::clone(&weak_ref)))),
+                None,
             ),
             input_field(
                 "OR",
                 InputType::opt(InputType::list(InputType::object(Weak::clone(&weak_ref)))),
+                None,
             ),
             input_field(
                 "NOT",
                 InputType::opt(InputType::list(InputType::object(Weak::clone(&weak_ref)))),
+                None,
             ),
         ];
 
@@ -82,14 +84,17 @@ impl<'a> FilterObjectTypeBuilder<'a> {
             input_field(
                 "AND",
                 InputType::opt(InputType::list(InputType::object(Weak::clone(&weak_ref)))),
+                None,
             ),
             input_field(
                 "OR",
                 InputType::opt(InputType::list(InputType::object(Weak::clone(&weak_ref)))),
+                None,
             ),
             input_field(
                 "NOT",
                 InputType::opt(InputType::list(InputType::object(Weak::clone(&weak_ref)))),
+                None,
             ),
         ];
 
@@ -129,9 +134,9 @@ impl<'a> FilterObjectTypeBuilder<'a> {
                 let mapped = self.map_required_input_type(Arc::clone(&field));
 
                 if arg.is_list {
-                    input_field(field_name, InputType::opt(InputType::list(mapped)))
+                    input_field(field_name, InputType::opt(InputType::list(mapped)), None)
                 } else {
-                    input_field(field_name, InputType::opt(mapped))
+                    input_field(field_name, InputType::opt(mapped), None)
                 }
             })
             .collect()
@@ -147,13 +152,14 @@ impl<'a> FilterObjectTypeBuilder<'a> {
             (_, false) => vec![input_field(
                 field.name.clone(),
                 InputType::opt(InputType::object(Weak::clone(&related_input_type))),
+                None,
             )],
             (_, true) => get_field_filters(&ModelField::Relation(Arc::clone(&field)))
                 .into_iter()
                 .map(|arg| {
                     let field_name = format!("{}{}", field.name, arg.suffix);
                     let typ = InputType::opt(InputType::object(Weak::clone(&related_input_type)));
-                    input_field(field_name, typ)
+                    input_field(field_name, typ, None)
                 })
                 .collect(),
         }

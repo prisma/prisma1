@@ -9,11 +9,11 @@ pub struct SkipAndLimit {
 
 #[derive(Debug, Default, Clone)]
 pub struct QueryArguments {
-    pub skip: Option<u32>,
+    pub skip: Option<i64>,
     pub after: Option<GraphqlId>,
-    pub first: Option<u32>,
+    pub first: Option<i64>,
     pub before: Option<GraphqlId>,
-    pub last: Option<u32>,
+    pub last: Option<i64>,
     pub filter: Option<Filter>,
     pub order_by: Option<OrderBy>,
 }
@@ -23,7 +23,7 @@ impl QueryArguments {
         self.last.or(self.first).or(self.skip).is_some()
     }
 
-    pub fn window_limits(&self) -> (u32, u32) {
+    pub fn window_limits(&self) -> (i64, i64) {
         let skip = self.skip.unwrap_or(0) + 1;
 
         match self.last.or(self.first) {

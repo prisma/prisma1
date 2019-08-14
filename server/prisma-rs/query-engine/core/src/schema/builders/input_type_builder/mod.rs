@@ -21,6 +21,7 @@ pub trait InputTypeBuilderBase<'a>: CachedBuilder<InputObjectType> + InputBuilde
         input_object_name: T,
         prefiltered_fields: Vec<ScalarFieldRef>,
         field_mapper: F,
+        with_defaults: bool,
     ) -> Vec<InputField>
     where
         T: Into<String>,
@@ -30,7 +31,10 @@ pub trait InputTypeBuilderBase<'a>: CachedBuilder<InputObjectType> + InputBuilde
         let mut non_list_fields: Vec<InputField> = prefiltered_fields
             .iter()
             .filter(|f| !f.is_list)
-            .map(|f| input_field(f.name.clone(), field_mapper(Arc::clone(f))))
+            .map(|f| {
+                let default = if with_defaults { f.default_value.clone() } else { None };
+                input_field(f.name.clone(), field_mapper(Arc::clone(f)), default)
+            })
             .collect();
 
         let mut list_fields: Vec<InputField> = prefiltered_fields
@@ -42,7 +46,7 @@ pub trait InputTypeBuilderBase<'a>: CachedBuilder<InputObjectType> + InputBuilde
                 let input_object = match self.get_cache().get(&set_name) {
                     Some(t) => t,
                     None => {
-                        let set_fields = vec![input_field("set", self.map_optional_input_type(f))];
+                        let set_fields = vec![input_field("set", self.map_optional_input_type(f), None)];
                         let input_object = Arc::new(input_object_type(set_name.clone(), set_fields));
                         self.cache(set_name, Arc::clone(&input_object));
                         Arc::downgrade(&input_object)
@@ -50,7 +54,7 @@ pub trait InputTypeBuilderBase<'a>: CachedBuilder<InputObjectType> + InputBuilde
                 };
 
                 let set_input_type = InputType::opt(InputType::object(input_object));
-                input_field(name, set_input_type)
+                input_field(name, set_input_type, None)
             })
             .collect();
 
@@ -74,7 +78,7 @@ pub trait InputTypeBuilderBase<'a>: CachedBuilder<InputObjectType> + InputBuilde
         let input_type = self.where_unique_object_type(field.related_model());
         let input_type = Self::wrap_list_input_object_type(input_type, field.is_list);
 
-        input_field(name.into(), input_type)
+        input_field(name.into(), input_type, None)
     }
 
     /// Wraps an input object type into an option list object type.
@@ -103,7 +107,7 @@ pub trait InputTypeBuilderBase<'a>: CachedBuilder<InputObjectType> + InputBuilde
 
         let fields: Vec<InputField> = unique_fields
             .into_iter()
-            .map(|f| input_field(f.name.clone(), self.map_optional_input_type(f)))
+            .map(|f| input_field(f.name.clone(), self.map_optional_input_type(f), None))
             .collect();
 
         input_object.set_fields(fields);

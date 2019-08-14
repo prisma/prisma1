@@ -94,6 +94,14 @@ pub struct ColumnDescription {
 pub struct ForeignKey {
     pub table: String,
     pub column: String,
+    pub on_delete: OnDelete,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub enum OnDelete {
+    NoAction,
+    SetNull,
+    Cascade
 }
 
 #[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize, Deserialize)]

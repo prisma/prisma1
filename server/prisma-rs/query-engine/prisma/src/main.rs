@@ -7,16 +7,13 @@ extern crate rust_embed;
 #[macro_use]
 extern crate debug_stub_derive;
 
-// #[macro_use]
-// extern crate human_panic;
-
 mod context;
 mod data_model_loader;
 mod dmmf; // Temporary
 mod error;
 mod exec_loader;
-mod req_handlers;
-mod serializer;
+mod request_handlers;
+mod serializers;
 mod utilities;
 
 use crate::data_model_loader::*;
@@ -32,7 +29,7 @@ use core::{
 };
 use error::*;
 use prisma_common::{logger::Logger, metrics_recorder::StupidLogRecorder};
-use req_handlers::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
+use request_handlers::{graphql::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler}, PrismaRequest, RequestHandler};
 use serde_json;
 use std::{env, process, sync::Arc, time::Instant};
 
@@ -51,9 +48,6 @@ struct RequestContext {
 }
 
 fn main() {
-    // Setup a more user-friendly panic handler
-    // setup_panic!();
-
     let matches = ClapApp::new("Prisma Query Engine")
         .version(env!("CARGO_PKG_VERSION"))
         .arg(
@@ -84,19 +78,25 @@ fn main() {
         )
         .get_matches();
 
-    let result = if matches.is_present("cli") {
-        start_cli(matches.subcommand_matches("cli").unwrap())
+    if matches.is_present("cli") {
+        let result = start_cli(matches.subcommand_matches("cli").unwrap());
+
+        if let Err(err) = result {
+            info!("Encountered error during initialization:");
+            err.pretty_print();
+            process::exit(1);
+        };
     } else {
         let _logger = Logger::build("prisma", std::io::stdout()); // keep in scope
         StupidLogRecorder::install().unwrap();
 
-        start_server(matches)
-    };
+        let result = start_server(matches);
 
-    if let Err(err) = result {
-        info!("Encountered error during initialization:");
-        err.pretty_print();
-        process::exit(1);
+        if let Err(err) = result {
+            info!("Encountered error during initialization:");
+            err.pretty_print();
+            process::exit(1);
+        };
     };
 }
 
@@ -191,6 +191,7 @@ fn http_handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<Request
         .graphql_request_handler
         .handle(req, &request_context.context);
 
+    // TODO this copies the data for some reason.
     serde_json::to_string(&result)
 }
 

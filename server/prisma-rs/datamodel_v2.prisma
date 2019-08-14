@@ -5,7 +5,7 @@ datasource chinook {
 
 model Album {
   id Int @id @map(name:"AlbumId")
-  Title String
+  Title String @default("WURST")
   Artist Artist @map(name:"ArtistId")
   Tracks Track[]
 }
@@ -20,7 +20,6 @@ model Track {
   Composer String?
   Milliseconds Int
   UnitPrice Float
-  Playlists PlaylistTrack[]
   InvoiceLines InvoiceLine[]
 }
 
@@ -100,11 +99,4 @@ model InvoiceLine {
 model Playlist {
   id Int @id @map(name:"PlaylistId")
   Name String?
-  Tracks PlaylistTrack[]
-}
-
-model PlaylistTrack {
-  id Int @id
-  Playlist Playlist @map(name: "PlaylistId")
-  Track Track @map(name: "TrackId")
 }

@@ -15,7 +15,6 @@ mod query_builder;
 mod raw_query;
 mod row;
 mod transactional;
-mod write_query;
 
 use filter_conversion::*;
 use raw_query::*;

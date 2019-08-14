@@ -1,10 +1,10 @@
-mod database_reader;
-mod database_writer;
+mod managed_database_reader;
+mod unmanaged_database_writer;
 
-pub use database_reader::*;
-pub use database_writer::*;
+pub use managed_database_reader::*;
+pub use unmanaged_database_writer::*;
 
-use crate::{error::*, query_builder::QueryBuilder, AliasedCondition, RawQuery, SqlRow, ToSqlRow};
+use crate::{error::*, query_builder::ReadQueryBuilder, AliasedCondition, RawQuery, SqlRow, ToSqlRow};
 use connector_interface::{
     error::RecordFinderInfo,
     filter::{Filter, RecordFinder},
@@ -67,7 +67,7 @@ pub trait Transaction: Queryable {
 
         let model = record_finder.field.model();
         let selected_fields = SelectedFields::from(Arc::clone(&model));
-        let select = QueryBuilder::get_records(model, &selected_fields, record_finder);
+        let select = ReadQueryBuilder::get_records(model, &selected_fields, record_finder);
         let idents = selected_fields.type_identifiers();
 
         let row = self.find(select, idents.as_slice()).map_err(|e| match e {

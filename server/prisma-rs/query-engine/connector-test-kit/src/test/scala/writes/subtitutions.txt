@@ -1,0 +1,24 @@
+type 
+model 
+
+id: ID! @id
+id String @id @default(cuid())
+
+link:INLINE
+link: INLINE
+references: [id]
+
+@relation(link: INLINE)
+@relation(references: [id])
+
+[Foo]
+Foo[]
+
+SchemaDsl.fromStringV11
+ProjectDsl.fromString
+
+@createdAt
+@default(now())
+
+ifConnectorIsActive
+// ifConnectorIsActive

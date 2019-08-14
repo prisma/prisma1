@@ -48,6 +48,7 @@ pub trait CreateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> {
                     false => self.map_optional_input_type(f),
                 }
             },
+            true
         );
 
         // Compute input fields for relational fields.
@@ -115,9 +116,9 @@ pub trait CreateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> {
 
                     let input_type = InputType::object(input_object);
                     let input_field = if rf.is_required {
-                        input_field(rf.name.clone(), input_type)
+                        input_field(rf.name.clone(), input_type, None)
                     } else {
-                        input_field(rf.name.clone(), InputType::opt(input_type))
+                        input_field(rf.name.clone(), InputType::opt(input_type), None)
                     };
 
                     Some(input_field)
@@ -130,7 +131,7 @@ pub trait CreateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> {
         let input_object = self.create_input_type(field.related_model(), Some(Arc::clone(&field)));
         let input_object = Self::wrap_list_input_object_type(input_object, field.is_list);
 
-        input_field("create", input_object)
+        input_field("create", input_object, None)
     }
 
     /// Returns true if the field should be filtered for create input type building.

@@ -170,12 +170,15 @@ impl<'a> DatamodelConverter<'a> {
                                 related_field.clone(),
                                 field.clone(),
                             ),
-                            _ => (
-                                model.clone(),
-                                related_model.clone(),
-                                field.clone(),
-                                related_field.clone(),
-                            ),
+                            // SELF RELATION CASE
+                            _ => {
+                                let (field_a, field_b) = if field.name < related_field.name {
+                                    (field.clone(), related_field.clone())
+                                } else {
+                                    (related_field.clone(), field.clone())
+                                };
+                                (model.clone(), related_model.clone(), field_a, field_b)
+                            }
                         };
                         let inline_on_model_a = TempManifestationHolder::Inline {
                             in_table_of_model: model_a.name.clone(),
@@ -440,7 +443,9 @@ impl DatamodelFieldExtensions for dml::Field {
             datamodel::common::PrismaValue::String(x) => Some(PrismaValue::String(x.clone())),
             datamodel::common::PrismaValue::DateTime(x) => Some(PrismaValue::DateTime(*x)),
             datamodel::common::PrismaValue::Decimal(x) => Some(PrismaValue::Float(*x as f64)), // TODO: not sure if this mapping is correct
-            datamodel::common::PrismaValue::ConstantLiteral(x) => Some(PrismaValue::Enum(x.clone())),
+            datamodel::common::PrismaValue::ConstantLiteral(x) => {
+                Some(PrismaValue::Enum(EnumValue::string(x.clone(), x.clone())))
+            }
             datamodel::common::PrismaValue::Expression(_, _, _) => None, // expressions are handled in the behaviour function right now
         })
     }

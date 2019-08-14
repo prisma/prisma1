@@ -21,7 +21,6 @@ chrono = { version = "0.4", features = ["serde"] }
 failure = "0.1"
 failure_derive = "0.1"
 rand = "0.6"
-graphql-parser = "0.2.2"
 prisma-query = { git = "https://github.com/prisma/prisma-query.git", optional = true }
 datamodel = { path = "../libs/datamodel" }
 itertools = "0.8"

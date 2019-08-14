@@ -220,8 +220,8 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
         prismaProcess.destroyForcibly().waitFor()
         r
       })
+//    }
   }
-//  }
 
   override def queryThatMustFail(query: String,
                                  project: Project,

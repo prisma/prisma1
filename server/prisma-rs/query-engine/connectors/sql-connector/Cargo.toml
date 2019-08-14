@@ -22,12 +22,7 @@ failure_derive = "0.1"
 r2d2 = "0.8"
 cuid = { git = "https://github.com/prisma/cuid-rust" }
 rand = "0.6"
-
-slog = { version = "2.5", features = ["max_level_trace", "release_max_level_info"] }
-slog-async = "2.3"
-slog-json = "2.3"
-slog-stdlog = "3.0"
-log = { version = "0.4", features = ["max_level_trace", "release_max_level_info"] }
+log = "0.4"
 
 postgres = { version = "0.16.0-rc.1", features = ["with-serde_json-1", "with-chrono-0_4", "with-uuid-0_7"] }
 tokio-postgres = { version = "0.4.0-rc.2" }
