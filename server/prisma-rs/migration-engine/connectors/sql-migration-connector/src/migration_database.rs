@@ -26,7 +26,10 @@ impl Sqlite {
         let params = SqliteParams::try_from(url)?;
         let file_path = params.file_path.to_str().unwrap().to_string();
         let manager = PrismaConnectionManager::sqlite(&file_path)?;
-        let pool = r2d2::Pool::builder().max_size(params.connection_limit).build(manager)?;
+        let pool = r2d2::Pool::builder()
+            .max_size(params.connection_limit)
+            .test_on_check_out(false)
+            .build(manager)?;
 
         Ok(Self { pool, file_path })
     }
@@ -84,6 +87,7 @@ impl PostgreSql {
         let pool = r2d2::Pool::builder()
             .max_size(params.connection_limit)
             .connection_timeout(Duration::from_secs(3))
+            .test_on_check_out(false)
             .build(manager)?;
 
         Ok(Self { pool })
@@ -126,6 +130,7 @@ impl Mysql {
 
         let pool = r2d2::Pool::builder()
             .max_size(params.connection_limit)
+            .test_on_check_out(false)
             .build(manager)?;
 
         Ok(Self { pool })
