@@ -16,6 +16,14 @@ fn main() {
                 .takes_value(true)
                 .required(true),
         )
+        .arg(
+            Arg::with_name("single_cmd")
+                .short("s")
+                .long("single_cmd")
+                .help("Run only a single command, then exit")
+                .takes_value(false)
+                .required(false),
+        )
         .get_matches();
 
     let datamodel_location = matches.value_of("datamodel_location").unwrap();
@@ -24,6 +32,13 @@ fn main() {
     let mut datamodel = String::new();
     file.read_to_string(&mut datamodel).unwrap();
 
-    let api = RpcApi::new(&datamodel).unwrap();
-    api.start_server()
+    if matches.is_present("single_cmd") {
+        let api = RpcApi::new_sync(&datamodel).unwrap();
+        let response = api.handle().unwrap();
+
+        println!("{}", response);
+    } else {
+        let api = RpcApi::new_async(&datamodel).unwrap();
+        api.start_server()
+    }
 }

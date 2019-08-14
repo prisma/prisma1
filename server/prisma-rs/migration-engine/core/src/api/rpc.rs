@@ -46,35 +46,34 @@ impl RpcCommand {
 }
 
 impl RpcApi {
-    pub fn new(datamodel: &str) -> crate::Result<RpcApi> {
-        let config = datamodel::load_configuration(datamodel)?;
+    pub fn new_async(datamodel: &str) -> crate::Result<Self> {
+        let mut rpc_api = Self::new(datamodel)?;
 
-        let source = config.datasources.first().ok_or(CommandError::DataModelErrors {
-            code: 1000,
-            errors: vec!["There is no datasource in the configuration.".to_string()],
-        })?;
+        rpc_api.add_async_command_handler(RpcCommand::ApplyMigration);
+        rpc_api.add_async_command_handler(RpcCommand::InferMigrationSteps);
+        rpc_api.add_async_command_handler(RpcCommand::ListMigrations);
+        rpc_api.add_async_command_handler(RpcCommand::MigrationProgress);
+        rpc_api.add_async_command_handler(RpcCommand::MigrationProgress);
+        rpc_api.add_async_command_handler(RpcCommand::UnapplyMigration);
+        rpc_api.add_async_command_handler(RpcCommand::Reset);
+        rpc_api.add_async_command_handler(RpcCommand::CalculateDatamodel);
+        rpc_api.add_async_command_handler(RpcCommand::CalculateDatabaseSteps);
 
-        let connector = match source.connector_type() {
-            "sqlite" => SqlMigrationConnector::sqlite(&source.url())?,
-            "postgresql" => SqlMigrationConnector::postgres(&source.url())?,
-            "mysql" => SqlMigrationConnector::mysql(&source.url())?,
-            x => unimplemented!("Connector {} is not supported yet", x),
-        };
+        Ok(rpc_api)
+    }
 
-        let mut rpc_api = RpcApi {
-            io_handler: IoHandler::default(),
-            executor: Arc::new(MigrationApi::new(connector)?),
-        };
+    pub fn new_sync(datamodel: &str) -> crate::Result<Self> {
+        let mut rpc_api = Self::new(datamodel)?;
 
-        rpc_api.add_command_handler(RpcCommand::ApplyMigration);
-        rpc_api.add_command_handler(RpcCommand::InferMigrationSteps);
-        rpc_api.add_command_handler(RpcCommand::ListMigrations);
-        rpc_api.add_command_handler(RpcCommand::MigrationProgress);
-        rpc_api.add_command_handler(RpcCommand::MigrationProgress);
-        rpc_api.add_command_handler(RpcCommand::UnapplyMigration);
-        rpc_api.add_command_handler(RpcCommand::Reset);
-        rpc_api.add_command_handler(RpcCommand::CalculateDatamodel);
-        rpc_api.add_command_handler(RpcCommand::CalculateDatabaseSteps);
+        rpc_api.add_sync_command_handler(RpcCommand::ApplyMigration);
+        rpc_api.add_sync_command_handler(RpcCommand::InferMigrationSteps);
+        rpc_api.add_sync_command_handler(RpcCommand::ListMigrations);
+        rpc_api.add_sync_command_handler(RpcCommand::MigrationProgress);
+        rpc_api.add_sync_command_handler(RpcCommand::MigrationProgress);
+        rpc_api.add_sync_command_handler(RpcCommand::UnapplyMigration);
+        rpc_api.add_sync_command_handler(RpcCommand::Reset);
+        rpc_api.add_sync_command_handler(RpcCommand::CalculateDatamodel);
+        rpc_api.add_sync_command_handler(RpcCommand::CalculateDatabaseSteps);
 
         Ok(rpc_api)
     }
@@ -102,15 +101,101 @@ impl RpcApi {
         Ok(result)
     }
 
-    fn add_command_handler(&mut self, cmd: RpcCommand) {
+    fn new(datamodel: &str) -> crate::Result<RpcApi> {
+        let config = datamodel::load_configuration(datamodel)?;
+
+        let source = config.datasources.first().ok_or(CommandError::DataModelErrors {
+            code: 1000,
+            errors: vec!["There is no datasource in the configuration.".to_string()],
+        })?;
+
+        let connector = match source.connector_type() {
+            "sqlite" => SqlMigrationConnector::sqlite(&source.url())?,
+            "postgresql" => SqlMigrationConnector::postgres(&source.url())?,
+            "mysql" => SqlMigrationConnector::mysql(&source.url())?,
+            x => unimplemented!("Connector {} is not supported yet", x),
+        };
+
+        Ok(Self {
+            io_handler: IoHandler::default(),
+            executor: Arc::new(MigrationApi::new(connector)?),
+        })
+    }
+
+    fn add_sync_command_handler(&mut self, cmd: RpcCommand) {
         let executor = Arc::clone(&self.executor);
 
         self.io_handler.add_method(cmd.name(), move |params: Params| {
-            Self::create_handler(&executor, cmd, params)
+            Self::create_sync_handler(&executor, cmd, &params)
         });
     }
 
-    fn create_handler(
+    fn add_async_command_handler(&mut self, cmd: RpcCommand) {
+        let executor = Arc::clone(&self.executor);
+
+        self.io_handler.add_method(cmd.name(), move |params: Params| {
+            Self::create_async_handler(&executor, cmd, params)
+        });
+    }
+
+    fn create_sync_handler(
+        executor: &Arc<dyn GenericApi>,
+        cmd: RpcCommand,
+        params: &Params,
+    ) -> std::result::Result<serde_json::Value, JsonRpcError> {
+        let response_json = match cmd {
+            RpcCommand::InferMigrationSteps => {
+                let input: InferMigrationStepsInput = params.clone().parse()?;
+                let result = executor.infer_migration_steps(&input)?;
+
+                serde_json::to_value(result).expect("Rendering of RPC response failed")
+            }
+            RpcCommand::ListMigrations => {
+                let result = executor.list_migrations(&serde_json::Value::Null)?;
+
+                serde_json::to_value(result).expect("Rendering of RPC response failed")
+            }
+            RpcCommand::MigrationProgress => {
+                let input: MigrationProgressInput = params.clone().parse()?;
+                let result = executor.migration_progress(&input)?;
+
+                serde_json::to_value(result).expect("Rendering of RPC response failed")
+            }
+            RpcCommand::ApplyMigration => {
+                let input: ApplyMigrationInput = params.clone().parse()?;
+                let result = executor.apply_migration(&input)?;
+
+                serde_json::to_value(result).expect("Rendering of RPC response failed")
+            }
+            RpcCommand::UnapplyMigration => {
+                let input: UnapplyMigrationInput = params.clone().parse()?;
+                let result = executor.unapply_migration(&input)?;
+
+                serde_json::to_value(result).expect("Rendering of RPC response failed")
+            }
+            RpcCommand::Reset => {
+                let result = executor.reset(&serde_json::Value::Null)?;
+
+                serde_json::to_value(result).expect("Rendering of RPC response failed")
+            }
+            RpcCommand::CalculateDatamodel => {
+                let input: CalculateDatamodelInput = params.clone().parse()?;
+                let result = executor.calculate_datamodel(&input)?;
+
+                serde_json::to_value(result).expect("Rendering of RPC response failed")
+            }
+            RpcCommand::CalculateDatabaseSteps => {
+                let input: CalculateDatabaseStepsInput = params.clone().parse()?;
+                let result = executor.calculate_database_steps(&input)?;
+
+                serde_json::to_value(result).expect("Rendering of RPC response failed")
+            }
+        };
+
+        Ok(response_json)
+    }
+
+    fn create_async_handler(
         executor: &Arc<dyn GenericApi>,
         cmd: RpcCommand,
         params: Params,
@@ -120,56 +205,7 @@ impl RpcApi {
         lazy(move || {
             poll_fn(move || {
                 blocking(|| {
-                    let response_json = match cmd {
-                        RpcCommand::InferMigrationSteps => {
-                            let input: InferMigrationStepsInput = params.clone().parse()?;
-                            let result = executor.infer_migration_steps(&input)?;
-
-                            serde_json::to_value(result).expect("Rendering of RPC response failed")
-                        }
-                        RpcCommand::ListMigrations => {
-                            let result = executor.list_migrations(&serde_json::Value::Null)?;
-
-                            serde_json::to_value(result).expect("Rendering of RPC response failed")
-                        }
-                        RpcCommand::MigrationProgress => {
-                            let input: MigrationProgressInput = params.clone().parse()?;
-                            let result = executor.migration_progress(&input)?;
-
-                            serde_json::to_value(result).expect("Rendering of RPC response failed")
-                        }
-                        RpcCommand::ApplyMigration => {
-                            let input: ApplyMigrationInput = params.clone().parse()?;
-                            let result = executor.apply_migration(&input)?;
-
-                            serde_json::to_value(result).expect("Rendering of RPC response failed")
-                        }
-                        RpcCommand::UnapplyMigration => {
-                            let input: UnapplyMigrationInput = params.clone().parse()?;
-                            let result = executor.unapply_migration(&input)?;
-
-                            serde_json::to_value(result).expect("Rendering of RPC response failed")
-                        }
-                        RpcCommand::Reset => {
-                            let result = executor.reset(&serde_json::Value::Null)?;
-
-                            serde_json::to_value(result).expect("Rendering of RPC response failed")
-                        }
-                        RpcCommand::CalculateDatamodel => {
-                            let input: CalculateDatamodelInput = params.clone().parse()?;
-                            let result = executor.calculate_datamodel(&input)?;
-
-                            serde_json::to_value(result).expect("Rendering of RPC response failed")
-                        }
-                        RpcCommand::CalculateDatabaseSteps => {
-                            let input: CalculateDatabaseStepsInput = params.clone().parse()?;
-                            let result = executor.calculate_database_steps(&input)?;
-
-                            serde_json::to_value(result).expect("Rendering of RPC response failed")
-                        }
-                    };
-
-                    Ok(response_json)
+                    Self::create_sync_handler(&executor, cmd, &params)
                 })
             })
         })
