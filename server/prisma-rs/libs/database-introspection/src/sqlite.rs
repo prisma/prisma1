@@ -45,7 +45,7 @@ impl IntrospectionConnector {
             .map(|row| row.get("name").and_then(|x| x.to_string()).unwrap())
             .filter(|n| n != "sqlite_sequence")
             .collect();
-        debug!("Found table names: {:#?}", names);
+        debug!("Found table names: {:?}", names);
         names
     }
 
@@ -79,7 +79,7 @@ impl IntrospectionConnector {
                     None => panic!("couldn't get dflt_value column"),
                 };
                 let tpe = get_column_type(&row.get("type").and_then(|x| x.to_string()).expect("type"));
-                let pk = row.get("pk").and_then(|x| x.as_i64()).expect("primary key");
+                let pk_col = row.get("pk").and_then(|x| x.as_i64()).expect("primary key");
                 let is_required = row.get("notnull").and_then(|x| x.as_bool()).expect("notnull");
                 let arity = if tpe.raw.ends_with("[]") {
                     ColumnArity::List
@@ -93,11 +93,10 @@ impl IntrospectionConnector {
                     tpe,
                     arity: arity.clone(),
                     default: default_value.clone(),
-                    // TODO
-                    auto_increment: None,
+                    auto_increment: pk_col > 0,
                 };
-                if pk > 0 {
-                    pk_cols.insert(pk, col.name.clone());
+                if pk_col > 0 {
+                    pk_cols.insert(pk_col, col.name.clone());
                 }
 
                 debug!(
@@ -106,7 +105,7 @@ impl IntrospectionConnector {
                     col.tpe,
                     default_value.unwrap_or("none".to_string()),
                     arity,
-                    pk
+                    pk_col > 0
                 );
 
                 col

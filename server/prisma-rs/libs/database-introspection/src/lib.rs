@@ -1,6 +1,7 @@
 use failure::{Error, Fail};
 use std::collections::HashSet;
 
+pub mod mysql;
 pub mod postgres;
 pub mod sqlite;
 
@@ -100,7 +101,7 @@ pub struct Column {
     // Does this field need to be richer? E.g. to easier detect the usages of sequences here
     pub default: Option<String>,
     /// Column auto increment setting, MySQL/SQLite only.
-    pub auto_increment: Option<bool>,
+    pub auto_increment: bool,
 }
 
 /// The type of a column.

@@ -14,3 +14,6 @@ members = [
   "libs/prisma-inflector",
   "libs/database-introspection",
 ]
+
+[patch.crates-io]
+barrel = { git = "https://github.com/aknuds1/barrel.git", branch = "bugfix/fix-index-creation" }
