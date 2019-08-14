@@ -13,30 +13,46 @@ pub struct SourceConfig {
     pub documentation: Option<String>,
 }
 
-fn source_from_json(source: &SourceConfig, loader: &configuration::SourceLoader) -> Box<configuration::Source> {
-    // Loader only works on AST. We should change that.
-    // TODO: This is code duplication with source serializer, the format is very similar.
-    // Maybe we can impl the Source trait.
-    let mut arguments: Vec<ast::Argument> = Vec::new();
+pub fn render_sources_to_json_value(sources: &Vec<Box<configuration::Source>>) -> serde_json::Value {
+    let res = sources_to_json(sources);
+    serde_json::to_value(&res).expect("Failed to render JSON.")
+}
 
-    arguments.push(ast::Argument::new_string("provider", &source.connector_type));
-    arguments.push(ast::Argument::new_string("url", &source.url));
+pub fn render_sources_to_json(sources: &Vec<Box<configuration::Source>>) -> String {
+    let res = sources_to_json(sources);
+    serde_json::to_string_pretty(&res).expect("Failed to render JSON.")
+}
 
-    for (key, value) in &source.config {
-        arguments.push(ast::Argument::new_string(&key, &value));
+fn sources_to_json(sources: &Vec<Box<configuration::Source>>) -> Vec<SourceConfig> {
+    let mut res: Vec<SourceConfig> = Vec::new();
+
+    for source in sources {
+        res.push(source_to_json(source));
     }
 
-    let ast_source = ast::SourceConfig {
-        name: ast::Identifier::new(&source.name),
-        properties: arguments,
-        documentation: source.documentation.clone().map(|text| ast::Comment { text }),
-        span: ast::Span::empty(),
-    };
+    res
+}
 
-    loader
-        .load_source(&ast_source)
-        .expect("Source loading failed.") // Result
-        .expect("Source was disabled. That should not be possible.") // Option
+fn source_to_json(source: &Box<configuration::Source>) -> SourceConfig {
+    SourceConfig {
+        name: source.name().clone(),
+        connector_type: String::from(source.connector_type()),
+        url: source.url().clone(),
+        documentation: source.documentation().clone(),
+        config: source.config().clone(),
+    }
+}
+
+pub fn sources_from_json_value_with_plugins(
+    json: serde_json::Value,
+    source_definitions: Vec<Box<configuration::SourceDefinition>>,
+) -> Vec<Box<configuration::Source>> {
+    let json_sources = serde_json::from_value::<Vec<SourceConfig>>(json).expect("Failed to parse JSON");
+    sources_from_vec(json_sources, source_definitions)
+}
+
+pub fn sources_from_json(json: &str) -> Vec<Box<configuration::Source>> {
+    sources_from_json_with_plugins(json, Vec::new())
 }
 
 pub fn sources_from_json_with_plugins(
@@ -67,44 +83,28 @@ fn sources_from_vec(
     res
 }
 
-pub fn sources_from_json_value_with_plugins(
-    json: serde_json::Value,
-    source_definitions: Vec<Box<configuration::SourceDefinition>>,
-) -> Vec<Box<configuration::Source>> {
-    let json_sources = serde_json::from_value::<Vec<SourceConfig>>(json).expect("Failed to parse JSON");
-    sources_from_vec(json_sources, source_definitions)
-}
+fn source_from_json(source: &SourceConfig, loader: &configuration::SourceLoader) -> Box<configuration::Source> {
+    // Loader only works on AST. We should change that.
+    // TODO: This is code duplication with source serializer, the format is very similar.
+    // Maybe we can impl the Source trait.
+    let mut arguments: Vec<ast::Argument> = Vec::new();
 
-pub fn sources_from_json(json: &str) -> Vec<Box<configuration::Source>> {
-    sources_from_json_with_plugins(json, Vec::new())
-}
+    arguments.push(ast::Argument::new_string("provider", &source.connector_type));
+    arguments.push(ast::Argument::new_string("url", &source.url));
 
-fn source_to_json(source: &Box<configuration::Source>) -> SourceConfig {
-    SourceConfig {
-        name: source.name().clone(),
-        connector_type: String::from(source.connector_type()),
-        url: source.url().clone(),
-        documentation: source.documentation().clone(),
-        config: source.config().clone(),
-    }
-}
-
-fn sources_to_json(sources: &Vec<Box<configuration::Source>>) -> Vec<SourceConfig> {
-    let mut res: Vec<SourceConfig> = Vec::new();
-
-    for source in sources {
-        res.push(source_to_json(source));
+    for (key, value) in &source.config {
+        arguments.push(ast::Argument::new_string(&key, &value));
     }
 
-    res
-}
+    let ast_source = ast::SourceConfig {
+        name: ast::Identifier::new(&source.name),
+        properties: arguments,
+        documentation: source.documentation.clone().map(|text| ast::Comment { text }),
+        span: ast::Span::empty(),
+    };
 
-pub fn render_sources_to_json_value(sources: &Vec<Box<configuration::Source>>) -> serde_json::Value {
-    let res = sources_to_json(sources);
-    serde_json::to_value(&res).expect("Failed to render JSON.")
-}
-
-pub fn render_sources_to_json(sources: &Vec<Box<configuration::Source>>) -> String {
-    let res = sources_to_json(sources);
-    serde_json::to_string_pretty(&res).expect("Failed to render JSON.")
+    loader
+        .load_source(&ast_source)
+        .expect("Source loading failed.") // Result
+        .expect("Source was disabled. That should not be possible.") // Option
 }
