@@ -8,6 +8,7 @@ edition = "2018"
 migration-connector = { path = "../connectors/migration-connector" }
 datamodel = { path = "../../libs/datamodel" }
 prisma-models = { path = "../../prisma-models" }
+prisma-common = { path = "../../libs/prisma-common" }
 sql-migration-connector = { path = "../connectors/sql-migration-connector" }
 clap = "2.33"
 
@@ -15,7 +16,6 @@ chrono = { version = "0.4", features = ["serde"] }
 boolinator = "2.4.0"
 url = "1.7"
 log = "0.4"
-env_logger = "0.6"
 
 serde = "1.0"
 serde_json = "1.0"

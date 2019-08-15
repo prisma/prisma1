@@ -1337,6 +1337,7 @@ dependencies = [
  "jsonrpc-stdio-server 13.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "migration-connector 0.1.0",
+ "prisma-common 0.0.0",
  "prisma-models 0.0.0",
  "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)",
  "serde 1.0.98 (registry+https://github.com/rust-lang/crates.io-index)",
