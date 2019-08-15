@@ -17,6 +17,7 @@ url = "1.7.2"
 postgres = { version = "0.16.0-rc.2", features = ["runtime", "with-serde_json-1", "with-chrono-0_4", "with-uuid-0_7"] }
 log = "0.4"
 mysql = { version = "16", features = ["ssl"] }
+regex = "1.2"
 
 [dev-dependencies]
 fern = "0.5"
