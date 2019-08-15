@@ -70,9 +70,12 @@ impl SqlMigrationConnector {
         let schema = params.schema.clone();
 
         match PostgreSql::new(params) {
-            Ok(conn) => {
-                Ok(Self::create_connector(Arc::new(conn), SqlFamily::Postgres, schema, None))
-            }
+            Ok(conn) => Ok(Self::create_connector(
+                Arc::new(conn),
+                SqlFamily::Postgres,
+                schema,
+                None,
+            )),
             Err(prisma_query::error::Error::ConnectionError(_)) => {
                 let _ = {
                     let mut url = url.clone();
@@ -97,9 +100,7 @@ impl SqlMigrationConnector {
                     None,
                 ))
             }
-            Err(err) => {
-                Err(err.into())
-            }
+            Err(err) => Err(err.into()),
         }
     }
 
@@ -158,7 +159,7 @@ impl SqlMigrationConnector {
         });
 
         let database_migration_step_applier = Arc::new(SqlDatabaseStepApplier {
-            sql_family: sql_family,
+            sql_family,
             schema_name: schema_name.clone(),
             conn: Arc::clone(&conn),
         });

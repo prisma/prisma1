@@ -98,12 +98,10 @@ impl ReadQueryBuilder {
         // I vant to saak your blaad... - Vlad the Impaler
         let vhere = "nodeId".in_selection(record_ids);
 
-        let query = Select::from_table(table)
+        Select::from_table(table)
             .column("nodeId")
             .column("value")
-            .so_that(vhere);
-
-        query
+            .so_that(vhere)
     }
 
     pub fn count_by_model(model: ModelRef, query_arguments: QueryArguments) -> Select<'static> {
@@ -113,12 +111,10 @@ impl ReadQueryBuilder {
         selected_fields.add_scalar(id_field.clone());
 
         let base_query = Self::get_records(model, &selected_fields, query_arguments);
-
         let table = Table::from(base_query).alias("sub");
         let column = Column::from(("sub", id_field.db_name().to_string()));
-        let select_ast = Select::from_table(table).value(count(column));
 
-        select_ast
+        Select::from_table(table).value(count(column))
     }
 
     pub fn count_by_table(database: &str, table: &str) -> Select<'static> {

@@ -39,7 +39,7 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
             "Update",
             model.fields().scalar(),
             |f: ScalarFieldRef| self.map_optional_input_type(f),
-            false
+            false,
         )
     }
 
@@ -266,7 +266,7 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
 
                     Some(Arc::downgrade(&input_object))
                 }
-                x => return x,
+                x => x,
             }
         } else {
             None

@@ -1,12 +1,12 @@
 use crate::{
-    query_builder::ManyRelatedRecordsWithRowNumber, FromSource, LegacyDatabase, SqlCapabilities,
-    Transaction, Transactional,
+    query_builder::ManyRelatedRecordsWithRowNumber, FromSource, LegacyDatabase, SqlCapabilities, Transaction,
+    Transactional,
 };
 use datamodel::Source;
 use postgres::Config;
 use prisma_common::config::*;
 use prisma_query::{
-    connector::{Queryable, PostgresParams},
+    connector::{PostgresParams, Queryable},
     pool::{postgres::PostgresManager, PrismaConnectionManager},
 };
 use std::{convert::TryFrom, str::FromStr};
@@ -19,7 +19,7 @@ pub struct PostgreSql {
 }
 
 impl FromSource for PostgreSql {
-    fn from_source(source: &Box<dyn Source>) -> crate::Result<Self> {
+    fn from_source(source: &dyn Source) -> crate::Result<Self> {
         let url = url::Url::parse(source.url())?;
         let params = PostgresParams::try_from(url)?;
         let pool = r2d2::Pool::try_from(params).unwrap();

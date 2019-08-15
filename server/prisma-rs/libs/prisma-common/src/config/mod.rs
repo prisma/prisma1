@@ -94,7 +94,7 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
                         let source = SqliteSourceDefinition::new().create(
                             &name,
                             &format!("file:{}", path),
-                            &mut Arguments::empty(&vec![]),
+                            &mut Arguments::empty(&[]),
                             &None
                         );
 
@@ -111,17 +111,24 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
                         None => config.user.clone(),
                     };
 
-                    let url = format!("postgresql://{}@{}:{}/{}?sslmode=prefer&schema={}", auth_pair, config.host, config.port, db_name, config.schema.clone().unwrap_or("public".into()));
-                    let source = PostgresSourceDefinition::new().create( &name, &url, &mut Arguments::empty(&vec![]), &None);
+                    let url = format!(
+                        "postgresql://{}@{}:{}/{}?sslmode=prefer&schema={}",
+                        auth_pair,
+                        config.host,
+                        config.port,
+                        db_name,
+                        config.schema.clone().unwrap_or_else(|| "public".into()));
+
+                    let source = PostgresSourceDefinition::new().create( &name, &url, &mut Arguments::empty(&[]), &None);
 
                     source.map_err(|err| err.into())
                 },
 
                 PrismaDatabase::ConnectionString(ref config) if config.connector == "postgres-native" => {
                     let mut uri = config.uri.clone();
-                    uri.query_pairs_mut().append_pair("schema", &config.schema.clone().unwrap_or("public".into()));
+                    uri.query_pairs_mut().append_pair("schema", &config.schema.clone().unwrap_or_else(|| "public".into()));
 
-                    let source = PostgresSourceDefinition::new().create(&name, &uri.to_string(), &mut Arguments::empty(&vec![]), &None);
+                    let source = PostgresSourceDefinition::new().create(&name, &uri.to_string(), &mut Arguments::empty(&[]), &None);
                     source.map_err(|err| err.into())
                 },
 
@@ -133,13 +140,13 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
                     };
 
                     let url = format!("mysql://{}@{}:{}/{}", auth_pair, config.host, config.port, db_name);
-                    let source = MySqlSourceDefinition::new().create(&name, &url, &mut Arguments::empty(&vec![]), &None);
+                    let source = MySqlSourceDefinition::new().create(&name, &url, &mut Arguments::empty(&[]), &None);
 
                     source.map_err(|err| err.into())
                 },
 
                 PrismaDatabase::ConnectionString(ref config) if config.connector == "mysql-native" => {
-                    let source = MySqlSourceDefinition::new().create(&name, &config.uri.to_string(), &mut Arguments::empty(&vec![]), &None);
+                    let source = MySqlSourceDefinition::new().create(&name, &config.uri.to_string(), &mut Arguments::empty(&[]), &None);
                     source.map_err(|err| err.into())
                 },
 
@@ -211,7 +218,7 @@ fn substitute_env_vars(cfg_string: String) -> Result<String, CommonError> {
     // Collect all unresolved env vars
     let unresolved_env: Vec<&str> = resolved_env
         .iter()
-        .filter_map(|m| if let None = m.1 { Some(m.0.as_ref()) } else { None })
+        .filter_map(|m| if m.1.is_none() { Some(m.0.as_ref()) } else { None })
         .collect();
 
     // Validate that all env vars can be resolved

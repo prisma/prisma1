@@ -16,9 +16,9 @@ pub use scalar::*;
 
 #[derive(Debug, Clone)]
 pub enum Filter {
-    And(Vec<Box<Filter>>),
-    Or(Vec<Box<Filter>>),
-    Not(Vec<Box<Filter>>),
+    And(Vec<Filter>),
+    Or(Vec<Filter>),
+    Not(Vec<Filter>),
     Scalar(ScalarFilter),
     ScalarList(ScalarListFilter),
     OneRelationIsNull(OneRelationIsNullFilter),
@@ -29,15 +29,15 @@ pub enum Filter {
 
 impl Filter {
     pub fn and(filters: Vec<Filter>) -> Self {
-        Filter::And(filters.into_iter().map(Box::new).collect())
+        Filter::And(filters)
     }
 
     pub fn or(filters: Vec<Filter>) -> Self {
-        Filter::Or(filters.into_iter().map(Box::new).collect())
+        Filter::Or(filters)
     }
 
     pub fn not(filters: Vec<Filter>) -> Self {
-        Filter::Not(filters.into_iter().map(Box::new).collect())
+        Filter::Not(filters)
     }
 
     pub fn empty() -> Self {

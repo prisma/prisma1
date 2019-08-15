@@ -10,8 +10,7 @@ use crate::{
     response_ir::{Response, ResultIrBuilder},
     CoreError, CoreResult, QueryPair, QuerySchemaRef, ResultPair, ResultResolutionStrategy,
 };
-use connector::{filter::RecordFinder, Identifier, ModelExtractor, Query, ReadQuery, WriteQueryResult};
-use prisma_models::ModelRef;
+use connector::{ModelExtractor, Query, ReadQuery};
 
 /// Central query executor and main entry point into the query core.
 pub struct QueryExecutor {
@@ -48,7 +47,7 @@ impl QueryExecutor {
         // 4. Build IR response / Parse results into IR response
         Ok(results
             .into_iter()
-            .fold(ResultIrBuilder::new(), |builder, result| builder.add(result))
+            .fold(ResultIrBuilder::new(), |builder, result| builder.push(result))
             .build())
     }
 
@@ -61,7 +60,7 @@ impl QueryExecutor {
         let model_opt = query.extract_model();
         match query {
             Query::Read(read) => {
-                let query_result = self.read_executor.execute(read, &vec![])?;
+                let query_result = self.read_executor.execute(read, &[])?;
 
                 Ok(match strategy {
                     ResultResolutionStrategy::Serialize(typ) => ResultPair::Read(query_result, typ),
@@ -78,7 +77,7 @@ impl QueryExecutor {
                         Some(model) => match *dependent_pair {
                             (Query::Read(ReadQuery::RecordQuery(mut rq)), strategy) => {
                                 // Inject required information into the query and execute
-                                rq.record_finder = Some(Self::to_record_finder(&query_result.result, model)?);
+                                rq.record_finder = Some(query_result.result.to_record_finder(model)?);
 
                                 let dependent_pair = (Query::Read(ReadQuery::RecordQuery(rq)), strategy);
                                 self.execute_query(dependent_pair)
@@ -91,25 +90,6 @@ impl QueryExecutor {
                     },
                 }
             }
-        }
-    }
-
-    /// Attempts to convert a write query result into a RecordFinder required for dependent queries.
-    /// Assumes ID field is used as dependent field (which is true for now in the current execution model).
-    fn to_record_finder(write_result: &WriteQueryResult, model: ModelRef) -> CoreResult<RecordFinder> {
-        let id_field = model.fields().id();
-
-        match &write_result.identifier {
-            Identifier::Id(id) => Ok(RecordFinder::new(id_field, id)),
-            Identifier::Record(r) => r
-                .collect_id(&id_field.name)
-                .map(|id_val| RecordFinder::new(id_field, id_val))
-                .map_err(|err| err.into()),
-
-            other => Err(CoreError::ConversionError(format!(
-                "Impossible conversion of write query result {:?} to RecordFinder.",
-                other
-            ))),
         }
     }
 

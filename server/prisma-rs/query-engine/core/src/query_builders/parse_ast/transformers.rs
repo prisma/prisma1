@@ -112,8 +112,8 @@ impl TryInto<Option<OrderBy>> for ParsedInputValue {
 
         match enum_val {
             Some(EnumValue {
-                name: _,
                 value: EnumValueWrapper::OrderBy(ob),
+                ..
             }) => Ok(Some(ob)),
             None => Ok(None),
             v => Err(QueryValidationError::AssertionError(format!(

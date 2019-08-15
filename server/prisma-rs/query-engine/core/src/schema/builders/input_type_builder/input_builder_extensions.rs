@@ -1,5 +1,5 @@
 use super::*;
-use prisma_models::{ScalarFieldRef, TypeIdentifier, EnumType};
+use prisma_models::{EnumType, ScalarFieldRef, TypeIdentifier};
 
 /// Generic extension also used by the FilterInputTypeBuilder.
 pub trait InputBuilderExtensions {
@@ -17,7 +17,7 @@ pub trait InputBuilderExtensions {
             TypeIdentifier::UUID => InputType::uuid(),
             TypeIdentifier::DateTime => InputType::date_time(),
             TypeIdentifier::Json => InputType::json(),
-            TypeIdentifier::Enum => self.map_enum_input_type(&field).into(),
+            TypeIdentifier::Enum => self.map_enum_input_type(&field),
             TypeIdentifier::Relation => unreachable!(), // A scalar field can't be a relation.
         };
 

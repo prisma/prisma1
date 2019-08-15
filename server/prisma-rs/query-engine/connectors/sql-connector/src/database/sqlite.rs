@@ -33,7 +33,7 @@ impl Sqlite {
 }
 
 impl FromSource for Sqlite {
-    fn from_source(source: &Box<dyn Source>) -> crate::Result<Self> {
+    fn from_source(source: &dyn Source) -> crate::Result<Self> {
         let params = SqliteParams::try_from(source.url().as_str())?;
 
         let file_path = params.file_path.clone();

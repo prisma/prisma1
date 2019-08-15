@@ -39,14 +39,12 @@ fn main() {
         println!("{}", response);
     } else {
         match RpcApi::new_async(&datamodel) {
-            Ok(api) => {
-                api.start_server()
-            }
+            Ok(api) => api.start_server(),
             Err(Error::DatamodelError(errors)) => {
                 let file_name = env::var("PRISMA_SDL_PATH").unwrap_or_else(|_| "schema.prisma".to_string());
 
                 for error in errors.to_iter() {
-                    println!("");
+                    println!();
                     error
                         .pretty_print(&mut io::stderr().lock(), &file_name, &datamodel)
                         .expect("Failed to write errors to stderr");
@@ -54,8 +52,7 @@ fn main() {
 
                 std::process::exit(1);
             }
-            Err(e) => panic!(e)
+            Err(e) => panic!(e),
         }
-
     }
 }

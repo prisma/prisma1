@@ -147,7 +147,7 @@ fn load_datamodel_v2() -> PrismaResult<Option<DatamodelV2Components>> {
 }
 
 fn load_configuration(dml_string: &str) -> PrismaResult<datamodel::Configuration> {
-    let datasource_overwrites_string = load_string_from_env("OVERWRITE_DATASOURCES")?.unwrap_or(r#"[]"#.to_string());
+    let datasource_overwrites_string = load_string_from_env("OVERWRITE_DATASOURCES")?.unwrap_or_else(|| r#"[]"#.to_string());
     let datasource_overwrites: Vec<SourceOverride> = serde_json::from_str(&datasource_overwrites_string)?;
 
     match datamodel::load_configuration(&dml_string) {
@@ -178,7 +178,7 @@ struct SourceOverride {
 /// Attempts to load a Prisma DML (datamodel v2) string from either env or file.
 /// Env has precedence over file.
 fn load_v2_dml_string() -> PrismaResult<Option<String>> {
-    load_v2_string_from_env().inner_or_else(|| load_v2_dml_from_file())
+    load_v2_string_from_env().inner_or_else(load_v2_dml_from_file)
 }
 
 /// Attempts to load a Prisma DML (datamodel v2) string from env.
@@ -198,7 +198,7 @@ fn load_v2_dml_from_file() -> PrismaResult<Option<String>> {
 fn load_v1_sdl_string() -> PrismaResult<Option<String>> {
     debug!("Trying to load Prisma v1.1 Datamodel...");
     load_v11_sdl_from_env()
-        .inner_or_else(|| load_v11_sdl_from_file())
+        .inner_or_else( load_v11_sdl_from_file)
         .on_success(|| debug!("Loaded Prisma v1.1 data model."))
 }
 

@@ -61,10 +61,10 @@ impl FilterOp {
                 let op_suffix: &'static str = op.suffix();
                 name.ends_with(op_suffix)
             })
-            .map(|op| op.clone())
+            .copied()
     }
 
-    pub fn suffix(&self) -> &'static str {
+    pub fn suffix(self) -> &'static str {
         match self {
             FilterOp::In => "_in",
             FilterOp::NotIn => "_not_in",

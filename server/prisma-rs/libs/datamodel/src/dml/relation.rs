@@ -41,7 +41,7 @@ impl RelationInfo {
     pub fn new_with_fields(to: &str, to_fields: Vec<String>) -> RelationInfo {
         RelationInfo {
             to: String::from(to),
-            to_fields: to_fields,
+            to_fields,
             name: String::new(),
             on_delete: OnDeleteStrategy::None,
         }
@@ -57,7 +57,7 @@ pub enum OnDeleteStrategy {
 }
 
 impl FromStrAndSpan for OnDeleteStrategy {
-    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, ValidationError> {
+    fn from_str_and_span(s: &str, span: ast::Span) -> Result<Self, ValidationError> {
         match s {
             "CASCADE" => Ok(OnDeleteStrategy::Cascade),
             "NONE" => Ok(OnDeleteStrategy::None),

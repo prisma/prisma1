@@ -69,7 +69,7 @@ pub fn model_validation_error(message: &str, model: &dml::Model, ast: &ast::Data
     ValidationError::new_model_validation_error(
         message,
         &model.name,
-        &ast.find_model(&model.name).expect(ERROR_GEN_STATE_ERROR).span,
+        ast.find_model(&model.name).expect(ERROR_GEN_STATE_ERROR).span,
     )
 }
 
@@ -82,7 +82,7 @@ pub fn field_validation_error(
     ValidationError::new_model_validation_error(
         message,
         &model.name,
-        &ast.find_field(&model.name, &field.name)
+        ast.find_field(&model.name, &field.name)
             .expect(ERROR_GEN_STATE_ERROR)
             .span,
     )

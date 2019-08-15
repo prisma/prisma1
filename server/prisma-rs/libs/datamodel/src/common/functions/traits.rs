@@ -8,14 +8,14 @@ pub trait Functional {
     fn name(&self) -> &str;
 
     /// Applies the function to the given arguments and returns the result.
-    fn apply(&self, values: &Vec<ValueValidator>, span: &ast::Span) -> Result<MaybeExpression, ValidationError>;
+    fn apply(&self, values: &[ValueValidator], span: ast::Span) -> Result<MaybeExpression, ValidationError>;
 
     /// Internal: Shorthand to check the count of arguments, and raise an error if applicable.
     fn check_arg_count(
         &self,
-        values: &Vec<ValueValidator>,
+        values: &[ValueValidator],
         count: usize,
-        span: &ast::Span,
+        span: ast::Span,
     ) -> Result<(), ValidationError> {
         if values.len() == count {
             Ok(())

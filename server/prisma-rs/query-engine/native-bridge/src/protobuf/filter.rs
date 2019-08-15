@@ -15,7 +15,7 @@ impl IntoFilter for pb::Filter {
                     let filters = and
                         .filters
                         .into_iter()
-                        .map(|filter| Box::new(filter.into_filter(model.clone())))
+                        .map(|filter| filter.into_filter(model.clone()))
                         .collect();
 
                     Filter::And(filters)
@@ -27,7 +27,7 @@ impl IntoFilter for pb::Filter {
                     let filters = or
                         .filters
                         .into_iter()
-                        .map(|filter| Box::new(filter.into_filter(model.clone())))
+                        .map(|filter| filter.into_filter(model.clone()))
                         .collect();
 
                     Filter::Or(filters)
@@ -36,7 +36,7 @@ impl IntoFilter for pb::Filter {
             pb::filter::Type::Not(not) => Filter::Not(
                 not.filters
                     .into_iter()
-                    .map(|filter| Box::new(filter.into_filter(model.clone())))
+                    .map(|filter| filter.into_filter(model.clone()))
                     .collect(),
             ),
             pb::filter::Type::Scalar(scalar) => scalar.into_filter(model),

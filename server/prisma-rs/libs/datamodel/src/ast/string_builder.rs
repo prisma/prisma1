@@ -1,13 +1,8 @@
 use super::renderer::LineWriteable;
 
+#[derive(Default)]
 pub struct StringBuilder {
     buffer: Vec<String>,
-}
-
-impl StringBuilder {
-    pub fn new() -> StringBuilder {
-        StringBuilder { buffer: Vec::new() }
-    }
 }
 
 impl ToString for StringBuilder {
@@ -30,6 +25,6 @@ impl LineWriteable for StringBuilder {
     }
 
     fn line_empty(&self) -> bool {
-        self.buffer.len() == 0
+        self.buffer.is_empty()
     }
 }

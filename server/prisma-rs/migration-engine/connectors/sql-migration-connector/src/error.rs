@@ -1,4 +1,4 @@
-use failure::{Fail, Error};
+use failure::{Error, Fail};
 use migration_connector::ConnectorError;
 
 pub type SqlResult<T> = Result<T, SqlError>;

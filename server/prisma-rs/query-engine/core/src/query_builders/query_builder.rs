@@ -32,7 +32,7 @@ impl QueryBuilder {
         query_doc
             .operations
             .into_iter()
-            .map(|op| self.map_operation(op).map_err(|err| err.into()))
+            .map(|op| self.map_operation(op))
             .collect::<QueryBuilderResult<Vec<Vec<QueryPair>>>>()
             .map(|vec| vec.into_iter().flatten().collect())
             .map_err(|err| err.into())
@@ -93,7 +93,7 @@ impl QueryBuilder {
 
         builder
             .build()
-            .map(|query| Query::Read(query))
+            .map(Query::Read)
             .map(|res| (res, ResultResolutionStrategy::Serialize(Arc::clone(field_type))))
     }
 
@@ -276,10 +276,10 @@ impl QueryBuilder {
     /// validation in the serialization step.
     fn parse_object(
         &self,
-        selections: &Vec<Selection>,
+        selections: &[Selection],
         schema_object: &ObjectTypeStrongRef,
     ) -> QueryBuilderResult<ParsedObject> {
-        if selections.len() == 0 {
+        if selections.is_empty() {
             return Err(QueryValidationError::ObjectValidationError {
                 object_name: schema_object.name.clone(),
                 inner: Box::new(QueryValidationError::AtLeastOneSelectionError),
@@ -287,7 +287,7 @@ impl QueryBuilder {
         }
 
         selections
-            .into_iter()
+            .iter()
             .map(|selection| {
                 let parsed_field = match schema_object.find_field(selection.name.as_str()) {
                     Some(ref field) => self.parse_field(selection, field),
@@ -340,7 +340,7 @@ impl QueryBuilder {
     fn parse_arguments(
         &self,
         schema_field: &FieldRef,
-        given_arguments: &Vec<(String, QueryValue)>,
+        given_arguments: &[(String, QueryValue)],
     ) -> QueryBuilderResult<Vec<ParsedArgument>> {
         let left: HashSet<&str> = schema_field.arguments.iter().map(|arg| arg.name.as_str()).collect();
         let right: HashSet<&str> = given_arguments.iter().map(|arg| arg.0.as_str()).collect();
@@ -412,13 +412,13 @@ impl QueryBuilder {
             (QueryValue::Null, _)                           => Err(QueryValidationError::RequiredValueNotSetError),
 
             // Scalar and enum handling.
-            (_, InputType::Scalar(scalar))                  => self.parse_scalar(value, &scalar).map(|pv| ParsedInputValue::Single(pv)),
-            (QueryValue::Enum(_), InputType::Enum(et))      => self.parse_scalar(value, &ScalarType::Enum(Arc::clone(et))).map(|pv| ParsedInputValue::Single(pv)), // todo
+            (_, InputType::Scalar(scalar))                  => self.parse_scalar(value, &scalar).map(ParsedInputValue::Single),
+            (QueryValue::Enum(_), InputType::Enum(et))      => self.parse_scalar(value, &ScalarType::Enum(Arc::clone(et))).map(ParsedInputValue::Single), // todo
 
             // List and object handling.
-            (QueryValue::List(values), InputType::List(l))  => self.parse_list(values.clone(), &l).map(|vals| ParsedInputValue::List(vals)),
-            (_, InputType::List(l))                         => self.parse_list(vec![value], &l).map(|vals| ParsedInputValue::List(vals)),
-            (QueryValue::Object(o), InputType::Object(obj)) => self.parse_input_object(o.clone(), obj.into_arc()).map(|btree| ParsedInputValue::Map(btree)),
+            (QueryValue::List(values), InputType::List(l))  => self.parse_list(values.clone(), &l).map(ParsedInputValue::List),
+            (_, InputType::List(l))                         => self.parse_list(vec![value], &l).map(ParsedInputValue::List),
+            (QueryValue::Object(o), InputType::Object(obj)) => self.parse_input_object(o.clone(), obj.into_arc()).map(ParsedInputValue::Map),
             (_, input_type)                                 => Err(QueryValidationError::ValueTypeMismatchError { have: value, want: input_type.clone() }),
         }
     }
@@ -429,9 +429,9 @@ impl QueryBuilder {
         match (value, scalar_type.clone()) {
             (QueryValue::Null, _)                         => Ok(PrismaValue::Null),
             (QueryValue::String(s), ScalarType::String)   => Ok(PrismaValue::String(s)),
-            (QueryValue::String(s), ScalarType::DateTime) => Self::parse_datetime(s.as_str()).map(|dt| PrismaValue::DateTime(dt)),
-            (QueryValue::String(s), ScalarType::Json)     => Self::parse_json(s.as_str()).map(|j| PrismaValue::Json(j)),
-            (QueryValue::String(s), ScalarType::UUID)     => Self::parse_uuid(s.as_str()).map(|u| PrismaValue::Uuid(u)),
+            (QueryValue::String(s), ScalarType::DateTime) => Self::parse_datetime(s.as_str()).map(PrismaValue::DateTime),
+            (QueryValue::String(s), ScalarType::Json)     => Self::parse_json(s.as_str()).map(PrismaValue::Json),
+            (QueryValue::String(s), ScalarType::UUID)     => Self::parse_uuid(s.as_str()).map(PrismaValue::Uuid),
             (QueryValue::Int(i), ScalarType::Float)       => Ok(PrismaValue::Float(i as f64)),
             (QueryValue::Int(i), ScalarType::Int)         => Ok(PrismaValue::Int(i)),
             (QueryValue::Float(f), ScalarType::Float)     => Ok(PrismaValue::Float(f)),
@@ -443,7 +443,7 @@ impl QueryBuilder {
                                                              },
 
             // Possible ID combinations TODO UUID ids are not encoded in any useful way in the schema.
-            (QueryValue::String(s), ScalarType::ID)       => Self::parse_uuid(s.as_str()).map(|u| PrismaValue::Uuid(u)).or_else(|_| Ok(PrismaValue::String(s))),
+            (QueryValue::String(s), ScalarType::ID)       => Self::parse_uuid(s.as_str()).map(PrismaValue::Uuid).or_else(|_| Ok(PrismaValue::String(s))),
             (QueryValue::Int(i), ScalarType::ID)          => Ok(PrismaValue::GraphqlId(GraphqlId::Int(i as usize))),
 
             // Remainder of combinations is invalid
@@ -453,7 +453,7 @@ impl QueryBuilder {
 
     fn parse_datetime(s: &str) -> QueryBuilderResult<DateTime<Utc>> {
         let fmt = "%Y-%m-%dT%H:%M:%S%.3f";
-        Utc.datetime_from_str(s.trim_end_matches("Z"), fmt)
+        Utc.datetime_from_str(s.trim_end_matches('Z'), fmt)
             .map(|dt| DateTime::<Utc>::from_utc(dt.naive_utc(), Utc))
             .map_err(|err| {
                 QueryValidationError::ValueParseError(format!(
@@ -490,7 +490,7 @@ impl QueryBuilder {
             .map(|field| field.name.as_str())
             .collect();
 
-        let right: HashSet<&str> = object.keys().into_iter().map(|k| k.as_str()).collect();
+        let right: HashSet<&str> = object.keys().map(|k| k.as_str()).collect();
         let diff = Diff::new(&left, &right);
 
         // First, check that all fields not provided in the query (left diff) are optional,
@@ -562,9 +562,9 @@ struct Diff<'a, T: std::cmp::Eq + std::hash::Hash> {
 
 impl<'a, T: std::cmp::Eq + std::hash::Hash> Diff<'a, T> {
     fn new(left_side: &'a HashSet<T>, right_side: &'a HashSet<T>) -> Diff<'a, T> {
-        let left: Vec<&T> = left_side.difference(right_side).into_iter().collect();
-        let right: Vec<&T> = right_side.difference(left_side).into_iter().collect();
-        let equal: Vec<&T> = left_side.intersection(right_side).into_iter().collect();
+        let left: Vec<&T> = left_side.difference(right_side).collect();
+        let right: Vec<&T> = right_side.difference(left_side).collect();
+        let equal: Vec<&T> = left_side.intersection(right_side).collect();
 
         Diff { left, right, equal }
     }

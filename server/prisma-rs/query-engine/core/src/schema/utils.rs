@@ -1,6 +1,6 @@
 use super::*;
 use once_cell::sync::OnceCell;
-use prisma_models::{ModelRef, PrismaValue, EnumType, EnumValue};
+use prisma_models::{EnumType, EnumValue, ModelRef, PrismaValue};
 use std::sync::Arc;
 
 /// Object type initializer for cases where only the name is known, and fields are computed later.
@@ -55,7 +55,7 @@ where
 {
     EnumType {
         name: name.into(),
-        values: values,
+        values,
     }
 }
 

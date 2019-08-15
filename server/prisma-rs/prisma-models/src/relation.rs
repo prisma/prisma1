@@ -14,14 +14,14 @@ pub enum OnDelete {
 }
 
 impl OnDelete {
-    pub fn is_cascade(&self) -> bool {
+    pub fn is_cascade(self) -> bool {
         match self {
             OnDelete::Cascade => true,
             OnDelete::SetNull => false,
         }
     }
 
-    pub fn is_set_null(&self) -> bool {
+    pub fn is_set_null(self) -> bool {
         match self {
             OnDelete::Cascade => false,
             OnDelete::SetNull => true,
@@ -111,7 +111,7 @@ impl RelationTemplate {
             model_b: OnceCell::new(),
             field_a: OnceCell::new(),
             field_b: OnceCell::new(),
-            internal_data_model: internal_data_model,
+            internal_data_model,
         };
 
         Arc::new(relation)
@@ -211,6 +211,7 @@ impl Relation {
             .expect("Field B deleted without deleting the relations in internal_data_model.")
     }
 
+    #[allow(clippy::if_same_then_else)]
     pub fn model_a_column(&self) -> Column<'static> {
         use RelationLinkManifestation::*;
 
@@ -236,6 +237,7 @@ impl Relation {
         }
     }
 
+    #[allow(clippy::if_same_then_else)]
     pub fn model_b_column(&self) -> Column<'static> {
         use RelationLinkManifestation::*;
 
@@ -244,9 +246,7 @@ impl Relation {
             Some(Inline(ref m)) => {
                 let model_b = self.model_b();
 
-                if self.is_self_relation() && self.field_a().is_hidden {
-                    m.referencing_column(self.relation_table())
-                } else if self.is_self_relation() && self.field_b().is_hidden {
+                if self.is_self_relation() && (self.field_a().is_hidden || self.field_b().is_hidden) {
                     m.referencing_column(self.relation_table())
                 } else if self.is_self_relation() {
                     model_b.fields().id().as_column()

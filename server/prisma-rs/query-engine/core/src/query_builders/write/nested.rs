@@ -1,9 +1,9 @@
 use super::*;
 use crate::query_builders::{
-    extract_filter, utils, ParsedInputMap, ParsedInputValue, QueryBuilderResult, QueryValidationError,
+    extract_filter, utils, ParsedInputMap, ParsedInputValue, QueryBuilderResult,
 };
 use connector::write_ast::*;
-use prisma_models::{ModelRef, PrismaValue, RelationFieldRef, RelationLinkManifestation};
+use prisma_models::{ModelRef, PrismaValue, RelationFieldRef};
 use std::{convert::TryInto, sync::Arc};
 
 pub fn extract_nested_queries(
@@ -71,29 +71,31 @@ pub fn extract_nested_queries(
 
     // Check if we need to abort due to limitation in the query engine
     nested_queries.and_then(|nq| {
+        /*
         let is_unsupported = match relation_field.relation().manifestation {
             Some(RelationLinkManifestation::Inline(ref i)) => {
                 i.in_table_of_model_name == relation_field.model().db_name()
             }
             _ => false,
         };
+        */
 
         // TODO: probably we don't need the check anymore. Remove when the query planning for writes is done.
-//        if triggered_from_create
-//            && (nq.creates.len() + nq.connects.len() > 0)
-//            && relation_field.is_required
-//            && is_unsupported
-//        {
-//            Err(QueryValidationError::AssertionError(
-//                format!(
-//                    "A create or connect cannot be performed in this direction. You're first creating a {} and then {}, but only the reverse order is currently supported. This limitation will be lifted for general availability",
-//                    relation_field.model().name,
-//                    relation_field.related_model().name)
-//                )
-//            )
-//        } else {
-//            Ok(nq)
-//        }
+        //        if triggered_from_create
+        //            && (nq.creates.len() + nq.connects.len() > 0)
+        //            && relation_field.is_required
+        //            && is_unsupported
+        //        {
+        //            Err(QueryValidationError::AssertionError(
+        //                format!(
+        //                    "A create or connect cannot be performed in this direction. You're first creating a {} and then {}, but only the reverse order is currently supported. This limitation will be lifted for general availability",
+        //                    relation_field.model().name,
+        //                    relation_field.related_model().name)
+        //                )
+        //            )
+        //        } else {
+        //            Ok(nq)
+        //        }
         Ok(nq)
     })
 }
@@ -113,7 +115,7 @@ pub fn nested_create(
 
             Ok(NestedCreateRecord {
                 relation_field: Arc::clone(relation_field),
-                non_list_args: non_list_args,
+                non_list_args,
                 list_args: args.list,
                 nested_writes: args.nested,
                 top_is_create: triggered_from_create,
@@ -137,27 +139,27 @@ pub fn nested_update(
             let where_arg = map.remove("where").expect("2");
             let record_finder = Some(utils::extract_record_finder(where_arg, &model)?);
 
-            let list_causes_update = write_args.list.len() > 0;
+            let list_causes_update = !write_args.list.is_empty();
             let mut non_list_args = write_args.non_list;
             non_list_args.update_datetimes(Arc::clone(&model), list_causes_update);
 
             vec.push(NestedUpdateRecord {
                 relation_field: Arc::clone(&relation_field),
                 where_: record_finder,
-                non_list_args: non_list_args,
+                non_list_args,
                 list_args: write_args.list,
                 nested_writes: write_args.nested,
             });
         } else {
             let write_args = WriteArguments::from(&model, value.try_into()?, false)?;
-            let list_causes_update = write_args.list.len() > 0;
+            let list_causes_update = !write_args.list.is_empty();
             let mut non_list_args = write_args.non_list;
             non_list_args.update_datetimes(Arc::clone(&model), list_causes_update);
 
             vec.push(NestedUpdateRecord {
                 relation_field: Arc::clone(&relation_field),
                 where_: None,
-                non_list_args: non_list_args,
+                non_list_args,
                 list_args: write_args.list,
                 nested_writes: write_args.nested,
             });
@@ -191,7 +193,7 @@ pub fn nested_upsert(
 
             let update_arg = map.remove("update").expect("4");
             let update_args = WriteArguments::from(&model, update_arg.try_into()?, triggered_from_create)?;
-            let list_causes_update = update_args.list.len() > 0;
+            let list_causes_update = !update_args.list.is_empty();
             let mut update_non_list_args = update_args.non_list;
             update_non_list_args.update_datetimes(Arc::clone(&model), list_causes_update);
 

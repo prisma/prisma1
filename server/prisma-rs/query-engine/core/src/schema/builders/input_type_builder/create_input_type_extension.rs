@@ -3,6 +3,7 @@ use prisma_models::{ModelRef, RelationFieldRef, ScalarFieldRef};
 
 pub trait CreateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> {
     /// Builds the create input type (<x>CreateInput / <x>CreateWithout<y>Input)
+    #[rustfmt::skip]
     fn create_input_type(&self, model: ModelRef, parent_field: Option<RelationFieldRef>) -> InputObjectTypeRef {
         let name = match parent_field.as_ref().map(|pf| pf.related_field()) {
             Some(ref f) if !f.is_hidden => format!("{}CreateWithout{}Input", model.name, capitalize(f.name.as_str())),
@@ -29,9 +30,10 @@ pub trait CreateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> {
             "Create",
             scalar_fields,
             |f: ScalarFieldRef| {
-                match f.is_required && f.default_value.is_none() {
-                    #[cfg_attr(rustfmt, rustfmt_skip)]
-                    true if f.is_id() =>  match (f.behaviour.as_ref(), f.type_identifier) {
+                let required_and_none = f.is_required && f.default_value.is_none();
+
+                if required_and_none && f.is_id() {
+                    match (f.behaviour.as_ref(), f.type_identifier) {
                         (Some(FieldBehaviour::Id { strategy: IdStrategy::Auto, .. }), TypeIdentifier::UUID)      => self.map_optional_input_type(f),
                         (Some(FieldBehaviour::Id { strategy: IdStrategy::Auto, .. }), TypeIdentifier::GraphQLID) => self.map_optional_input_type(f),
                         (None, TypeIdentifier::UUID)                                                             => self.map_optional_input_type(f),
@@ -42,10 +44,12 @@ pub trait CreateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> {
 
                         _ => unreachable!(),
                     }
-                    true if f.is_created_at() => self.map_optional_input_type(f),
-                    true if f.is_updated_at() => self.map_optional_input_type(f),
-                    true => self.map_required_input_type(f),
-                    false => self.map_optional_input_type(f),
+                } else if required_and_none && (f.is_created_at() || f.is_updated_at()) {
+                    self.map_optional_input_type(f)
+                } else if required_and_none {
+                    self.map_required_input_type(f)
+                } else {
+                    self.map_optional_input_type(f)
                 }
             },
             true
@@ -135,8 +139,8 @@ pub trait CreateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> {
     }
 
     /// Returns true if the field should be filtered for create input type building.
+    #[rustfmt::skip]
     fn do_filter(field: &ScalarFieldRef) -> bool {
-        #[cfg_attr(rustfmt, rustfmt_skip)]
         match (field.behaviour.as_ref(), field.type_identifier) {
             _ if !field.is_id()                                                                      => true,
 

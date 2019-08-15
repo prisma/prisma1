@@ -31,7 +31,7 @@ impl Builder<WriteQuery> for UpdateBuilder {
         let data_map: ParsedInputMap = data_argument.value.try_into()?;
 
         Self::build_from(model, data_map, record_finder)
-            .map(|ur| WriteQuery::Root(name, alias, RootWriteQuery::UpdateRecord(ur)))
+            .map(|ur| WriteQuery::Root(name, alias, RootWriteQuery::UpdateRecord(Box::new(ur))))
     }
 }
 
@@ -42,12 +42,12 @@ impl UpdateBuilder {
         record_finder: RecordFinder,
     ) -> QueryBuilderResult<UpdateRecord> {
         let update_args = WriteArguments::from(&model, data, false)?;
-        let list_causes_update = update_args.list.len() > 0;
+        let list_causes_update = !update_args.list.is_empty();
         let mut non_list_args = update_args.non_list;
         non_list_args.update_datetimes(Arc::clone(&model), list_causes_update);
         Ok(UpdateRecord {
             where_: record_finder,
-            non_list_args: non_list_args,
+            non_list_args,
             list_args: update_args.list,
             nested_writes: update_args.nested,
         })

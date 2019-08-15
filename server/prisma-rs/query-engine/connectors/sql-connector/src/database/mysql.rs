@@ -6,7 +6,7 @@ use datamodel::Source;
 use mysql_client as my;
 use prisma_common::config::*;
 use prisma_query::{
-    connector::{Queryable, MysqlParams},
+    connector::{MysqlParams, Queryable},
     pool::{mysql::MysqlConnectionManager, PrismaConnectionManager},
 };
 use std::convert::TryFrom;
@@ -19,7 +19,7 @@ pub struct Mysql {
 }
 
 impl FromSource for Mysql {
-    fn from_source(source: &Box<dyn Source>) -> crate::Result<Self> {
+    fn from_source(source: &dyn Source) -> crate::Result<Self> {
         let url = Url::parse(source.url())?;
         let params = MysqlParams::try_from(url)?;
         let pool = r2d2::Pool::try_from(params).unwrap();

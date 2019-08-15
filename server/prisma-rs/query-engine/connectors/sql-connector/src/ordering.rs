@@ -54,7 +54,7 @@ impl Ordering {
             .map(|order| order.sort_order)
             .unwrap_or(SortOrder::Ascending);
 
-        let ordering = match first_column {
+        match first_column {
             Some(first) => {
                 if first != second_column {
                     match (default_order, reverse) {
@@ -78,8 +78,6 @@ impl Ordering {
                 (SortOrder::Ascending, false) => vec![second_column.ascend()],
                 (SortOrder::Descending, false) => vec![second_column.descend()],
             },
-        };
-
-        ordering
+        }
     }
 }

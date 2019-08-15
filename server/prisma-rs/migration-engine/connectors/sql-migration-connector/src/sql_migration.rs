@@ -101,7 +101,7 @@ pub struct ForeignKey {
 pub enum OnDelete {
     NoAction,
     SetNull,
-    Cascade
+    Cascade,
 }
 
 #[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize, Deserialize)]

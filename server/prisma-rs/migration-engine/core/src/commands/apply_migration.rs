@@ -56,10 +56,7 @@ impl<'a> ApplyMigrationCommand<'a> {
         self.handle_migration(&engine, current_datamodel, next_datamodel)
     }
 
-    fn handle_normal_migration<C, D>(
-        &self,
-        engine: &MigrationEngine<C, D>,
-    ) -> CommandResult<MigrationStepsResultOutput>
+    fn handle_normal_migration<C, D>(&self, engine: &MigrationEngine<C, D>) -> CommandResult<MigrationStepsResultOutput>
     where
         C: MigrationConnector<DatabaseMigration = D>,
         D: DatabaseMigrationMarker + 'static,

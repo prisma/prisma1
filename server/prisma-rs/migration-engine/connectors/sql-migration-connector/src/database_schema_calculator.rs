@@ -52,13 +52,13 @@ impl<'a> DatabaseSchemaCalculator<'a> {
 
                 let table = Table {
                     name: model.db_name(),
-                    columns: columns,
+                    columns,
                     indexes: Vec::new(),
                     primary_key_columns: vec![model.id_field()?.db_name()],
                 };
                 Ok(ModelTable {
                     model: model.clone(),
-                    table: table,
+                    table,
                 })
             })
             .collect()
@@ -111,12 +111,16 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         } else {
                             (&relation.model_b, &relation.model_a)
                         };
-                        let field = model.fields().find(|f|&f.db_name() == column).unwrap();
+                        let field = model.fields().find(|f| &f.db_name() == column).unwrap();
                         let column = Column::with_foreign_key(
                             column.to_string(),
                             column_type(related_model.id_field()?),
                             field.is_required(),
-                            ForeignKey::new(related_model.db_name(), related_model.id_field()?.db_name(), OnDelete::SetNull),
+                            ForeignKey::new(
+                                related_model.db_name(),
+                                related_model.id_field()?.db_name(),
+                                OnDelete::SetNull,
+                            ),
                         );
                         model_table.table.columns.push(column);
                     }
@@ -140,13 +144,21 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                                 relation.model_a_column(),
                                 column_type(relation.model_a.id_field()?),
                                 true,
-                                ForeignKey::new(relation.model_a.db_name(), relation.model_a.id_field()?.db_name(), OnDelete::Cascade),
+                                ForeignKey::new(
+                                    relation.model_a.db_name(),
+                                    relation.model_a.id_field()?.db_name(),
+                                    OnDelete::Cascade,
+                                ),
                             ),
                             Column::with_foreign_key(
                                 relation.model_b_column(),
                                 column_type(relation.model_b.id_field()?),
                                 true,
-                                ForeignKey::new(relation.model_b.db_name(), relation.model_b.id_field()?.db_name(), OnDelete::Cascade),
+                                ForeignKey::new(
+                                    relation.model_b.db_name(),
+                                    relation.model_b.id_field()?.db_name(),
+                                    OnDelete::Cascade,
+                                ),
                             ),
                         ],
                         indexes: Vec::new(),

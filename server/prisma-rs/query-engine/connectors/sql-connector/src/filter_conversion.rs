@@ -89,10 +89,10 @@ impl AliasedCondition for Filter {
             Filter::And(mut filters) => match filters.pop() {
                 None => ConditionTree::NoCondition,
                 Some(filter) => {
-                    let right = (*filter).aliased_cond(alias);
+                    let right = filter.aliased_cond(alias);
 
                     filters.into_iter().rev().fold(right, |acc, filter| {
-                        let left = (*filter).aliased_cond(alias);
+                        let left = filter.aliased_cond(alias);
                         ConditionTree::and(left, acc)
                     })
                 }
@@ -100,10 +100,10 @@ impl AliasedCondition for Filter {
             Filter::Or(mut filters) => match filters.pop() {
                 None => ConditionTree::NegativeCondition,
                 Some(filter) => {
-                    let right = (*filter).aliased_cond(alias);
+                    let right = filter.aliased_cond(alias);
 
                     filters.into_iter().rev().fold(right, |acc, filter| {
-                        let left = (*filter).aliased_cond(alias);
+                        let left = filter.aliased_cond(alias);
                         ConditionTree::or(left, acc)
                     })
                 }
@@ -111,10 +111,10 @@ impl AliasedCondition for Filter {
             Filter::Not(mut filters) => match filters.pop() {
                 None => ConditionTree::NoCondition,
                 Some(filter) => {
-                    let right = (*filter).aliased_cond(alias).not();
+                    let right = filter.aliased_cond(alias).not();
 
                     filters.into_iter().rev().fold(right, |acc, filter| {
-                        let left = (*filter).aliased_cond(alias).not();
+                        let left = filter.aliased_cond(alias).not();
                         ConditionTree::and(left, acc)
                     })
                 }
@@ -213,14 +213,14 @@ impl AliasedSelect for RelationFilter {
         let compacted = match *self.nested_filter {
             Filter::And(mut filters) => {
                 if filters.len() == 1 {
-                    *filters.pop().unwrap()
+                    filters.pop().unwrap()
                 } else {
                     Filter::And(filters)
                 }
             }
             Filter::Or(mut filters) => {
                 if filters.len() == 1 {
-                    *filters.pop().unwrap()
+                    filters.pop().unwrap()
                 } else {
                     Filter::Or(filters)
                 }

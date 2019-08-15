@@ -23,19 +23,14 @@ impl<'a> MigrationCommand<'a> for MigrationProgressCommand<'a> {
     {
         let migration_persistence = engine.connector().migration_persistence();
 
-        let migration = migration_persistence
-            .by_name(&self.input.migration_id)
-            .ok_or_else(|| {
-                let error = format!(
-                    "Could not load migration from database. Migration name was: {}",
-                    &self.input.migration_id
-                );
+        let migration = migration_persistence.by_name(&self.input.migration_id).ok_or_else(|| {
+            let error = format!(
+                "Could not load migration from database. Migration name was: {}",
+                &self.input.migration_id
+            );
 
-                CommandError::Input {
-                    code: 1002,
-                    error
-                }
-            })?;
+            CommandError::Input { code: 1002, error }
+        })?;
 
         Ok(MigrationProgressOutput {
             status: migration.status,

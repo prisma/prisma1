@@ -1,4 +1,4 @@
-use super::dmmf::*;
+use super::*;
 use crate::common::PrismaType;
 use crate::dml;
 use serde_json;
@@ -23,7 +23,7 @@ fn get_field_type(field: &dml::Field) -> String {
         dml::FieldType::Base(t) => type_to_string(t),
         dml::FieldType::ConnectorSpecific {
             base_type: t,
-            connector_type: _,
+            ..
         } => type_to_string(t),
     }
 }
@@ -133,7 +133,7 @@ pub fn schema_to_dmmf(schema: &dml::Datamodel) -> Datamodel {
         datamodel.enums.push(enum_to_dmmf(&enum_model));
     }
 
-    return datamodel;
+    datamodel
 }
 
 pub fn render_to_dmmf(schema: &dml::Datamodel) -> String {
@@ -143,5 +143,5 @@ pub fn render_to_dmmf(schema: &dml::Datamodel) -> String {
 
 pub fn render_to_dmmf_value(schema: &dml::Datamodel) -> serde_json::Value {
     let dmmf = schema_to_dmmf(schema);
-    return serde_json::to_value(&dmmf).expect("Failed to render JSON");
+    serde_json::to_value(&dmmf).expect("Failed to render JSON")
 }

@@ -35,7 +35,7 @@ fn main() {
                 .long("lint")
                 .required(false)
                 .help("Specifies linter mode."),
-        )  
+        )
         .arg(
             Arg::with_name("no_env_errors")
                 .long("no_env_errors")
@@ -73,8 +73,8 @@ fn main() {
                 .errors
                 .iter()
                 .filter(|err: &&ValidationError| match err {
-                    ValidationError::EnvironmentFunctionalEvaluationError { var_name: _, span: _} => !skip_env_errors,
-                    _ => true
+                    ValidationError::EnvironmentFunctionalEvaluationError { var_name: _, span: _ } => !skip_env_errors,
+                    _ => true,
                 })
                 .map(|err: &ValidationError| MiniError {
                     start: err.span().start,

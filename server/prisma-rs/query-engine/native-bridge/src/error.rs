@@ -108,11 +108,11 @@ impl From<BridgeError> for protobuf::prisma::error::Value {
                 child_where,
             }) => {
                 let error = protobuf::prisma::NodesNotConnectedError {
-                    relation_name: relation_name,
-                    parent_name: parent_name,
-                    parent_where: parent_where.map(protobuf::prisma::NodeSelector::from),
-                    child_name: child_name,
-                    child_where: child_where.map(protobuf::prisma::NodeSelector::from),
+                    relation_name,
+                    parent_name,
+                    parent_where: parent_where.map(|w| protobuf::prisma::NodeSelector::from(*w)),
+                    child_name,
+                    child_where: child_where.map(|w| protobuf::prisma::NodeSelector::from(*w)),
                 };
 
                 protobuf::prisma::error::Value::NodesNotConnected(error)

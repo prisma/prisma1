@@ -11,7 +11,7 @@ pub use postgresql::*;
 pub use sqlite::*;
 
 pub trait FromSource {
-    fn from_source(source: &Box<dyn Source>) -> crate::Result<Self>
+    fn from_source(source: &dyn Source) -> crate::Result<Self>
     where
         Self: Transactional + SqlCapabilities + Sized;
 }

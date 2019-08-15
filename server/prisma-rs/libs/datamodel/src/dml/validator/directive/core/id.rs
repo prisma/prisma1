@@ -15,7 +15,7 @@ impl DirectiveValidator<dml::Field> for IdDirectiveValidator {
         };
 
         if obj.arity != dml::FieldArity::Required {
-            return self.error("Fields that are marked as id must be required.", &args.span());
+            return self.error("Fields that are marked as id must be required.", args.span());
         }
 
         if let Ok(arg) = args.arg("strategy") {
@@ -24,7 +24,7 @@ impl DirectiveValidator<dml::Field> for IdDirectiveValidator {
 
         obj.id_info = Some(id_info);
 
-        return Ok(());
+        Ok(())
     }
 
     fn serialize(&self, field: &dml::Field, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {

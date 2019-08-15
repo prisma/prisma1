@@ -105,8 +105,7 @@ pub fn introspect_database(api: &dyn GenericApi) -> DatabaseSchema {
     result
 }
 
-pub fn database(sql_family: SqlFamily) -> Box<dyn MigrationDatabase>
-{
+pub fn database(sql_family: SqlFamily) -> Box<dyn MigrationDatabase> {
     match sql_family {
         SqlFamily::Postgres => {
             let url = Url::parse(&postgres_url()).unwrap();

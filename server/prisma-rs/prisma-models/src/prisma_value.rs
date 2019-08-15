@@ -72,17 +72,6 @@ impl PrismaValue {
             _ => false,
         }
     }
-
-    // todo: this conversion can be removed if we get rid of enum GraphqlId completely
-    pub fn as_graphql_id(&self) -> DomainResult<GraphqlId> {
-        // todo: must handle uuid
-        match self {
-            PrismaValue::String(x) => Ok(GraphqlId::String(x.clone())),
-            PrismaValue::Int(x) => Ok(GraphqlId::Int(x.clone() as usize)),
-            PrismaValue::GraphqlId(x) => Ok(x.clone()),
-            _ => Err(DomainError::ConversionFailure("PrismaValue", "PrismaValue::GraphqlId")),
-        }
-    }
 }
 
 impl fmt::Display for PrismaValue {
@@ -130,7 +119,7 @@ impl From<f64> for PrismaValue {
 
 impl From<f32> for PrismaValue {
     fn from(f: f32) -> Self {
-        PrismaValue::Float(f as f64)
+        PrismaValue::Float(f64::from(f))
     }
 }
 
@@ -142,7 +131,7 @@ impl From<bool> for PrismaValue {
 
 impl From<i32> for PrismaValue {
     fn from(i: i32) -> Self {
-        PrismaValue::Int(i as i64)
+        PrismaValue::Int(i64::from(i))
     }
 }
 
@@ -216,7 +205,7 @@ impl TryFrom<&PrismaValue> for GraphqlId {
             PrismaValue::GraphqlId(id) => Ok(id.clone()),
             PrismaValue::Int(i) => Ok(GraphqlId::from(*i)),
             PrismaValue::String(s) => Ok(GraphqlId::from(s.clone())),
-            PrismaValue::Uuid(u) => Ok(GraphqlId::from(u.clone())),
+            PrismaValue::Uuid(u) => Ok(GraphqlId::from(*u)),
             _ => Err(DomainError::ConversionFailure("PrismaValue", "GraphqlId")),
         }
     }

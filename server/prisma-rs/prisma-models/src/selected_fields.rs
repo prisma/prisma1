@@ -36,9 +36,7 @@ pub struct SelectedRelationField {
 
 impl From<Arc<ScalarField>> for SelectedField {
     fn from(sf: Arc<ScalarField>) -> SelectedField {
-        SelectedField::Scalar(SelectedScalarField {
-            field: sf,
-        })
+        SelectedField::Scalar(SelectedScalarField { field: sf })
     }
 }
 
@@ -99,7 +97,7 @@ impl SelectedFields {
 
     pub fn add_scalar(&mut self, field: Arc<ScalarField>) {
         self.columns = OnceCell::new();
-        self.scalar.push(SelectedScalarField { field});
+        self.scalar.push(SelectedScalarField { field });
     }
 
     pub fn columns(&self) -> &[Column<'static>] {

@@ -43,7 +43,7 @@ pub enum TypeIdentifier {
 }
 
 impl TypeIdentifier {
-    pub fn user_friendly_type_name(&self) -> String {
+    pub fn user_friendly_type_name(self) -> String {
         match self {
             TypeIdentifier::GraphQLID => "ID".to_string(),
             _ => format!("{:?}", self),
@@ -113,37 +113,37 @@ impl FieldTemplate {
     pub fn build(self, model: ModelWeakRef) -> Field {
         match self {
             FieldTemplate::Scalar(st) => {
-                let scalar = ScalarField::new(
-                    st.name,
-                    st.type_identifier,
-                    st.is_required,
-                    st.is_list,
-                    st.is_hidden,
-                    st.is_auto_generated,
-                    st.is_unique,
-                    st.manifestation,
-                    st.internal_enum,
-                    st.behaviour,
+                let scalar = ScalarField {
+                    name: st.name,
+                    type_identifier: st.type_identifier,
+                    is_required: st.is_required,
+                    is_list: st.is_list,
+                    is_hidden: st.is_hidden,
+                    is_auto_generated: st.is_auto_generated,
+                    is_unique: st.is_unique,
+                    manifestation: st.manifestation,
+                    internal_enum: st.internal_enum,
+                    behaviour: st.behaviour,
                     model,
-                    st.default_value,
-                );
+                    default_value: st.default_value,
+                };
 
                 Field::Scalar(Arc::new(scalar))
             }
             FieldTemplate::Relation(rt) => {
-                let relation = RelationField::new(
-                    rt.name,
-                    rt.type_identifier,
-                    rt.is_required,
-                    rt.is_list,
-                    rt.is_hidden,
-                    rt.is_auto_generated,
-                    rt.is_unique,
-                    rt.relation_name,
-                    rt.relation_side,
+                let relation = RelationField {
+                    name: rt.name,
+                    type_identifier: rt.type_identifier,
+                    is_required: rt.is_required,
+                    is_list: rt.is_list,
+                    is_hidden: rt.is_hidden,
+                    is_auto_generated: rt.is_auto_generated,
+                    is_unique: rt.is_unique,
+                    relation_name: rt.relation_name,
+                    relation_side: rt.relation_side,
                     model,
-                    OnceCell::new(),
-                );
+                    relation: OnceCell::new(),
+                };
 
                 Field::Relation(Arc::new(relation))
             }

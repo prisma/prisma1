@@ -7,6 +7,7 @@ use crate::{
 /// Helper for validating a datamodel.
 ///
 /// When validating, we check if the datamodel is valid, and generate errors otherwise.
+#[derive(Default)]
 pub struct Validator {}
 
 /// State error message. Seeing this error means something went really wrong internally. It's the datamodel equivalent of a bluescreen.
@@ -15,15 +16,15 @@ const STATE_ERROR: &str = "Failed lookup of model, field or optional property du
 impl Validator {
     /// Creates a new instance, with all builtin directives registered.
     pub fn new() -> Validator {
-        Validator {}
+        Self::default()
     }
 
     /// Creates a new instance, with all builtin directives and
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(_sources: &Vec<Box<configuration::Source>>) -> Validator {
-        Validator {}
+    pub fn with_sources(_sources: &[Box<dyn configuration::Source>]) -> Validator {
+        Self::default()
     }
 
     pub fn validate(&self, ast_schema: &ast::Datamodel, schema: &mut dml::Datamodel) -> Result<(), ErrorCollection> {
@@ -64,7 +65,7 @@ impl Validator {
             _ => Err(ValidationError::new_model_validation_error(
                 "Exactly one field must be marked as the id field with the `@id` directive.",
                 &model.name,
-                &ast_model.span,
+                ast_model.span,
             )),
         }
     }
@@ -79,7 +80,7 @@ impl Validator {
                 ) => {
                     let name_eq = name == "cuid" || name == "uuid";
                     let type_eq = return_type == &dml::ScalarType::String;
-                    let args_eq = args.len() == 0;
+                    let args_eq = args.is_empty();
 
                     name_eq && type_eq && args_eq
                 }
@@ -91,7 +92,7 @@ impl Validator {
                 return Err(ValidationError::new_model_validation_error(
                     "Invalid ID field. ID field must be one of: Int @id, String @id @default(cuid()), String @id @default(uuid()).", 
                     &model.name,
-                    &ast_schema.find_field(&model.name, &id_field.name).expect(STATE_ERROR).span));
+                    ast_schema.find_field(&model.name, &id_field.name).expect(STATE_ERROR).span));
             }
         }
 
@@ -113,12 +114,13 @@ impl Validator {
                         // TODO: I am not sure if this check is d'accord with the query engine.
                         let related = datamodel.find_model(&rel.to).unwrap();
                         let related_field = related.related_field(&model.name, &rel.name, &field.name).unwrap();
-                        if rel.to_fields.len() == 0 && !related_field.is_generated {
+
+                        if rel.to_fields.is_empty() && !related_field.is_generated {
                             // TODO: Refactor that out, it's way too much boilerplate.
                             return Err(ValidationError::new_model_validation_error(
                                 "Embedded models cannot have back relation fields.",
                                 &model.name,
-                                &ast_schema.find_field(&model.name, &field.name).expect(STATE_ERROR).span,
+                                ast_schema.find_field(&model.name, &field.name).expect(STATE_ERROR).span,
                             ));
                         }
                     }
@@ -148,7 +150,7 @@ impl Validator {
                                     return Err(ValidationError::new_model_validation_error(
                                         "Ambiguous relation detected.",
                                         &model.name,
-                                        &ast_schema
+                                        ast_schema
                                             .find_field(&model.name, &field_a.name)
                                             .expect(STATE_ERROR)
                                             .span,
@@ -167,7 +169,7 @@ impl Validator {
                                                 return Err(ValidationError::new_model_validation_error(
                                                     "Ambiguous self relation detected.",
                                                     &model.name,
-                                                    &ast_schema
+                                                    ast_schema
                                                         .find_field(&model.name, &field_a.name)
                                                         .expect(STATE_ERROR)
                                                         .span,

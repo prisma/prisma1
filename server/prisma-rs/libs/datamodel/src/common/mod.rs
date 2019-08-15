@@ -24,7 +24,7 @@ pub enum PrismaType {
 }
 
 impl FromStrAndSpan for PrismaType {
-    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, ValidationError> {
+    fn from_str_and_span(s: &str, span: ast::Span) -> Result<Self, ValidationError> {
         match s {
             "Int" => Ok(PrismaType::Int),
             "Float" => Ok(PrismaType::Float),
@@ -83,13 +83,13 @@ impl PrismaValue {
 impl ToString for PrismaValue {
     fn to_string(&self) -> String {
         match self {
-            PrismaValue::Int(val) => format!("{}", val),
-            PrismaValue::Float(val) => format!("{}", val),
-            PrismaValue::Decimal(val) => format!("{}", val),
-            PrismaValue::Boolean(val) => format!("{}", val),
-            PrismaValue::String(val) => format!("{}", val),
-            PrismaValue::DateTime(val) => format!("{}", val),
-            PrismaValue::ConstantLiteral(val) => format!("{}", val),
+            PrismaValue::Int(val) => val.to_string(),
+            PrismaValue::Float(val) => val.to_string(),
+            PrismaValue::Decimal(val) => val.to_string(),
+            PrismaValue::Boolean(val) => val.to_string(),
+            PrismaValue::String(val) => val.to_string(),
+            PrismaValue::DateTime(val) => val.to_string(),
+            PrismaValue::ConstantLiteral(val) => val.to_string(),
             PrismaValue::Expression(_, t, _) => format!("Function<{}>", t.to_string()),
         }
     }

@@ -91,7 +91,7 @@ fn must_add_to_fields_correctly_for_implicit_back_relations_for_one_to_one_relat
     }
     "#;
 
-    let schema = parse(dml);
+    let schema = dbg!(parse(dml));
 
     schema
         .assert_has_model("User")

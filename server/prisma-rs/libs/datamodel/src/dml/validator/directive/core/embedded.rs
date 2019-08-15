@@ -10,7 +10,7 @@ impl DirectiveValidator<dml::Model> for EmbeddedDirectiveValidator {
     }
     fn validate_and_apply(&self, _args: &mut Args, obj: &mut dml::Model) -> Result<(), Error> {
         obj.is_embedded = true;
-        return Ok(());
+        Ok(())
     }
 
     fn serialize(&self, model: &dml::Model, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {

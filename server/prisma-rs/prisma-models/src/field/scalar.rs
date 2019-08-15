@@ -46,7 +46,7 @@ pub struct ScalarField {
     pub model: ModelWeakRef,
     pub default_value: Option<PrismaValue>,
 
-    is_unique: bool,
+    pub(crate) is_unique: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Eq, PartialEq)]
@@ -85,36 +85,6 @@ pub struct Sequence {
 }
 
 impl ScalarField {
-    pub fn new(
-        name: String,
-        type_identifier: TypeIdentifier,
-        is_required: bool,
-        is_list: bool,
-        is_hidden: bool,
-        is_auto_generated: bool,
-        is_unique: bool,
-        manifestation: Option<FieldManifestation>,
-        internal_enum: Option<InternalEnum>,
-        behaviour: Option<FieldBehaviour>,
-        model: ModelWeakRef,
-        default_value: Option<PrismaValue>,
-    ) -> Self {
-        ScalarField {
-            name,
-            type_identifier,
-            is_required,
-            is_list,
-            is_hidden,
-            is_auto_generated,
-            is_unique,
-            manifestation,
-            internal_enum,
-            behaviour,
-            model,
-            default_value,
-        }
-    }
-
     pub fn model(&self) -> ModelRef {
         self.model
             .upgrade()
@@ -201,7 +171,7 @@ impl ScalarField {
         }
     }
 
-    pub fn scalar_list_table<'a>(&'a self) -> ScalarListTable<'a> {
+    pub fn scalar_list_table(&self) -> ScalarListTable {
         ScalarListTable::new(self)
     }
 }
