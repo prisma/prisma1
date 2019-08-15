@@ -1,21 +1,27 @@
 use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
+use migration_connector::*;
 
-pub struct UnapplyMigrationCommand {
-    input: UnapplyMigrationInput,
+pub struct UnapplyMigrationCommand<'a> {
+    input: &'a UnapplyMigrationInput,
 }
-#[allow(unused)]
-impl MigrationCommand for UnapplyMigrationCommand {
+
+impl<'a> MigrationCommand<'a> for UnapplyMigrationCommand<'a> {
     type Input = UnapplyMigrationInput;
     type Output = UnapplyMigrationOutput;
 
-    fn new(input: Self::Input) -> Box<Self> {
+    fn new(input: &'a Self::Input) -> Box<Self> {
         Box::new(UnapplyMigrationCommand { input })
     }
 
-    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
-        println!("{:?}", self.input);
+    fn execute<C, D>(&self, engine: &MigrationEngine<C, D>) -> CommandResult<Self::Output>
+    where
+        C: MigrationConnector<DatabaseMigration = D>,
+        D: DatabaseMigrationMarker + 'static,
+    {
+        debug!("{:?}", self.input);
         let connector = engine.connector();
+
         let result = match connector.migration_persistence().last() {
             None => UnapplyMigrationOutput {
                 rolled_back: "not-applicable".to_string(),
@@ -25,9 +31,10 @@ impl MigrationCommand for UnapplyMigrationCommand {
             Some(migration_to_rollback) => {
                 let database_migration =
                     connector.deserialize_database_migration(migration_to_rollback.database_migration.clone());
+
                 connector
                     .migration_applier()
-                    .unapply(&migration_to_rollback, &database_migration);
+                    .unapply(&migration_to_rollback, &database_migration)?;
 
                 let new_active_migration = connector.migration_persistence().last().map(|m| m.name);
 
@@ -38,11 +45,8 @@ impl MigrationCommand for UnapplyMigrationCommand {
                 }
             }
         };
-        Ok(result)
-    }
 
-    fn underlying_database_must_exist() -> bool {
-        true
+        Ok(result)
     }
 }
 

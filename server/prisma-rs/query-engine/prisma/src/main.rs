@@ -7,6 +7,7 @@ extern crate rust_embed;
 #[macro_use]
 extern crate debug_stub_derive;
 
+mod cli;
 mod context;
 mod data_model_loader;
 mod dmmf; // Temporary
@@ -16,20 +17,20 @@ mod request_handlers;
 mod serializers;
 mod utilities;
 
-use crate::data_model_loader::*;
 use actix_web::{
     http::{Method, StatusCode},
     server, App, HttpRequest, HttpResponse, Json, Responder,
 };
 use clap::{App as ClapApp, Arg, ArgMatches, SubCommand};
+use cli::*;
 use context::PrismaContext;
-use core::{
-    schema::{QuerySchemaBuilder, QuerySchemaRef, QuerySchemaRenderer, SupportedCapabilities},
-    BuildMode,
-};
+use core::schema::QuerySchemaRenderer;
 use error::*;
 use prisma_common::logger::Logger;
-use request_handlers::{graphql::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler}, PrismaRequest, RequestHandler};
+use request_handlers::{
+    graphql::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler},
+    PrismaRequest, RequestHandler,
+};
 use serde_json;
 use std::{env, process, sync::Arc, time::Instant};
 
@@ -74,18 +75,38 @@ fn main() {
                         .help("Output the DMMF from the loaded data model.")
                         .takes_value(false)
                         .required(false),
+                )
+                .arg(
+                    Arg::with_name("dmmf_to_dml")
+                        .long("dmmf_to_dml")
+                        .help("Convert the DMMF to a data model")
+                        .takes_value(true)
+                        .required(false),
+                )
+                .arg(
+                    Arg::with_name("get_config")
+                        .long("get_config")
+                        .help("Get the configuration from the given data model")
+                        .takes_value(true)
+                        .required(false),
                 ),
         )
         .get_matches();
 
-    if matches.is_present("cli") {
-        let result = start_cli(matches.subcommand_matches("cli").unwrap());
-
-        if let Err(err) = result {
-            info!("Encountered error during initialization:");
-            err.pretty_print();
-            process::exit(1);
-        };
+    if let Some(matches) = matches.subcommand_matches("cli") {
+        match CliCommand::new(matches) {
+            Some(cmd) => {
+                if let Err(err) = cmd.execute() {
+                    info!("Encountered error during initialization:");
+                    err.pretty_print();
+                    process::exit(1);
+                }
+            }
+            None => {
+                error!("No command provided");
+                process::exit(1);
+            }
+        }
     } else {
         let _logger = Logger::build("prisma"); // keep in scope
         let result = start_server(matches);
@@ -96,39 +117,6 @@ fn main() {
             process::exit(1);
         };
     };
-}
-
-/// Start Prisma in CLI mode with given args.
-fn start_cli(matches: &ArgMatches) -> PrismaResult<()> {
-    if matches.is_present("dmmf") {
-        let (_, v2components, template) = load_data_model_components()?;
-
-        match v2components {
-            Some(v2) => {
-                // temporary code duplication
-                let internal_data_model = template.build("".into());
-                let capabilities = SupportedCapabilities::empty();
-                let build_mode = if matches.is_present("legacy") {
-                    BuildMode::Legacy
-                } else {
-                    BuildMode::Modern
-                };
-
-                let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, build_mode);
-                let query_schema: QuerySchemaRef = Arc::new(schema_builder.build());
-                let dmmf = dmmf::render_dmmf(&v2.datamodel, query_schema);
-                let serialized = serde_json::to_string_pretty(&dmmf).unwrap();
-
-                println!("{}", serialized);
-                Ok(())
-            }
-            None => Err(PrismaError::InvocationError(
-                "DMMF cli command can only be invoked if a v2 data model was configured.".into(),
-            )),
-        }
-    } else {
-        Err(PrismaError::InvocationError("Please specify a subcommand.".into()))
-    }
 }
 
 /// Start Prisma in server mode with given args.

@@ -6,7 +6,7 @@ use std::sync::Arc;
 pub struct SqlDatabaseStepApplier {
     pub sql_family: SqlFamily,
     pub schema_name: String,
-    pub conn: Arc<MigrationDatabase>,
+    pub conn: Arc<MigrationDatabase + Send + Sync + 'static>,
 }
 
 #[allow(unused, dead_code)]
@@ -17,28 +17,6 @@ impl DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier {
 
     fn unapply_step(&self, database_migration: &SqlMigration, index: usize) -> ConnectorResult<bool> {
         Ok(self.apply_next_step(&database_migration.rollback, index)?)
-    }
-
-    fn render_steps_pretty(&self, database_migration: &SqlMigration) -> ConnectorResult<serde_json::Value> {
-        Ok(render_steps_pretty(
-            &database_migration,
-            self.sql_family,
-            &self.schema_name,
-        )?)
-    }
-}
-
-pub struct VirtualSqlDatabaseStepApplier {
-    pub sql_family: SqlFamily,
-    pub schema_name: String,
-}
-impl DatabaseMigrationStepApplier<SqlMigration> for VirtualSqlDatabaseStepApplier {
-    fn apply_step(&self, _database_migration: &SqlMigration, _index: usize) -> ConnectorResult<bool> {
-        unimplemented!("Not allowed on a VirtualSqlDatabaseStepApplier")
-    }
-
-    fn unapply_step(&self, _database_migration: &SqlMigration, _index: usize) -> ConnectorResult<bool> {
-        unimplemented!("Not allowed on a VirtualSqlDatabaseStepApplier")
     }
 
     fn render_steps_pretty(&self, database_migration: &SqlMigration) -> ConnectorResult<serde_json::Value> {

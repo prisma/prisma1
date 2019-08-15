@@ -3,6 +3,8 @@ mod database_migration_step_applier;
 mod destructive_changes_checker;
 mod migration_applier;
 mod migration_persistence;
+mod error;
+
 pub mod steps;
 
 pub use database_migration_inferrer::*;
@@ -10,6 +12,7 @@ pub use database_migration_step_applier::*;
 pub use destructive_changes_checker::*;
 pub use migration_applier::*;
 pub use migration_persistence::*;
+pub use error::*;
 use std::fmt::Debug;
 use std::sync::Arc;
 pub use steps::*;
@@ -17,7 +20,7 @@ pub use steps::*;
 #[macro_use]
 extern crate serde_derive;
 
-pub trait MigrationConnector {
+pub trait MigrationConnector: Send + Sync + 'static {
     type DatabaseMigration: DatabaseMigrationMarker + 'static;
 
     fn connector_type(&self) -> &'static str;
@@ -50,8 +53,3 @@ pub trait DatabaseMigrationMarker: Debug {
 }
 
 pub type ConnectorResult<T> = Result<T, ConnectorError>;
-
-#[derive(Debug)]
-pub enum ConnectorError {
-    Generic(String),
-}

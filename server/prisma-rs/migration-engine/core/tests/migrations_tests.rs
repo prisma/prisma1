@@ -7,7 +7,7 @@ use test_harness::*;
 
 #[test]
 fn adding_a_scalar_field_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm2 = r#"
             model Test {
                 id String @id @default(cuid())
@@ -24,7 +24,7 @@ fn adding_a_scalar_field_must_work() {
                 B
             }
         "#;
-        let result = infer_and_apply(&engine, &dm2);
+        let result = infer_and_apply(api, &dm2);
         let table = result.table_bang("Test");
         table.columns.iter().for_each(|c| assert_eq!(c.is_required, true));
 
@@ -39,7 +39,7 @@ fn adding_a_scalar_field_must_work() {
 
 //#[test]
 //fn apply_schema() {
-//    test_each_connector(|engine| {
+//    test_each_connector(|api| {
 //        let dm2 = r#"
 //            model Test {
 //                id String @id @default(cuid())
@@ -57,20 +57,20 @@ fn adding_a_scalar_field_must_work() {
 //            }
 //        "#;
 //
-//        infer_and_apply(&engine, &dm2);
+//        infer_and_apply(api, &dm2);
 //    });
 //}
 
 #[test]
 fn adding_an_optional_field_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm2 = r#"
             model Test {
                 id String @id @default(cuid())
                 field String?
             }
         "#;
-        let result = infer_and_apply(&engine, &dm2);
+        let result = infer_and_apply(api, &dm2);
         let column = result.table_bang("Test").column_bang("field");
         assert_eq!(column.is_required, false);
     });
@@ -78,13 +78,13 @@ fn adding_an_optional_field_must_work() {
 
 #[test]
 fn adding_an_id_field_with_a_special_name_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm2 = r#"
             model Test {
                 specialName String @id @default(cuid())
             }
         "#;
-        let result = infer_and_apply(&engine, &dm2);
+        let result = infer_and_apply(api, &dm2);
         let column = result.table_bang("Test").column("specialName");
         assert_eq!(column.is_some(), true);
     });
@@ -92,14 +92,14 @@ fn adding_an_id_field_with_a_special_name_must_work() {
 
 #[test]
 fn removing_a_scalar_field_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model Test {
                 id String @id @default(cuid())
                 field String
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         let column1 = result.table_bang("Test").column("field");
         assert_eq!(column1.is_some(), true);
 
@@ -108,7 +108,7 @@ fn removing_a_scalar_field_must_work() {
                 id String @id @default(cuid())
             }
         "#;
-        let result = infer_and_apply(&engine, &dm2);
+        let result = infer_and_apply(api, &dm2);
         let column2 = result.table_bang("Test").column("field");
         assert_eq!(column2.is_some(), false);
     });
@@ -116,14 +116,14 @@ fn removing_a_scalar_field_must_work() {
 
 #[test]
 fn can_handle_reserved_sql_keywords_for_model_name() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model Group {
                 id String @id @default(cuid())
                 field String
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         let column = result.table_bang("Group").column_bang("field");
         assert_eq!(column.tpe, ColumnType::String);
 
@@ -133,7 +133,7 @@ fn can_handle_reserved_sql_keywords_for_model_name() {
                 field Int
             }
         "#;
-        let result = infer_and_apply(&engine, &dm2);
+        let result = infer_and_apply(api, &dm2);
         let column = result.table_bang("Group").column_bang("field");
         assert_eq!(column.tpe, ColumnType::Int);
     });
@@ -141,14 +141,14 @@ fn can_handle_reserved_sql_keywords_for_model_name() {
 
 #[test]
 fn can_handle_reserved_sql_keywords_for_field_name() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model Test {
                 id String @id @default(cuid())
                 Group String
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         let column = result.table_bang("Test").column_bang("Group");
         assert_eq!(column.tpe, ColumnType::String);
 
@@ -158,7 +158,7 @@ fn can_handle_reserved_sql_keywords_for_field_name() {
                 Group Int
             }
         "#;
-        let result = infer_and_apply(&engine, &dm2);
+        let result = infer_and_apply(api, &dm2);
         let column = result.table_bang("Test").column_bang("Group");
         assert_eq!(column.tpe, ColumnType::Int);
     });
@@ -166,14 +166,14 @@ fn can_handle_reserved_sql_keywords_for_field_name() {
 
 #[test]
 fn update_type_of_scalar_field_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model Test {
                 id String @id @default(cuid())
                 field String
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         let column1 = result.table_bang("Test").column_bang("field");
         assert_eq!(column1.tpe, ColumnType::String);
 
@@ -183,7 +183,7 @@ fn update_type_of_scalar_field_must_work() {
                 field Int
             }
         "#;
-        let result = infer_and_apply(&engine, &dm2);
+        let result = infer_and_apply(api, &dm2);
         let column2 = result.table_bang("Test").column_bang("field");
         assert_eq!(column2.tpe, ColumnType::Int);
     });
@@ -191,7 +191,7 @@ fn update_type_of_scalar_field_must_work() {
 
 #[test]
 fn changing_the_type_of_an_id_field_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -201,7 +201,7 @@ fn changing_the_type_of_an_id_field_must_work() {
                 id Int @id
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.tpe, ColumnType::Int);
         assert_eq!(
@@ -218,7 +218,7 @@ fn changing_the_type_of_an_id_field_must_work() {
                 id String @id @default(cuid())
             }
         "#;
-        let result = infer_and_apply(&engine, &dm2);
+        let result = infer_and_apply(api, &dm2);
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.tpe, ColumnType::String);
         assert_eq!(
@@ -230,14 +230,14 @@ fn changing_the_type_of_an_id_field_must_work() {
 
 #[test]
 fn updating_db_name_of_a_scalar_field_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id String @id @default(cuid())
                 field String @map(name:"name1")
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         assert_eq!(result.table_bang("A").column("name1").is_some(), true);
 
         let dm2 = r#"
@@ -246,7 +246,7 @@ fn updating_db_name_of_a_scalar_field_must_work() {
                 field String @map(name:"name2")
             }
         "#;
-        let result = infer_and_apply(&engine, &dm2);
+        let result = infer_and_apply(api, &dm2);
         assert_eq!(result.table_bang("A").column("name1").is_some(), false);
         assert_eq!(result.table_bang("A").column("name2").is_some(), true);
     });
@@ -255,7 +255,7 @@ fn updating_db_name_of_a_scalar_field_must_work() {
 #[test]
 fn changing_a_relation_field_to_a_scalar_field_must_work() {
     // this relies on link: INLINE which we don't support yet
-    test_each_connector_with_ignores(vec![SqlFamily::Mysql], |_, engine| {
+    test_each_connector_with_ignores(vec![SqlFamily::Mysql], |_, api| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -266,7 +266,7 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
                 a A // remove this once the implicit back relation field is implemented
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.foreign_key.is_some(), true);
         assert_eq!(column.tpe, ColumnType::Int);
@@ -280,7 +280,7 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
                 id Int @id
             }
         "#;
-        let result = infer_and_apply(&engine, &dm2);
+        let result = infer_and_apply(api, &dm2);
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.foreign_key.is_some(), false);
         assert_eq!(column.tpe, ColumnType::String);
@@ -289,7 +289,7 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
 
 #[test]
 fn changing_a_scalar_field_to_a_relation_field_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -299,7 +299,7 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
                 id Int @id
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.foreign_key.is_some(), false);
         assert_eq!(column.tpe, ColumnType::String);
@@ -314,7 +314,7 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
                 a A // remove this once the implicit back relation field is implemented
             }
         "#;
-        let result = infer_and_apply(&engine, &dm2);
+        let result = infer_and_apply(api, &dm2);
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.foreign_key.is_some(), true);
         assert_eq!(column.tpe, ColumnType::Int);
@@ -324,7 +324,7 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
 #[test]
 fn adding_a_many_to_many_relation_must_result_in_a_prisma_style_relation_table() {
     // TODO: one model should have an id of different type. Not possible right now due to barrel limitation.
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -335,7 +335,7 @@ fn adding_a_many_to_many_relation_must_result_in_a_prisma_style_relation_table()
                 as A[]
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         let relation_table = result.table_bang("_AToB");
         assert_eq!(relation_table.columns.len(), 2);
         let aColumn = relation_table.column_bang("A");
@@ -355,7 +355,7 @@ fn adding_a_many_to_many_relation_must_result_in_a_prisma_style_relation_table()
 
 #[test]
 fn adding_a_many_to_many_relation_with_custom_name_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -366,15 +366,18 @@ fn adding_a_many_to_many_relation_with_custom_name_must_work() {
                 as A[] @relation(name: "my_relation")
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+
+        let result = infer_and_apply(api, &dm1);
         let relation_table = result.table_bang("_my_relation");
         assert_eq!(relation_table.columns.len(), 2);
+
         let aColumn = relation_table.column_bang("A");
         assert_eq!(aColumn.tpe, ColumnType::Int);
         assert_eq!(
             aColumn.foreign_key,
             Some(ForeignKey::new("A".to_string(), "id".to_string(), OnDelete::NoAction))
         );
+
         let bColumn = relation_table.column_bang("B");
         assert_eq!(bColumn.tpe, ColumnType::Int);
         assert_eq!(
@@ -414,7 +417,7 @@ fn providing_an_explicit_link_table_must_work() {
 
 #[test]
 fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -426,7 +429,7 @@ fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
                 a A // todo: remove when implicit back relation field is implemented
             }
         "#;
-        let result = dbg!(infer_and_apply(&engine, &dm1));
+        let result = dbg!(infer_and_apply(api, &dm1));
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.tpe, ColumnType::Int);
         assert_eq!(
@@ -438,7 +441,7 @@ fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
 
 #[test]
 fn specifying_a_db_name_for_an_inline_relation_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -450,7 +453,7 @@ fn specifying_a_db_name_for_an_inline_relation_must_work() {
                 a A // todo: remove when implicit back relation field is implemented
             }
         "#;
-        let result = dbg!(infer_and_apply(&engine, &dm1));
+        let result = dbg!(infer_and_apply(api, &dm1));
         let column = result.table_bang("A").column_bang("b_column");
         assert_eq!(column.tpe, ColumnType::Int);
         assert_eq!(
@@ -462,7 +465,7 @@ fn specifying_a_db_name_for_an_inline_relation_must_work() {
 
 #[test]
 fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -474,7 +477,7 @@ fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
                 a A // todo: remove when implicit back relation field is implemented
             }
         "#;
-        let result = dbg!(infer_and_apply(&engine, &dm1));
+        let result = dbg!(infer_and_apply(api, &dm1));
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.tpe, ColumnType::String);
         assert_eq!(
@@ -486,7 +489,7 @@ fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
 
 #[test]
 fn removing_an_inline_relation_must_work() {
-    test_each_connector_with_ignores(vec![SqlFamily::Mysql], |_, engine| {
+    test_each_connector_with_ignores(vec![SqlFamily::Mysql], |_, api| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -498,7 +501,7 @@ fn removing_an_inline_relation_must_work() {
                 a A // todo: remove when implicit back relation field is implemented
             }
         "#;
-        let result = dbg!(infer_and_apply(&engine, &dm1));
+        let result = dbg!(infer_and_apply(api, &dm1));
         let column = result.table_bang("A").column("b");
         assert_eq!(column.is_some(), true);
 
@@ -511,7 +514,7 @@ fn removing_an_inline_relation_must_work() {
                 id Int @id
             }
         "#;
-        let result = dbg!(infer_and_apply(&engine, &dm2));
+        let result = dbg!(infer_and_apply(api, &dm2));
         let column = result.table_bang("A").column("b");
         assert_eq!(column.is_some(), false);
     });
@@ -519,7 +522,7 @@ fn removing_an_inline_relation_must_work() {
 
 #[test]
 fn moving_an_inline_relation_to_the_other_side_must_work() {
-    test_each_connector_with_ignores(vec![SqlFamily::Mysql], |_, engine| {
+    test_each_connector_with_ignores(vec![SqlFamily::Mysql], |_, api| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -531,7 +534,7 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
                 a A // todo: remove when implicit back relation field is implemented
             }
         "#;
-        let result = dbg!(infer_and_apply(&engine, &dm1));
+        let result = dbg!(infer_and_apply(api, &dm1));
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(
             column.foreign_key,
@@ -549,7 +552,7 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
                 a A @relation(references: [id])
             }
         "#;
-        let result = dbg!(infer_and_apply(&engine, &dm2));
+        let result = dbg!(infer_and_apply(api, &dm2));
         let column = result.table_bang("B").column_bang("a");
         assert_eq!(
             column.foreign_key,
@@ -560,14 +563,14 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
 
 #[test]
 fn adding_a_new_unique_field_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id Int @id
                 field String @unique
             }
         "#;
-        let result = dbg!(infer_and_apply(&engine, &dm1));
+        let result = dbg!(infer_and_apply(api, &dm1));
         let index = result
             .table_bang("A")
             .indexes
@@ -581,15 +584,15 @@ fn adding_a_new_unique_field_must_work() {
 
 #[test]
 fn removing_an_existing_unique_field_must_work() {
-    //    test_only_connector(SqlFamily::Postgres, |_, engine| {
-    test_each_connector(|_, engine| {
+    //    test_only_connector(SqlFamily::Postgres, |_, api| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id    Int    @id
                 field String @unique
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         // FIXME: bring assertion back once introspection can handle indexes
         //        let index = result
         //            .table_bang("A")
@@ -604,7 +607,7 @@ fn removing_an_existing_unique_field_must_work() {
                 id    Int    @id
             }
         "#;
-        let result = dbg!(infer_and_apply(&engine, &dm2));
+        let result = dbg!(infer_and_apply(api, &dm2));
         // FIXME: bring assertion back once introspection can handle indexes
         //        let index = result
         //            .table_bang("A")
@@ -617,14 +620,14 @@ fn removing_an_existing_unique_field_must_work() {
 
 #[test]
 fn adding_unique_to_an_existing_field_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id    Int    @id
                 field String
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         // FIXME: bring assertion back once introspection can handle indexes
         //        let index = result
         //            .table_bang("A")
@@ -640,7 +643,7 @@ fn adding_unique_to_an_existing_field_must_work() {
                 field String @unique
             }
         "#;
-        let result = dbg!(infer_and_apply(&engine, &dm2));
+        let result = dbg!(infer_and_apply(api, &dm2));
         // FIXME: bring assertion back once introspection can handle indexes
         //        let index = result
         //            .table_bang("A")
@@ -653,15 +656,15 @@ fn adding_unique_to_an_existing_field_must_work() {
 
 #[test]
 fn removing_unique_from_an_existing_field_must_work() {
-    //    test_only_connector(SqlFamily::Postgres, |_, engine| {
-    test_each_connector(|_, engine| {
+    //    test_only_connector(SqlFamily::Postgres, |_, api| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id    Int    @id
                 field String @unique
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         // FIXME: bring assertion back once introspection can handle indexes
         //        let index = result
         //            .table_bang("A")
@@ -677,7 +680,7 @@ fn removing_unique_from_an_existing_field_must_work() {
                 field String
             }
         "#;
-        let result = dbg!(infer_and_apply(&engine, &dm2));
+        let result = dbg!(infer_and_apply(api, &dm2));
         // FIXME: bring assertion back once introspection can handle indexes
         //        let index = result
         //            .table_bang("A")
@@ -690,7 +693,7 @@ fn removing_unique_from_an_existing_field_must_work() {
 
 #[test]
 fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm1 = r#"
             model A {
                 id Int @id
@@ -703,7 +706,7 @@ fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
               ERROR
             }
         "#;
-        let result = infer_and_apply(&engine, &dm1);
+        let result = infer_and_apply(api, &dm1);
         let scalar_list_table_for_strings = result.table_bang("A_strings");
         let node_id_column = scalar_list_table_for_strings.column_bang("nodeId");
         assert_eq!(node_id_column.tpe, ColumnType::Int);
@@ -723,14 +726,14 @@ fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
 
 #[test]
 fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
-    test_each_connector_with_ignores(vec![SqlFamily::Mysql], |_, engine| {
+    test_each_connector_with_ignores(vec![SqlFamily::Mysql], |_, api| {
         let dm = r#"
             model A {
                 id Int @id
                 strings String[]
             }
         "#;
-        let result = infer_and_apply(&engine, &dm);
+        let result = infer_and_apply(api, &dm);
         let node_id_column = result.table_bang("A_strings").column_bang("nodeId");
         assert_eq!(node_id_column.tpe, ColumnType::Int);
 
@@ -740,7 +743,7 @@ fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
                 strings String[]
             }
         "#;
-        let result = infer_and_apply(&engine, &dm);
+        let result = infer_and_apply(api, &dm);
         let node_id_column = result.table_bang("A_strings").column_bang("nodeId");
         assert_eq!(node_id_column.tpe, ColumnType::String);
     });
@@ -749,7 +752,7 @@ fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
 #[test]
 fn reserved_sql_key_words_must_work() {
     // Group is a reserved keyword
-    test_each_connector(|_, engine| {
+    test_each_connector(|_, api| {
         let dm = r#"
             model Group {
                 id    String  @default(cuid()) @id
@@ -757,7 +760,7 @@ fn reserved_sql_key_words_must_work() {
                 childGroups Group[] @relation(name: "ChildGroups")
             }
         "#;
-        let result = infer_and_apply(&engine, &dm);
+        let result = infer_and_apply(api, &dm);
 
         let relation_column = result.table_bang("Group").column_bang("parent");
         assert_eq!(

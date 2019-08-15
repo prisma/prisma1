@@ -1,8 +1,1 @@
-{
-    "id": 1,
-    "jsonrpc": "2.0",
-    "method": "listMigrations",
-    "params": {
-        "projectInfo": "the-project-id"
-    }
-}
+{"id": 1, "jsonrpc": "2.0", "method": "listMigrations", "params": {"projectInfo": "the-project-id"}}

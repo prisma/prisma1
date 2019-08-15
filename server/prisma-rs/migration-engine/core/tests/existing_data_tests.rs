@@ -6,7 +6,7 @@ use test_harness::*;
 
 #[test]
 fn adding_a_required_field_if_there_is_data() {
-    test_each_connector(|sql_family, engine| {
+    test_each_connector(|sql_family, api| {
         let dm = r#"
             model Test {
                 id String @id @default(cuid())
@@ -17,7 +17,7 @@ fn adding_a_required_field_if_there_is_data() {
                 A
             }
         "#;
-        infer_and_apply(&engine, &dm);
+        infer_and_apply(api, &dm);
 
         let conn = database(sql_family);
         let insert = Insert::single_into((SCHEMA_NAME, "Test")).value("id", "test");
@@ -39,13 +39,13 @@ fn adding_a_required_field_if_there_is_data() {
                 A
             }
         "#;
-        infer_and_apply(&engine, &dm);
+        infer_and_apply(api, &dm);
     });
 }
 
 #[test]
 fn adding_a_required_field_must_use_the_default_value_for_migrations() {
-    test_each_connector(|sql_family, engine| {
+    test_each_connector(|sql_family, api| {
         let dm = r#"
             model Test {
                 id String @id @default(cuid())
@@ -56,7 +56,7 @@ fn adding_a_required_field_must_use_the_default_value_for_migrations() {
                 A
             }
         "#;
-        infer_and_apply(&engine, &dm);
+        infer_and_apply(api, &dm);
 
         let conn = database(sql_family);
         let insert = Insert::single_into((SCHEMA_NAME, "Test")).value("id", "test");
@@ -80,7 +80,7 @@ fn adding_a_required_field_must_use_the_default_value_for_migrations() {
                 C
             }
         "#;
-        infer_and_apply(&engine, &dm);
+        infer_and_apply(api, &dm);
 
         // TODO: those assertions somehow fail with column not found on SQLite. I could observe the correct data in the db file though.
         if sql_family != SqlFamily::Sqlite {

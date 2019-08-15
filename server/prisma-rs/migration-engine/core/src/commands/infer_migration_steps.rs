@@ -4,19 +4,25 @@ use crate::migration_engine::MigrationEngine;
 use crate::*;
 use migration_connector::*;
 
-pub struct InferMigrationStepsCommand {
-    input: InferMigrationStepsInput,
+pub struct InferMigrationStepsCommand<'a> {
+    input: &'a InferMigrationStepsInput,
 }
 
-impl MigrationCommand for InferMigrationStepsCommand {
+impl<'a> MigrationCommand<'a> for InferMigrationStepsCommand<'a> {
     type Input = InferMigrationStepsInput;
     type Output = MigrationStepsResultOutput;
 
-    fn new(input: Self::Input) -> Box<Self> {
+    fn new(input: &'a Self::Input) -> Box<Self> {
         Box::new(InferMigrationStepsCommand { input })
     }
 
-    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
+    fn execute<C, D>(&self, engine: &MigrationEngine<C, D>) -> CommandResult<Self::Output>
+    where
+        C: MigrationConnector<DatabaseMigration = D>,
+        D: DatabaseMigrationMarker + 'static,
+    {
+        debug!("{:?}", self.input);
+
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
         let current_datamodel = migration_persistence.current_datamodel();

@@ -3,25 +3,39 @@ use crate::migration_engine::MigrationEngine;
 use chrono::*;
 use migration_connector::*;
 
-pub struct MigrationProgressCommand {
-    input: MigrationProgressInput,
+pub struct MigrationProgressCommand<'a> {
+    input: &'a MigrationProgressInput,
 }
 
 #[allow(unused)]
-impl MigrationCommand for MigrationProgressCommand {
+impl<'a> MigrationCommand<'a> for MigrationProgressCommand<'a> {
     type Input = MigrationProgressInput;
     type Output = MigrationProgressOutput;
 
-    fn new(input: Self::Input) -> Box<Self> {
+    fn new(input: &'a Self::Input) -> Box<Self> {
         Box::new(MigrationProgressCommand { input })
     }
 
-    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
+    fn execute<C, D>(&self, engine: &MigrationEngine<C, D>) -> CommandResult<Self::Output>
+    where
+        C: MigrationConnector<DatabaseMigration = D>,
+        D: DatabaseMigrationMarker + 'static,
+    {
         let migration_persistence = engine.connector().migration_persistence();
-        let migration = migration_persistence.by_name(&self.input.migration_id).expect(&format!(
-            "Could not load migration from database. Migration name was: {}",
-            &self.input.migration_id
-        ));
+
+        let migration = migration_persistence
+            .by_name(&self.input.migration_id)
+            .ok_or_else(|| {
+                let error = format!(
+                    "Could not load migration from database. Migration name was: {}",
+                    &self.input.migration_id
+                );
+
+                CommandError::Input {
+                    code: 1002,
+                    error
+                }
+            })?;
 
         Ok(MigrationProgressOutput {
             status: migration.status,
