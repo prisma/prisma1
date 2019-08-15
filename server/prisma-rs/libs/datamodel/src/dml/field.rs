@@ -94,7 +94,7 @@ impl Field {
         Field {
             name: String::from(name),
             arity: FieldArity::Required,
-            field_type: field_type,
+            field_type,
             database_name: None,
             default_value: None,
             is_unique: false,
@@ -110,7 +110,7 @@ impl Field {
         Field {
             name: String::from(name),
             arity: FieldArity::Optional,
-            field_type: field_type,
+            field_type,
             database_name: None,
             default_value: None,
             is_unique: false,

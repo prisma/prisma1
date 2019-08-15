@@ -11,12 +11,12 @@ mod sqlite_inspector;
 use crate::migration_database::{
     MigrationDatabase, Mysql as MysqlDriver, PostgreSql as PostgresDriver, Sqlite as SqliteDriver,
 };
-use prisma_query::connector;
 pub use database_inspector_impl::*;
 pub use database_schema::*;
 pub use empty_impl::*;
 use mysql_inspector::MysqlInspector;
 use postgres_inspector::Postgres;
+use prisma_query::connector;
 use sqlite_inspector::Sqlite;
 use std::convert::TryFrom;
 use std::sync::Arc;

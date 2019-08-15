@@ -16,8 +16,8 @@ pub struct TableFormat {
     maybe_new_line: bool,
 }
 
-impl TableFormat {
-    pub fn new() -> TableFormat {
+impl Default for TableFormat {
+    fn default() -> Self {
         TableFormat {
             table: Vec::new(),
             row: -1,
@@ -25,11 +25,17 @@ impl TableFormat {
             maybe_new_line: false,
         }
     }
+}
+
+impl TableFormat {
+    pub fn new() -> TableFormat {
+        Self::default()
+    }
 
     pub fn interleave_writer(&mut self) -> TableFormatInterleaveWrapper {
         TableFormatInterleaveWrapper {
             formatter: self,
-            string_builder: StringBuilder::new(),
+            string_builder: StringBuilder::default(),
         }
     }
 
@@ -41,7 +47,7 @@ impl TableFormat {
     }
 
     pub fn column_locked_writer(&mut self) -> ColumnLockedWriter {
-        if self.table.len() == 0 {
+        if self.table.is_empty() {
             self.start_new_line();
             self.write("");
         }
@@ -62,7 +68,7 @@ impl TableFormat {
         // We've just ended a line.
         self.line_ending = false;
         self.maybe_new_line = false;
-        self.row = self.row + 1;
+        self.row += 1;
 
         // Prepare next new line.
         self.end_line();
@@ -94,7 +100,7 @@ impl TableFormat {
 
     fn start_new_line(&mut self) {
         self.table.push(Row::Regular(Vec::new()));
-        self.row = self.row + 1;
+        self.row += 1;
     }
 
     pub fn render(&self, target: &mut LineWriteable) {
@@ -187,7 +193,7 @@ impl<'a> LineWriteable for TableFormatInterleaveWrapper<'a> {
 
     fn end_line(&mut self) {
         self.formatter.interleave(&self.string_builder.to_string());
-        self.string_builder = StringBuilder::new();
+        self.string_builder = StringBuilder::default();
     }
 
     fn maybe_end_line(&mut self) {
@@ -219,7 +225,7 @@ impl<'a> LineWriteable for ColumnLockedWriter<'a> {
 
     fn line_empty(&self) -> bool {
         if self.formatter.line_empty() {
-            return true;
+            true
         } else {
             match &self.formatter.table.last().unwrap() {
                 Row::Regular(row) => row.len() <= self.column || row[self.column].is_empty(),

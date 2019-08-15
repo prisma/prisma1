@@ -19,7 +19,7 @@ impl Enum {
     pub fn new(name: &str, values: Vec<String>) -> Enum {
         Enum {
             name: String::from(name),
-            values: values,
+            values,
             documentation: None,
             database_name: None,
         }

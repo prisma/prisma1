@@ -202,20 +202,15 @@ impl RpcApi {
     ) -> impl Future<Item = serde_json::Value, Error = JsonRpcError> {
         let executor = Arc::clone(executor);
 
-        lazy(move || {
-            poll_fn(move || {
-                blocking(|| {
-                    Self::create_sync_handler(&executor, cmd, &params)
-                })
-            })
-        })
-        .then(|res| match res {
-            // dumdidum futures 0.1 we love <3
-            Ok(Ok(val)) => ok(val),
-            Ok(Err(val)) => err(val),
-            Err(val) => {
-                let e = crate::error::Error::from(val);
-                err(JsonRpcError::from(e))
+        lazy(move || poll_fn(move || blocking(|| Self::create_sync_handler(&executor, cmd, &params)))).then(|res| {
+            match res {
+                // dumdidum futures 0.1 we love <3
+                Ok(Ok(val)) => ok(val),
+                Ok(Err(val)) => err(val),
+                Err(val) => {
+                    let e = crate::error::Error::from(val);
+                    err(JsonRpcError::from(e))
+                }
             }
         })
     }
@@ -233,12 +228,10 @@ impl From<crate::error::Error> for JsonRpcError {
                     data: Some(json),
                 }
             }
-            crate::error::Error::BlockingError(_) => {
-                JsonRpcError {
-                    code: jsonrpc_core::types::error::ErrorCode::ServerError(4467),
-                    message: "The RPC threadpool is exhausted. Add more worker threads.".to_string(),
-                    data: None,
-                }
+            crate::error::Error::BlockingError(_) => JsonRpcError {
+                code: jsonrpc_core::types::error::ErrorCode::ServerError(4467),
+                message: "The RPC threadpool is exhausted. Add more worker threads.".to_string(),
+                data: None,
             },
             err => panic!(
                 "An unexpected error happened. Maybe we should build a handler for these kind of errors? {:?}",

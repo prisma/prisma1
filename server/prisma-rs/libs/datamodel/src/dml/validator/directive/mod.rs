@@ -32,7 +32,7 @@ pub trait DirectiveValidator<T> {
     fn serialize(&self, obj: &T, datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error>;
 
     /// Shorthand to construct an directive validation error.
-    fn error(&self, msg: &str, span: &ast::Span) -> Result<(), Error> {
+    fn error(&self, msg: &str, span: ast::Span) -> Result<(), Error> {
         Err(ValidationError::new_directive_validation_error(
             msg,
             self.directive_name(),
@@ -45,7 +45,7 @@ pub trait DirectiveValidator<T> {
         Err(ValidationError::new_directive_validation_error(
             &format!("{}", err),
             self.directive_name(),
-            &err.span(),
+            err.span(),
         ))
     }
 }
@@ -87,6 +87,7 @@ impl<T> DirectiveValidator<T> for DirectiveScope<T> {
 
 /// Struct which holds a list of directive validators and automatically
 /// picks the right one for each directive in the given object.
+#[derive(Default)]
 pub struct DirectiveListValidator<T> {
     known_directives: BTreeMap<String, Box<DirectiveValidator<T>>>,
 }
@@ -137,13 +138,13 @@ impl<T: 'static> DirectiveListValidator<T> {
 
         for directive in ast.directives() {
             for other_directive in ast.directives() {
-                if directive as *const ast::Directive != other_directive as *const ast::Directive {
-                    if directive.name.name == other_directive.name.name {
-                        errors.push(ValidationError::new_duplicate_directive_error(
-                            &directive.name.name,
-                            &directive.name.span,
-                        ));
-                    }
+                if directive as *const ast::Directive != other_directive as *const ast::Directive
+                    && directive.name.name == other_directive.name.name
+                {
+                    errors.push(ValidationError::new_duplicate_directive_error(
+                        &directive.name.name,
+                        directive.name.span,
+                    ));
                 }
             }
         }
@@ -166,7 +167,7 @@ impl<T: 'static> DirectiveListValidator<T> {
                             errors.push(ValidationError::new_directive_argument_not_found_error(
                                 &argument_name,
                                 &directive.name.name,
-                                &span,
+                                span,
                             ))
                         }
                         Err(err) => {
@@ -182,7 +183,7 @@ impl<T: 'static> DirectiveListValidator<T> {
                 }
                 None => errors.push(ValidationError::new_directive_not_known_error(
                     &directive.name.name,
-                    &directive.name.span,
+                    directive.name.span,
                 )),
             };
         }

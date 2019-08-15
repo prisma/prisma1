@@ -145,7 +145,7 @@ impl ExternalInterface for ProtoBufInterface {
 
             let response = RpcResponse::ok(prisma::NodesResult {
                 nodes: proto_nodes,
-                fields: fields,
+                fields,
             });
 
             let mut response_payload = Vec::new();

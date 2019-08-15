@@ -1,4 +1,4 @@
-use super::errors::ValidationError;
+use super::ValidationError;
 
 /// Represents a list of validation or parser errors.
 ///

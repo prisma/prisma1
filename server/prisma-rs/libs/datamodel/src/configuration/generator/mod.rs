@@ -3,8 +3,8 @@ mod loader;
 pub use json::*;
 pub use loader::*;
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 
 #[serde(rename_all = "camelCase")]
 #[derive(Debug, Serialize, Deserialize)]

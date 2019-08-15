@@ -17,7 +17,7 @@ fn id_should_error_if_the_field_is_not_required() {
     errors.assert_is(ValidationError::new_directive_validation_error(
         "Fields that are marked as id must be required.",
         "id",
-        &Span::new(36, 38),
+        Span::new(36, 38),
     ));
 }
 
@@ -34,7 +34,7 @@ fn id_should_error_if_an_unknown_strategy_is_used() {
     errors.assert_is(ValidationError::new_literal_parser_error(
         "id strategy",
         "FOO",
-        &Span::new(48, 51),
+        Span::new(48, 51),
     ));
 }
 
@@ -52,7 +52,7 @@ fn id_should_error_on_model_without_id() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Exactly one field must be marked as the id field with the `@id` directive.",
         "Model",
-        &Span::new(5, 42),
+        Span::new(5, 42),
     ));
 }
 
@@ -70,7 +70,7 @@ fn id_should_error_multiple_ids_are_provided() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Exactly one field must be marked as the id field with the `@id` directive.",
         "Model",
-        &Span::new(5, 105),
+        Span::new(5, 105),
     ));
 }
 
@@ -101,22 +101,22 @@ fn id_should_error_if_the_id_field_is_not_of_valid_type() {
 
     errors.assert_is_at(
         0,
-        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model", &Span::new(27, 42)),
+        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model", Span::new(27, 42)),
     );
 
     errors.assert_is_at(
         1,
-        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model2", &Span::new(77, 91)),
+        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model2", Span::new(77, 91)),
     );
 
     errors.assert_is_at(
         2,
-        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model3", &Span::new(126, 138)),
+        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model3", Span::new(126, 138)),
     );
 
     errors.assert_is_at(
         3,
-        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model4", &Span::new(173, 187)),
+        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model4", Span::new(173, 187)),
     );
 }
 
@@ -140,16 +140,16 @@ fn id_should_error_if_string_id_field_has_incorrect_default_value() {
 
     errors.assert_is_at(
         0,
-        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model1", &Span::new(28, 41)),
+        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model1", Span::new(28, 41)),
     );
 
     errors.assert_is_at(
         1,
-        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model2", &Span::new(76, 107)),
+        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model2", Span::new(76, 107)),
     );
 
     errors.assert_is_at(
         2,
-        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model3", &Span::new(142, 172)),
+        ValidationError::new_model_validation_error(ID_TYPE_ERROR, "Model3", Span::new(142, 172)),
     );
 }

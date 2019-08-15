@@ -5,19 +5,20 @@ use crate::{ast, common::names::*, configuration, dml, errors::ErrorCollection};
 ///
 /// When standardsing, datamodel will be made consistent.
 /// Implicit back relation fields, relation names and `to_fields` will be generated.
+#[derive(Default)]
 pub struct Standardiser {}
 
 impl Standardiser {
     /// Creates a new instance, with all builtin directives registered.
-    pub fn new() -> Standardiser {
-        Standardiser {}
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Creates a new instance, with all builtin directives and
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(_sources: &Vec<Box<configuration::Source>>) -> Standardiser {
+    pub fn with_sources(_sources: &[Box<dyn configuration::Source>]) -> Standardiser {
         Standardiser {}
     }
 
@@ -45,6 +46,7 @@ impl Standardiser {
         for model_idx in 0..schema.models.len() {
             let model = &mut schema.models[model_idx];
             let model_name = &model.name;
+
             for field_index in 0..model.fields.len() {
                 let field = &mut model.fields[field_index];
 
@@ -60,7 +62,7 @@ impl Standardiser {
                     };
 
                     // If one of the fields has to_fields explicitly set by the user, we continue.
-                    if rel.to_fields.len() > 0 || related_field_rel.to_fields.len() > 0 {
+                    if !rel.to_fields.is_empty() || !related_field_rel.to_fields.is_empty() {
                         continue;
                     }
 
@@ -76,13 +78,13 @@ impl Standardiser {
                             (x, y) if x < y => true,
                             (x, y) if x > y => false,
                             // SELF RELATIONS
-                            (x, y) if x == y => &field.name < &related_field.name,
+                            (x, y) if x == y => field.name < related_field.name,
                             _ => unreachable!(), // no clue why the compiler does not understand it is exhaustive
                         },
                     };
 
                     if embed_here {
-                        rel.to_fields = related_model.id_field_names().map(|x| x.clone()).collect()
+                        rel.to_fields = related_model.id_field_names().cloned().collect()
                     }
                 }
             }
@@ -161,7 +163,7 @@ impl Standardiser {
             &NameNormalizer::camel_case(&model.name),
             dml::FieldType::Relation(dml::RelationInfo {
                 to: model.name.clone(),
-                to_fields: model.id_field_names().map(|s| s.clone()).collect(),
+                to_fields: model.id_field_names().cloned().collect(),
                 name: String::from(relation_name), // Will be corrected in later step
                 on_delete: dml::OnDeleteStrategy::None,
             }),
@@ -235,7 +237,7 @@ impl Standardiser {
             let model = schema.find_model(&forward.to).expect(STATE_ERROR);
             let name = backward.to.camel_case();
 
-            if let Some(_) = model.find_field(&name) {
+            if model.find_field(&name).is_some() {
                 let source_model = schema.find_model(&backward.to).expect(STATE_ERROR);
                 let source_field = source_model
                     .related_field(&forward.to, &forward.name, "")
@@ -286,7 +288,7 @@ impl Standardiser {
 
                 if !back_field_exists {
                     // We only add back relations for unnamed relations.
-                    if rel.name.len() == 0 {
+                    if rel.name.is_empty() {
                         fields.push((
                             // Forward
                             rel.clone(),
@@ -360,10 +362,10 @@ impl Standardiser {
                         .expect(STATE_ERROR);
 
                     if let dml::FieldType::Relation(related_rel) = &related_field.field_type {
-                        if rel.name.len() == 0
-                            && rel.to_fields.len() > 0
+                        if rel.name.is_empty()
+                            && !rel.to_fields.is_empty()
                             // Tie is used to prevent duplicates on n:m relation.
-                            && (related_rel.to_fields.len() == 0 || tie(&model, &field, &related_model, &related_field))
+                            && (related_rel.to_fields.is_empty() || tie(&model, &field, &related_model, &related_field))
                         {
                             rels.push((model.name.clone(), field.name.clone(), rel.clone()))
                         }

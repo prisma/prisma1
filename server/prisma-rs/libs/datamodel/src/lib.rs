@@ -174,7 +174,7 @@ pub fn parse_with_formatted_error(datamodel_string: &str, file_name: &str) -> Re
             let mut buffer = std::io::Cursor::new(Vec::<u8>::new());
 
             for error in errs.to_iter() {
-                writeln!(&mut buffer, "").expect("Failed to render error.");
+                writeln!(&mut buffer).expect("Failed to render error.");
                 error
                     .pretty_print(&mut buffer, file_name, datamodel_string)
                     .expect("Failed to render error.");

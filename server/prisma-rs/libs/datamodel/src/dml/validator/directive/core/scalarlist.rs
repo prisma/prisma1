@@ -8,6 +8,7 @@ impl DirectiveValidator<dml::Field> for ScalarListDirectiveValidator {
     fn directive_name(&self) -> &'static str {
         &"scalarList"
     }
+
     fn validate_and_apply(&self, args: &mut Args, obj: &mut dml::Field) -> Result<(), Error> {
         // TODO: Throw when field is not of type scalar and arity is list.
         // TODO: We can probably lift this pattern to a macro.
@@ -17,7 +18,7 @@ impl DirectiveValidator<dml::Field> for ScalarListDirectiveValidator {
             Err(err) => return self.parser_error(&err),
         }
 
-        return Ok(());
+        Ok(())
     }
 
     fn serialize(&self, obj: &dml::Field, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {

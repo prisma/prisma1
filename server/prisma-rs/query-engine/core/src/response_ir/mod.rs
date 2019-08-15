@@ -52,16 +52,16 @@ pub enum Item {
 }
 
 /// An IR builder utility
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ResultIrBuilder(Vec<ResultPair>);
 
 impl ResultIrBuilder {
     pub fn new() -> Self {
-        Self(vec![])
+        Self::default()
     }
 
     /// Add a single query result to the builder
-    pub fn add(mut self, q: ResultPair) -> Self {
+    pub fn push(mut self, q: ResultPair) -> Self {
         self.0.push(q);
         self
     }

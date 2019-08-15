@@ -24,7 +24,7 @@ impl GqlFieldRenderer {
 
     fn render_output_field(&self, field: FieldRef, ctx: RenderContext) -> (String, RenderContext) {
         let (rendered_args, ctx) = self.render_arguments(&field.arguments, ctx);
-        let rendered_args = if rendered_args.len() == 0 {
+        let rendered_args = if rendered_args.is_empty() {
             "".into()
         } else if rendered_args.len() > 1 {
             // Multiline - double indent.
@@ -46,7 +46,7 @@ impl GqlFieldRenderer {
         (format!("{}{}: {}", field.name, rendered_args, rendered_type), ctx)
     }
 
-    fn render_arguments(&self, args: &Vec<Argument>, ctx: RenderContext) -> (Vec<String>, RenderContext) {
+    fn render_arguments(&self, args: &[Argument], ctx: RenderContext) -> (Vec<String>, RenderContext) {
         args.iter().fold((vec![], ctx), |(mut prev, ctx), arg| {
             let (rendered, ctx) = self.render_argument(arg, ctx);
 

@@ -13,7 +13,7 @@ pub enum SortOrder {
 
 impl SortOrder {
     /// "ASC" / "DESC"
-    pub fn abbreviated(&self) -> &'static str {
+    pub fn abbreviated(self) -> &'static str {
         match self {
             SortOrder::Ascending => "ASC",
             SortOrder::Descending => "DESC",

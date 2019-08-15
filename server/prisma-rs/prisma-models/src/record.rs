@@ -79,16 +79,16 @@ impl Record {
         }
     }
 
-    pub fn collect_id(&self, field_names: &Vec<String>, id_field: &str) -> DomainResult<GraphqlId> {
+    pub fn collect_id(&self, field_names: &[String], id_field: &str) -> DomainResult<GraphqlId> {
         self.get_field_value(field_names, id_field)
-            .and_then(|raw| GraphqlId::try_from(raw))
+            .and_then(GraphqlId::try_from)
     }
 
-    pub fn get_field_value(&self, field_names: &Vec<String>, field: &str) -> DomainResult<&PrismaValue> {
+    pub fn get_field_value(&self, field_names: &[String], field: &str) -> DomainResult<&PrismaValue> {
         let index = field_names
             .iter()
             .position(|r| r == field)
-            .map(|i| Ok(i))
+            .map(Ok)
             .unwrap_or_else(|| {
                 Err(Error::FieldNotFound {
                     name: field.to_string(),

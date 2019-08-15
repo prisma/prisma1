@@ -19,7 +19,7 @@ fn should_error_if_default_value_for_related() {
     errors.assert_is(ValidationError::new_directive_validation_error(
         "Cannot set a default value on a relation field.",
         "default",
-        &Span::new(53, 64),
+        Span::new(53, 64),
     ));
 }
 
@@ -37,7 +37,7 @@ fn should_error_if_default_value_for_list() {
     errors.assert_is(ValidationError::new_directive_validation_error(
         "Cannot set a default value on list field.",
         "default",
-        &Span::new(60, 78),
+        Span::new(60, 78),
     ));
 }
 
@@ -55,7 +55,7 @@ fn should_error_if_default_value_type_missmatch() {
     errors.assert_is(ValidationError::new_directive_validation_error(
         "Expected a String value, but received numeric value \"3\".",
         "default",
-        &Span::new(66, 67),
+        Span::new(66, 67),
     ));
 }
 
@@ -73,6 +73,6 @@ fn should_error_if_default_value_parser_error() {
     errors.assert_is(ValidationError::new_directive_validation_error(
         "Expected a datetime value, but failed while parsing \"Hugo\": input contains invalid characters.",
         "default",
-        &Span::new(68, 74),
+        Span::new(68, 74),
     ));
 }

@@ -7,19 +7,25 @@ pub struct LowerDmlToAst {
     directives: DirectiveBox,
 }
 
-impl LowerDmlToAst {
-    /// Creates a new instance, with all builtin directives registered.
-    pub fn new() -> LowerDmlToAst {
-        LowerDmlToAst {
+impl Default for LowerDmlToAst {
+    fn default() -> Self {
+        Self {
             directives: DirectiveBox::new(),
         }
+    }
+}
+
+impl LowerDmlToAst {
+    /// Creates a new instance, with all builtin directives registered.
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Creates a new instance, with all builtin directives and
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(sources: &Vec<Box<configuration::Source>>) -> LowerDmlToAst {
+    pub fn with_sources(sources: &[Box<dyn configuration::Source>]) -> LowerDmlToAst {
         LowerDmlToAst {
             directives: DirectiveBox::with_sources(sources),
         }
@@ -67,7 +73,7 @@ impl LowerDmlToAst {
 
         Ok(ast::Model {
             name: ast::Identifier::new(&model.name),
-            fields: fields,
+            fields,
             directives: self.directives.model.serialize(model, datamodel)?,
             documentation: model.documentation.clone().map(|text| ast::Comment { text }),
             span: ast::Span::empty(),
@@ -99,7 +105,7 @@ impl LowerDmlToAst {
     ) -> Result<ast::Field, ErrorCollection> {
         Ok(ast::Field {
             name: ast::Identifier::new(&field.name),
-            arity: self.lower_field_arity(&field.arity),
+            arity: self.lower_field_arity(field.arity),
             default_value: field.default_value.clone().map(|v| v.into()),
             directives: self.directives.field.serialize(field, datamodel)?,
             field_type: self.lower_type(&field.field_type, field, model, &datamodel),
@@ -109,7 +115,7 @@ impl LowerDmlToAst {
     }
 
     /// Internal: Lowers a field's arity.
-    fn lower_field_arity(&self, field_arity: &dml::FieldArity) -> ast::FieldArity {
+    fn lower_field_arity(&self, field_arity: dml::FieldArity) -> ast::FieldArity {
         match field_arity {
             dml::FieldArity::Required => ast::FieldArity::Required,
             dml::FieldArity::Optional => ast::FieldArity::Optional,

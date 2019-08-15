@@ -25,7 +25,7 @@ impl Builder<WriteQuery> for CreateBuilder {
         let data_argument = self.field.arguments.lookup("data").unwrap();
         let data_map: ParsedInputMap = data_argument.value.try_into()?;
 
-        Self::build_from(model, data_map).map(|cr| WriteQuery::Root(name, alias, RootWriteQuery::CreateRecord(cr)))
+        Self::build_from(model, data_map).map(|cr| WriteQuery::Root(name, alias, RootWriteQuery::CreateRecord(Box::new(cr))))
     }
 }
 
@@ -35,8 +35,8 @@ impl CreateBuilder {
         let mut non_list_args = create_args.non_list;
         non_list_args.add_datetimes(Arc::clone(&model));
         Ok(CreateRecord {
-            model: model,
-            non_list_args: non_list_args,
+            model,
+            non_list_args,
             list_args: create_args.list,
             nested_writes: create_args.nested,
         })

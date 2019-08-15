@@ -87,7 +87,7 @@ impl<'a> ObjectTypeBuilder<'a> {
 
     pub fn map_field(&self, model_field: &ModelField) -> Field {
         field(
-            model_field.name().clone(),
+            model_field.name(),
             self.many_records_field_arguments(&model_field),
             self.map_output_type(&model_field),
             None,

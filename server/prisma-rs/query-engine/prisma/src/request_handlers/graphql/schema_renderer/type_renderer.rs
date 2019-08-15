@@ -39,7 +39,7 @@ impl<'a> GqlTypeRenderer<'a> {
             }
             InputType::Opt(ref opt) => {
                 let (substring, subctx) = self.render_input_type(opt, ctx);
-                (substring.trim_end_matches("!").to_owned(), subctx)
+                (substring.trim_end_matches('!').to_owned(), subctx)
             }
             InputType::Scalar(ScalarType::Enum(et)) => {
                 let (_, subctx) = et.into_renderer().render(ctx);
@@ -80,7 +80,7 @@ impl<'a> GqlTypeRenderer<'a> {
             }
             OutputType::Opt(ref opt) => {
                 let (substring, subctx) = self.render_output_type(opt, ctx);
-                (substring.trim_end_matches("!").to_owned(), subctx)
+                (substring.trim_end_matches('!').to_owned(), subctx)
             }
             OutputType::Scalar(ScalarType::Enum(et)) => {
                 let (_, subctx) = et.into_renderer().render(ctx);

@@ -92,13 +92,16 @@ pub enum ConnectorError {
     RecordsNotConnected {
         relation_name: String,
         parent_name: String,
-        parent_where: Option<RecordFinderInfo>,
+        parent_where: Option<Box<RecordFinderInfo>>,
         child_name: String,
-        child_where: Option<RecordFinderInfo>,
+        child_where: Option<Box<RecordFinderInfo>>,
     },
 
     #[fail(display = "Conversion error: {}", _0)]
     ConversionError(Error),
+
+    #[fail(display = "Conversion error: {}", _0)]
+    InternalConversionError(String),
 
     #[fail(display = "Database creation error: {}", _0)]
     DatabaseCreationError(&'static str),

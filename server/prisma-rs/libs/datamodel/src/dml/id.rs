@@ -13,7 +13,7 @@ pub enum IdStrategy {
 }
 
 impl FromStrAndSpan for IdStrategy {
-    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, ValidationError> {
+    fn from_str_and_span(s: &str, span: ast::Span) -> Result<Self, ValidationError> {
         match s {
             "AUTO" => Ok(IdStrategy::Auto),
             "NONE" => Ok(IdStrategy::None),

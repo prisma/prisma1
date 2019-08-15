@@ -14,9 +14,11 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
         if let dml::FieldType::Relation(relation_info) = &mut field.field_type {
             if let Ok(name_arg) = args.default_arg("name") {
                 let name = name_arg.as_str()?;
-                if name.len() == 0 {
-                    return self.error("A relation cannot have an empty name.", &name_arg.span());
+
+                if name.is_empty() {
+                    return self.error("A relation cannot have an empty name.", name_arg.span());
                 }
+
                 relation_info.name = name;
             }
 
@@ -27,9 +29,10 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
             if let Ok(on_delete) = args.arg("onDelete") {
                 relation_info.on_delete = on_delete.parse_literal::<dml::OnDeleteStrategy>()?;
             }
-            return Ok(());
+
+            Ok(())
         } else {
-            return self.error("Invalid field type, not a relation.", &args.span());
+            self.error("Invalid field type, not a relation.", args.span())
         }
     }
 
@@ -39,9 +42,11 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
 
             // These unwraps must be safe.
             let parent_model = datamodel.find_model_by_field_ref(field).unwrap();
+
             let related_model = datamodel
                 .find_model(&relation_info.to)
-                .expect(&format!("Related model not found: {}.", relation_info.to));
+                .unwrap_or_else(|| panic!("Related model not found: {}.", relation_info.to));
+
             let mut all_related_ids: Vec<&String> = related_model.id_field_names().collect();
 
             if !relation_info.name.is_empty()
@@ -53,7 +58,13 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
             // We only add the references arg,
             // if we have references
             // and we do only reference the IDs, which is the default case.
-            if relation_info.to_fields.len() > 0 && relation_info.to_fields.clone().sort() != all_related_ids.sort() {
+
+            let mut relation_fields: Vec<&String> = relation_info.to_fields.iter().collect();
+
+            relation_fields.sort();
+            all_related_ids.sort();
+
+            if !relation_info.to_fields.is_empty() && relation_fields != all_related_ids {
                 let mut related_fields: Vec<ast::Value> = Vec::new();
 
                 for related_field in &relation_info.to_fields {
@@ -70,8 +81,8 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
                 ));
             }
 
-            if args.len() > 0 {
-                return Ok(Some(ast::Directive::new(self.directive_name(), args)));
+            if !args.is_empty() {
+                return Ok(Some(ast::Directive::new(self.directive_name(), args)))
             }
         }
 

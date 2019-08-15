@@ -13,27 +13,27 @@ pub struct SourceConfig {
     pub documentation: Option<String>,
 }
 
-pub fn render_sources_to_json_value(sources: &Vec<Box<configuration::Source>>) -> serde_json::Value {
+pub fn render_sources_to_json_value(sources: &[Box<configuration::Source>]) -> serde_json::Value {
     let res = sources_to_json(sources);
     serde_json::to_value(&res).expect("Failed to render JSON.")
 }
 
-pub fn render_sources_to_json(sources: &Vec<Box<configuration::Source>>) -> String {
+pub fn render_sources_to_json(sources: &[Box<configuration::Source>]) -> String {
     let res = sources_to_json(sources);
     serde_json::to_string_pretty(&res).expect("Failed to render JSON.")
 }
 
-fn sources_to_json(sources: &Vec<Box<configuration::Source>>) -> Vec<SourceConfig> {
+fn sources_to_json(sources: &[Box<dyn configuration::Source>]) -> Vec<SourceConfig> {
     let mut res: Vec<SourceConfig> = Vec::new();
 
     for source in sources {
-        res.push(source_to_json(source));
+        res.push(source_to_json(&**source));
     }
 
     res
 }
 
-fn source_to_json(source: &Box<configuration::Source>) -> SourceConfig {
+fn source_to_json(source: &dyn configuration::Source) -> SourceConfig {
     SourceConfig {
         name: source.name().clone(),
         connector_type: String::from(source.connector_type()),
@@ -45,19 +45,19 @@ fn source_to_json(source: &Box<configuration::Source>) -> SourceConfig {
 
 pub fn sources_from_json_value_with_plugins(
     json: serde_json::Value,
-    source_definitions: Vec<Box<configuration::SourceDefinition>>,
+    source_definitions: Vec<Box<dyn configuration::SourceDefinition>>,
 ) -> Vec<Box<configuration::Source>> {
     let json_sources = serde_json::from_value::<Vec<SourceConfig>>(json).expect("Failed to parse JSON");
     sources_from_vec(json_sources, source_definitions)
 }
 
-pub fn sources_from_json(json: &str) -> Vec<Box<configuration::Source>> {
+pub fn sources_from_json(json: &str) -> Vec<Box<dyn configuration::Source>> {
     sources_from_json_with_plugins(json, Vec::new())
 }
 
 pub fn sources_from_json_with_plugins(
     json: &str,
-    source_definitions: Vec<Box<configuration::SourceDefinition>>,
+    source_definitions: Vec<Box<dyn configuration::SourceDefinition>>,
 ) -> Vec<Box<configuration::Source>> {
     let json_sources = serde_json::from_str::<Vec<SourceConfig>>(&json).expect("Failed to parse JSON");
     sources_from_vec(json_sources, source_definitions)
@@ -65,7 +65,7 @@ pub fn sources_from_json_with_plugins(
 
 fn sources_from_vec(
     sources: Vec<SourceConfig>,
-    source_definitions: Vec<Box<configuration::SourceDefinition>>,
+    source_definitions: Vec<Box<dyn configuration::SourceDefinition>>,
 ) -> Vec<Box<configuration::Source>> {
     let mut res = Vec::new();
     let mut source_loader = configuration::SourceLoader::new();

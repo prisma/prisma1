@@ -147,9 +147,10 @@ impl ReadQueryExecutor {
     /// - ID field
     fn inject_required_fields(mut selected_fields: SelectedFields) -> SelectedFields {
         let id_field = selected_fields.model().fields().id();
-        if let None = selected_fields.scalar.iter().find(|f| f.field.name == id_field.name) {
-            selected_fields.add_scalar(id_field.into());
-        };
+
+        if selected_fields.scalar.iter().find(|f| f.field.name == id_field.name).is_none() {
+            selected_fields.add_scalar(id_field);
+        }
 
         selected_fields
     }

@@ -1,6 +1,5 @@
 use super::MigrationDatabase;
 use super::SqlFamily;
-#[allow(unused, dead_code)]
 use barrel::types;
 use chrono::*;
 use migration_connector::*;
@@ -246,15 +245,15 @@ fn parse_rows_new(result_set: ResultSet) -> Vec<Migration> {
             Migration {
                 name: row[NAME_COLUMN].to_string().unwrap(),
                 revision: row[REVISION_COLUMN].as_i64().unwrap() as usize,
-                datamodel: datamodel,
+                datamodel,
                 status: MigrationStatus::from_str(row[STATUS_COLUMN].to_string().unwrap()),
                 applied: row[APPLIED_COLUMN].as_i64().unwrap() as usize,
                 rolled_back: row[ROLLED_BACK_COLUMN].as_i64().unwrap() as usize,
-                datamodel_steps: datamodel_steps,
+                datamodel_steps,
                 database_migration: database_migration_json,
-                errors: errors,
+                errors,
                 started_at: convert_parameterized_date_value(&row[STARTED_AT_COLUMN]),
-                finished_at: finished_at,
+                finished_at,
             }
         })
         .collect()

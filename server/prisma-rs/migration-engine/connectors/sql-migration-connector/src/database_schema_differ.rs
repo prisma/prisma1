@@ -84,7 +84,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
                 if !changes.is_empty() {
                     let update = AlterTable {
                         table: previous_table.name.clone(),
-                        changes: changes,
+                        changes,
                     };
                     result.push(update);
                 }

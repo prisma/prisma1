@@ -11,7 +11,7 @@ pub enum ScalarListStrategy {
 }
 
 impl FromStrAndSpan for ScalarListStrategy {
-    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, ValidationError> {
+    fn from_str_and_span(s: &str, span: ast::Span) -> Result<Self, ValidationError> {
         match s {
             "EMBEDDED" => Ok(ScalarListStrategy::Embedded),
             "RELATION" => Ok(ScalarListStrategy::Relation),

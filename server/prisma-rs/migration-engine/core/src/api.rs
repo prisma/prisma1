@@ -37,7 +37,10 @@ where
 // liking them in the exported class.
 pub trait GenericApi: Send + Sync + 'static {
     fn apply_migration(&self, input: &ApplyMigrationInput) -> crate::Result<MigrationStepsResultOutput>;
-    fn calculate_database_steps(&self, input: &CalculateDatabaseStepsInput) -> crate::Result<MigrationStepsResultOutput>;
+    fn calculate_database_steps(
+        &self,
+        input: &CalculateDatabaseStepsInput,
+    ) -> crate::Result<MigrationStepsResultOutput>;
     fn calculate_datamodel(&self, input: &CalculateDatamodelInput) -> crate::Result<CalculateDatamodelOutput>;
     fn infer_migration_steps(&self, input: &InferMigrationStepsInput) -> crate::Result<MigrationStepsResultOutput>;
     fn list_migrations(&self, input: &serde_json::Value) -> crate::Result<Vec<ListMigrationStepsOutput>>;
@@ -57,7 +60,10 @@ where
         self.handle_command::<ApplyMigrationCommand>(input)
     }
 
-    fn calculate_database_steps(&self, input: &CalculateDatabaseStepsInput) -> crate::Result<MigrationStepsResultOutput> {
+    fn calculate_database_steps(
+        &self,
+        input: &CalculateDatabaseStepsInput,
+    ) -> crate::Result<MigrationStepsResultOutput> {
         self.handle_command::<CalculateDatabaseStepsCommand>(input)
     }
 

@@ -47,8 +47,7 @@ pub fn apply_migration(api: &dyn GenericApi, steps: Vec<MigrationStep>, migratio
     introspect_database(api)
 }
 
-pub fn unapply_migration(api: &dyn GenericApi) -> DatabaseSchema
-{
+pub fn unapply_migration(api: &dyn GenericApi) -> DatabaseSchema {
     let input = UnapplyMigrationInput {};
     let _ = api.unapply_migration(&input);
 

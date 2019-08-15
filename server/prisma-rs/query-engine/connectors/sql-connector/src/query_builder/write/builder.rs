@@ -1,6 +1,7 @@
 use crate::error::SqlError;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
+use std::convert::TryFrom;
 
 pub struct WriteQueryBuilder;
 
@@ -18,11 +19,8 @@ impl WriteQueryBuilder {
                 Some(id)
             }
             Some(prisma_value) => Some(
-                prisma_value
-                    .as_graphql_id()
-                    .expect("Could not convert prisma value to graphqlid"),
+                GraphqlId::try_from(prisma_value).expect("Could not convert prisma value to graphqlid"),
             ),
-            _ => None,
         };
 
         let fields: Vec<&Field> = model

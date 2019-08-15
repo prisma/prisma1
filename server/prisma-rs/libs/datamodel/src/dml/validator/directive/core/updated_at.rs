@@ -8,21 +8,22 @@ impl DirectiveValidator<dml::Field> for UpdatedAtDirectiveValidator {
     fn directive_name(&self) -> &'static str {
         &"updatedAt"
     }
+
     fn validate_and_apply(&self, args: &mut Args, obj: &mut dml::Field) -> Result<(), Error> {
         if obj.field_type != dml::FieldType::Base(dml::ScalarType::DateTime) {
             return self.error(
                 "Fields that are marked with @updatedAt must be of type DateTime.",
-                &args.span(),
+                args.span(),
             );
         }
 
         if obj.arity == dml::FieldArity::List {
-            return self.error("Fields that are marked with @updatedAt can not be lists.", &args.span());
+            return self.error("Fields that are marked with @updatedAt can not be lists.", args.span());
         }
 
         obj.is_updated_at = true;
 
-        return Ok(());
+        Ok(())
     }
 
     fn serialize(&self, field: &dml::Field, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {

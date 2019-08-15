@@ -7,7 +7,7 @@ const PROVIDER_KEY: &str = "provider";
 const OUTPUT_KEY: &str = "output";
 const PLATFORMS_KEY: &str = "platforms";
 const PINNED_PLATFORM_KEY: &str = "pinnedPlatform";
-const FIRST_CLASS_PROPERTIES: &'static [&'static str] = &[PROVIDER_KEY, OUTPUT_KEY, PLATFORMS_KEY, PINNED_PLATFORM_KEY];
+const FIRST_CLASS_PROPERTIES: &[&str] = &[PROVIDER_KEY, OUTPUT_KEY, PLATFORMS_KEY, PINNED_PLATFORM_KEY];
 
 impl GeneratorLoader {
     pub fn lift_generator(ast_generator: &ast::GeneratorConfig) -> Result<Generator, ValidationError> {
@@ -29,7 +29,7 @@ impl GeneratorLoader {
         let pinned_platform = args.arg(PINNED_PLATFORM_KEY).and_then(|x| x.as_str()).ok();
 
         for prop in &ast_generator.properties {
-            let is_first_class_prop = FIRST_CLASS_PROPERTIES.iter().find(|k| *k == &prop.name.name).is_some();
+            let is_first_class_prop = FIRST_CLASS_PROPERTIES.iter().any(|k| *k == prop.name.name);
             if is_first_class_prop {
                 continue;
             }
@@ -39,10 +39,10 @@ impl GeneratorLoader {
 
         Ok(Generator {
             name: ast_generator.name.name.clone(),
-            provider: provider,
-            output: output,
-            platforms: platforms,
-            pinned_platform: pinned_platform,
+            provider,
+            output,
+            platforms,
+            pinned_platform,
             config: properties,
             documentation: ast_generator.documentation.clone().map(|comment| comment.text),
         })
@@ -87,16 +87,15 @@ impl GeneratorLoader {
         let mut errors = ErrorCollection::new();
 
         for ast_obj in &ast_schema.models {
-            match ast_obj {
-                ast::Top::Generator(gen) => match Self::lift_generator(&gen) {
+            if let ast::Top::Generator(gen) = ast_obj {
+                match Self::lift_generator(&gen) {
                     Ok(loaded_gen) => generators.push(loaded_gen),
                     // Lift error.
                     Err(ValidationError::ArgumentNotFound { argument_name, span }) => errors.push(
-                        ValidationError::new_generator_argument_not_found_error(&argument_name, &gen.name.name, &span),
+                        ValidationError::new_generator_argument_not_found_error(&argument_name, &gen.name.name, span),
                     ),
                     Err(err) => errors.push(err),
-                },
-                _ => { /* Non-Source blocks are explicitely ignored by the source loader */ }
+                }
             }
         }
 
@@ -107,7 +106,7 @@ impl GeneratorLoader {
         }
     }
 
-    pub fn add_generators_to_ast(generators: &Vec<Generator>, ast_datamodel: &mut ast::Datamodel) {
+    pub fn add_generators_to_ast(generators: &[Generator], ast_datamodel: &mut ast::Datamodel) {
         let mut models: Vec<ast::Top> = Vec::new();
 
         for generator in generators {

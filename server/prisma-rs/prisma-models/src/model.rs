@@ -44,7 +44,7 @@ impl ModelTemplate {
             is_embedded: self.is_embedded,
             fields: OnceCell::new(),
             manifestation: self.manifestation,
-            internal_data_model: internal_data_model,
+            internal_data_model,
         });
 
         let fields = Fields::new(

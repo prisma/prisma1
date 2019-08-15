@@ -11,7 +11,8 @@ impl DirectiveValidator<dml::Field> for UniqueDirectiveValidator {
 
     fn validate_and_apply(&self, _args: &mut Args, obj: &mut dml::Field) -> Result<(), Error> {
         obj.is_unique = true;
-        return Ok(());
+
+        Ok(())
     }
 
     fn serialize(&self, field: &dml::Field, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {

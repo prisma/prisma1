@@ -1,6 +1,6 @@
 use crate::migration_engine::MigrationEngine;
-use migration_connector::*;
 use failure::Fail;
+use migration_connector::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::convert::From;
@@ -32,7 +32,7 @@ pub enum CommandError {
     Generic { code: i64, error: String },
 
     #[fail(display = "Error in command input. (code: {}, error: {})", code, error)]
-    Input { code: i64, error: String }
+    Input { code: i64, error: String },
 }
 
 impl From<datamodel::errors::ErrorCollection> for CommandError {

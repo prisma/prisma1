@@ -1,8 +1,8 @@
-use failure::{Error as Schwerror, Fail};
-use sql_migration_connector::SqlError;
-use migration_connector::ConnectorError;
 use crate::commands::CommandError;
 use datamodel::errors::ErrorCollection;
+use failure::{Error as Schwerror, Fail};
+use migration_connector::ConnectorError;
+use sql_migration_connector::SqlError;
 use tokio_threadpool::BlockingError;
 
 #[derive(Debug, Fail)]

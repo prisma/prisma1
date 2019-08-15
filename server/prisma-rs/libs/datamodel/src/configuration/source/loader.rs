@@ -4,16 +4,15 @@ use crate::common::argument::Arguments;
 use crate::errors::{ErrorCollection, ValidationError};
 
 /// Helper struct to load and validate source configuration blocks.
+#[derive(Default)]
 pub struct SourceLoader {
     source_declarations: Vec<Box<SourceDefinition>>,
 }
 
 impl SourceLoader {
     /// Creates a new, empty source loader.
-    pub fn new() -> SourceLoader {
-        SourceLoader {
-            source_declarations: vec![],
-        }
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Adds a source definition to this loader.
@@ -29,7 +28,7 @@ impl SourceLoader {
         let provider = provider_arg.as_str()?;
 
         if let Ok(arg) = args.arg("enabled") {
-            if false == arg.as_bool()? {
+            if !(arg.as_bool()?) {
                 // This source was disabled.
                 return Ok(None);
             }
@@ -52,7 +51,7 @@ impl SourceLoader {
 
         Err(ValidationError::new_source_not_known_error(
             &provider,
-            &provider_arg.span(),
+            provider_arg.span(),
         ))
     }
 
@@ -63,17 +62,16 @@ impl SourceLoader {
         let mut errors = ErrorCollection::new();
 
         for ast_obj in &ast_schema.models {
-            match ast_obj {
-                ast::Top::Source(src) => match self.load_source(&src) {
+            if let ast::Top::Source(src) = ast_obj {
+                match self.load_source(&src) {
                     Ok(Some(loaded_src)) => sources.push(loaded_src),
                     Ok(None) => { /* Source was disabled. */ }
                     // Lift error to source.
                     Err(ValidationError::ArgumentNotFound { argument_name, span }) => errors.push(
-                        ValidationError::new_source_argument_not_found_error(&argument_name, &src.name.name, &span),
+                        ValidationError::new_source_argument_not_found_error(&argument_name, &src.name.name, span),
                     ),
                     Err(err) => errors.push(err),
-                },
-                _ => { /* Non-Source blocks are explicitely ignored by the source loader */ }
+                }
             }
         }
 

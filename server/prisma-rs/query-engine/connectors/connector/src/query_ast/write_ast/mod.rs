@@ -37,10 +37,10 @@ impl ModelExtractor for WriteQuery {
 
 #[derive(Debug, Clone)]
 pub enum RootWriteQuery {
-    CreateRecord(CreateRecord),
-    UpdateRecord(UpdateRecord),
+    CreateRecord(Box<CreateRecord>),
+    UpdateRecord(Box<UpdateRecord>),
     DeleteRecord(DeleteRecord),
-    UpsertRecord(UpsertRecord),
+    UpsertRecord(Box<UpsertRecord>),
     UpdateManyRecords(UpdateManyRecords),
     DeleteManyRecords(DeleteManyRecords),
     ResetData(ResetData),
@@ -62,9 +62,9 @@ impl RootWriteQuery {
 
 #[derive(Debug, Clone)]
 pub enum NestedWriteQuery {
-    CreateRecord(NestedCreateRecord),
-    UpdateRecord(NestedUpdateRecord),
-    UpsertRecord(NestedUpsertRecord),
+    CreateRecord(Box<NestedCreateRecord>),
+    UpdateRecord(Box<NestedUpdateRecord>),
+    UpsertRecord(Box<NestedUpsertRecord>),
     DeleteRecord(NestedDeleteRecord),
     Connect(NestedConnect),
     Disconnect(NestedDisconnect),

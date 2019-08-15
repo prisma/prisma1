@@ -30,7 +30,7 @@ impl GraphQLProtocolAdapter {
                 .definitions
                 .into_iter()
                 .find(|def| Self::matches_operation(def, op))
-                .ok_or(QueryValidationError(format!(
+                .ok_or_else(|| QueryValidationError(format!(
                     "Operation '{}' does not match any query.",
                     op
                 )))
@@ -39,7 +39,7 @@ impl GraphQLProtocolAdapter {
             None => gql_doc
                 .definitions
                 .into_iter()
-                .map(|def| Self::convert_definition(def))
+                .map(Self::convert_definition)
                 .collect::<PrismaResult<Vec<Operation>>>(),
         }?;
 
@@ -139,7 +139,7 @@ impl GraphQLProtocolAdapter {
             Value::List(values) => {
                 let values: Vec<QueryValue> = values
                     .into_iter()
-                    .map(|v| Self::convert_value(v))
+                    .map(Self::convert_value)
                     .collect::<PrismaResult<Vec<QueryValue>>>()?;
 
                 Ok(QueryValue::List(values))

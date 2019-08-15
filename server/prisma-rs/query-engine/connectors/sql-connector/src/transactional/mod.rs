@@ -151,7 +151,7 @@ pub trait Transaction: Queryable {
             parent_name: parent_field.model().name.clone(),
             parent_where: None,
             child_name: parent_field.related_model().name.clone(),
-            child_where: selector.as_ref().map(RecordFinderInfo::from),
+            child_where: selector.as_ref().map(RecordFinderInfo::from).map(Box::new),
         })?;
 
         Ok(id)

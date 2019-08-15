@@ -11,11 +11,11 @@ impl DirectiveValidator<dml::Field> for DefaultDirectiveValidator {
     fn validate_and_apply(&self, args: &mut Args, field: &mut dml::Field) -> Result<(), Error> {
         // If we allow list default values, we need to adjust the types below properly for that case.
         if field.arity == dml::FieldArity::List {
-            return self.error("Cannot set a default value on list field.", &args.span());
+            return self.error("Cannot set a default value on list field.", args.span());
         }
 
-        if let dml::FieldType::Base(scalar_type) = &field.field_type {
-            match args.default_arg("value")?.as_type(&scalar_type) {
+        if let dml::FieldType::Base(scalar_type) = field.field_type {
+            match args.default_arg("value")?.as_type(scalar_type) {
                 // TODO: Here, a default value directive can override the default value syntax sugar.
                 Ok(value) => field.default_value = Some(value),
                 Err(err) => return self.parser_error(&err),
@@ -27,10 +27,10 @@ impl DirectiveValidator<dml::Field> for DefaultDirectiveValidator {
                 Err(err) => return self.parser_error(&err),
             }
         } else {
-            return self.error("Cannot set a default value on a relation field.", &args.span());
+            return self.error("Cannot set a default value on a relation field.", args.span());
         }
 
-        return Ok(());
+        Ok(())
     }
 
     fn serialize(&self, field: &dml::Field, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {

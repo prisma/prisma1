@@ -21,7 +21,7 @@ impl Precheck {
                     top.name(),
                     top.get_type(),
                     existing.get_type(),
-                    &top.identifier().span,
+                    top.identifier().span,
                 )
             };
             match top {
@@ -60,10 +60,10 @@ impl Precheck {
     }
 
     fn assert_is_not_a_reserved_scalar_type(identifier: &ast::Identifier, errors: &mut ErrorCollection) {
-        if let Ok(_) = dml::ScalarType::from_str_and_span(&identifier.name, &identifier.span) {
+        if dml::ScalarType::from_str_and_span(&identifier.name, identifier.span).is_ok() {
             errors.push(ValidationError::new_reserved_scalar_type_error(
                 &identifier.name,
-                &identifier.span,
+                identifier.span,
             ));
         }
     }
@@ -72,7 +72,7 @@ impl Precheck {
         let mut checker = DuplicateChecker::new();
         for value in &enum_type.values {
             checker.check_if_duplicate_exists(value, |_| {
-                ValidationError::new_duplicate_enum_value_error(&enum_type.name.name, &value.name, &value.span)
+                ValidationError::new_duplicate_enum_value_error(&enum_type.name.name, &value.name, value.span)
             });
         }
         errors.append(&mut checker.errors());
@@ -82,7 +82,7 @@ impl Precheck {
         let mut checker = DuplicateChecker::new();
         for field in &model.fields {
             checker.check_if_duplicate_exists(field, |_| {
-                ValidationError::new_duplicate_field_error(&model.name.name, &field.name.name, &field.identifier().span)
+                ValidationError::new_duplicate_field_error(&model.name.name, &field.name.name, field.identifier().span)
             });
         }
         errors.append(&mut checker.errors());
@@ -95,7 +95,7 @@ impl Precheck {
                 ValidationError::new_duplicate_config_key_error(
                     &format!("generator configuration \"{}\"", config.name.name),
                     &arg.name.name,
-                    &arg.identifier().span,
+                    arg.identifier().span,
                 )
             });
         }
@@ -109,7 +109,7 @@ impl Precheck {
                 ValidationError::new_duplicate_config_key_error(
                     &format!("datasource configuration \"{}\"", config.name.name),
                     &arg.name.name,
-                    &arg.identifier().span,
+                    arg.identifier().span,
                 )
             });
         }

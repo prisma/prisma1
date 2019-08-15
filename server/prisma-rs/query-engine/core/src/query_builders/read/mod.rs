@@ -30,7 +30,7 @@ impl Builder<ReadQuery> for ReadQueryBuilder {
 }
 
 pub fn collect_selection_order(from: &[ParsedField]) -> Vec<String> {
-    from.into_iter()
+    from.iter()
         .map(|selected_field| {
             selected_field
                 .alias
@@ -46,7 +46,7 @@ pub fn collect_selected_fields(
     parent: Option<RelationFieldRef>,
 ) -> SelectedFields {
     let selected_fields = from
-        .into_iter()
+        .iter()
         .map(|selected_field| {
             let model_field = model.fields().find_from_all(&selected_field.name).unwrap();
             match model_field {
@@ -72,11 +72,9 @@ pub fn collect_nested_queries(from: Vec<ParsedField>, model: &ModelRef) -> Query
                     let model = rf.related_model();
                     let parent = Arc::clone(&rf);
 
-                    Some(ReadQueryBuilder::ReadRelatedRecordsBuilder(ReadRelatedRecordsBuilder::new(
-                        model,
-                        parent,
-                        selected_field,
-                    )))
+                    Some(ReadQueryBuilder::ReadRelatedRecordsBuilder(
+                        ReadRelatedRecordsBuilder::new(model, parent, selected_field),
+                    ))
                 }
             }
         })

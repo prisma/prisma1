@@ -30,7 +30,7 @@ impl Span {
         Span { start: 0, end: 0 }
     }
     /// Creates a new ast::Span from a pest::Span.
-    pub fn from_pest(s: &pest::Span) -> Span {
+    pub fn from_pest(s: pest::Span) -> Span {
         Span {
             start: s.start(),
             end: s.end(),
@@ -150,7 +150,7 @@ impl Argument {
     pub fn new(name: &str, value: Value) -> Argument {
         Argument {
             name: Identifier::new(name),
-            value: value,
+            value,
             span: Span::empty(),
         }
     }
@@ -246,7 +246,7 @@ impl Directive {
     pub fn new(name: &str, arguments: Vec<Argument>) -> Directive {
         Directive {
             name: Identifier::new(name),
-            arguments: arguments,
+            arguments,
             span: Span::empty(),
         }
     }

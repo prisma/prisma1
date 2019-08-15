@@ -66,7 +66,7 @@ impl<'a> DatamodelConverter<'a> {
                         .relations
                         .iter()
                         .find(|r| r.is_for_model_and_field(model, field))
-                        .expect(&format!(
+                        .unwrap_or_else(|| panic!(
                             "Did not find a relation for those for model {} and field {}",
                             model.name, field.name
                         ));
@@ -119,115 +119,113 @@ impl<'a> DatamodelConverter<'a> {
         let mut result = Vec::new();
         for model in datamodel.models() {
             for field in model.fields() {
-                match &field.field_type {
-                    dml::FieldType::Relation(relation_info) => {
-                        let dml::RelationInfo {
-                            to,
-                            to_fields,
-                            name,
-                            on_delete: _,
-                        } = relation_info;
-                        let related_model = datamodel
-                            .find_model(&to)
-                            .expect(&format!("Related model {} not found", to));
+                if let dml::FieldType::Relation(relation_info) = &field.field_type {
+                    let dml::RelationInfo {
+                        to,
+                        to_fields,
+                        name,
+                        ..
+                    } = relation_info;
 
-                        let related_field = related_model
-                            .fields()
-                            .find(|f| match f.field_type {
-                                dml::FieldType::Relation(ref rel_info) => {
-                                    // TODO: i probably don't need to check the the `to`. The name of the relation should be enough. The parser must guarantee that the relation info is set right.
-                                    if &model.name == &related_model.name {
-                                        // SELF RELATIONS
-                                        &rel_info.to == &model.name && &rel_info.name == name && f.name != field.name
-                                    } else {
-                                        // In a normal relation the related field could be named the same hence we omit the last condition from above.
-                                        &rel_info.to == &model.name && &rel_info.name == name
-                                    }
-                                }
-                                _ => false,
-                            })
-                            .expect(&format!(
-                                "Related model for model {} and field {} not found",
-                                model.name, field.name
-                            ))
-                            .clone();
+                    let related_model = datamodel
+                        .find_model(&to)
+                        .unwrap_or_else(|| panic!("Related model {} not found", to));
 
-                        let related_field_info = match &related_field.field_type {
-                            dml::FieldType::Relation(info) => info,
-                            _ => panic!("this was not a relation field"),
-                        };
-
-                        let (model_a, model_b, field_a, field_b) = match () {
-                            _ if &model.name < &related_model.name => (
-                                model.clone(),
-                                related_model.clone(),
-                                field.clone(),
-                                related_field.clone(),
-                            ),
-                            _ if &related_model.name < &model.name => (
-                                related_model.clone(),
-                                model.clone(),
-                                related_field.clone(),
-                                field.clone(),
-                            ),
-                            // SELF RELATION CASE
-                            _ => {
-                                let (field_a, field_b) = if field.name < related_field.name {
-                                    (field.clone(), related_field.clone())
+                    let related_field = related_model
+                        .fields()
+                        .find(|f| match f.field_type {
+                            dml::FieldType::Relation(ref rel_info) => {
+                                // TODO: i probably don't need to check the the `to`. The name of the relation should be enough. The parser must guarantee that the relation info is set right.
+                                if model.name == related_model.name {
+                                    // SELF RELATIONS
+                                    rel_info.to == model.name && &rel_info.name == name && f.name != field.name
                                 } else {
-                                    (related_field.clone(), field.clone())
-                                };
-                                (model.clone(), related_model.clone(), field_a, field_b)
+                                    // In a normal relation the related field could be named the same hence we omit the last condition from above.
+                                    rel_info.to == model.name && &rel_info.name == name
+                                }
                             }
-                        };
-                        let inline_on_model_a = TempManifestationHolder::Inline {
-                            in_table_of_model: model_a.name.clone(),
-                            column: field_a.final_db_name(),
-                        };
-                        let inline_on_model_b = TempManifestationHolder::Inline {
-                            in_table_of_model: model_b.name.clone(),
-                            column: field_b.final_db_name(),
-                        };
-                        let inline_on_this_model = TempManifestationHolder::Inline {
-                            in_table_of_model: model.name.clone(),
-                            column: field.final_db_name(),
-                        };
-                        let inline_on_related_model = TempManifestationHolder::Inline {
-                            in_table_of_model: related_model.name.clone(),
-                            column: related_field.final_db_name(),
-                        };
-
-                        let manifestation = match (field_a.is_list(), field_b.is_list()) {
-                            (true, true) => TempManifestationHolder::Table,
-                            (false, true) => inline_on_model_a,
-                            (true, false) => inline_on_model_b,
-                            // TODO: to_fields is now a list, please fix this line.
-                            (false, false) => match (to_fields.first(), &related_field_info.to_fields.first()) {
-                                (Some(_), None) => inline_on_this_model,
-                                (None, Some(_)) => inline_on_related_model,
-                                (None, None) => {
-                                    if model_a.name < model_b.name {
-                                        inline_on_model_a
-                                    } else {
-                                        inline_on_model_b
-                                    }
-                                }
-                                (Some(_), Some(_)) => {
-                                    panic!("It's not allowed that both sides of a relation specify the inline policy. The field was {} on model {}. The related field was {} on model {}.", field.name, model.name, related_field.name, related_model.name)
-                                }
-                            },
-                        };
-
-                        result.push(TempRelationHolder {
-                            name: name.clone(),
-                            model_a: model_a,
-                            model_b: model_b,
-                            field_a: field_a,
-                            field_b: field_b,
-                            manifestation,
+                            _ => false,
                         })
-                    }
-                    _ => {}
+                        .unwrap_or_else(|| panic!(
+                            "Related model for model {} and field {} not found",
+                            model.name, field.name
+                        ))
+                        .clone();
+
+                    let related_field_info = match &related_field.field_type {
+                        dml::FieldType::Relation(info) => info,
+                        _ => panic!("this was not a relation field"),
+                    };
+
+                    let (model_a, model_b, field_a, field_b) = match () {
+                        _ if model.name < related_model.name => (
+                            model.clone(),
+                            related_model.clone(),
+                            field.clone(),
+                            related_field.clone(),
+                        ),
+                        _ if related_model.name < model.name => (
+                            related_model.clone(),
+                            model.clone(),
+                            related_field.clone(),
+                            field.clone(),
+                        ),
+                        // SELF RELATION CASE
+                        _ => {
+                            let (field_a, field_b) = if field.name < related_field.name {
+                                (field.clone(), related_field.clone())
+                            } else {
+                                (related_field.clone(), field.clone())
+                            };
+                            (model.clone(), related_model.clone(), field_a, field_b)
+                        }
+                    };
+                    let inline_on_model_a = TempManifestationHolder::Inline {
+                        in_table_of_model: model_a.name.clone(),
+                        column: field_a.final_db_name(),
+                    };
+                    let inline_on_model_b = TempManifestationHolder::Inline {
+                        in_table_of_model: model_b.name.clone(),
+                        column: field_b.final_db_name(),
+                    };
+                    let inline_on_this_model = TempManifestationHolder::Inline {
+                        in_table_of_model: model.name.clone(),
+                        column: field.final_db_name(),
+                    };
+                    let inline_on_related_model = TempManifestationHolder::Inline {
+                        in_table_of_model: related_model.name.clone(),
+                        column: related_field.final_db_name(),
+                    };
+
+                    let manifestation = match (field_a.is_list(), field_b.is_list()) {
+                        (true, true) => TempManifestationHolder::Table,
+                        (false, true) => inline_on_model_a,
+                        (true, false) => inline_on_model_b,
+                        // TODO: to_fields is now a list, please fix this line.
+                        (false, false) => match (to_fields.first(), &related_field_info.to_fields.first()) {
+                            (Some(_), None) => inline_on_this_model,
+                            (None, Some(_)) => inline_on_related_model,
+                            (None, None) => {
+                                if model_a.name < model_b.name {
+                                    inline_on_model_a
+                                } else {
+                                    inline_on_model_b
+                                }
+                            }
+                            (Some(_), Some(_)) => {
+                                panic!("It's not allowed that both sides of a relation specify the inline policy. The field was {} on model {}. The related field was {} on model {}.", field.name, model.name, related_field.name, related_model.name)
+                            }
+                        },
+                    };
+
+                    result.push(TempRelationHolder {
+                        name: name.clone(),
+                        model_a,
+                        model_b,
+                        field_a,
+                        field_b,
+                        manifestation,
+                    })
                 }
             }
         }
@@ -346,10 +344,7 @@ impl DatamodelFieldExtensions for dml::Field {
                     _ => TypeIdentifier::String,
                 },
             },
-            dml::FieldType::ConnectorSpecific {
-                base_type: _,
-                connector_type: _,
-            } => unimplemented!("Connector Specific types are not supported here yet"),
+            dml::FieldType::ConnectorSpecific { .. } => unimplemented!("Connector Specific types are not supported here yet"),
         }
     }
 
@@ -386,7 +381,7 @@ impl DatamodelFieldExtensions for dml::Field {
                     dml::IdStrategy::None => IdStrategy::None,
                 };
                 FieldBehaviour::Id {
-                    strategy: strategy,
+                    strategy,
                     sequence: None, // the sequence was just used by the migration engine. Now those models are only used by the query engine. Hence we don't need it anyway.
                 }
             })
@@ -438,11 +433,11 @@ impl DatamodelFieldExtensions for dml::Field {
     fn default_value(&self) -> Option<PrismaValue> {
         self.default_value.as_ref().and_then(|v| match v {
             datamodel::common::PrismaValue::Boolean(x) => Some(PrismaValue::Boolean(*x)),
-            datamodel::common::PrismaValue::Int(x) => Some(PrismaValue::Int(*x as i64)),
-            datamodel::common::PrismaValue::Float(x) => Some(PrismaValue::Float(*x as f64)),
+            datamodel::common::PrismaValue::Int(x) => Some(PrismaValue::Int(i64::from(*x))),
+            datamodel::common::PrismaValue::Float(x) => Some(PrismaValue::Float(f64::from(*x))),
             datamodel::common::PrismaValue::String(x) => Some(PrismaValue::String(x.clone())),
             datamodel::common::PrismaValue::DateTime(x) => Some(PrismaValue::DateTime(*x)),
-            datamodel::common::PrismaValue::Decimal(x) => Some(PrismaValue::Float(*x as f64)), // TODO: not sure if this mapping is correct
+            datamodel::common::PrismaValue::Decimal(x) => Some(PrismaValue::Float(f64::from(*x))), // TODO: not sure if this mapping is correct
             datamodel::common::PrismaValue::ConstantLiteral(x) => {
                 Some(PrismaValue::Enum(EnumValue::string(x.clone(), x.clone())))
             }

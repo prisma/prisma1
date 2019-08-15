@@ -15,13 +15,7 @@ impl WriteQueryExecutor {
                 .write_executor
                 .execute(self.db_name.clone(), wq)
                 .map_err(|err| err.into())
-                .map(|result| {
-                    WriteQueryResultWrapper {
-                        name,
-                        alias,
-                        result,
-                    }
-                }),
+                .map(|result| WriteQueryResultWrapper { name, alias, result }),
 
             _ => Err(CoreError::UnsupportedFeatureError(
                 "Attempted to execute nested write query on the root level.".into(),
