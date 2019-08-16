@@ -233,7 +233,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "barrel"
 version = "0.6.3-alpha.0"
-source = "git+https://github.com/aknuds1/barrel.git?branch=bugfix/fix-index-creation#49fceb2ed9e1b9ebd5f06158053f02d7e9f90ae1"
+source = "git+https://github.com/aknuds1/barrel.git?branch=bugfix/fix-index-creation#686632d5ad0838e238035ee8e1d571136249b609"
 
 [[package]]
 name = "base64"
