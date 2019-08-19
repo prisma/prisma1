@@ -97,7 +97,7 @@ fn test_dmmf_roundtrip_with_functions() {
 
 const DATAMODEL_WITH_SOURCE: &str = r#"datasource pg1 {
   provider = "postgresql"
-  url      = "https://localhost/postgres1"
+  url      = env("PG_URL")
 }
 
 model Author {
@@ -108,6 +108,7 @@ model Author {
 
 #[test]
 fn test_dmmf_roundtrip_with_sources() {
+    std::env::set_var("PG_URL", "https://localhost/postgres1");
     let rendered = dmmf_roundtrip(DATAMODEL_WITH_SOURCE);
 
     assert_eq!(DATAMODEL_WITH_SOURCE, rendered);

@@ -90,8 +90,15 @@ fn source_from_json(source: &SourceConfig, loader: &configuration::SourceLoader)
     let mut arguments: Vec<ast::Argument> = Vec::new();
 
     arguments.push(ast::Argument::new_string("provider", &source.connector_type));
-    // FIXME: marcus
-    arguments.push(ast::Argument::new_string("url", &source.url.value));
+    match source.url.from_env_var {
+        Some(ref env_var) => {
+            let values = vec![ast::Value::StringValue(env_var.to_string(), ast::Span::empty())];
+            arguments.push(ast::Argument::new_function("url", "env", values));
+        }
+        None => {
+            arguments.push(ast::Argument::new_string("url", &source.url.value));
+        }
+    }
 
     for (key, value) in &source.config {
         arguments.push(ast::Argument::new_string(&key, &value));

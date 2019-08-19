@@ -147,6 +147,14 @@ impl Argument {
         }
     }
 
+    pub fn new_function(name: &str, fn_name: &str, value: Vec<Value>) -> Argument {
+        Argument {
+            name: Identifier::new(name),
+            value: Value::Function(fn_name.to_string(), value, Span::empty()),
+            span: Span::empty(),
+        }
+    }
+
     pub fn new(name: &str, value: Value) -> Argument {
         Argument {
             name: Identifier::new(name),
