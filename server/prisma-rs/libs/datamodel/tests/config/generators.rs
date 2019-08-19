@@ -47,18 +47,18 @@ fn serialize_generators_to_cmf() {
 
 #[test]
 fn pinned_platform_must_contain_the_env_var_name() {
-    // using a random env var that is part of our .envrc
+    std::env::set_var("PINNED_PLATFORM", "b");
     let schema = r#"
         generator go {
             provider = "go"
-            pinnedPlatform = env("PRISMA2_BINARY_PATH")
+            pinnedPlatform = env("PINNED_PLATFORM")
         }
     "#;
     let config = datamodel::load_configuration(schema).unwrap();
     let generator = config.generators.into_iter().next().unwrap();
     let pinned_platform = generator.pinned_platform.unwrap();
-    assert_eq!(pinned_platform.from_env_var, Some("PRISMA2_BINARY_PATH".to_string()));
-    assert_eq!(pinned_platform.value, std::env::var("PRISMA2_BINARY_PATH").unwrap());
+    assert_eq!(pinned_platform.from_env_var, Some("PINNED_PLATFORM".to_string()));
+    assert_eq!(pinned_platform.value, "b".to_string());
 }
 
 fn assert_eq_json(a: &str, b: &str) {
