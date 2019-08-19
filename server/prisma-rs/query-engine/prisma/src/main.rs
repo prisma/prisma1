@@ -23,7 +23,7 @@ use cli::*;
 use context::PrismaContext;
 use core::schema::QuerySchemaRenderer;
 use error::*;
-use prisma_common::logger::Logger;
+use logger::Logger;
 use request_handlers::{
     graphql::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler},
     PrismaRequest, RequestHandler,
