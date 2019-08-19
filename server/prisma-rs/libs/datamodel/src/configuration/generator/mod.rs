@@ -13,9 +13,16 @@ pub struct Generator {
     output: Option<String>,
     #[serde(default = "Vec::new")]
     platforms: Vec<String>,
-    pinned_platform: Option<String>,
+    pub pinned_platform: Option<StringFromEnvVar>,
     // Todo: This is a bad choice, PrismaValue is probably better.
     pub config: HashMap<String, String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub documentation: Option<String>,
+}
+
+#[serde(rename_all = "camelCase")]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct StringFromEnvVar {
+    pub from_env_var: Option<String>,
+    pub value: String,
 }
