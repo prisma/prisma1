@@ -16,3 +16,6 @@ serde_json = "1.0"
 failure = "0.1"
 failure_derive = "0.1"
 bytecount = "0.5"
+
+[dev-dependencies]
+pretty_assertions = "0.6.1"
