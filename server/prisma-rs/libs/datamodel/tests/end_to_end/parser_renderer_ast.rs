@@ -1,4 +1,5 @@
 extern crate datamodel;
+use pretty_assertions::assert_eq;
 
 const DATAMODEL_STRING: &str = r#"model User {
   id        Int      @id
@@ -67,7 +68,7 @@ enum CategoryEnum {
 
 #[test]
 fn test_parser_renderer_via_ast() {
-    let ast = datamodel::parse_to_ast(DATAMODEL_STRING).unwrap();
+    let ast = datamodel::parse_to_ast(DATAMODEL_STRING).expect("failed to parse");
     let rendered = datamodel::render_ast(&ast);
 
     print!("{}", rendered);
@@ -98,7 +99,7 @@ model Post {
 
 #[test]
 fn test_parser_renderer_many_to_many_via_ast() {
-    let ast = datamodel::parse_to_ast(MANY_TO_MANY_DATAMODEL).unwrap();
+    let ast = datamodel::parse_to_ast(MANY_TO_MANY_DATAMODEL).expect("failed to parse");
     let rendered = datamodel::render_ast(&ast);
 
     print!("{}", rendered);
@@ -116,7 +117,7 @@ model Author {
 
 #[test]
 fn test_parser_renderer_types_via_ast() {
-    let ast = datamodel::parse_to_ast(DATAMODEL_WITH_TYPES).unwrap();
+    let ast = datamodel::parse_to_ast(DATAMODEL_WITH_TYPES).expect("failed to parse");
     let rendered = datamodel::render_ast(&ast);
 
     print!("{}", rendered);
@@ -137,7 +138,7 @@ model Author {
 
 #[test]
 fn test_parser_renderer_sources_via_ast() {
-    let ast = datamodel::parse_to_ast(DATAMODEL_WITH_SOURCE).unwrap();
+    let ast = datamodel::parse_to_ast(DATAMODEL_WITH_SOURCE).expect("failed to parse");
     let rendered = datamodel::render_ast(&ast);
 
     print!("{}", rendered);
@@ -161,10 +162,47 @@ model Author {
 
 #[test]
 fn test_parser_renderer_sources_and_comments_via_ast() {
-    let ast = datamodel::parse_to_ast(DATAMODEL_WITH_SOURCE_AND_COMMENTS).unwrap();
+    let ast = datamodel::parse_to_ast(DATAMODEL_WITH_SOURCE_AND_COMMENTS).expect("failed to parse");
     let rendered = datamodel::render_ast(&ast);
 
     print!("{}", rendered);
 
     assert_eq!(rendered, DATAMODEL_WITH_SOURCE_AND_COMMENTS);
+}
+
+const DATAMODEL_WITH_TABS: &str = r#"/// Super cool postgres source.
+datasource\tpg1\t{
+\tprovider\t=\t\t"postgres"
+\turl\t=\t"https://localhost/postgres1"
+}
+\t
+///\tMy author\tmodel.
+model\tAuthor\t{
+\tid\tInt\t@id
+\t/// Name of the author.
+\t\tname\tString?
+\tcreatedAt\tDateTime\t@default(now())
+}"#;
+
+const DATAMODEL_WITH_SPACES: &str = r#"/// Super cool postgres source.
+datasource pg1 {
+  provider = "postgres"
+  url      = "https://localhost/postgres1"
+}
+
+/// My author\tmodel.
+model Author {
+  id        Int      @id
+  /// Name of the author.
+  name      String?
+  createdAt DateTime @default(now())
+}"#;
+
+#[test]
+fn test_parser_renderer_with_tabs() {
+    // replaces \t placeholder with a real tab
+    let tabbed_dm = DATAMODEL_WITH_TABS.replace("\\t", "\t");
+    let ast = datamodel::parse_to_ast(&tabbed_dm).expect("failed to parse");
+    let rendered = datamodel::render_ast(&ast);
+    assert_eq!(rendered, DATAMODEL_WITH_SPACES.replace("\\t", "\t"));
 }
