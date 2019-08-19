@@ -7,7 +7,6 @@ members = [
   "query-engine/connectors/connector",
   "query-engine/connectors/sql-connector",
   "query-engine/prisma",
-  "query-engine/native-bridge",
   "query-engine/core",
   "prisma-fmt",
   "libs/datamodel",
