@@ -2,6 +2,7 @@ use super::traits::{Source, SourceDefinition};
 use crate::ast;
 use crate::common::argument::Arguments;
 use crate::errors::{ErrorCollection, ValidationError};
+use crate::StringFromEnvVar;
 
 /// Helper struct to load and validate source configuration blocks.
 pub struct SourceLoader {
@@ -24,7 +25,7 @@ impl SourceLoader {
     /// Internal: Loads a single source from a source config block in the datamodel.
     pub fn load_source(&self, ast_source: &ast::SourceConfig) -> Result<Option<Box<Source>>, ValidationError> {
         let mut args = Arguments::new(&ast_source.properties, ast_source.span);
-        let url = args.arg("url")?.as_str()?;
+        let (env_var_for_url, url) = args.arg("url")?.as_str_from_env()?;
         let provider_arg = args.arg("provider")?;
         let provider = provider_arg.as_str()?;
 
@@ -43,7 +44,10 @@ impl SourceLoader {
                 return Ok(Some(decl.create(
                     // The name in front of the block is the name of the concrete instantiation.
                     &ast_source.name.name,
-                    &url,
+                    StringFromEnvVar {
+                        from_env_var: env_var_for_url,
+                        value: url,
+                    },
                     &mut Arguments::new(&ast_source.properties, ast_source.span),
                     &ast_source.documentation.clone().map(|comment| comment.text),
                 )?));

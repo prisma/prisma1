@@ -3,6 +3,7 @@ mod loader;
 pub use json::*;
 pub use loader::*;
 
+use crate::StringFromEnvVar;
 use std::collections::HashMap;
 
 #[serde(rename_all = "camelCase")]
@@ -18,11 +19,4 @@ pub struct Generator {
     pub config: HashMap<String, String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub documentation: Option<String>,
-}
-
-#[serde(rename_all = "camelCase")]
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct StringFromEnvVar {
-    pub from_env_var: Option<String>,
-    pub value: String,
 }

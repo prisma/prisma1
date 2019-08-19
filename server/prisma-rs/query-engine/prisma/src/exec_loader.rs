@@ -45,7 +45,7 @@ fn sqlite(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
 fn postgres(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
     trace!("Loading Postgres connector...");
 
-    let url = Url::parse(source.url())?;
+    let url = Url::parse(&source.url().value)?;
     let params: HashMap<String, String> = url.query_pairs().into_owned().collect();
 
     let db_name = params
@@ -66,7 +66,7 @@ fn mysql(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
 
     let psql = Mysql::from_source(source)?;
     let db = SqlDatabase::new(psql);
-    let url = Url::parse(source.url())?;
+    let url = Url::parse(&source.url().value)?;
     let err_str = "No database found in connection string";
     let mut db_name = url
         .path_segments()

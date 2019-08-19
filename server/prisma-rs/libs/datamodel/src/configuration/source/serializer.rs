@@ -8,7 +8,7 @@ impl SourceSerializer {
         let mut arguments: Vec<ast::Argument> = Vec::new();
 
         arguments.push(ast::Argument::new_string("provider", source.connector_type()));
-        arguments.push(ast::Argument::new_string("url", source.url()));
+        arguments.push(ast::Argument::new_string("url", &source.url().value));
 
         for (key, value) in &source.config() {
             arguments.push(ast::Argument::new_string(&key, &value));

@@ -1,4 +1,4 @@
-use crate::{ast, configuration, get_builtin_sources};
+use crate::{ast, configuration, get_builtin_sources, StringFromEnvVar};
 use serde_json;
 use std::collections::HashMap;
 
@@ -7,33 +7,33 @@ use std::collections::HashMap;
 pub struct SourceConfig {
     pub name: String,
     pub connector_type: String,
-    pub url: String,
+    pub url: StringFromEnvVar,
     pub config: HashMap<String, String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub documentation: Option<String>,
 }
 
-pub fn render_sources_to_json_value(sources: &Vec<Box<configuration::Source>>) -> serde_json::Value {
-    let res = sources_to_json(sources);
+pub fn render_sources_to_json_value(sources: &Vec<Box<dyn configuration::Source>>) -> serde_json::Value {
+    let res = sources_to_json_structs(sources);
     serde_json::to_value(&res).expect("Failed to render JSON.")
 }
 
-pub fn render_sources_to_json(sources: &Vec<Box<configuration::Source>>) -> String {
-    let res = sources_to_json(sources);
+pub fn render_sources_to_json(sources: &Vec<Box<dyn configuration::Source>>) -> String {
+    let res = sources_to_json_structs(sources);
     serde_json::to_string_pretty(&res).expect("Failed to render JSON.")
 }
 
-fn sources_to_json(sources: &Vec<Box<configuration::Source>>) -> Vec<SourceConfig> {
+fn sources_to_json_structs(sources: &Vec<Box<dyn configuration::Source>>) -> Vec<SourceConfig> {
     let mut res: Vec<SourceConfig> = Vec::new();
 
     for source in sources {
-        res.push(source_to_json(source));
+        res.push(source_to_json_struct(source));
     }
 
     res
 }
 
-fn source_to_json(source: &Box<configuration::Source>) -> SourceConfig {
+fn source_to_json_struct(source: &Box<dyn configuration::Source>) -> SourceConfig {
     SourceConfig {
         name: source.name().clone(),
         connector_type: String::from(source.connector_type()),
@@ -51,11 +51,11 @@ pub fn sources_from_json_value_with_plugins(
     sources_from_vec(json_sources, source_definitions)
 }
 
-pub fn sources_from_json(json: &str) -> Vec<Box<configuration::Source>> {
+fn sources_from_json(json: &str) -> Vec<Box<configuration::Source>> {
     sources_from_json_with_plugins(json, Vec::new())
 }
 
-pub fn sources_from_json_with_plugins(
+fn sources_from_json_with_plugins(
     json: &str,
     source_definitions: Vec<Box<configuration::SourceDefinition>>,
 ) -> Vec<Box<configuration::Source>> {
@@ -90,7 +90,8 @@ fn source_from_json(source: &SourceConfig, loader: &configuration::SourceLoader)
     let mut arguments: Vec<ast::Argument> = Vec::new();
 
     arguments.push(ast::Argument::new_string("provider", &source.connector_type));
-    arguments.push(ast::Argument::new_string("url", &source.url));
+    // FIXME: marcus
+    arguments.push(ast::Argument::new_string("url", &source.url.value));
 
     for (key, value) in &source.config {
         arguments.push(ast::Argument::new_string(&key, &value));

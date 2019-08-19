@@ -17,13 +17,13 @@ impl SourceDefinition for PostgresSourceDefinition {
     fn create(
         &self,
         name: &str,
-        url: &str,
+        url: StringFromEnvVar,
         _arguments: &mut Arguments,
         documentation: &Option<String>,
     ) -> Result<Box<Source>, ValidationError> {
         Ok(Box::new(PostgresSource {
             name: String::from(name),
-            url: String::from(url),
+            url: url,
             documentation: documentation.clone(),
         }))
     }

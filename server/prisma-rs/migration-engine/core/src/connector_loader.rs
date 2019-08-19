@@ -18,7 +18,7 @@ pub fn load_connector(
         "mysql" => SqlFamily::Mysql,
         x => unimplemented!("Connector {} is not supported yet", x),
     };
-    let url = source.url();
+    let url = &source.url().value;
     let exists = SqlMigrationConnector::exists(sql_family, &url);
     match (exists, must_exist) {
         (true, _) => Ok(SqlMigrationConnector::new(sql_family, &url)),
