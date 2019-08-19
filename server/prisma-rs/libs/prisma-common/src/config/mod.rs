@@ -7,9 +7,7 @@ pub use explicit::ExplicitConfig;
 pub use file::FileConfig;
 
 use crate::error::CommonError;
-use datamodel::{
-    Arguments, MySqlSourceDefinition, PostgresSourceDefinition, Source, SourceDefinition, SqliteSourceDefinition,
-};
+use datamodel::Source;
 
 use serde_yaml;
 use std::{
@@ -83,70 +81,74 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
     type Error = CommonError;
 
     fn try_into(self) -> Result<Vec<Box<dyn Source>>, Self::Error> {
-        let result: Vec<Result<Box<dyn Source>, Self::Error>> = self.databases
+        let result: Vec<Result<Box<dyn Source>, Self::Error>> = self
+            .databases
             .into_iter()
             .map(|(name, db)| match db {
-                PrismaDatabase::File(ref config) if config.connector == "sqlite-native" => {
-                    let path = config.database_file.clone();
-                    let ospath = PathBuf::from(&path);
+                //                PrismaDatabase::File(ref config) if config.connector == "sqlite-native" => {
+                //                    let path = config.database_file.clone();
+                //                    let ospath = PathBuf::from(&path);
+                //
+                //                    if ospath.exists() && !ospath.is_dir() {
+                //                        let source = SqliteSourceDefinition::new().create(
+                //                            &name,
+                //                            &format!("file:{}", path),
+                //                            &mut Arguments::empty(&vec![]),
+                //                            &None
+                //                        );
+                //
+                //                        source.map_err(|err| err.into())
+                //                    } else {
+                //                        Err(CommonError::ConfigurationError("Configuration error: Sqlite file configuration found, but path either doesn't exist or doens't point to a file.".into()))
+                //                    }
+                //                }
+                //
+                //                PrismaDatabase::Explicit(ref config) if config.connector == "postgres-native" => {
+                //                    let db_name = config.database.as_ref().map(|x| x.as_str()).unwrap_or("postgres");
+                //                    let auth_pair = match config.password.as_ref() {
+                //                        Some(pw) => format!("{}:{}", config.user.clone(), pw),
+                //                        None => config.user.clone(),
+                //                    };
+                //
+                //                    let url = format!("postgresql://{}@{}:{}/{}?sslmode=prefer&schema={}", auth_pair, config.host, config.port, db_name, config.schema.clone().unwrap_or("public".into()));
+                //                    let source = PostgresSourceDefinition::new().create( &name, &url, &mut Arguments::empty(&vec![]), &None);
+                //
+                //                    source.map_err(|err| err.into())
+                //                },
+                //
+                //                PrismaDatabase::ConnectionString(ref config) if config.connector == "postgres-native" => {
+                //                    let mut uri = config.uri.clone();
+                //                    uri.query_pairs_mut().append_pair("schema", &config.schema.clone().unwrap_or("public".into()));
+                //
+                //                    let source = PostgresSourceDefinition::new().create(&name, &uri.to_string(), &mut Arguments::empty(&vec![]), &None);
+                //                    source.map_err(|err| err.into())
+                //                },
 
-                    if ospath.exists() && !ospath.is_dir() {
-                        let source = SqliteSourceDefinition::new().create(
-                            &name,
-                            &format!("file:{}", path),
-                            &mut Arguments::empty(&vec![]),
-                            &None
-                        );
+                //                PrismaDatabase::Explicit(ref config) if config.connector == "mysql-native" => {
+                //                    let db_name = config.database.as_ref().map(|x| x.as_str()).unwrap_or("mysql");
+                //                    let auth_pair = match config.password.as_ref() {
+                //                        Some(pw) => format!("{}:{}", config.user.clone(), pw),
+                //                        None => config.user.clone(),
+                //                    };
+                //
+                //                    let url = format!("mysql://{}@{}:{}/{}", auth_pair, config.host, config.port, db_name);
+                //                    let source = MySqlSourceDefinition::new().create(&name, &url, &mut Arguments::empty(&vec![]), &None);
+                //
+                //                    source.map_err(|err| err.into())
+                //                },
 
-                        source.map_err(|err| err.into())
-                    } else {
-                        Err(CommonError::ConfigurationError("Configuration error: Sqlite file configuration found, but path either doesn't exist or doens't point to a file.".into()))
-                    }
-                }
-
-                PrismaDatabase::Explicit(ref config) if config.connector == "postgres-native" => {
-                    let db_name = config.database.as_ref().map(|x| x.as_str()).unwrap_or("postgres");
-                    let auth_pair = match config.password.as_ref() {
-                        Some(pw) => format!("{}:{}", config.user.clone(), pw),
-                        None => config.user.clone(),
-                    };
-
-                    let url = format!("postgresql://{}@{}:{}/{}?sslmode=prefer&schema={}", auth_pair, config.host, config.port, db_name, config.schema.clone().unwrap_or("public".into()));
-                    let source = PostgresSourceDefinition::new().create( &name, &url, &mut Arguments::empty(&vec![]), &None);
-
-                    source.map_err(|err| err.into())
-                },
-
-                PrismaDatabase::ConnectionString(ref config) if config.connector == "postgres-native" => {
-                    let mut uri = config.uri.clone();
-                    uri.query_pairs_mut().append_pair("schema", &config.schema.clone().unwrap_or("public".into()));
-
-                    let source = PostgresSourceDefinition::new().create(&name, &uri.to_string(), &mut Arguments::empty(&vec![]), &None);
-                    source.map_err(|err| err.into())
-                },
-
-                PrismaDatabase::Explicit(ref config) if config.connector == "mysql-native" => {
-                    let db_name = config.database.as_ref().map(|x| x.as_str()).unwrap_or("mysql");
-                    let auth_pair = match config.password.as_ref() {
-                        Some(pw) => format!("{}:{}", config.user.clone(), pw),
-                        None => config.user.clone(),
-                    };
-
-                    let url = format!("mysql://{}@{}:{}/{}", auth_pair, config.host, config.port, db_name);
-                    let source = MySqlSourceDefinition::new().create(&name, &url, &mut Arguments::empty(&vec![]), &None);
-
-                    source.map_err(|err| err.into())
-                },
-
-                PrismaDatabase::ConnectionString(ref config) if config.connector == "mysql-native" => {
-                    let source = MySqlSourceDefinition::new().create(&name, &config.uri.to_string(), &mut Arguments::empty(&vec![]), &None);
-                    source.map_err(|err| err.into())
-                },
-
+                //                PrismaDatabase::ConnectionString(ref config) if config.connector == "mysql-native" => {
+                //                    let source = MySqlSourceDefinition::new().create(&name, &config.uri.to_string(), &mut Arguments::empty(&vec![]), &None);
+                //                    source.map_err(|err| err.into())
+                //                },
                 _ => {
                     debug!("Database: {:?}", db);
-                    Err(CommonError::ConfigurationError(format!("Database connector {} for configuration key {} is not supported.", db.connector(), name)))
-                },
+                    Err(CommonError::ConfigurationError(format!(
+                        "Database connector {} for configuration key {} is not supported.",
+                        db.connector(),
+                        name
+                    )))
+                }
             })
             .collect();
 
