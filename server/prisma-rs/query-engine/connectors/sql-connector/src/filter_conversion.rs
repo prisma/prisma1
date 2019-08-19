@@ -294,7 +294,9 @@ impl AliasedCondition for OneRelationIsNullFilter {
                 None => table,
             };
 
-            let select = Select::from_table(relation_table).column(column);
+            let select = Select::from_table(relation_table)
+                .column(column.clone())
+                .so_that(column.is_not_null());
             let id_column = self.field.model().id_column().opt_table(alias.clone());
 
             id_column.not_in_selection(select)
