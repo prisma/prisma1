@@ -25,6 +25,10 @@ pub trait MigrationConnector: Send + Sync + 'static {
 
     fn connector_type(&self) -> &'static str;
 
+    fn can_connect(&self) -> bool;
+    fn can_create_database(&self) -> bool;
+    fn create_database(&self);
+
     fn initialize(&self) -> ConnectorResult<()>;
 
     fn reset(&self) -> ConnectorResult<()>;

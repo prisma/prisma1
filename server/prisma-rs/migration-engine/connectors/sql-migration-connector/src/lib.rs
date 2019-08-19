@@ -187,6 +187,18 @@ impl MigrationConnector for SqlMigrationConnector {
         self.sql_family.connector_type_string()
     }
 
+    fn can_connect(&self) -> bool {
+        unimplemented!()
+    }
+
+    fn can_create_database(&self) -> bool {
+        unimplemented!()
+    }
+
+    fn create_database(&self) {
+        unimplemented!()
+    }
+
     fn initialize(&self) -> ConnectorResult<()> {
         // TODO: this code probably does not ever do anything. The schema/db creation happens already in the helper functions above.
         match self.sql_family {
