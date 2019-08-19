@@ -17,16 +17,13 @@ mod request_handlers;
 mod serializers;
 mod utilities;
 
-use actix_web::{
-    http::{Method, StatusCode},
-    server, App, HttpRequest, HttpResponse, Json, Responder,
-};
+use actix_web::{http::Method, server, App, HttpRequest, HttpResponse, Json, Responder};
 use clap::{App as ClapApp, Arg, ArgMatches, SubCommand};
 use cli::*;
 use context::PrismaContext;
 use core::schema::QuerySchemaRenderer;
 use error::*;
-use prisma_common::logger::Logger;
+use logger::Logger;
 use request_handlers::{
     graphql::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler},
     PrismaRequest, RequestHandler,
@@ -194,18 +191,13 @@ fn sdl_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
 /// Only callable if prisma was initialized using a v2 data model.
 fn dmmf_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
     let request_context = req.state();
-    match request_context.context.dm {
-        Some(ref dm) => {
-            let dmmf = dmmf::render_dmmf(dm, Arc::clone(&request_context.context.query_schema));
-            let serialized = serde_json::to_string(&dmmf).unwrap();
+    let dmmf = dmmf::render_dmmf(
+        &request_context.context.dm,
+        Arc::clone(&request_context.context.query_schema),
+    );
+    let serialized = serde_json::to_string(&dmmf).unwrap();
 
-            HttpResponse::Ok().content_type("application/json").body(serialized)
-        }
-        None => HttpResponse::with_body(
-            StatusCode::UNPROCESSABLE_ENTITY,
-            "This endpoint is only callable if Prisma was initialized with a v2 data model.",
-        ),
-    }
+    HttpResponse::Ok().content_type("application/json").body(serialized)
 }
 
 /// Serves playground html.

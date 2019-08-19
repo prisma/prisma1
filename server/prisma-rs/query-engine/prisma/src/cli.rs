@@ -1,4 +1,4 @@
-use crate::{data_model_loader::load_data_model_components, dmmf, error::PrismaError, PrismaResult};
+use crate::{data_model_loader::load_data_model_components, dmmf, PrismaResult};
 use clap::ArgMatches;
 use core::{
     schema::{QuerySchemaBuilder, QuerySchemaRef, SupportedCapabilities},
@@ -60,28 +60,21 @@ impl CliCommand {
     }
 
     fn dmmf(build_mode: BuildMode) -> PrismaResult<()> {
-        let (_, v2components, template) = load_data_model_components()?;
+        let (v2components, template) = load_data_model_components()?;
 
-        match v2components {
-            Some(v2) => {
-                // temporary code duplication
-                let internal_data_model = template.build("".into());
-                let capabilities = SupportedCapabilities::empty();
+        // temporary code duplication
+        let internal_data_model = template.build("".into());
+        let capabilities = SupportedCapabilities::empty();
 
-                let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, build_mode);
-                let query_schema: QuerySchemaRef = Arc::new(schema_builder.build());
+        let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, build_mode);
+        let query_schema: QuerySchemaRef = Arc::new(schema_builder.build());
 
-                let dmmf = dmmf::render_dmmf(&v2.datamodel, query_schema);
-                let serialized = serde_json::to_string_pretty(&dmmf)?;
+        let dmmf = dmmf::render_dmmf(&v2components.datamodel, query_schema);
+        let serialized = serde_json::to_string_pretty(&dmmf)?;
 
-                println!("{}", serialized);
+        println!("{}", serialized);
 
-                Ok(())
-            }
-            None => Err(PrismaError::InvocationError(
-                "DMMF cli command can only be invoked if a v2 data model was configured.".into(),
-            )),
-        }
+        Ok(())
     }
 
     fn dmmf_to_dml(input: DmmfToDmlInput) -> PrismaResult<()> {
