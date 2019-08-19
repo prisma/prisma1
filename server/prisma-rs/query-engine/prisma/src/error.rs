@@ -3,7 +3,6 @@ use core::{response_ir, CoreError};
 use datamodel::errors::ErrorCollection;
 use failure::{Error, Fail};
 use graphql_parser::query::ParseError as GqlParseError;
-use prisma_common::error::CommonError;
 use serde_json;
 
 #[cfg(feature = "sql")]
@@ -89,12 +88,6 @@ impl From<CoreError> for PrismaError {
 impl From<url::ParseError> for PrismaError {
     fn from(e: url::ParseError) -> PrismaError {
         PrismaError::ConfigurationError(format!("Error parsing connection string: {}", e))
-    }
-}
-
-impl From<CommonError> for PrismaError {
-    fn from(e: CommonError) -> PrismaError {
-        PrismaError::ConfigurationError(format!("{}", e))
     }
 }
 

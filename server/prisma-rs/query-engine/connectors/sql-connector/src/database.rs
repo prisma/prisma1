@@ -4,7 +4,6 @@ mod sqlite;
 
 use crate::{query_builder::*, Transactional};
 use datamodel::Source;
-use prisma_common::config::PrismaDatabase;
 
 pub use mysql::*;
 pub use postgresql::*;
@@ -14,12 +13,6 @@ pub trait FromSource {
     fn from_source(source: &dyn Source) -> crate::Result<Self>
     where
         Self: Transactional + SqlCapabilities + Sized;
-}
-
-pub trait LegacyDatabase {
-    fn from_prisma_database(db: &PrismaDatabase) -> crate::Result<Self>
-    where
-        Self: Sized;
 }
 
 pub trait SqlCapabilities {

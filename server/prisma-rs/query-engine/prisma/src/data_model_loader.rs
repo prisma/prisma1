@@ -1,13 +1,12 @@
-use crate::{utilities, PrismaError, PrismaResult};
+use std::{fs::File, io::Read};
+
+use serde::Deserialize;
+use serde_json;
+
 use datamodel::{Datamodel, Source};
 use prisma_models::{DatamodelConverter, InternalDataModelTemplate};
-use serde::{Deserialize, Serialize};
-use serde_json;
-use std::{
-    fs::File,
-    io::{Read, Write},
-    process::{Command, Stdio},
-};
+
+use crate::{utilities, PrismaError, PrismaResult};
 
 /// Wrapper type to unclutter the interface
 pub struct DatamodelV2Components {
@@ -68,62 +67,21 @@ impl<T> PrismaResultOption<T> for PrismaResult<Option<T>> {
     }
 }
 
-/// Loads data model components (SDL string, v2 data model, internal data model).
-///
-/// The precendence order is:
-/// 1. The datamodel loading is bypassed by providing a pre-build internal data model template
-///    via PRISMA_INTERNAL_DATA_MODEL_JSON. This is only intended to be used by integration tests or in
-///    rare cases where we don't want to compute the data model.
-/// -> Returns (None, None, InternalDataModelTemplate)
-///
-/// 2. The v2 data model is provided either as file (PRISMA_DML_PATH) or as string in the env (PRISMA_DML).
-/// -> Returns (None, Some(DatamodelV2Components), InternalDataModelTemplate)
-///
-/// 3. The v1 data model is provided either as file (PRISMA_SDL_PATH) or as string in the env (PRISMA_SDL).
-/// -> Returns (Some(String), None, InternalDataModelTemplate)
-///
-/// Encountered Err results abort the chain, else Nones are chained until a Some is encountered in the load order.
-pub fn load_data_model_components(
-) -> PrismaResult<(Option<String>, Option<DatamodelV2Components>, InternalDataModelTemplate)> {
+/// Loads data model components for the v2 data model.
+/// The v2 data model is provided either as file (PRISMA_DML_PATH) or as string in the env (PRISMA_DML).
+pub fn load_data_model_components() -> PrismaResult<(DatamodelV2Components, InternalDataModelTemplate)> {
     // Load data model in order of precedence.
-    let triple = match load_v11_from_env_json()? {
-        Some(template) => (None, None, template),
-        None => match load_datamodel_v2()? {
-            Some(v2components) => {
-                let template = DatamodelConverter::convert(&v2components.datamodel);
-                (None, Some(v2components), template)
-            }
-            None => match load_v1_sdl_string()? {
-                Some(sdl) => {
-                    let inferred = infer_v11_json(sdl.as_ref())?;
-                    let template = serde_json::from_str::<InternalDataModelTemplate>(&inferred)?;
-                    (Some(sdl), None, template)
-                }
-                None => {
-                    return Err(PrismaError::ConfigurationError(
-                        "Unable to load data model (neither v1.1 / v2) from any source.".into(),
-                    ))
-                }
-            },
-        },
-    };
-
-    Ok(triple)
-}
-
-/// Attempts to construct an internal data model template from env.
-/// Returns: InternalDataModelTemplate
-///     Err      If the env var was found, but loading the template failed.
-///     Ok(Some) If the env var was found, and the template loaded successfully.
-///     Ok(None) If the env var was not found.
-fn load_v11_from_env_json() -> PrismaResult<Option<InternalDataModelTemplate>> {
-    debug!("Trying to load internal data model from env...");
-
-    load_string_from_env("PRISMA_INTERNAL_DATA_MODEL_JSON").inner_map(|data_model_json| {
-        let parsed = serde_json::from_str::<InternalDataModelTemplate>(&data_model_json)?;
-        debug!("Loaded internal data model from env.");
-        Ok(Some(parsed))
-    })
+    match load_datamodel_v2()? {
+        Some(v2components) => {
+            let template = DatamodelConverter::convert(&v2components.datamodel);
+            Ok((v2components, template))
+        }
+        None => {
+            return Err(PrismaError::ConfigurationError(
+                "Unable to load data model v2 from any source.".into(),
+            ))
+        }
+    }
 }
 
 /// Attempts to construct a Prisma v2 datamodel.
@@ -147,7 +105,8 @@ fn load_datamodel_v2() -> PrismaResult<Option<DatamodelV2Components>> {
 }
 
 fn load_configuration(dml_string: &str) -> PrismaResult<datamodel::Configuration> {
-    let datasource_overwrites_string = load_string_from_env("OVERWRITE_DATASOURCES")?.unwrap_or_else(|| r#"[]"#.to_string());
+    let datasource_overwrites_string =
+        load_string_from_env("OVERWRITE_DATASOURCES")?.unwrap_or_else(|| r#"[]"#.to_string());
     let datasource_overwrites: Vec<SourceOverride> = serde_json::from_str(&datasource_overwrites_string)?;
 
     match datamodel::load_configuration(&dml_string) {
@@ -191,27 +150,6 @@ fn load_v2_string_from_env() -> PrismaResult<Option<String>> {
 fn load_v2_dml_from_file() -> PrismaResult<Option<String>> {
     debug!("Trying to load Prisma v2 Datamodel from file...");
     load_from_file("PRISMA_DML_PATH").on_success(|| debug!("Loaded Prisma v2 DML from file."))
-}
-
-/// Attempts to load a Prisma SDL (datamodel v1.1) string from either env or file.
-/// Env has precedence over file.
-fn load_v1_sdl_string() -> PrismaResult<Option<String>> {
-    debug!("Trying to load Prisma v1.1 Datamodel...");
-    load_v11_sdl_from_env()
-        .inner_or_else( load_v11_sdl_from_file)
-        .on_success(|| debug!("Loaded Prisma v1.1 data model."))
-}
-
-/// Attempts to load a Prisma SDL (datamodel v1.1) string from env.
-fn load_v11_sdl_from_env() -> PrismaResult<Option<String>> {
-    debug!("Trying to load Prisma v1.1 SDL from env...");
-    load_string_from_env("PRISMA_SDL").on_success(|| debug!("Loaded Prisma v1.1 SDL from env."))
-}
-
-/// Attempts to load a Prisma SDL (datamodel v1.1) string from file.
-fn load_v11_sdl_from_file() -> PrismaResult<Option<String>> {
-    debug!("Trying to load Prisma v1.1 SDL from file...");
-    load_from_file("PRISMA_SDL_PATH").on_success(|| debug!("Loaded Prisma v1.1 SDL from file."))
 }
 
 /// Attempts to load a string from given env var.
@@ -260,31 +198,4 @@ fn load_from_file(env_var: &str) -> PrismaResult<Option<String>> {
         }
         None => Ok(None),
     }
-}
-
-/// Transforms an SDL string into stringified JSON of the internal data model template.
-/// Calls out to an external process. Requires SCHEMA_INFERRER_PATH to be set.
-fn infer_v11_json(sdl: &str) -> PrismaResult<String> {
-    #[derive(Serialize)]
-    #[serde(rename_all = "camelCase")]
-    struct InternalDataModelInferrerJson {
-        data_model: String,
-    }
-
-    let internal_data_model_inferrer = utilities::get_env("SCHEMA_INFERRER_PATH")?;
-    let mut child = Command::new(internal_data_model_inferrer)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()?;
-
-    let compacted = sdl.replace('\n', " ");
-    let child_in = child.stdin.as_mut().unwrap();
-    let json = serde_json::to_string(&InternalDataModelInferrerJson { data_model: compacted })?;
-
-    child_in.write_all(json.as_bytes()).expect("Failed to write to stdin");
-
-    let output = child.wait_with_output()?;
-    let inferred = String::from_utf8(output.stdout)?;
-
-    Ok(inferred)
 }

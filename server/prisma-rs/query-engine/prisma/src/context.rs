@@ -1,9 +1,9 @@
-use crate::{data_model_loader::*, exec_loader, PrismaError, PrismaResult};
+use std::sync::Arc;
+
 use core::{BuildMode, QueryExecutor, QuerySchemaBuilder, QuerySchemaRef, SupportedCapabilities};
-use datamodel::{Datamodel, Source};
-use prisma_common::{config::load as load_config, error::CommonError};
 use prisma_models::InternalDataModelRef;
-use std::{convert::TryInto, sync::Arc};
+
+use crate::{data_model_loader::*, exec_loader, PrismaError, PrismaResult};
 
 /// Prisma request context containing all immutable state of the process.
 /// There is usually only one context initialized per process.
@@ -16,15 +16,12 @@ pub struct PrismaContext {
     pub query_schema: QuerySchemaRef,
 
     /// DML-based v2 datamodel.
-    /// Setting this option will make the /dmmf route available.
-    pub dm: Option<datamodel::Datamodel>,
+    pub dm: datamodel::Datamodel,
 
     /// Central query executor.
     #[debug_stub = "#QueryExecutor#"]
     pub executor: QueryExecutor,
 }
-
-type ModelWithSources = (Option<Datamodel>, Vec<Box<dyn Source>>);
 
 impl PrismaContext {
     /// Initializes a new Prisma context.
@@ -34,19 +31,9 @@ impl PrismaContext {
     /// 3. The api query schema is constructed from the internal data model.
     pub fn new(legacy: bool) -> PrismaResult<Self> {
         // Load data model in order of precedence.
-        let (_, v2components, template) = load_data_model_components()?;
+        let (v2components, template) = load_data_model_components()?;
 
-        // Deconstruct v2 components if present, and fall back to loading the legacy config
-        // to get data sources for connector initialization if no v2 data model was loaded.
-        let v2: PrismaResult<ModelWithSources> = match v2components {
-            Some(v2) => Ok((Some(v2.datamodel), v2.data_sources)),
-            None => {
-                let data_sources = Self::data_sources_from_config()?;
-                Ok((None, data_sources))
-            }
-        };
-
-        let (dm, data_sources) = v2?;
+        let (dm, data_sources) = (v2components.datamodel, v2components.data_sources);
 
         // We only support one data source at the moment, so take the first one (default not exposed yet).
         let data_source = if data_sources.is_empty() {
@@ -74,20 +61,5 @@ impl PrismaContext {
             dm,
             executor,
         })
-    }
-
-    /// Fallback function for legacy config, constructs data sources.
-    fn data_sources_from_config() -> PrismaResult<Vec<Box<dyn Source>>> {
-        let config = load_config().map_err(|_| {
-            // Fallback failed
-            PrismaError::ConfigurationError(
-                "Unable to load Prisma configuration from any source.
-                 If Prisma was initialized using data model v1,
-                 make sure to provide PRISMA_CONFIG or PRISMA_CONFIG_PATH."
-                    .into(),
-            )
-        })?;
-
-        config.try_into().map_err(|err: CommonError| err.into())
     }
 }
