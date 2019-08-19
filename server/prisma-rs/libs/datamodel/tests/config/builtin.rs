@@ -1,30 +1,30 @@
 use crate::common::ErrorAsserts;
 use datamodel::errors::ValidationError;
 
-const DATAMODEL: &str = r#"
-datasource pg1 {
-    provider = "postgresql"
-    url = "https://localhost/postgres1"
-}
-
-datasource pg2 {
-    provider = "postgresql"
-    url = "https://localhost/postgres2"
-}
-
-datasource sqlite1 {
-    provider = "sqlite"
-    url = "https://localhost/sqlite1"
-}
-
-datasource mysql1 {
-    provider = "mysql"
-    url = "https://localhost/mysql"
-}
-"#;
-
 #[test]
 fn serialize_builtin_sources_to_dmmf() {
+    std::env::set_var("pg2", "https://localhost/postgres2");
+    const DATAMODEL: &str = r#"
+        datasource pg1 {
+            provider = "postgresql"
+            url = "https://localhost/postgres1"
+        }
+        
+        datasource pg2 {
+            provider = "postgresql"
+            url = env("pg2")
+        }
+        
+        datasource sqlite1 {
+            provider = "sqlite"
+            url = "https://localhost/sqlite1"
+        }
+        
+        datasource mysql1 {
+            provider = "mysql"
+            url = "https://localhost/mysql"
+        }
+    "#;
     let config = datamodel::load_configuration(DATAMODEL).unwrap();
     let rendered = datamodel::render_sources_to_json(&config.datasources);
 
@@ -32,32 +32,44 @@ fn serialize_builtin_sources_to_dmmf() {
   {
     "name": "pg1",
     "connectorType": "postgresql",
-    "url": "https://localhost/postgres1",
+    "url": {
+      "fromEnvVar": null,
+      "value": "https://localhost/postgres1"
+    },    
     "config": {}
   },
   {
     "name": "pg2",
     "connectorType": "postgresql",
-    "url": "https://localhost/postgres2",
+    "url": {
+      "fromEnvVar": "pg2",
+      "value": "https://localhost/postgres2"
+    },
     "config": {}
   },
   {
     "name": "sqlite1",
     "connectorType": "sqlite",
-    "url": "https://localhost/sqlite1",
+    "url": {
+      "fromEnvVar": null,
+      "value": "https://localhost/sqlite1"
+    },
     "config": {}
   },
   {
     "name": "mysql1",
     "connectorType": "mysql",
-    "url": "https://localhost/mysql",
+    "url": {
+      "fromEnvVar": null,
+      "value": "https://localhost/mysql"
+    },
     "config": {}
   }
 ]"#;
 
     print!("{}", &rendered);
 
-    assert_eq!(rendered, expected);
+    assert_eq_json(&rendered, expected);
 }
 
 const INVALID_DATAMODEL: &str = r#"
@@ -106,7 +118,7 @@ fn enable_disable_source_flag() {
 
     assert_eq!(source.name(), "chinook");
     assert_eq!(source.connector_type(), "sqlite");
-    assert_eq!(source.url(), "file:../db/production.db");
+    assert_eq!(source.url().value, "file:../db/production.db");
 }
 
 const ENABLED_DISABLED_SOURCE_ENV: &str = r#"
@@ -137,5 +149,12 @@ fn enable_disable_source_flag_from_env() {
 
     assert_eq!(source.name(), "chinook");
     assert_eq!(source.connector_type(), "sqlite");
-    assert_eq!(source.url(), "file:../db/staging.db");
+    assert_eq!(source.url().value, "file:../db/staging.db");
+}
+
+fn assert_eq_json(a: &str, b: &str) {
+    let json_a: serde_json::Value = serde_json::from_str(a).expect("The String a was not valid JSON.");
+    let json_b: serde_json::Value = serde_json::from_str(b).expect("The String b was not valid JSON.");
+
+    assert_eq!(json_a, json_b);
 }

@@ -37,3 +37,10 @@ impl From<SerializeableMcf> for Configuration {
         }
     }
 }
+
+#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct StringFromEnvVar {
+    pub from_env_var: Option<String>,
+    pub value: String,
+}

@@ -3,7 +3,7 @@ pub const POSTGRES_SOURCE_NAME: &str = "postgresql";
 
 pub struct PostgresSource {
     pub(super) name: String,
-    pub(super) url: String,
+    pub(super) url: StringFromEnvVar,
     pub(super) documentation: Option<String>,
 }
 
@@ -17,11 +17,14 @@ impl Source for PostgresSource {
     fn config(&self) -> std::collections::HashMap<String, String> {
         std::collections::HashMap::new()
     }
-    fn url(&self) -> &String {
+    fn url(&self) -> &StringFromEnvVar {
         &self.url
     }
     fn set_url(&mut self, url: &str) {
-        self.url = url.to_string();
+        self.url = StringFromEnvVar {
+            from_env_var: None,
+            value: url.to_string(),
+        };
     }
     fn get_field_directives(&self) -> Vec<Box<DirectiveValidator<dml::Field>>> {
         vec![]

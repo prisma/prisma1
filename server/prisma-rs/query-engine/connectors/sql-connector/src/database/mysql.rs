@@ -20,7 +20,7 @@ pub struct Mysql {
 
 impl FromSource for Mysql {
     fn from_source(source: &dyn Source) -> crate::Result<Self> {
-        let url = Url::parse(source.url())?;
+        let url = Url::parse(&source.url().value)?;
         let params = MysqlParams::try_from(url)?;
         let pool = r2d2::Pool::try_from(params).unwrap();
 

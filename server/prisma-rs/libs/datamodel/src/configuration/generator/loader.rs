@@ -1,4 +1,8 @@
-use crate::{ast, common::argument::Arguments, common::value::ValueListValidator, configuration::Generator, errors::*};
+use crate::common::value::MaybeExpression::Value;
+use crate::{
+    ast, common::argument::Arguments, common::value::ValueListValidator, configuration::Generator, errors::*,
+    StringFromEnvVar,
+};
 use std::collections::HashMap;
 
 pub struct GeneratorLoader {}
@@ -26,7 +30,16 @@ impl GeneratorLoader {
             Some(x) => x.as_array()?.to_str_vec()?,
             None => Vec::new(),
         };
-        let pinned_platform = args.arg(PINNED_PLATFORM_KEY).and_then(|x| x.as_str()).ok();
+        let pinned_platform = args
+            .arg(PINNED_PLATFORM_KEY)
+            .and_then(|x| {
+                let (env_var, value) = x.as_str_from_env()?;
+                Ok(StringFromEnvVar {
+                    from_env_var: env_var,
+                    value: value,
+                })
+            })
+            .ok();
 
         for prop in &ast_generator.properties {
             let is_first_class_prop = FIRST_CLASS_PROPERTIES.iter().any(|k| *k == prop.name.name);
@@ -67,7 +80,7 @@ impl GeneratorLoader {
         }
 
         if let Some(pinned_platform) = &generator.pinned_platform {
-            arguments.push(ast::Argument::new_string("pinnedPlatform", &pinned_platform));
+            arguments.push(ast::Argument::new_string("pinnedPlatform", &pinned_platform.value));
         }
 
         for (key, value) in &generator.config {

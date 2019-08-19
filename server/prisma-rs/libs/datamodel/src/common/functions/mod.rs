@@ -54,7 +54,7 @@ impl FunctionalEvaluator {
     pub fn evaluate(&self) -> Result<MaybeExpression, ValidationError> {
         match &self.value {
             ast::Value::Function(name, params, span) => self.evaluate_functional(&name, &params, *span),
-            _ => Ok(MaybeExpression::Value(self.value.clone())),
+            _ => Ok(MaybeExpression::Value(None, self.value.clone())),
         }
     }
 

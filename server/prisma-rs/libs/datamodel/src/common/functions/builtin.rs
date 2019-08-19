@@ -7,10 +7,7 @@ use crate::common::{
 use crate::errors::ValidationError;
 
 fn server_functional_with(name: &str, return_type: PrismaType, span: ast::Span) -> MaybeExpression {
-    MaybeExpression::Expression(
-        PrismaValue::Expression(String::from(name), return_type, vec![]),
-        span,
-    )
+    MaybeExpression::Expression(PrismaValue::Expression(String::from(name), return_type, vec![]), span)
 }
 
 /// Environment variable interpolating function (`env(...)`).
@@ -27,7 +24,10 @@ impl Functional for EnvFunctional {
         let var_wrapped = &values[0];
         let var_name = var_wrapped.as_str()?;
         if let Ok(var) = std::env::var(&var_name) {
-            Ok(MaybeExpression::Value(ast::Value::Any(var, span)))
+            Ok(MaybeExpression::Value(
+                Some(var_name.clone()),
+                ast::Value::Any(var, span),
+            ))
         } else {
             Err(ValidationError::new_environment_functional_evaluation_error(
                 &var_name,

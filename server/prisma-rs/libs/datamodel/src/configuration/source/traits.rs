@@ -1,7 +1,7 @@
 use crate::common::argument::Arguments;
-use crate::dml;
 use crate::dml::validator::directive::DirectiveValidator;
 use crate::errors::ValidationError;
+use crate::{dml, StringFromEnvVar};
 use std::collections::HashMap;
 
 // TODO: Probably rename everything. Terminology here is messy.
@@ -15,7 +15,7 @@ pub trait Source {
     /// Gets the name of the source configuration block.
     fn name(&self) -> &String;
     /// Gets the source config URL.
-    fn url(&self) -> &String;
+    fn url(&self) -> &StringFromEnvVar;
 
     fn set_url(&mut self, url: &str);
 
@@ -49,7 +49,7 @@ pub trait SourceDefinition {
     fn create(
         &self,
         name: &str,
-        url: &str,
+        url: StringFromEnvVar,
         arguments: &mut Arguments,
         documentation: &Option<String>,
     ) -> Result<Box<Source>, ValidationError>;

@@ -32,7 +32,10 @@ fn serialize_generators_to_cmf() {
     "provider": "go",
     "output": null,
     "platforms": ["a","b"],
-    "pinnedPlatform": "b",
+    "pinnedPlatform": {
+      "fromEnvVar": null,
+      "value": "b"
+    },
     "config": {}
   }
 ]"#;
@@ -40,6 +43,22 @@ fn serialize_generators_to_cmf() {
     print!("{}", &rendered);
 
     assert_eq_json(&rendered, expected);
+}
+
+#[test]
+fn pinned_platform_must_contain_the_env_var_name() {
+    std::env::set_var("PINNED_PLATFORM", "b");
+    let schema = r#"
+        generator go {
+            provider = "go"
+            pinnedPlatform = env("PINNED_PLATFORM")
+        }
+    "#;
+    let config = datamodel::load_configuration(schema).unwrap();
+    let generator = config.generators.into_iter().next().unwrap();
+    let pinned_platform = generator.pinned_platform.unwrap();
+    assert_eq!(pinned_platform.from_env_var, Some("PINNED_PLATFORM".to_string()));
+    assert_eq!(pinned_platform.value, "b".to_string());
 }
 
 fn assert_eq_json(a: &str, b: &str) {

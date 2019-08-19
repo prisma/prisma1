@@ -110,9 +110,9 @@ impl RpcApi {
         })?;
 
         let connector = match source.connector_type() {
-            "sqlite" => SqlMigrationConnector::sqlite(&source.url())?,
-            "postgresql" => SqlMigrationConnector::postgres(&source.url())?,
-            "mysql" => SqlMigrationConnector::mysql(&source.url())?,
+            "sqlite" => SqlMigrationConnector::sqlite(&source.url().value)?,
+            "postgresql" => SqlMigrationConnector::postgres(&source.url().value)?,
+            "mysql" => SqlMigrationConnector::mysql(&source.url().value)?,
             x => unimplemented!("Connector {} is not supported yet", x),
         };
 
