@@ -25,7 +25,7 @@ impl Builder<WriteQuery> for DeleteManyBuilder {
 
         let delete_many = RootWriteQuery::DeleteManyRecords(DeleteManyRecords {
             model: self.model,
-            filter: filter,
+            filter,
         });
 
         Ok(WriteQuery::Root(self.field.name, self.field.alias, delete_many))

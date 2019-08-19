@@ -10,7 +10,7 @@ use url::Url;
 #[cfg(feature = "sql")]
 use sql_connector::*;
 
-pub fn load(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
+pub fn load(source: &dyn Source) -> PrismaResult<QueryExecutor> {
     match source.connector_type() {
         #[cfg(feature = "sql")]
         SQLITE_SOURCE_NAME => sqlite(source),
@@ -29,7 +29,7 @@ pub fn load(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
 }
 
 #[cfg(feature = "sql")]
-fn sqlite(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
+fn sqlite(source: &dyn Source) -> PrismaResult<QueryExecutor> {
     trace!("Loading SQLite connector...");
 
     let sqlite = Sqlite::from_source(source)?;
@@ -42,7 +42,7 @@ fn sqlite(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
 }
 
 #[cfg(feature = "sql")]
-fn postgres(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
+fn postgres(source: &dyn Source) -> PrismaResult<QueryExecutor> {
     trace!("Loading Postgres connector...");
 
     let url = Url::parse(&source.url().value)?;
@@ -51,7 +51,7 @@ fn postgres(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
     let db_name = params
         .get("schema")
         .map(ToString::to_string)
-        .unwrap_or(String::from("public"));
+        .unwrap_or_else(|| String::from("public"));
 
     let psql = PostgreSql::from_source(source)?;
     let db = SqlDatabase::new(psql);
@@ -61,16 +61,18 @@ fn postgres(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
 }
 
 #[cfg(feature = "sql")]
-fn mysql(source: &Box<dyn Source>) -> PrismaResult<QueryExecutor> {
+fn mysql(source: &dyn Source) -> PrismaResult<QueryExecutor> {
     trace!("Loading MySQL connector...");
 
     let psql = Mysql::from_source(source)?;
     let db = SqlDatabase::new(psql);
     let url = Url::parse(&source.url().value)?;
     let err_str = "No database found in connection string";
+
     let mut db_name = url
         .path_segments()
-        .ok_or(PrismaError::ConfigurationError(err_str.into()))?;
+        .ok_or_else(|| PrismaError::ConfigurationError(err_str.into()))?;
+
     let db_name = db_name.next().expect(err_str);
 
     trace!("Loaded MySQL connector.");

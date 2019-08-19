@@ -1,24 +1,40 @@
 mod enum_renderer;
 mod field_renderer;
 mod object_renderer;
-mod schema_renderer;
 mod type_renderer;
 
 use core::schema::*;
 use enum_renderer::*;
 use field_renderer::*;
 use object_renderer::*;
-use schema_renderer::*;
+use prisma_models::EnumType;
 use std::{
     cell::RefCell,
     collections::HashMap,
     sync::{Arc, Weak},
 };
 use type_renderer::*;
-use prisma_models::EnumType;
 
 #[allow(dead_code)]
 pub struct GraphQLSchemaRenderer;
+
+/// Top level GraphQL schema renderer.
+pub struct GqlSchemaRenderer {
+    query_schema: QuerySchemaRef,
+}
+
+impl Renderer for GqlSchemaRenderer {
+    fn render(&self, ctx: RenderContext) -> (String, RenderContext) {
+        let (_, ctx) = self.query_schema.query.into_renderer().render(ctx);
+        self.query_schema.mutation.into_renderer().render(ctx)
+    }
+}
+
+impl GqlSchemaRenderer {
+    pub fn new(query_schema: QuerySchemaRef) -> GqlSchemaRenderer {
+        GqlSchemaRenderer { query_schema }
+    }
+}
 
 impl QuerySchemaRenderer<String> for GraphQLSchemaRenderer {
     fn render(query_schema: QuerySchemaRef) -> String {

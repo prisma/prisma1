@@ -38,7 +38,7 @@ where
             })?
             .map(Record::from)
             .map(|record| SingleRecord {
-                record: record,
+                record,
                 field_names,
             });
 
@@ -156,7 +156,7 @@ where
 
                     Ok(ScalarListElement {
                         record_id: GraphqlId::try_from(record_id)?,
-                        value: value,
+                        value,
                     })
                 })
                 .collect()

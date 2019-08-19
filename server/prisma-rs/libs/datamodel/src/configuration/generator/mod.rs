@@ -4,10 +4,11 @@ pub use json::*;
 pub use loader::*;
 
 use crate::StringFromEnvVar;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[serde(rename_all = "camelCase")]
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Generator {
     name: String,
     provider: String,

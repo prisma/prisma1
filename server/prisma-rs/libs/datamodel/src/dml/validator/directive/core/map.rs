@@ -16,12 +16,12 @@ impl<T: dml::WithDatabaseName> DirectiveValidator<T> for MapDirectiveValidator {
                 return Err(Error::new_directive_validation_error(
                     &format!("{}", err),
                     "map",
-                    &err.span(),
+                    err.span(),
                 ))
             }
         };
 
-        return Ok(());
+        Ok(())
     }
 
     fn serialize(&self, obj: &T, _atamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {

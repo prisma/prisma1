@@ -2,6 +2,7 @@ use super::*;
 use crate::{ast, configuration, dml, errors::ErrorCollection};
 
 /// Wrapper for all lift and validation steps
+#[derive(Default)]
 pub struct ValidationPipeline {
     lifter: LiftAstToDml,
     validator: Validator,
@@ -10,19 +11,15 @@ pub struct ValidationPipeline {
 
 impl ValidationPipeline {
     /// Creates a new instance, with all builtin directives registered.
-    pub fn new() -> ValidationPipeline {
-        ValidationPipeline {
-            lifter: LiftAstToDml::new(),
-            validator: Validator::new(),
-            standardiser: Standardiser::new(),
-        }
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Creates a new instance, with all builtin directives and
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(sources: &Vec<Box<configuration::Source>>) -> ValidationPipeline {
+    pub fn with_sources(sources: &[Box<dyn configuration::Source>]) -> ValidationPipeline {
         ValidationPipeline {
             lifter: LiftAstToDml::with_sources(sources),
             validator: Validator::with_sources(sources),

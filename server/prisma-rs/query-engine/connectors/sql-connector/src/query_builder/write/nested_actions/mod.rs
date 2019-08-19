@@ -39,8 +39,8 @@ pub trait NestedActions {
     fn records_not_connected(&self, parent_id: Option<GraphqlId>, child_id: Option<GraphqlId>) -> SqlError {
         let rf = self.relation_field();
 
-        let parent_where = parent_id.map(|parent_id| RecordFinderInfo::for_id(rf.model(), &parent_id));
-        let child_where = child_id.map(|child_id| RecordFinderInfo::for_id(rf.model(), &child_id));
+        let parent_where = parent_id.map(|parent_id| RecordFinderInfo::for_id(rf.model(), &parent_id)).map(Box::new);
+        let child_where = child_id.map(|child_id| RecordFinderInfo::for_id(rf.model(), &child_id)).map(Box::new);
 
         SqlError::RecordsNotConnected {
             relation_name: rf.relation().name.clone(),

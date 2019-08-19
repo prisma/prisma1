@@ -59,7 +59,7 @@ fn fail_if_back_relation_for_embedded_type() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Embedded models cannot have back relation fields.",
         "Comment",
-        &Span::new(151, 160),
+        Span::new(151, 160),
     ));
 }
 
@@ -103,6 +103,6 @@ fn fail_if_ambigous_relation_fields_do_not_specify_a_name() {
 
     errors.assert_is_at(
         0,
-        ValidationError::new_model_validation_error("Ambiguous relation detected.", "Todo", &Span::new(41, 59)),
+        ValidationError::new_model_validation_error("Ambiguous relation detected.", "Todo", Span::new(41, 59)),
     );
 }

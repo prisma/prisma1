@@ -43,7 +43,7 @@ impl DirectiveValidator<dml::Field> for SequenceDirectiveValidator {
             }
         }
 
-        return Ok(());
+        Ok(())
     }
 
     fn serialize(&self, field: &dml::Field, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {

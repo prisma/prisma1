@@ -8,24 +8,24 @@ use std::collections::HashSet;
 /// This class makes it more convenient to implement
 /// custom directives.
 pub struct Arguments<'a> {
-    arguments: &'a Vec<ast::Argument>,
+    arguments: &'a [ast::Argument],
     used_arguments: HashSet<&'a str>,
     span: ast::Span,
 }
 
 impl<'a> Arguments<'a> {
     /// Creates a new instance, given a list of arguments.
-    pub fn new(arguments: &'a Vec<ast::Argument>, span: ast::Span) -> Arguments<'a> {
+    pub fn new(arguments: &'a [ast::Argument], span: ast::Span) -> Arguments<'a> {
         Arguments {
             used_arguments: HashSet::new(),
-            arguments: arguments,
-            span: span.clone(),
+            arguments,
+            span,
         }
     }
 
     /// Creates empty arguments. The vec is a dummy that needs to be handed in
     /// due of the shape of the struct.
-    pub fn empty(vec: &'a Vec<ast::Argument>) -> Self {
+    pub fn empty(vec: &'a [ast::Argument]) -> Self {
         Arguments {
             used_arguments: HashSet::new(),
             arguments: vec,
@@ -40,7 +40,7 @@ impl<'a> Arguments<'a> {
 
         for arg in self.arguments {
             if arg_names.contains::<&str>(&(&arg.name.name as &str)) {
-                errors.push(ValidationError::new_duplicate_argument_error(&arg.name.name, &arg.span));
+                errors.push(ValidationError::new_duplicate_argument_error(&arg.name.name, arg.span));
             }
             arg_names.insert(&arg.name.name);
         }
@@ -54,7 +54,7 @@ impl<'a> Arguments<'a> {
 
         for arg in self.arguments {
             if !self.used_arguments.contains::<&str>(&(&arg.name.name as &str)) {
-                errors.push(ValidationError::new_unused_argument_error(&arg.name.name, &arg.span));
+                errors.push(ValidationError::new_unused_argument_error(&arg.name.name, arg.span));
             }
         }
 
@@ -62,14 +62,14 @@ impl<'a> Arguments<'a> {
     }
 
     /// Gets the span of all arguments wrapped by this instance.
-    pub fn span(&self) -> &ast::Span {
-        &self.span
+    pub fn span(&self) -> ast::Span {
+        self.span
     }
 
     /// Gets the arg with the given name.
     pub fn arg(&mut self, name: &str) -> Result<value::ValueValidator, ValidationError> {
         match self.arg_internal(name) {
-            None => Err(ValidationError::new_argument_not_found_error(name, &self.span)),
+            None => Err(ValidationError::new_argument_not_found_error(name, self.span)),
             Some(arg) => value::ValueValidator::new(&arg.value),
         }
     }
@@ -83,7 +83,7 @@ impl<'a> Arguments<'a> {
             }
         }
 
-        return None;
+        None
     }
 
     /// Gets the arg with the given name, or if it is not found, the first unnamed argument.
@@ -93,8 +93,8 @@ impl<'a> Arguments<'a> {
         match (self.arg_internal(name), self.arg_internal("")) {
             (Some(arg), None) => value::ValueValidator::new(&arg.value),
             (None, Some(arg)) => value::ValueValidator::new(&arg.value),
-            (Some(arg), Some(_)) => Err(ValidationError::new_duplicate_default_argument_error(&name, &arg.span)),
-            (None, None) => Err(ValidationError::new_argument_not_found_error(name, &self.span)),
+            (Some(arg), Some(_)) => Err(ValidationError::new_duplicate_default_argument_error(&name, arg.span)),
+            (None, None) => Err(ValidationError::new_argument_not_found_error(name, self.span)),
         }
     }
 }

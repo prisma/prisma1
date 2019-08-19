@@ -75,7 +75,7 @@ impl<'a> Renderer<'a> {
 
     pub fn render_documentation(target: &mut LineWriteable, obj: &ast::WithDocumentation) {
         if let Some(doc) = &obj.documentation() {
-            for line in doc.text.split("\n") {
+            for line in doc.text.split('\n') {
                 target.write("/// ");
                 target.write(line);
                 target.end_line();
@@ -142,8 +142,8 @@ impl<'a> Renderer<'a> {
         target.write(&field.field_type.name);
 
         // Attributes
-        if field.directives.len() > 0 {
-            let mut attributes_builder = StringBuilder::new();
+        if !field.directives.is_empty() {
+            let mut attributes_builder = StringBuilder::default();
 
             for directive in &field.directives {
                 Self::render_field_directive(&mut attributes_builder, &directive);
@@ -172,7 +172,7 @@ impl<'a> Renderer<'a> {
 
         field_formatter.render(self);
 
-        if model.directives.len() > 0 {
+        if !model.directives.is_empty() {
             self.end_line();
             for directive in &model.directives {
                 self.render_block_directive(&directive);
@@ -198,7 +198,7 @@ impl<'a> Renderer<'a> {
             self.end_line();
         }
 
-        if enm.directives.len() > 0 {
+        if !enm.directives.is_empty() {
             self.end_line();
             for directive in &enm.directives {
                 self.write(" ");
@@ -218,7 +218,7 @@ impl<'a> Renderer<'a> {
 
         // Type
         {
-            let mut type_builder = StringBuilder::new();
+            let mut type_builder = StringBuilder::default();
 
             type_builder.write(&field.field_type.name);
             Self::render_field_arity(&mut type_builder, &field.arity);
@@ -227,8 +227,8 @@ impl<'a> Renderer<'a> {
         }
 
         // Attributes
-        if field.directives.len() > 0 {
-            let mut attributes_builder = StringBuilder::new();
+        if !field.directives.is_empty() {
+            let mut attributes_builder = StringBuilder::default();
 
             for directive in &field.directives {
                 attributes_builder.write(&" ");
@@ -253,7 +253,7 @@ impl<'a> Renderer<'a> {
         target.write("@");
         target.write(&directive.name.name);
 
-        if directive.arguments.len() > 0 {
+        if !directive.arguments.is_empty() {
             target.write("(");
             Self::render_arguments(target, &directive.arguments);
             target.write(")");
@@ -264,15 +264,16 @@ impl<'a> Renderer<'a> {
         self.write("@@");
         self.write(&directive.name.name);
 
-        if directive.arguments.len() > 0 {
+        if !directive.arguments.is_empty() {
             self.write("(");
             Self::render_arguments(self, &directive.arguments);
             self.write(")");
         }
+
         self.end_line();
     }
 
-    pub fn render_arguments(target: &mut LineWriteable, args: &Vec<ast::Argument>) {
+    pub fn render_arguments(target: &mut LineWriteable, args: &[ast::Argument]) {
         for (idx, arg) in args.iter().enumerate() {
             if idx > 0 {
                 target.write(&", ");
@@ -291,7 +292,7 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_value_to_string(val: &ast::Value) -> String {
-        let mut builder = StringBuilder::new();
+        let mut builder = StringBuilder::default();
         Self::render_value(&mut builder, val);
         builder.to_string()
     }
@@ -308,7 +309,7 @@ impl<'a> Renderer<'a> {
         };
     }
 
-    pub fn render_func(target: &mut LineWriteable, name: &str, vals: &Vec<ast::Value>) {
+    pub fn render_func(target: &mut LineWriteable, name: &str, vals: &[ast::Value]) {
         target.write(name);
         target.write("(");
         for val in vals {
@@ -318,17 +319,17 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn indent_up(&mut self) {
-        self.indent = self.indent + 1
+        self.indent += 1
     }
 
     pub fn indent_down(&mut self) {
         if self.indent == 0 {
             panic!("Indentation error.")
         }
-        self.indent = self.indent - 1
+        self.indent -= 1
     }
 
-    pub fn render_array(target: &mut LineWriteable, vals: &Vec<ast::Value>) {
+    pub fn render_array(target: &mut LineWriteable, vals: &[ast::Value]) {
         target.write(&"[");
         for (idx, arg) in vals.iter().enumerate() {
             if idx > 0 {
@@ -352,7 +353,7 @@ impl<'a> LineWriteable for Renderer<'a> {
         // TODO: Proper result handling.
         if self.new_line > 0 || self.maybe_new_line > 0 {
             for _i in 0..std::cmp::max(self.new_line, self.maybe_new_line) {
-                writeln!(self.stream, "").expect("Writer error.");
+                writeln!(self.stream).expect("Writer error.");
             }
             write!(self.stream, "{}", " ".repeat(self.indent * self.indent_width)).expect("Writer error.");
             self.new_line = 0;
@@ -363,11 +364,11 @@ impl<'a> LineWriteable for Renderer<'a> {
     }
 
     fn end_line(&mut self) {
-        self.new_line = self.new_line + 1;
+        self.new_line += 1;
     }
 
     fn maybe_end_line(&mut self) {
-        self.maybe_new_line = self.maybe_new_line + 1;
+        self.maybe_new_line += 1;
     }
 
     fn line_empty(&self) -> bool {

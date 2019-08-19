@@ -21,7 +21,7 @@ fn nice_error_for_missing_model_keyword() {
             "source definition",
             "generator definition",
         ],
-        &Span::new(5, 5),
+        Span::new(5, 5),
     ));
 }
 #[test]
@@ -46,7 +46,7 @@ fn nice_error_for_missing_model_keyword_2() {
             "source definition",
             "generator definition",
         ],
-        &Span::new(47, 47),
+        Span::new(47, 47),
     ));
 }
 
@@ -63,7 +63,7 @@ fn nice_error_on_incorrect_enum_field() {
 
     error.assert_is(ValidationError::new_parser_error(
         &vec!["End of block (\"}\")", "enum field declaration"],
-        &Span::new(26, 26),
+        Span::new(26, 26),
     ));
 }
 
@@ -80,7 +80,7 @@ fn nice_error_missing_type() {
 
     error.assert_is(ValidationError::new_parser_error(
         &vec!["field type"],
-        &Span::new(54, 54),
+        Span::new(54, 54),
     ));
 }
 
@@ -96,7 +96,7 @@ fn nice_error_missing_directive_name() {
 
     error.assert_is(ValidationError::new_parser_error(
         &vec!["directive"],
-        &Span::new(43, 43),
+        Span::new(43, 43),
     ));
 }
 
@@ -112,7 +112,7 @@ fn nice_error_missing_braces() {
 
     error.assert_is(ValidationError::new_parser_error(
         &vec!["Start of block (\"{\")"],
-        &Span::new(25, 25),
+        Span::new(25, 25),
     ));
 }
 
@@ -127,7 +127,7 @@ fn nice_error_broken_field_type_legacy_list() {
 
     error.assert_is(ValidationError::new_legacy_parser_error(
         "To specify a list, please use `Type[]` instead of `[Type]`.",
-        &Span::new(29, 34),
+        Span::new(29, 34),
     ));
 }
 
@@ -142,7 +142,7 @@ fn nice_error_broken_field_type_legacy_colon() {
 
     error.assert_is(ValidationError::new_legacy_parser_error(
         "Field declarations don't require a `:`.",
-        &Span::new(28, 29),
+        Span::new(28, 29),
     ));
 }
 
@@ -157,7 +157,7 @@ fn nice_error_broken_field_type_legacy_required() {
 
     error.assert_is(ValidationError::new_legacy_parser_error(
         "Fields are required by default, `!` is no longer required.",
-        &Span::new(29, 33),
+        Span::new(29, 33),
     ));
 }
 
@@ -172,6 +172,6 @@ fn nice_error_legacy_model_decl() {
 
     error.assert_is(ValidationError::new_legacy_parser_error(
         "Model declarations have to be indicated with the `model` keyword.",
-        &Span::new(5, 9),
+        Span::new(5, 9),
     ));
 }

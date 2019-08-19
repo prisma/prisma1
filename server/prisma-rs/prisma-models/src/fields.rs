@@ -19,7 +19,7 @@ pub struct Fields {
 impl Fields {
     pub fn new(all: Vec<Field>, model: ModelWeakRef) -> Fields {
         Fields {
-            all: all,
+            all,
             id: OnceCell::new(),
             scalar: OnceCell::new(),
             relation: OnceCell::new(),

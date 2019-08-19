@@ -114,7 +114,7 @@ pub struct ForeignKey {
 pub enum OnDelete {
     NoAction,
     SetNull,
-    Cascade
+    Cascade,
 }
 
 impl PartialEq for ForeignKey {
@@ -138,7 +138,7 @@ impl ForeignKey {
             name: Some(name),
             table,
             column,
-            on_delete
+            on_delete,
         }
     }
 }

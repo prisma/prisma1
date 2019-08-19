@@ -21,7 +21,7 @@ pub fn convert_introspected_columns(
                 name: c.name.clone(),
                 tpe: column_type(c),
                 is_required: c.is_required,
-                foreign_key: foreign_key,
+                foreign_key,
                 sequence: None,
                 default: None,
             }

@@ -1,7 +1,7 @@
 use datamodel::*;
 use migration_connector::steps::*;
 
-pub trait DataModelMigrationStepsInferrer: std::panic::RefUnwindSafe {
+pub trait DataModelMigrationStepsInferrer: Send + Sync + 'static {
     fn infer(&self, previous: &Datamodel, next: &Datamodel) -> Vec<MigrationStep>;
 }
 

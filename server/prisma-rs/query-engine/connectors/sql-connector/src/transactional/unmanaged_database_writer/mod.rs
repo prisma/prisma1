@@ -12,7 +12,7 @@ use crate::{
     query_builder::WriteQueryBuilder,
     RawQuery, Transaction, Transactional,
 };
-use connector_interface::{self, write_ast::*, result_ast::*, UnmanagedDatabaseWriter};
+use connector_interface::{self, result_ast::*, write_ast::*, UnmanagedDatabaseWriter};
 use serde_json::Value;
 use std::sync::Arc;
 
@@ -47,7 +47,7 @@ where
                 RootWriteQuery::UpdateRecord(ref un) => Ok(update(conn, un)?),
                 RootWriteQuery::UpsertRecord(ref ups) => match conn.find_id(&ups.where_) {
                     Err(_e @ SqlError::RecordNotFoundForWhere { .. }) => Ok(create(conn, &ups.create)?),
-                    Err(e) => return Err(e.into()),
+                    Err(e) => Err(e.into()),
                     Ok(_) => Ok(update(conn, &ups.update)?),
                 },
                 RootWriteQuery::UpdateManyRecords(ref uns) => {

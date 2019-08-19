@@ -12,7 +12,7 @@ fn parse_expr_and_lift_span(token: &pest::iterators::Pair<'_, Rule>, start: usiz
     match parse_expression(token) {
         Value::Array(_, s) => Err(ValidationError::new_validation_error(
             "Arrays cannot be interpolated into strings.",
-            &lift_span(&s, start),
+            lift_span(&s, start),
         )),
         expr => Ok(expr.with_lifted_span(start)),
     }
@@ -24,7 +24,7 @@ impl StringInterpolator {
     ///
     /// The string is re-parsed and all expressions found within `${...}` are
     /// evaluated recursively.
-    pub fn interpolate(text: &str, span: &Span) -> Result<Value, ValidationError> {
+    pub fn interpolate(text: &str, span: Span) -> Result<Value, ValidationError> {
         let string_result = PrismaDatamodelParser::parse(Rule::string_interpolated, text);
         let mut parts: Vec<String> = Vec::new();
 
@@ -43,7 +43,7 @@ impl StringInterpolator {
                                     Rule::INTERPOLATION_END => {}
                                     Rule::expression => {
                                         let value = parse_expr_and_lift_span(&child, span.start + 1)?;
-                                        parts.push(String::from(ValueValidator::new(&value)?.raw()))
+                                        parts.push(ValueValidator::new(&value)?.raw())
                                     }
                                     Rule::EOI => {}
                                     _ => panic!("Encounterd impossible interpolation sequence: {:?}", child.tokens()),
@@ -55,7 +55,7 @@ impl StringInterpolator {
                         Rule::string_any => parts.push(String::from(current.as_str())),
                         Rule::expression => {
                             let value = parse_expr_and_lift_span(&current, span.start + 1)?;
-                            parts.push(String::from(ValueValidator::new(&value)?.raw()))
+                            parts.push(ValueValidator::new(&value)?.raw())
                         }
                         // No whitespace, no comments.
                         Rule::EOI => {}
@@ -66,7 +66,7 @@ impl StringInterpolator {
                     };
                 }
 
-                Ok(Value::StringValue(parts.join(""), span.clone()))
+                Ok(Value::StringValue(parts.join(""), span))
             }
             Err(err) => {
                 let location = match err.location {
@@ -77,12 +77,12 @@ impl StringInterpolator {
                 let expected = match err.variant {
                     pest::error::ErrorVariant::ParsingError {
                         positives,
-                        negatives: _,
+                        ..
                     } => crate::ast::parser::get_expected_from_error(&positives),
                     _ => panic!("Could not construct parsing error. This should never happend."),
                 };
 
-                Err(ValidationError::new_parser_error(&expected, &location))
+                Err(ValidationError::new_parser_error(&expected, location))
             }
         }
     }

@@ -10,7 +10,7 @@ macro_rules! set (
     );
 );
 
-pub trait DataModelCalculator: std::panic::RefUnwindSafe {
+pub trait DataModelCalculator: Send + Sync + 'static {
     fn infer(&self, current: &Datamodel, steps: &Vec<MigrationStep>) -> Datamodel;
 }
 

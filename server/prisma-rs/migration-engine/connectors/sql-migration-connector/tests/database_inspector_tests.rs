@@ -145,7 +145,11 @@ fn foreign_keys_must_work() {
                 name: "city".to_string(),
                 tpe: ColumnType::Int,
                 is_required: true,
-                foreign_key: Some(ForeignKey::new("City".to_string(), "id".to_string(), OnDelete::NoAction)),
+                foreign_key: Some(ForeignKey::new(
+                    "City".to_string(),
+                    "id".to_string(),
+                    OnDelete::NoAction,
+                )),
                 sequence: None,
                 default: None,
             }];
@@ -186,8 +190,10 @@ where
     {
         let mut migration = Migration::new().schema(SCHEMA);
         migrationFn("mysql", &mut migration);
+
         let (inspector, database) = mysql();
         let full_sql = dbg!(migration.make::<barrel::backend::MySql>());
+
         run_full_sql(&database, &full_sql);
         println!("Running the test function now");
         testFn(inspector);
@@ -221,6 +227,7 @@ fn postgres() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
         db_host_postgres(),
         SCHEMA
     );
+
     let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA));
     let setup_database = DatabaseInspector::postgres(url.to_string()).database;
     let _ = setup_database.query_raw(SCHEMA, &drop_schema, &[]);
@@ -234,8 +241,10 @@ fn postgres() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
 fn mysql() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
     let url_without_db = format!("mysql://root:prisma@{}:3306", db_host_mysql());
     let drop_database = dbg!(format!("DROP DATABASE IF EXISTS `{}`;", SCHEMA));
+
     let create_database = dbg!(format!("CREATE DATABASE `{}`;", SCHEMA));
     let setup_database = DatabaseInspector::mysql(url_without_db.to_string()).database;
+
     let _ = setup_database.query_raw(SCHEMA, &drop_database, &[]);
     let _ = setup_database.query_raw(SCHEMA, &create_database, &[]);
 

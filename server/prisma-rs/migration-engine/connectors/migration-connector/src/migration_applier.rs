@@ -7,14 +7,12 @@ pub trait MigrationApplier<T> {
     fn unapply(&self, migration: &Migration, database_migration: &T) -> ConnectorResult<()>;
 }
 
-#[allow(unused, dead_code)]
 pub struct MigrationApplierImpl<T> {
     pub migration_persistence: Arc<MigrationPersistence>,
     pub step_applier: Arc<DatabaseMigrationStepApplier<T>>,
 }
 
-#[allow(unused, dead_code)]
-impl<T> MigrationApplier<T> for MigrationApplierImpl<T> {
+impl<T: 'static> MigrationApplier<T> for MigrationApplierImpl<T> {
     fn apply(&self, migration: &Migration, database_migration: &T) -> ConnectorResult<()> {
         assert_eq!(migration.status, MigrationStatus::Pending); // what other states are valid here?
         let mut migration_updates = migration.update_params();
@@ -62,7 +60,7 @@ impl<T> MigrationApplier<T> for MigrationApplierImpl<T> {
     }
 }
 
-impl<T> MigrationApplierImpl<T> {
+impl<T: 'static> MigrationApplierImpl<T> {
     fn go_forward(&self, migration_updates: &mut MigrationUpdateParams, database_migration: &T) -> ConnectorResult<()> {
         let mut step = 0;
         while self.step_applier.apply_step(&database_migration, step)? {

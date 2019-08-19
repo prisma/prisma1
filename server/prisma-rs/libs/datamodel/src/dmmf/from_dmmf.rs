@@ -1,4 +1,4 @@
-use super::dmmf::*;
+use super::*;
 use crate::ast::Span;
 use crate::common::FromStrAndSpan;
 use crate::common::PrismaType;
@@ -6,7 +6,7 @@ use crate::dml;
 use chrono::{DateTime, Utc};
 
 fn type_from_string(scalar: &str) -> PrismaType {
-    PrismaType::from_str_and_span(scalar, &crate::ast::Span::empty()).unwrap()
+    PrismaType::from_str_and_span(scalar, Span::empty()).unwrap()
 }
 
 pub fn default_value_from_serde(
@@ -41,7 +41,7 @@ pub fn default_value_from_serde(
 }
 
 fn function_from_dmmf(func: &Function, expected_type: PrismaType) -> dml::Value {
-    if func.args.len() > 0 {
+    if !func.args.is_empty() {
         panic!("Function argument deserialization is not supported with DMMF. There are no type annotations yet, so it's not clear which is meant.");
     }
 
@@ -58,7 +58,7 @@ fn function_from_dmmf(func: &Function, expected_type: PrismaType) -> dml::Value 
 
 fn get_on_delete_strategy(strategy: &Option<String>) -> dml::OnDeleteStrategy {
     match strategy {
-        Some(val) => dml::OnDeleteStrategy::from_str_and_span(&val, &Span::empty()).unwrap(),
+        Some(val) => dml::OnDeleteStrategy::from_str_and_span(&val, Span::empty()).unwrap(),
         None => dml::OnDeleteStrategy::None,
     }
 }
@@ -111,9 +111,9 @@ pub fn field_from_dmmf(field: &Field) -> dml::Field {
         name: field.name.clone(),
         arity: get_field_arity(field.is_required, field.is_list),
         database_name: field.db_name.clone(),
-        field_type: field_type,
-        default_value: default_value,
-        id_info: id_info,
+        field_type,
+        default_value,
+        id_info,
         is_unique: field.is_unique,
         // TODO: Scalar List Strategy
         scalar_list_strategy: None,
@@ -148,7 +148,7 @@ pub fn schema_from_dmmf(schema: &Datamodel) -> dml::Datamodel {
         datamodel.add_enum(enum_from_dmmf(&enum_model));
     }
 
-    return datamodel;
+    datamodel
 }
 
 pub fn parse_from_dmmf(dmmf: &str) -> dml::Datamodel {

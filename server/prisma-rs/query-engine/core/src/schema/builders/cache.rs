@@ -58,13 +58,12 @@ impl<T: Debug> TypeRefCache<T> {
     /// changed as well. While this restriction could be lifted by comparing the contents, it is
     /// not required in the context of the schema builders.
     pub fn insert(&self, key: String, value: Arc<T>) {
-        match self.cache.borrow_mut().insert(key.clone(), value) {
-            Some(old) => panic!(format!(
+        if let Some(old) = self.cache.borrow_mut().insert(key.clone(), value) {
+            panic!(format!(
                 "Invariant violation: Inserted key {} twice, this is a bug and invalidates Weak references. {:?}",
                 key, old
-            )),
-            None => (),
-        };
+            ))
+        }
     }
 }
 

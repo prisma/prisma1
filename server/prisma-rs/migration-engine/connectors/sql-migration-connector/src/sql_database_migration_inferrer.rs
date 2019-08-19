@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 pub struct SqlDatabaseMigrationInferrer {
     pub sql_family: SqlFamily,
-    pub inspector: Arc<DatabaseInspector>,
+    pub inspector: Arc<DatabaseInspector + Send + Sync + 'static>,
     pub schema_name: String,
 }
 
@@ -21,31 +21,6 @@ impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
         steps: &Vec<MigrationStep>,
     ) -> ConnectorResult<SqlMigration> {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
-        let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
-        infer(
-            &current_database_schema,
-            &expected_database_schema,
-            &self.schema_name,
-            self.sql_family,
-            previous,
-            next,
-            steps,
-        )
-    }
-}
-
-pub struct VirtualSqlDatabaseMigrationInferrer {
-    pub sql_family: SqlFamily,
-    pub schema_name: String,
-}
-impl DatabaseMigrationInferrer<SqlMigration> for VirtualSqlDatabaseMigrationInferrer {
-    fn infer(
-        &self,
-        previous: &Datamodel,
-        next: &Datamodel,
-        steps: &Vec<MigrationStep>,
-    ) -> ConnectorResult<SqlMigration> {
-        let current_database_schema = DatabaseSchemaCalculator::calculate(previous)?;
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
         infer(
             &current_database_schema,
@@ -177,8 +152,8 @@ fn infer_based_on_db_schema_diff(
     let steps = infer_database_migration_steps_and_fix(&current, &next, &schema_name, sql_family)?;
     let rollback = infer_database_migration_steps_and_fix(&next, &current, &schema_name, sql_family)?;
     Ok(SqlMigration {
-        steps: steps,
-        rollback: rollback,
+        steps,
+        rollback,
     })
 }
 
@@ -283,7 +258,7 @@ fn delay_foreign_key_creation(mut diff: DatabaseSchemaDiff) -> Vec<SqlMigrationS
 
         let alter_table = AlterTable {
             table: create_table.name.clone(),
-            changes: changes,
+            changes,
         };
         if !alter_table.changes.is_empty() {
             extra_alter_tables.push(alter_table);

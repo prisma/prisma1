@@ -11,18 +11,18 @@ mod sqlite_inspector;
 use crate::migration_database::{
     MigrationDatabase, Mysql as MysqlDriver, PostgreSql as PostgresDriver, Sqlite as SqliteDriver,
 };
-use prisma_query::connector;
 pub use database_inspector_impl::*;
 pub use database_schema::*;
 pub use empty_impl::*;
 use mysql_inspector::MysqlInspector;
 use postgres_inspector::Postgres;
+use prisma_query::connector;
 use sqlite_inspector::Sqlite;
 use std::convert::TryFrom;
 use std::sync::Arc;
 use url::Url;
 
-pub trait DatabaseInspector {
+pub trait DatabaseInspector: Send + Sync + 'static {
     fn introspect(&self, schema: &String) -> DatabaseSchema;
 }
 
@@ -38,7 +38,7 @@ impl DatabaseInspector {
         Self::sqlite_with_database(conn)
     }
 
-    pub fn sqlite_with_database(database: Arc<MigrationDatabase>) -> Sqlite {
+    pub fn sqlite_with_database(database: Arc<MigrationDatabase + Send + Sync + 'static>) -> Sqlite {
         Sqlite::new(database)
     }
 
@@ -72,7 +72,7 @@ impl DatabaseInspector {
         Postgres::new(schema_connection)
     }
 
-    pub fn postgres_with_database(database: Arc<MigrationDatabase>) -> Postgres {
+    pub fn postgres_with_database(database: Arc<MigrationDatabase + Send + Sync + 'static>) -> Postgres {
         Postgres::new(database)
     }
 
@@ -84,7 +84,7 @@ impl DatabaseInspector {
         Self::mysql_with_database(Arc::new(database))
     }
 
-    pub fn mysql_with_database(database: Arc<MigrationDatabase>) -> MysqlInspector {
+    pub fn mysql_with_database(database: Arc<MigrationDatabase + Send + Sync + 'static>) -> MysqlInspector {
         MysqlInspector::new(database)
     }
 }

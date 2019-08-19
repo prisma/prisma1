@@ -1,4 +1,3 @@
-use super::IntrospectionConnection;
 use super::*;
 use log::debug;
 use std::collections::{HashMap, HashSet};
@@ -43,7 +42,7 @@ impl IntrospectionConnector {
             WHERE table_schema = '{}'
             -- Views are not supported yet
             AND table_type = 'BASE TABLE'
-        ORDER BY table_name",
+            ORDER BY table_name",
             schema
         );
         let rows = self.conn.query_raw(&sql, schema).expect("get table names ");
@@ -76,7 +75,7 @@ impl IntrospectionConnector {
 
     fn get_columns(&self, schema: &str, table: &str) -> Vec<Column> {
         let sql = format!(
-            "SELECT column_name, udt_name, column_default, is_nullable
+            "SELECT column_name, udt_name, column_default, is_nullable, is_identity, data_type
             FROM information_schema.columns
             WHERE table_schema = '{}' AND table_name  = '{}'
             ORDER BY column_name",
@@ -87,7 +86,21 @@ impl IntrospectionConnector {
             .into_iter()
             .map(|col| {
                 debug!("Got column: {:?}", col);
+                let col_name = col
+                    .get("column_name")
+                    .and_then(|x| x.to_string())
+                    .expect("get column name");
                 let udt = col.get("udt_name").and_then(|x| x.to_string()).expect("get udt_name");
+                let is_identity_str = col
+                    .get("is_identity")
+                    .and_then(|x| x.to_string())
+                    .expect("get is_identity")
+                    .to_lowercase();
+                let is_identity = match is_identity_str.as_str() {
+                    "no" => false,
+                    "yes" => true,
+                    _ => panic!("unrecognized is_identity variant '{}'", is_identity_str),
+                };
                 let is_nullable = col
                     .get("is_nullable")
                     .and_then(|x| x.to_string())
@@ -106,26 +119,31 @@ impl IntrospectionConnector {
                 } else {
                     ColumnArity::Nullable
                 };
+                let default = col
+                    .get("column_default")
+                    .map(|x| {
+                        debug!("Converting default to string: {:?}", x);
+                        if x.is_null() {
+                            None
+                        } else {
+                            let default = x.to_string().expect("default to string");
+                            Some(default)
+                        }
+                    })
+                    .expect("get default");
+                let is_auto_increment = is_identity
+                    || match default {
+                        Some(ref val) => {
+                            val == &format!("nextval(\'\"{}\".\"{}_{}_seq\"\'::regclass)", schema, table, col_name,)
+                        }
+                        None => false,
+                    };
                 Column {
-                    name: col
-                        .get("column_name")
-                        .and_then(|x| x.to_string())
-                        .expect("get column name"),
+                    name: col_name,
                     tpe,
                     arity,
-                    default: col
-                        .get("column_default")
-                        .map(|x| {
-                            debug!("Converting default to string: {:?}", x);
-                            if x.is_null() {
-                                None
-                            } else {
-                                let default = x.to_string().expect("default to string");
-                                Some(default)
-                            }
-                        })
-                        .expect("get default"),
-                    auto_increment: None,
+                    default,
+                    auto_increment: is_auto_increment,
                 }
             })
             .collect();

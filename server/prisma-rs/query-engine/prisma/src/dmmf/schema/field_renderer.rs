@@ -39,7 +39,7 @@ impl DMMFFieldRenderer {
         (DMMFFieldWrapper::Output(output_field), ctx)
     }
 
-    fn render_arguments(&self, args: &Vec<Argument>, ctx: RenderContext) -> (Vec<DMMFArgument>, RenderContext) {
+    fn render_arguments(&self, args: &[Argument], ctx: RenderContext) -> (Vec<DMMFArgument>, RenderContext) {
         args.iter().fold((vec![], ctx), |(mut prev, ctx), arg| {
             let (rendered, ctx) = self.render_argument(arg, ctx);
 

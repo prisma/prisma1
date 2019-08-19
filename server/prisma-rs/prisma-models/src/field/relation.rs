@@ -36,7 +36,7 @@ pub struct RelationField {
     pub model: ModelWeakRef,
     pub relation: OnceCell<RelationWeakRef>,
 
-    is_unique: bool,
+    pub(crate) is_unique: bool,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
@@ -53,44 +53,16 @@ impl RelationSide {
         }
     }
 
-    pub fn is_a(&self) -> bool {
-        *self == RelationSide::A
+    pub fn is_a(self) -> bool {
+        self == RelationSide::A
     }
 
-    pub fn is_b(&self) -> bool {
-        *self == RelationSide::B
+    pub fn is_b(self) -> bool {
+        self == RelationSide::B
     }
 }
 
 impl RelationField {
-    pub fn new(
-        name: String,
-        type_identifier: TypeIdentifier,
-        is_required: bool,
-        is_list: bool,
-        is_hidden: bool,
-        is_auto_generated: bool,
-        is_unique: bool,
-        relation_name: String,
-        relation_side: RelationSide,
-        model: ModelWeakRef,
-        relation: OnceCell<RelationWeakRef>,
-    ) -> Self {
-        RelationField {
-            name,
-            type_identifier,
-            is_required,
-            is_list,
-            is_hidden,
-            is_auto_generated,
-            is_unique,
-            relation_name,
-            relation_side,
-            model,
-            relation,
-        }
-    }
-
     pub fn is_optional(&self) -> bool {
         !self.is_required
     }
@@ -153,10 +125,8 @@ impl RelationField {
                     true
                 } else if is_self_rel && self.relation_side == RelationSide::A {
                     false
-                } else if m.in_table_of_model_name == self.model().name {
-                    true
                 } else {
-                    false
+                    m.in_table_of_model_name == self.model().name
                 }
             }
             _ => false,

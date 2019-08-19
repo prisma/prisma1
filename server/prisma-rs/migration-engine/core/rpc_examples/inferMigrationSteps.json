@@ -5,6 +5,7 @@
     "params": {
         "projectInfo": "the-project-id",
         "migrationId": "the-migration_id",
+        "assumeToBeApplied": [],
         "dataModel": "model Blog {\n    id Int @id\n    name String\n    viewCount Int\n    posts Post[]\n    authors Author[]\n}\n\nmodel Author {\n    id Int @id\n    name String?\n    authors Blog[]\n}\n\nmodel Post {\n    id Int @id\n    title String\n    tags String[]\n    blog Blog\n}"
     }
 }

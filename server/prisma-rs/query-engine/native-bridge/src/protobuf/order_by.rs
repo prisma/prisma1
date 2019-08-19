@@ -4,7 +4,7 @@ pub fn into_model_order_by(model: ModelRef, ord: crate::protobuf::prisma::OrderB
     let field = model.fields().find_from_scalar(&ord.scalar_field).unwrap();
 
     OrderBy {
-        field: field,
+        field,
         sort_order: ord.sort_order().into(),
     }
 }

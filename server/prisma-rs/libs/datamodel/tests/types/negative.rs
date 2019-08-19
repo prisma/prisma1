@@ -15,11 +15,11 @@ fn shound_fail_on_directive_duplication() {
 
     error.assert_is_at(
         0,
-        ValidationError::new_duplicate_directive_error("id", &ast::Span::new(23, 25)),
+        ValidationError::new_duplicate_directive_error("id", ast::Span::new(23, 25)),
     );
     error.assert_is_at(
         1,
-        ValidationError::new_duplicate_directive_error("id", &ast::Span::new(77, 79)),
+        ValidationError::new_duplicate_directive_error("id", ast::Span::new(77, 79)),
     );
 }
 
@@ -38,11 +38,11 @@ fn shound_fail_on_directive_duplication_recursive() {
 
     error.assert_is_at(
         0,
-        ValidationError::new_duplicate_directive_error("default", &ast::Span::new(40, 47)),
+        ValidationError::new_duplicate_directive_error("default", ast::Span::new(40, 47)),
     );
     error.assert_is_at(
         1,
-        ValidationError::new_duplicate_directive_error("default", &ast::Span::new(128, 135)),
+        ValidationError::new_duplicate_directive_error("default", ast::Span::new(128, 135)),
     );
 }
 
@@ -62,7 +62,7 @@ fn shound_fail_on_endless_recursive_type_def() {
 
     error.assert_is(ValidationError::new_validation_error(
         "Recursive type definitions are not allowed. Recursive path was: ID -> MyStringWithDefault -> MyString -> ID",
-        &ast::Span::new(21, 23),
+        ast::Span::new(21, 23),
     ));
 }
 
@@ -82,7 +82,7 @@ fn shound_fail_on_unresolvable_type() {
 
     error.assert_is(ValidationError::new_type_not_found_error(
         "Hugo",
-        &ast::Span::new(21, 25),
+        ast::Span::new(21, 25),
     ));
 }
 
@@ -108,6 +108,6 @@ fn should_fail_on_custom_related_types() {
 
     error.assert_is(ValidationError::new_validation_error(
         "Only scalar types can be used for defining custom types.",
-        &ast::Span::new(25, 29),
+        ast::Span::new(25, 29),
     ));
 }

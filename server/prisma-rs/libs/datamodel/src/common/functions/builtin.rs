@@ -6,11 +6,8 @@ use crate::common::{
 };
 use crate::errors::ValidationError;
 
-fn server_functional_with(name: &str, return_type: PrismaType, span: &ast::Span) -> MaybeExpression {
-    MaybeExpression::Expression(
-        PrismaValue::Expression(String::from(name), return_type, vec![]),
-        span.clone(),
-    )
+fn server_functional_with(name: &str, return_type: PrismaType, span: ast::Span) -> MaybeExpression {
+    MaybeExpression::Expression(PrismaValue::Expression(String::from(name), return_type, vec![]), span)
 }
 
 /// Environment variable interpolating function (`env(...)`).
@@ -20,7 +17,8 @@ impl Functional for EnvFunctional {
     fn name(&self) -> &str {
         "env"
     }
-    fn apply(&self, values: &Vec<ValueValidator>, span: &ast::Span) -> Result<MaybeExpression, ValidationError> {
+
+    fn apply(&self, values: &[ValueValidator], span: ast::Span) -> Result<MaybeExpression, ValidationError> {
         self.check_arg_count(values, 1, span)?;
 
         let var_wrapped = &values[0];
@@ -28,7 +26,7 @@ impl Functional for EnvFunctional {
         if let Ok(var) = std::env::var(&var_name) {
             Ok(MaybeExpression::Value(
                 Some(var_name.clone()),
-                ast::Value::Any(var, span.clone()),
+                ast::Value::Any(var, span),
             ))
         } else {
             Err(ValidationError::new_environment_functional_evaluation_error(
@@ -56,7 +54,8 @@ impl Functional for ServerSideTrivialFunctional {
     fn name(&self) -> &str {
         self.name
     }
-    fn apply(&self, values: &Vec<ValueValidator>, span: &ast::Span) -> Result<MaybeExpression, ValidationError> {
+
+    fn apply(&self, values: &[ValueValidator], span: ast::Span) -> Result<MaybeExpression, ValidationError> {
         self.check_arg_count(values, 0, span)?;
 
         Ok(server_functional_with(self.name(), self.return_type, span))

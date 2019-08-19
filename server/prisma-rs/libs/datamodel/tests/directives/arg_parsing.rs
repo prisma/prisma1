@@ -14,7 +14,7 @@ fn fail_on_duplicate_directive() {
 
     errors.assert_is(ValidationError::new_duplicate_argument_error(
         "name",
-        &Span::new(87, 104),
+        Span::new(87, 104),
     ));
 }
 
@@ -31,7 +31,7 @@ fn fail_on_duplicate_unnamed_directive() {
 
     errors.assert_is(ValidationError::new_duplicate_default_argument_error(
         "name",
-        &Span::new(81, 98),
+        Span::new(81, 98),
     ));
 }
 
@@ -46,5 +46,5 @@ fn fail_on_extra_argument() {
 
     let errors = parse_error(dml);
 
-    errors.assert_is(ValidationError::new_unused_argument_error("unused", &Span::new(81, 98)));
+    errors.assert_is(ValidationError::new_unused_argument_error("unused", Span::new(81, 98)));
 }

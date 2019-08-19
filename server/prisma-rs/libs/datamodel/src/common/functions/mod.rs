@@ -27,7 +27,7 @@ const BUILTIN_UUID_FUNCTIONAL: builtin::ServerSideTrivialFunctional = builtin::S
 };
 
 /// Array of all builtin functionals.
-const BUILTIN_FUNCTIONALS: [&'static Functional; 4] = [
+const BUILTIN_FUNCTIONALS: [&Functional; 4] = [
     &BUILTIN_ENV_FUNCTIONAL,
     &BUILTIN_NOW_FUNCTIONAL,
     &BUILTIN_CUID_FUNCTIONAL,
@@ -53,7 +53,7 @@ impl FunctionalEvaluator {
     /// Otherwise, if the value is a constant, the value is returned as-is.
     pub fn evaluate(&self) -> Result<MaybeExpression, ValidationError> {
         match &self.value {
-            ast::Value::Function(name, params, span) => self.evaluate_functional(&name, &params, &span),
+            ast::Value::Function(name, params, span) => self.evaluate_functional(&name, &params, *span),
             _ => Ok(MaybeExpression::Value(None, self.value.clone())),
         }
     }
@@ -61,8 +61,8 @@ impl FunctionalEvaluator {
     fn evaluate_functional(
         &self,
         name: &str,
-        args: &Vec<ast::Value>,
-        span: &ast::Span,
+        args: &[ast::Value],
+        span: ast::Span,
     ) -> Result<MaybeExpression, ValidationError> {
         for f in &BUILTIN_FUNCTIONALS {
             if f.name() == name {
@@ -76,6 +76,6 @@ impl FunctionalEvaluator {
             }
         }
 
-        return Err(ValidationError::new_function_not_known_error(name, span));
+        Err(ValidationError::new_function_not_known_error(name, span))
     }
 }

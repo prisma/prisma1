@@ -44,7 +44,7 @@ impl Postgres {
                 Box::new(column_type),
             ),
             indexes: Vec::new(),
-            primary_key_columns: primary_key_columns,
+            primary_key_columns,
         }
     }
 

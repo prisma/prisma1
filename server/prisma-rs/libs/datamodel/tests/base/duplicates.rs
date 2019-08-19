@@ -18,7 +18,7 @@ fn fail_on_duplicate_models() {
         "User",
         "model",
         "model",
-        &Span::new(53, 57),
+        Span::new(53, 57),
     ));
 }
 #[test]
@@ -39,7 +39,7 @@ fn fail_on_model_enum_conflict() {
         "User",
         "model",
         "enum",
-        &Span::new(65, 69),
+        Span::new(65, 69),
     ));
 }
 #[test]
@@ -57,7 +57,7 @@ fn fail_on_model_type_conflict() {
         "User",
         "model",
         "type",
-        &Span::new(34, 38),
+        Span::new(34, 38),
     ));
 }
 
@@ -77,7 +77,7 @@ fn fail_on_enum_type_conflict() {
         "User",
         "enum",
         "type",
-        &Span::new(33, 37),
+        Span::new(33, 37),
     ));
 }
 
@@ -96,7 +96,7 @@ fn fail_on_duplicate_field() {
     errors.assert_is(ValidationError::new_duplicate_field_error(
         "User",
         "firstName",
-        &Span::new(70, 79),
+        Span::new(70, 79),
     ));
 }
 
@@ -115,7 +115,7 @@ fn fail_on_duplicate_enum_value() {
     errors.assert_is(ValidationError::new_duplicate_enum_value_error(
         "Role",
         "Moderator",
-        &Span::new(57, 66),
+        Span::new(57, 66),
     ));
 }
 
@@ -132,7 +132,7 @@ fn fail_on_reserved_name_for_enum() {
 
     errors.assert_is(ValidationError::new_reserved_scalar_type_error(
         "String",
-        &Span::new(10, 16),
+        Span::new(10, 16),
     ));
 }
 
@@ -148,7 +148,7 @@ fn fail_on_reserved_name_for_model() {
 
     errors.assert_is(ValidationError::new_reserved_scalar_type_error(
         "DateTime",
-        &Span::new(11, 19),
+        Span::new(11, 19),
     ));
 }
 
@@ -162,6 +162,6 @@ fn fail_on_reserved_name_fo_custom_type() {
 
     errors.assert_is(ValidationError::new_reserved_scalar_type_error(
         "Int",
-        &Span::new(10, 13),
+        Span::new(10, 13),
     ));
 }

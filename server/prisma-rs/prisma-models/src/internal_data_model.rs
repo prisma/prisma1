@@ -45,7 +45,7 @@ impl InternalDataModelTemplate {
             relations: OnceCell::new(),
             enums: self.enums,
             version: self.version,
-            db_name: db_name,
+            db_name,
             relation_fields: OnceCell::new(),
         });
 
@@ -99,7 +99,7 @@ impl InternalDataModel {
 
     pub fn fields_requiring_model(&self, model: ModelRef) -> Vec<RelationFieldRef> {
         self.relation_fields()
-            .into_iter()
+            .iter()
             .filter(|rf| rf.related_model() == model)
             .filter(|f| f.is_required && !f.is_list)
             .map(|f| Arc::clone(f))

@@ -11,12 +11,13 @@ serde_json = "1.0"
 serde = "1.0"
 rusqlite = { version = "0.19", features = ["chrono", "bundled"] }
 prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
-barrel = { version = "0.6.2", features = ["sqlite3", "mysql", "pg"] }
+barrel = { version = "0.6.3-alpha.0", features = ["sqlite3", "mysql", "pg"] }
 itertools = "0.8"
 url = "1.7.2"
 postgres = { version = "0.16.0-rc.2", features = ["runtime", "with-serde_json-1", "with-chrono-0_4", "with-uuid-0_7"] }
-mysql = { version = "*" }
 log = "0.4"
+mysql = { version = "16", features = ["ssl"] }
+regex = "1.2"
 
 [dev-dependencies]
 fern = "0.5"

@@ -1,11 +1,12 @@
 use super::{PostgresSource, POSTGRES_SOURCE_NAME};
 use crate::{common::argument::Arguments, configuration::*, errors::ValidationError};
 
+#[derive(Default)]
 pub struct PostgresSourceDefinition {}
 
 impl PostgresSourceDefinition {
-    pub fn new() -> PostgresSourceDefinition {
-        PostgresSourceDefinition {}
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

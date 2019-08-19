@@ -19,7 +19,7 @@ pub struct PostgreSql {
 }
 
 impl FromSource for PostgreSql {
-    fn from_source(source: &Box<dyn Source>) -> crate::Result<Self> {
+    fn from_source(source: &dyn Source) -> crate::Result<Self> {
         let url = url::Url::parse(&source.url().value)?;
         let params = PostgresParams::try_from(url)?;
         let pool = r2d2::Pool::try_from(params).unwrap();

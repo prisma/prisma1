@@ -28,7 +28,7 @@ impl QueryArguments {
 
         match self.last.or(self.first) {
             Some(limited_count) => (skip, limited_count + skip),
-            None => (skip, 100000000),
+            None => (skip, 100_000_000),
         }
     }
 

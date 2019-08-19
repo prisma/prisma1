@@ -40,7 +40,7 @@ impl ValueValidator {
     pub fn new(value: &ast::Value) -> Result<ValueValidator, ValidationError> {
         match value {
             ast::Value::StringValue(string, span) => Ok(ValueValidator {
-                value: MaybeExpression::Value(None, StringInterpolator::interpolate(string, span)?),
+                value: MaybeExpression::Value(None, StringInterpolator::interpolate(string, *span)?),
             }),
             _ => Ok(ValueValidator {
                 value: FunctionalEvaluator::new(value).evaluate()?,
@@ -84,7 +84,7 @@ impl ValueValidator {
 
     /// Attempts to parse the wrapped value
     /// to a given prisma type.
-    pub fn as_type(&self, scalar_type: &PrismaType) -> Result<dml::Value, ValidationError> {
+    pub fn as_type(&self, scalar_type: PrismaType) -> Result<dml::Value, ValidationError> {
         match &self.value {
             MaybeExpression::Value(_, _) => match scalar_type {
                 PrismaType::Int => wrap_value!(self.as_int(), dml::Value::Int, self),
@@ -95,7 +95,7 @@ impl ValueValidator {
                 PrismaType::String => wrap_value!(self.as_str(), dml::Value::String, self),
             },
             MaybeExpression::Expression(expr, _) => {
-                if expr.get_type() == *scalar_type {
+                if expr.get_type() == scalar_type {
                     Ok(expr.clone())
                 } else {
                     Err(self.construct_error(&scalar_type.to_string()))
@@ -119,18 +119,18 @@ impl ValueValidator {
     }
 
     /// Accesses the span of the wrapped value.
-    pub fn span(&self) -> &ast::Span {
+    pub fn span(&self) -> ast::Span {
         match &self.value {
             MaybeExpression::Value(_, val) => match val {
-                ast::Value::StringValue(_, s) => s,
-                ast::Value::NumericValue(_, s) => s,
-                ast::Value::BooleanValue(_, s) => s,
-                ast::Value::ConstantValue(_, s) => s,
-                ast::Value::Function(_, _, s) => s,
-                ast::Value::Array(_, s) => s,
-                ast::Value::Any(_, s) => s,
+                ast::Value::StringValue(_, s) => *s,
+                ast::Value::NumericValue(_, s) => *s,
+                ast::Value::BooleanValue(_, s) => *s,
+                ast::Value::ConstantValue(_, s) => *s,
+                ast::Value::Function(_, _, s) => *s,
+                ast::Value::Array(_, s) => *s,
+                ast::Value::Any(_, s) => *s,
             },
-            MaybeExpression::Expression(_, s) => s,
+            MaybeExpression::Expression(_, s) => *s,
         }
     }
 

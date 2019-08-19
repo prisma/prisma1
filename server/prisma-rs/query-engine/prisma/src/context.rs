@@ -24,6 +24,8 @@ pub struct PrismaContext {
     pub executor: QueryExecutor,
 }
 
+type ModelWithSources = (Option<Datamodel>, Vec<Box<dyn Source>>);
+
 impl PrismaContext {
     /// Initializes a new Prisma context.
     /// Loads all immutable state for the query engine:
@@ -36,7 +38,7 @@ impl PrismaContext {
 
         // Deconstruct v2 components if present, and fall back to loading the legacy config
         // to get data sources for connector initialization if no v2 data model was loaded.
-        let v2: PrismaResult<(Option<Datamodel>, Vec<Box<dyn Source>>)> = match v2components {
+        let v2: PrismaResult<ModelWithSources> = match v2components {
             Some(v2) => Ok((Some(v2.datamodel), v2.data_sources)),
             None => {
                 let data_sources = Self::data_sources_from_config()?;
@@ -54,7 +56,7 @@ impl PrismaContext {
         };
 
         // Load executor
-        let executor = exec_loader::load(data_source)?;
+        let executor = exec_loader::load(&**data_source)?;
         let db_name: String = executor.db_name();
 
         // Build internal data model

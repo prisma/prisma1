@@ -16,19 +16,25 @@ pub struct LiftAstToDml {
     directives: DirectiveBox,
 }
 
-impl LiftAstToDml {
-    /// Creates a new instance, with all builtin directives registered.
-    pub fn new() -> LiftAstToDml {
-        LiftAstToDml {
+impl Default for LiftAstToDml {
+    fn default() -> Self {
+        Self {
             directives: DirectiveBox::new(),
         }
+    }
+}
+
+impl LiftAstToDml {
+    /// Creates a new instance, with all builtin directives registered.
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Creates a new instance, with all builtin directives and
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(sources: &Vec<Box<configuration::Source>>) -> LiftAstToDml {
+    pub fn with_sources(sources: &[Box<dyn configuration::Source>]) -> LiftAstToDml {
         LiftAstToDml {
             directives: DirectiveBox::with_sources(sources),
         }
@@ -120,8 +126,9 @@ impl LiftAstToDml {
 
         if let Some(value) = &ast_field.default_value {
             let validator = ValueValidator::new(value)?;
+
             if let dml::FieldType::Base(base_type) = &field_type {
-                match validator.as_type(base_type) {
+                match validator.as_type(*base_type) {
                     Ok(val) => field.default_value = Some(val),
                     Err(err) => errors.push(err),
                 };
@@ -166,11 +173,11 @@ impl LiftAstToDml {
     ) -> Result<(dml::FieldType, Vec<ast::Directive>), ValidationError> {
         let type_name = &ast_field.field_type.name;
 
-        if let Ok(scalar_type) = PrismaType::from_str_and_span(type_name, &ast_field.field_type.span) {
+        if let Ok(scalar_type) = PrismaType::from_str_and_span(type_name, ast_field.field_type.span) {
             Ok((dml::FieldType::Base(scalar_type), vec![]))
-        } else if let Some(_) = ast_schema.find_model(type_name) {
+        } else if ast_schema.find_model(type_name).is_some() {
             Ok((dml::FieldType::Relation(dml::RelationInfo::new(type_name)), vec![]))
-        } else if let Some(_) = ast_schema.find_enum(type_name) {
+        } else if ast_schema.find_enum(type_name).is_some() {
             Ok((dml::FieldType::Enum(type_name.clone()), vec![]))
         } else {
             self.resolve_custom_type(ast_field, ast_schema, checked_types)
@@ -193,7 +200,7 @@ impl LiftAstToDml {
                     checked_types.join(" -> "),
                     type_name
                 ),
-                &ast_field.field_type.span,
+                ast_field.field_type.span,
             ));
         }
 
@@ -204,7 +211,7 @@ impl LiftAstToDml {
             if let dml::FieldType::Relation(_) = field_type {
                 return Err(ValidationError::new_validation_error(
                     "Only scalar types can be used for defining custom types.",
-                    &custom_type.field_type.span,
+                    custom_type.field_type.span,
                 ));
             }
 
@@ -213,7 +220,7 @@ impl LiftAstToDml {
         } else {
             Err(ValidationError::new_type_not_found_error(
                 type_name,
-                &ast_field.field_type.span,
+                ast_field.field_type.span,
             ))
         }
     }

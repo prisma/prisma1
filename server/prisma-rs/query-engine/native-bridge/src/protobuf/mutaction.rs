@@ -17,7 +17,7 @@ pub fn convert_mutaction(m: crate::protobuf::prisma::DatabaseMutaction, project:
 }
 
 pub fn convert_create_envelope(m: crate::protobuf::prisma::CreateNode, project: ProjectRef) -> RootWriteQuery {
-    RootWriteQuery::CreateRecord(convert_create(m, project))
+    RootWriteQuery::CreateRecord(Box::new(convert_create(m, project)))
 }
 
 pub fn convert_create(m: crate::protobuf::prisma::CreateNode, project: ProjectRef) -> CreateRecord {
@@ -87,7 +87,7 @@ pub fn convert_nested_create(m: crate::protobuf::prisma::NestedCreateNode, proje
     let relation_field = find_relation_field(Arc::clone(&project), m.model_name, m.field_name);
 
     NestedCreateRecord {
-        relation_field: relation_field,
+        relation_field,
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
         top_is_create: m.top_is_create,
@@ -96,7 +96,7 @@ pub fn convert_nested_create(m: crate::protobuf::prisma::NestedCreateNode, proje
 }
 
 pub fn convert_update_envelope(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -> RootWriteQuery {
-    RootWriteQuery::UpdateRecord(convert_update(m, project))
+    RootWriteQuery::UpdateRecord(Box::new(convert_update(m, project)))
 }
 
 pub fn convert_update(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -> UpdateRecord {
@@ -111,7 +111,7 @@ pub fn convert_update(m: crate::protobuf::prisma::UpdateNode, project: ProjectRe
 pub fn convert_nested_update(m: crate::protobuf::prisma::NestedUpdateNode, project: ProjectRef) -> NestedUpdateRecord {
     let relation_field = find_relation_field(Arc::clone(&project), m.model_name, m.field_name);
     NestedUpdateRecord {
-        relation_field: relation_field,
+        relation_field,
         where_: m.where_.map(|w| convert_record_finder(w, Arc::clone(&project))),
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
@@ -151,7 +151,7 @@ pub fn convert_upsert(m: crate::protobuf::prisma::UpsertNode, project: ProjectRe
         update: convert_update(m.update, project),
     };
 
-    RootWriteQuery::UpsertRecord(upsert_node)
+    RootWriteQuery::UpsertRecord(Box::new(upsert_node))
 }
 
 pub fn convert_nested_upsert(m: crate::protobuf::prisma::NestedUpsertNode, project: ProjectRef) -> NestedUpsertRecord {

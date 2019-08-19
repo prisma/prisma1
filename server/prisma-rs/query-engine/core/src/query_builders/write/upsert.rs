@@ -30,11 +30,11 @@ impl Builder<WriteQuery> for UpsertBuilder {
             record_finder.clone(),
         )?;
 
-        let upsert = RootWriteQuery::UpsertRecord(UpsertRecord {
+        let upsert = RootWriteQuery::UpsertRecord(Box::new(UpsertRecord {
             where_: record_finder,
             create,
             update,
-        });
+        }));
 
         Ok(WriteQuery::Root(self.field.name, self.field.alias, upsert))
     }

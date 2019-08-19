@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 // TODO: Is schema the right name here?
 /// Represents a prisma-datamodel.
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Datamodel {
     // All enums.
     pub enums: Vec<Enum>,
@@ -19,10 +19,7 @@ pub type FieldRef = (String, String);
 impl Datamodel {
     /// Creates a new, empty schema.
     pub fn new() -> Datamodel {
-        Datamodel {
-            models: vec![],
-            enums: vec![],
-        }
+        Datamodel::default()
     }
 
     /// Creates a new, empty schema.
@@ -32,18 +29,12 @@ impl Datamodel {
 
     /// Checks if a model with the given name exists.
     pub fn has_model(&self, name: &str) -> bool {
-        match self.find_model(name) {
-            Some(_) => true,
-            None => false,
-        }
+        self.find_model(name).is_some()
     }
 
     /// Checks if an enum with the given name exists.
     pub fn has_enum(&self, name: &str) -> bool {
-        match self.find_enum(name) {
-            Some(_) => true,
-            None => false,
-        }
+        self.find_enum(name).is_some()
     }
 
     /// Adds an enum to this datamodel.

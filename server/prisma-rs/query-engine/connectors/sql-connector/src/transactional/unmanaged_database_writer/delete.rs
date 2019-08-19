@@ -54,18 +54,18 @@ pub fn execute_nested(
         SqlError::RecordsNotConnected {
             relation_name,
             parent_name,
-            parent_where: _,
             child_name,
             child_where,
+            ..
         } => {
             let model = Arc::clone(&relation_field.model());
 
             SqlError::RecordsNotConnected {
-                relation_name: relation_name,
-                parent_name: parent_name,
-                parent_where: Some(RecordFinderInfo::for_id(model, parent_id)),
-                child_name: child_name,
-                child_where: child_where,
+                relation_name,
+                parent_name,
+                parent_where: Some(Box::new(RecordFinderInfo::for_id(model, parent_id))),
+                child_name,
+                child_where,
             }
         }
         e => e,

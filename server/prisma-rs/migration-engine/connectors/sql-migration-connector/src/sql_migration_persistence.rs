@@ -1,6 +1,5 @@
 use super::MigrationDatabase;
 use super::SqlFamily;
-#[allow(unused, dead_code)]
 use barrel::types;
 use chrono::*;
 use migration_connector::*;
@@ -11,7 +10,7 @@ use std::sync::Arc;
 
 pub struct SqlMigrationPersistence {
     pub sql_family: SqlFamily,
-    pub connection: Arc<MigrationDatabase>,
+    pub connection: Arc<MigrationDatabase + Send + Sync + 'static>,
     pub schema_name: String,
     pub file_path: Option<String>,
 }
@@ -19,7 +18,6 @@ pub struct SqlMigrationPersistence {
 #[allow(unused, dead_code)]
 impl MigrationPersistence for SqlMigrationPersistence {
     fn init(&self) {
-        println!("SqlMigrationPersistence.init()");
         let mut m = barrel::Migration::new().schema(self.schema_name.clone());
 
         let barrel_variant = match self.sql_family {
@@ -42,7 +40,6 @@ impl MigrationPersistence for SqlMigrationPersistence {
     }
 
     fn reset(&self) {
-        println!("SqlMigrationPersistence.reset()");
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name); // TODO: this is not vendor agnostic yet
         let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
 
@@ -245,20 +242,18 @@ fn parse_rows_new(result_set: ResultSet) -> Vec<Migration> {
             let database_migration_json = serde_json::from_str(&database_migration_string).unwrap();
             let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
 
-            println!("{:?}", row.get(STARTED_AT_COLUMN).unwrap());
-
             Migration {
                 name: row[NAME_COLUMN].to_string().unwrap(),
                 revision: row[REVISION_COLUMN].as_i64().unwrap() as usize,
-                datamodel: datamodel,
+                datamodel,
                 status: MigrationStatus::from_str(row[STATUS_COLUMN].to_string().unwrap()),
                 applied: row[APPLIED_COLUMN].as_i64().unwrap() as usize,
                 rolled_back: row[ROLLED_BACK_COLUMN].as_i64().unwrap() as usize,
-                datamodel_steps: datamodel_steps,
+                datamodel_steps,
                 database_migration: database_migration_json,
-                errors: errors,
+                errors,
                 started_at: convert_parameterized_date_value(&row[STARTED_AT_COLUMN]),
-                finished_at: finished_at,
+                finished_at,
             }
         })
         .collect()

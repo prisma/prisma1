@@ -53,7 +53,7 @@ pub fn serialize_read(
                         .map(|(parent, mut items)| {
                             if !opt {
                                 // Check that all items are non-null
-                                if let Some(_) = items.iter().find(|item| match item {
+                                if items.iter().any(|item| match item {
                                     Item::Value(PrismaValue::Null) => true,
                                     _ => false,
                                 }) {
@@ -197,7 +197,10 @@ fn write_nested_items(
                             Item::Value(PrismaValue::Null)
                         }
                     }
-                    x => panic!("Application logic invariant error: received null value for field {} which may not be null", &field_name),
+                    _ => panic!(
+                        "Application logic invariant error: received null value for field {} which may not be null",
+                        &field_name
+                    ),
                 };
 
                 into.insert(field_name.to_owned(), Item::Ref(ItemRef::new(default)));
@@ -336,7 +339,7 @@ fn serialize_scalar(value: PrismaValue, typ: &OutputTypeRef) -> CoreResult<Item>
             Ok(Item::Value(item_value))
         }
         (pv, ot) => {
-            return Err(CoreError::SerializationError(format!(
+            Err(CoreError::SerializationError(format!(
                 "Attempted to serialize scalar '{}' with non-scalar compatible type '{:?}'",
                 pv, ot
             )))

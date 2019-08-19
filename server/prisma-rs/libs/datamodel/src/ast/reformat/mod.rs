@@ -10,7 +10,7 @@ type Token<'a> = pest::iterators::Pair<'a, Rule>;
 pub struct Reformatter {}
 
 fn count_lines(text: &str) -> usize {
-    text.as_bytes().iter().filter(|&&c| c == b'\n').count()
+    bytecount::count(text.as_bytes(), b'\n')
 }
 
 fn newlines(target: &mut LineWriteable, text: &str, _identifier: &str) {
@@ -365,7 +365,7 @@ impl Reformatter {
     }
 
     pub fn reformat_field_type(token: &Token) -> String {
-        let mut builder = StringBuilder::new();
+        let mut builder = StringBuilder::default();
 
         for current in token.clone().into_inner() {
             builder.write(&Self::get_identifier(&current));
@@ -380,15 +380,14 @@ impl Reformatter {
             }
         }
 
-        return builder.to_string();
+        builder.to_string()
     }
 
     pub fn get_identifier(token: &Token) -> String {
         for current in token.clone().into_inner() {
-            match current.as_rule() {
-                Rule::identifier => return current.as_str().to_string(),
-                _ => {}
-            };
+            if let Rule::identifier = current.as_rule() {
+                return current.as_str().to_string()
+            }
         }
 
         panic!("No identifier found.")
@@ -414,7 +413,7 @@ impl Reformatter {
     }
 
     pub fn reformat_directive_args(target: &mut LineWriteable, token: &Token) {
-        let mut builder = StringBuilder::new();
+        let mut builder = StringBuilder::default();
 
         for current in token.clone().into_inner() {
             match current.as_rule() {
@@ -508,7 +507,7 @@ impl Reformatter {
                         target.write(", ");
                     }
                     Self::reformat_expression(target, &current);
-                    expr_count = expr_count + 1;
+                    expr_count += 1;
                 }
                 Rule::WHITESPACE => {}
                 Rule::COMMENT => panic!("Comments inside expressions not supported yet."),
@@ -533,7 +532,7 @@ impl Reformatter {
                         target.write(", ");
                     }
                     Self::reformat_arg_value(target, &current);
-                    expr_count = expr_count + 1;
+                    expr_count += 1;
                 }
                 Rule::WHITESPACE => {}
                 Rule::COMMENT => panic!("Comments inside expressions not supported yet."),

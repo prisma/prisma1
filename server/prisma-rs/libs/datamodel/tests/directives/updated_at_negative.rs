@@ -15,7 +15,7 @@ fn should_fail_if_field_type_is_string() {
     errors.assert_is(ValidationError::new_directive_validation_error(
         "Fields that are marked with @updatedAt must be of type DateTime.",
         "updatedAt",
-        &Span::new(62, 71),
+        Span::new(62, 71),
     ));
 }
 
@@ -33,6 +33,6 @@ fn should_fail_if_field_arity_is_list() {
     errors.assert_is(ValidationError::new_directive_validation_error(
         "Fields that are marked with @updatedAt can not be lists.",
         "updatedAt",
-        &Span::new(66, 75),
+        Span::new(66, 75),
     ));
 }

@@ -77,11 +77,11 @@ impl Model {
     pub fn related_field(&self, to: &str, name: &str, exclude_field: &str) -> Option<&Field> {
         self.fields().find(|f| {
             if let FieldType::Relation(rel_info) = &f.field_type {
-                if rel_info.to == to && &rel_info.name == name && (self.name != to || &f.name != exclude_field) {
+                if rel_info.to == to && rel_info.name == name && (self.name != to || f.name != exclude_field) {
                     return true;
                 }
             }
-            return false;
+            false
         })
     }
 
@@ -90,11 +90,12 @@ impl Model {
         let self_name = self.name.clone();
         self.fields_mut().find(|f| {
             if let FieldType::Relation(rel_info) = &f.field_type {
-                if rel_info.to == to && &rel_info.name == name && (self_name != to || &f.name != exclude_field) {
+                if rel_info.to == to && rel_info.name == name && (self_name != to || f.name != exclude_field) {
                     return true;
                 }
             }
-            return false;
+
+            false
         })
     }
 
