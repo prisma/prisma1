@@ -7,16 +7,16 @@
           "name": "column1",
           "tpe": {
             "raw": "integer",
-            "family": "Int"
+            "family": "int"
           },
-          "arity": "Nullable",
+          "arity": "nullable",
           "default": null,
-          "auto_increment": false
+          "autoIncrement": false
         }
       ],
       "indices": [],
-      "primary_key": null,
-      "foreign_keys": []
+      "primaryKey": null,
+      "foreignKeys": []
     }
   ],
   "enums": [],

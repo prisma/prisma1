@@ -7,31 +7,31 @@
           "name": "column1",
           "tpe": {
             "raw": "integer",
-            "family": "Int"
+            "family": "int"
           },
-          "arity": "Required",
+          "arity": "required",
           "default": null,
-          "auto_increment": true
+          "autoIncrement": true
         },
         {
           "name": "column2",
           "tpe": {
             "raw": "varchar(255)",
-            "family": "String"
+            "family": "string"
           },
-          "arity": "Nullable",
+          "arity": "nullable",
           "default": "default value",
-          "auto_increment": false
+          "autoIncrement": false
         },
         {
           "name": "column3",
           "tpe": {
             "raw": "integer",
-            "family": "Int"
+            "family": "int"
           },
-          "arity": "Required",
+          "arity": "required",
           "default": null,
-          "auto_increment": false
+          "autoIncrement": false
         }
       ],
       "indices": [
@@ -43,21 +43,21 @@
           "unique": false
         }
       ],
-      "primary_key": {
+      "primaryKey": {
         "columns": [
           "column1"
         ]
       },
-      "foreign_keys": [
+      "foreignKeys": [
         {
           "columns": [
             "column3"
           ],
-          "referenced_table": "table2",
-          "referenced_columns": [
+          "referencedTable": "table2",
+          "referencedColumns": [
             "id"
           ],
-          "on_delete_action": "NoAction"
+          "onDeleteAction": "noAction"
         }
       ]
     },
@@ -68,20 +68,20 @@
           "name": "id",
           "tpe": {
             "raw": "integer",
-            "family": "Int"
+            "family": "int"
           },
-          "arity": "Required",
+          "arity": "required",
           "default": null,
-          "auto_increment": true
+          "autoIncrement": true
         }
       ],
       "indices": [],
-      "primary_key": {
+      "primaryKey": {
         "columns": [
           "id"
         ]
       },
-      "foreign_keys": []
+      "foreignKeys": []
     }
   ],
   "enums": [
@@ -96,8 +96,8 @@
   "sequences": [
     {
       "name": "sequence1",
-      "initial_value": 1,
-      "allocation_size": 32
+      "initialValue": 1,
+      "allocationSize": 32
     }
   ]
 }
