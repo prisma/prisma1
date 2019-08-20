@@ -1,0 +1,95 @@
+{
+  "tables": [
+    {
+      "name": "table1",
+      "columns": [
+        {
+          "name": "column1",
+          "tpe": {
+            "raw": "int",
+            "family": "int"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column2",
+          "tpe": {
+            "raw": "int",
+            "family": "int"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column3",
+          "tpe": {
+            "raw": "int",
+            "family": "int"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column4",
+          "tpe": {
+            "raw": "int",
+            "family": "int"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column5",
+          "tpe": {
+            "raw": "int",
+            "family": "int"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        }
+      ],
+      "indices": [],
+      "primaryKey": null,
+      "foreignKeys": [
+        {
+          "columns": ["column1"],
+          "referencedTable": "table2",
+          "referencedColumns": ["id"],
+          "onDeleteAction": "noAction"
+        },
+        {
+          "columns": ["column2"],
+          "referencedTable": "table2",
+          "referencedColumns": ["id"],
+          "onDeleteAction": "restrict"
+        },
+        {
+          "columns": ["column3"],
+          "referencedTable": "table2",
+          "referencedColumns": ["id"],
+          "onDeleteAction": "cascade"
+        },
+        {
+          "columns": ["column4"],
+          "referencedTable": "table2",
+          "referencedColumns": ["id"],
+          "onDeleteAction": "setNull"
+        },
+        {
+          "columns": ["column5"],
+          "referencedTable": "table2",
+          "referencedColumns": ["id"],
+          "onDeleteAction": "setDefault"
+        }
+      ]
+    }
+  ],
+  "enums": [],
+  "sequences": []
+}
