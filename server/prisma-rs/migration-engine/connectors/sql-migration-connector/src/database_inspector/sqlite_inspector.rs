@@ -34,7 +34,7 @@ impl Sqlite {
             WHERE
                 type='table'
         ",
-            schema
+            format!("\"{}\"", schema)
         );
 
         let result_set = self.database.query_raw(schema, &sql, &[]).unwrap();

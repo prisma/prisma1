@@ -171,7 +171,7 @@ pub fn mysql_test_config() -> String {
 
 pub fn postgres_url() -> String {
     dbg!(format!(
-        "postgresql://postgres:prisma@{}:5432/db?schema={}",
+        "postgresql://postgres:prisma@{}:5432/test-db?schema={}",
         db_host_postgres(),
         SCHEMA_NAME
     ))

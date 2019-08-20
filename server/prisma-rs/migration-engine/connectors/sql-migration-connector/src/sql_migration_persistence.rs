@@ -18,23 +18,24 @@ pub struct SqlMigrationPersistence {
 #[allow(unused, dead_code)]
 impl MigrationPersistence for SqlMigrationPersistence {
     fn init(&self) {
-        let mut m = barrel::Migration::new().schema(self.schema_name.clone());
-
-        let barrel_variant = match self.sql_family {
+        let sql_str = match self.sql_family {
             SqlFamily::Sqlite => {
+                let mut m = barrel::Migration::new().schema(self.schema_name.clone());
                 m.create_table_if_not_exists(TABLE_NAME, migration_table_setup_sqlite);
-                barrel::SqlVariant::Sqlite
+                m.make_from(barrel::SqlVariant::Sqlite)
             }
             SqlFamily::Postgres => {
+                let mut m = barrel::Migration::new().schema(self.schema_name.clone());
                 m.create_table(TABLE_NAME, migration_table_setup_postgres);
-                barrel::SqlVariant::Pg
+                m.make_from(barrel::SqlVariant::Pg)
             }
             SqlFamily::Mysql => {
-                m.create_table(TABLE_NAME, migration_table_setup_mysql);
-                barrel::SqlVariant::Mysql
+                // work around barrels missing quoting
+                let mut m = barrel::Migration::new().schema(format!("`{}`", self.schema_name.clone()));
+                m.create_table(format!("`{}`", TABLE_NAME), migration_table_setup_mysql);
+                m.make_from(barrel::SqlVariant::Mysql)
             }
         };
-        let sql_str = m.make_from(barrel_variant);
 
         let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
     }
