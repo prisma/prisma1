@@ -1,12 +1,14 @@
 package com.prisma.api.filters.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, Prisma2Capability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
 
 class RelationIsNullSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
+  override def runOnlyForCapabilities  = Set(JoinRelationLinksCapability)
+  override def doNotRunForCapabilities = Set(Prisma2Capability)
 
   val project = SchemaDsl.fromStringV11() {
     """
