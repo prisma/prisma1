@@ -96,12 +96,12 @@ pub struct AlterColumn {
 //    pub on_delete: OnDelete,
 //}
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub enum OnDelete {
-    NoAction,
-    SetNull,
-    Cascade,
-}
+//#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+//pub enum OnDelete {
+//    NoAction,
+//    SetNull,
+//    Cascade,
+//}
 
 //#[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize, Deserialize)]
 //pub enum ColumnType {

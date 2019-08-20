@@ -280,11 +280,13 @@ fn render_column(
     unimplemented!()
 }
 
-fn render_on_delete(on_delete: &OnDelete) -> &'static str {
+fn render_on_delete(on_delete: &ForeignKeyAction) -> &'static str {
     match on_delete {
-        OnDelete::NoAction => "",
-        OnDelete::SetNull => "ON DELETE SET NULL",
-        OnDelete::Cascade => "ON DELETE CASCADE",
+        ForeignKeyAction::NoAction => "",
+        ForeignKeyAction::SetNull => "ON DELETE SET NULL",
+        ForeignKeyAction::Cascade => "ON DELETE CASCADE",
+        ForeignKeyAction::SetDefault => "ON DELETE SET DEFAULT",
+        ForeignKeyAction::Restrict => "ON DELETE RESTRICT",
     }
 }
 
