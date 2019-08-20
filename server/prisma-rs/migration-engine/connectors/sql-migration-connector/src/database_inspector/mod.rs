@@ -44,12 +44,12 @@ impl DatabaseInspector {
 
     pub fn postgres(url: String) -> Postgres {
         let url = Url::parse(&url).expect(Self::PARSE_ERROR);
+        let db_name = url.path().trim_start_matches("/");
 
         let mut root_url = url.clone();
         root_url.set_path("postgres");
 
         let root_params = connector::PostgresParams::try_from(root_url).expect(Self::PARSE_ERROR);
-        let db_name = root_params.dbname.clone();
 
         let schema_name = root_params.schema.clone();
         let root_connection = Arc::new(PostgresDriver::new(root_params).unwrap());
