@@ -185,3 +185,56 @@ fn database_schema_without_primary_key_is_serializable() {
     // Verify that schema deserialized from reference JSON is equivalent
     assert_eq!(ref_schema, schema);
 }
+
+#[test]
+fn database_schema_is_serializable_for_every_column_type_family() {
+    setup();
+
+    // Add a column of every column type family
+    let mut columns: Vec<Column> = vec![
+        ColumnTypeFamily::Int,
+        ColumnTypeFamily::Float,
+        ColumnTypeFamily::Boolean,
+        ColumnTypeFamily::String,
+        ColumnTypeFamily::DateTime,
+        ColumnTypeFamily::Binary,
+        ColumnTypeFamily::Json,
+        ColumnTypeFamily::Uuid,
+        ColumnTypeFamily::Geometric,
+        ColumnTypeFamily::LogSequenceNumber,
+        ColumnTypeFamily::TextSearch,
+        ColumnTypeFamily::TransactionId,
+    ].iter().enumerate().map(|(i, family)| Column {
+        name: format!("column{}", i + 1),
+        tpe: ColumnType {
+            raw: "raw type".to_string(),
+            family: family.to_owned(),
+        },
+        arity: ColumnArity::Nullable,
+        default: None,
+        auto_increment: false,
+    }).collect();
+    let schema = DatabaseSchema {
+        tables: vec![
+            Table {
+                name: "table1".to_string(),
+                columns,
+                indices: vec![],
+                primary_key: None,
+                foreign_keys: vec![],
+            },
+        ],
+        enums: vec![],
+        sequences: vec![],
+    };
+    let ref_schema_json = include_str!("./resources/schema-all-column-type-families.json");
+    let ref_schema: DatabaseSchema = serde_json::from_str(ref_schema_json).expect("deserialize reference schema");
+
+    let schema_json = serde_json::to_string(&schema).expect("serialize schema to JSON");
+    let schema_deser: DatabaseSchema = serde_json::from_str(&schema_json).expect("deserialize schema");
+
+    // Verify that deserialized schema is equivalent
+    assert_eq!(schema_deser, schema);
+    // Verify that schema deserialized from reference JSON is equivalent
+    assert_eq!(ref_schema, schema);
+}
