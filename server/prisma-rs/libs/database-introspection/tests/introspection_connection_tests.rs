@@ -1632,7 +1632,7 @@ fn indices_must_work() {
 fn test_each_backend<MigrationFn, TestFn>(mut migrationFn: MigrationFn, testFn: TestFn)
 where
     MigrationFn: FnMut(DbType, &mut Migration) -> (),
-    TestFn: Fn(DbType, &mut IntrospectionConnector) -> (),
+    TestFn: Fn(DbType, dyn &mut IntrospectionConnector) -> (),
 {
     // SQLite
     {

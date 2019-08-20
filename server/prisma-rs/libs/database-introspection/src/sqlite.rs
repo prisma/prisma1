@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 pub struct IntrospectionConnector {
-    pub conn: Arc<IntrospectionConnection>,
+    pub conn: Arc<dyn IntrospectionConnection>,
 }
 
 impl super::IntrospectionConnector for IntrospectionConnector {
