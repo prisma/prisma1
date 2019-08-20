@@ -40,6 +40,10 @@ pub struct DatabaseSchema {
 }
 
 impl DatabaseSchema {
+    pub fn has_table(&self, name: &str) -> bool {
+        self.get_table(name).is_some()
+    }
+
     /// Get a table.
     pub fn get_table(&self, name: &str) -> Option<&Table> {
         self.tables.iter().find(|x| x.name == name)
@@ -50,8 +54,27 @@ impl DatabaseSchema {
         self.enums.iter().find(|x| x.name == name)
     }
 
+    pub fn table(&self, name: &str) -> core::result::Result<&Table, String> {
+        match self.tables.iter().find(|t| t.name == name) {
+            Some(t) => Ok(t),
+            None => Err(format!("Table {} not found", name)),
+        }
+    }
+
+    pub fn table_bang(&self, name: &str) -> &Table {
+        self.table(&name).unwrap()
+    }
+
     pub fn get_sequence(&self, name: &str) -> Option<&Sequence> {
         self.sequences.iter().find(|x| x.name == name)
+    }
+
+    pub fn empty() -> DatabaseSchema {
+        DatabaseSchema {
+            tables: Vec::new(),
+            enums: Vec::new(),
+            sequences: Vec::new(),
+        }
     }
 }
 
@@ -68,6 +91,21 @@ pub struct Table {
     pub primary_key: Option<PrimaryKey>,
     /// The table's foreign keys.
     pub foreign_keys: Vec<ForeignKey>,
+}
+
+impl Table {
+    pub fn column_bang(&self, name: &str) -> &Column {
+        self.column(name)
+            .expect(&format!("Column {} not found in Table {}", name, self.name))
+    }
+
+    pub fn column(&self, name: &str) -> Option<&Column> {
+        self.columns.iter().find(|c| c.name == name)
+    }
+
+    pub fn has_column(&self, name: &str) -> bool {
+        self.column(name).is_some()
+    }
 }
 
 /// An index of a table.
