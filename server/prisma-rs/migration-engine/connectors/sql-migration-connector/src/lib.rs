@@ -32,6 +32,7 @@ pub type Result<T> = std::result::Result<T, SqlError>;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
+    pub url: String,
     pub file_path: Option<String>,
     pub sql_family: SqlFamily,
     pub schema_name: String,
@@ -71,6 +72,7 @@ impl SqlMigrationConnector {
 
         match PostgreSql::new(params) {
             Ok(conn) => Ok(Self::create_connector(
+                url,
                 Arc::new(conn),
                 SqlFamily::Postgres,
                 schema,
@@ -94,6 +96,7 @@ impl SqlMigrationConnector {
                 let conn = PostgreSql::new(params)?;
 
                 Ok(Self::create_connector(
+                    url,
                     Arc::new(conn),
                     SqlFamily::Postgres,
                     schema,
@@ -117,7 +120,13 @@ impl SqlMigrationConnector {
         let params = MysqlParams::try_from(url)?;
         let conn = Mysql::new(params)?;
 
-        Ok(Self::create_connector(Arc::new(conn), SqlFamily::Mysql, schema, None))
+        Ok(Self::create_connector(
+            url,
+            Arc::new(conn),
+            SqlFamily::Mysql,
+            schema,
+            None,
+        ))
     }
 
     pub fn sqlite(url: &str) -> crate::Result<Self> {
@@ -126,6 +135,7 @@ impl SqlMigrationConnector {
         let schema = String::from("lift");
 
         Ok(Self::create_connector(
+            url,
             Arc::new(conn),
             SqlFamily::Sqlite,
             schema,
@@ -134,6 +144,7 @@ impl SqlMigrationConnector {
     }
 
     fn create_connector(
+        url: &str,
         conn: Arc<dyn MigrationDatabase + Send + Sync + 'static>,
         sql_family: SqlFamily,
         schema_name: String,
@@ -167,6 +178,7 @@ impl SqlMigrationConnector {
         let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
 
         Self {
+            url: url.to_string(),
             file_path,
             sql_family,
             schema_name,
@@ -188,11 +200,25 @@ impl MigrationConnector for SqlMigrationConnector {
     }
 
     fn can_connect(&self) -> bool {
-        unimplemented!()
+        match self.sql_family {
+            SqlFamily::Postgres | SqlFamily::Mysql => self
+                .database
+                .query_raw("", "SELECT * FROM information_schema.tables;", &[])
+                .map(|_| true)
+                .unwrap_or(false),
+            SqlFamily::Sqlite => unreachable!(),
+        }
     }
 
     fn can_create_database(&self) -> bool {
-        unimplemented!()
+        match self.sql_family {
+            SqlFamily::Postgres => self
+                .database
+                .query_raw("", "select rolcreatedb from pg_authid where rolname = 'postgres';", &[])
+                .map(|_| true)
+                .unwrap_or(false),
+            SqlFamily::Sqlite | SqlFamily::Mysql => unreachable!(),
+        }
     }
 
     fn create_database(&self) {
