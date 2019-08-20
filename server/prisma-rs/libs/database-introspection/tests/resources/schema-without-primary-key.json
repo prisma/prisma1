@@ -1,0 +1,24 @@
+{
+  "tables": [
+    {
+      "name": "table1",
+      "columns": [
+        {
+          "name": "column1",
+          "tpe": {
+            "raw": "integer",
+            "family": "int"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        }
+      ],
+      "indices": [],
+      "primaryKey": null,
+      "foreignKeys": []
+    }
+  ],
+  "enums": [],
+  "sequences": []
+}

@@ -1,0 +1,103 @@
+{
+  "tables": [
+    {
+      "name": "table1",
+      "columns": [
+        {
+          "name": "column1",
+          "tpe": {
+            "raw": "integer",
+            "family": "int"
+          },
+          "arity": "required",
+          "default": null,
+          "autoIncrement": true
+        },
+        {
+          "name": "column2",
+          "tpe": {
+            "raw": "varchar(255)",
+            "family": "string"
+          },
+          "arity": "nullable",
+          "default": "default value",
+          "autoIncrement": false
+        },
+        {
+          "name": "column3",
+          "tpe": {
+            "raw": "integer",
+            "family": "int"
+          },
+          "arity": "required",
+          "default": null,
+          "autoIncrement": false
+        }
+      ],
+      "indices": [
+        {
+          "name": "column2",
+          "columns": [
+            "column2"
+          ],
+          "unique": false
+        }
+      ],
+      "primaryKey": {
+        "columns": [
+          "column1"
+        ]
+      },
+      "foreignKeys": [
+        {
+          "columns": [
+            "column3"
+          ],
+          "referencedTable": "table2",
+          "referencedColumns": [
+            "id"
+          ],
+          "onDeleteAction": "noAction"
+        }
+      ]
+    },
+    {
+      "name": "table2",
+      "columns": [
+        {
+          "name": "id",
+          "tpe": {
+            "raw": "integer",
+            "family": "int"
+          },
+          "arity": "required",
+          "default": null,
+          "autoIncrement": true
+        }
+      ],
+      "indices": [],
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "foreignKeys": []
+    }
+  ],
+  "enums": [
+    {
+      "name": "enum1",
+      "values": [
+        "option2",
+        "option1"
+      ]
+    }
+  ],
+  "sequences": [
+    {
+      "name": "sequence1",
+      "initialValue": 1,
+      "allocationSize": 32
+    }
+  ]
+}

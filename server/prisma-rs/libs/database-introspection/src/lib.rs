@@ -1,4 +1,5 @@
 use failure::{Error, Fail};
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
 pub mod mysql;
@@ -30,6 +31,8 @@ pub trait IntrospectionConnector {
 }
 
 /// The result of introspecting a database schema.
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct DatabaseSchema {
     /// The schema's tables.
     pub tables: Vec<Table>,
@@ -56,7 +59,8 @@ impl DatabaseSchema {
 }
 
 /// A table found in a schema.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Table {
     /// The table's name.
     pub name: String,
@@ -71,7 +75,8 @@ pub struct Table {
 }
 
 /// An index of a table.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Index {
     /// Index name.
     pub name: String,
@@ -82,14 +87,16 @@ pub struct Index {
 }
 
 /// The primary key of a table.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PrimaryKey {
     /// Columns.
     pub columns: Vec<String>,
 }
 
 /// A column of a table.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Column {
     /// Column name.
     pub name: String,
@@ -105,7 +112,8 @@ pub struct Column {
 }
 
 /// The type of a column.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ColumnType {
     /// The raw SQL type.
     pub raw: String,
@@ -114,7 +122,8 @@ pub struct ColumnType {
 }
 
 /// Enumeration of column type families.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 // TODO: this name feels weird.
 pub enum ColumnTypeFamily {
     /// Integer types.
@@ -144,7 +153,8 @@ pub enum ColumnTypeFamily {
 }
 
 /// A column's arity.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum ColumnArity {
     /// Required column.
     Required,
@@ -155,7 +165,8 @@ pub enum ColumnArity {
 }
 
 /// Foreign key action types (for ON DELETE|ON UPDATE) constraints.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum ForeignKeyAction {
     /// Produce an error indicating that the deletion or update would create a foreign key
     /// constraint violation. If the constraint is deferred, this error will be produced at
@@ -176,7 +187,8 @@ pub enum ForeignKeyAction {
 }
 
 /// A foreign key.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ForeignKey {
     /// Column names.
     pub columns: Vec<String>,
@@ -188,7 +200,8 @@ pub struct ForeignKey {
 }
 
 /// A SQL enum.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Enum {
     /// Enum name.
     pub name: String,
@@ -197,7 +210,8 @@ pub struct Enum {
 }
 
 /// A SQL sequence.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Sequence {
     /// Sequence name.
     pub name: String,
