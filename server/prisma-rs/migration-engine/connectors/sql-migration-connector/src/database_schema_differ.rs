@@ -1,11 +1,12 @@
-use crate::database_inspector::{Column, DatabaseSchemaOld, Table};
+use crate::database_inspector::{Column, Table};
 use crate::*;
+use database_introspection::DatabaseSchema;
 
 const MIGRATION_TABLE_NAME: &str = "_Migration";
 
 pub struct DatabaseSchemaDiffer<'a> {
-    previous: &'a DatabaseSchemaOld,
-    next: &'a DatabaseSchemaOld,
+    previous: &'a DatabaseSchema,
+    next: &'a DatabaseSchema,
 }
 
 #[derive(Clone)]
@@ -30,7 +31,7 @@ impl DatabaseSchemaDiff {
 }
 
 impl<'a> DatabaseSchemaDiffer<'a> {
-    pub fn diff(previous: &DatabaseSchemaOld, next: &DatabaseSchemaOld) -> DatabaseSchemaDiff {
+    pub fn diff(previous: &DatabaseSchema, next: &DatabaseSchema) -> DatabaseSchemaDiff {
         let differ = DatabaseSchemaDiffer { previous, next };
         differ.diff_internal()
     }
@@ -45,51 +46,52 @@ impl<'a> DatabaseSchemaDiffer<'a> {
 
     fn create_tables(&self) -> Vec<CreateTable> {
         let mut result = Vec::new();
-        for next_table in &self.next.tables {
-            if !self.previous.has_table(&next_table.name) && next_table.name != MIGRATION_TABLE_NAME {
-                let create = CreateTable {
-                    name: next_table.name.clone(),
-                    columns: Self::column_descriptions(&next_table.columns),
-                    primary_columns: next_table.primary_key_columns.clone(),
-                };
-                result.push(create);
-            }
-        }
+//        for next_table in &self.next.tables {
+//            if !self.previous.has_table(&next_table.name) && next_table.name != MIGRATION_TABLE_NAME {
+//                let create = CreateTable {
+//                    name: next_table.name.clone(),
+//                    columns: Self::column_descriptions(&next_table.columns),
+//                    primary_columns: next_table.primary_key_columns.clone(),
+//                };
+//                result.push(create);
+//
+//            }
+//        }
         result
     }
 
     fn drop_tables(&self) -> Vec<DropTable> {
         let mut result = Vec::new();
-        for previous_table in &self.previous.tables {
-            if !self.next.has_table(&previous_table.name) && previous_table.name != MIGRATION_TABLE_NAME {
-                let drop = DropTable {
-                    name: previous_table.name.clone(),
-                };
-                result.push(drop);
-            }
-        }
+//        for previous_table in &self.previous.tables {
+//            if !self.next.has_table(&previous_table.name) && previous_table.name != MIGRATION_TABLE_NAME {
+//                let drop = DropTable {
+//                    name: previous_table.name.clone(),
+//                };
+//                result.push(drop);
+//            }
+//        }
         result
     }
 
     fn alter_tables(&self) -> Vec<AlterTable> {
         // TODO: this does not diff primary key columns yet
         let mut result = Vec::new();
-        for previous_table in &self.previous.tables {
-            if let Ok(next_table) = self.next.table(&previous_table.name) {
-                let mut changes = Vec::new();
-                changes.append(&mut Self::drop_columns(&previous_table, &next_table));
-                changes.append(&mut Self::add_columns(&previous_table, &next_table));
-                changes.append(&mut Self::alter_columns(&previous_table, &next_table));
-
-                if !changes.is_empty() {
-                    let update = AlterTable {
-                        table: previous_table.name.clone(),
-                        changes,
-                    };
-                    result.push(update);
-                }
-            }
-        }
+//        for previous_table in &self.previous.tables {
+//            if let Ok(next_table) = self.next.table(&previous_table.name) {
+//                let mut changes = Vec::new();
+//                changes.append(&mut Self::drop_columns(&previous_table, &next_table));
+//                changes.append(&mut Self::add_columns(&previous_table, &next_table));
+//                changes.append(&mut Self::alter_columns(&previous_table, &next_table));
+//
+//                if !changes.is_empty() {
+//                    let update = AlterTable {
+//                        table: previous_table.name.clone(),
+//                        changes,
+//                    };
+//                    result.push(update);
+//                }
+//            }
+//        }
         result
     }
 

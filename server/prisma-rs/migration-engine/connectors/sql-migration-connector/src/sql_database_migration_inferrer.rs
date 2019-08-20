@@ -163,7 +163,7 @@ fn infer_database_migration_steps_and_fix(
     schema_name: &str,
     sql_family: SqlFamily,
 ) -> SqlResult<Vec<SqlMigrationStep>> {
-    let diff = DatabaseSchemaDiffer::diff(&from, &to);
+    let diff: DatabaseSchemaDiff = unimplemented!(); // DatabaseSchemaDiffer::diff(&from, &to);
     let is_sqlite = sql_family == SqlFamily::Sqlite;
 
     if is_sqlite {
@@ -214,7 +214,7 @@ fn fix_id_column_type_change(
             .map(|t| t.name.clone())
             .collect();
         radical_steps.push(SqlMigrationStep::DropTables(DropTables { names: tables_to_drop }));
-        let diff_from_empty = DatabaseSchemaDiffer::diff(&DatabaseSchemaOld::empty(), &to);
+        let diff_from_empty: DatabaseSchemaDiff = unimplemented!(); // DatabaseSchemaDiffer::diff(&DatabaseSchemaOld::empty(), &to);
         let mut steps_from_empty = delay_foreign_key_creation(diff_from_empty);
         radical_steps.append(&mut steps_from_empty);
 
