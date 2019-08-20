@@ -2692,6 +2692,7 @@ version = "0.1.0"
 dependencies = [
  "barrel 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "database-introspection 0.1.0",
  "datamodel 0.1.0",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",

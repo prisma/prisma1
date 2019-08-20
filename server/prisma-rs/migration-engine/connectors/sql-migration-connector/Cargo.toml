@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 migration-connector = { path = "../migration-connector" }
+database-introspection = { path = "../../../libs/database-introspection" }
 datamodel = { path = "../../../libs/datamodel" }
 prisma-models = { path = "../../../prisma-models" }
 chrono = { version = "0.4" }
