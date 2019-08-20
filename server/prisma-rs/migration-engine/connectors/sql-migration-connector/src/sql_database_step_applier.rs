@@ -231,7 +231,7 @@ fn render_column(
     };
     let default_str = match &column.default {
         Some(value) => {
-            format!("DEFAULT {}", value)
+            format!("DEFAULT {}", value) // TODO: check if this is right
 //            match render_value(value) {
 //                Some(ref default) if column_description.required => format!("DEFAULT {}", default),
 //                Some(_) => "".to_string(), // we use the default value right now only to smoothen migrations. So we only use it when absolutely needed.
@@ -240,44 +240,44 @@ fn render_column(
         }
         None => "".to_string(),
     };
-//    let references_str = match (sql_family, &column_description.foreign_key) {
-//        (SqlFamily::Postgres, Some(fk)) => format!(
-//            "REFERENCES \"{}\".\"{}\"(\"{}\") {}",
-//            schema_name,
-//            fk.table,
-//            fk.column,
-//            render_on_delete(&fk.on_delete)
-//        ),
-//        (SqlFamily::Mysql, Some(fk)) => format!(
-//            "REFERENCES `{}`.`{}`(`{}`) {}",
-//            schema_name,
-//            fk.table,
-//            fk.column,
-//            render_on_delete(&fk.on_delete)
-//        ),
-//        (SqlFamily::Sqlite, Some(fk)) => format!(
-//            "REFERENCES \"{}\"({}) {}",
-//            fk.table,
-//            fk.column,
-//            render_on_delete(&fk.on_delete)
-//        ),
-//        (_, None) => "".to_string(),
-//    };
-//    match (sql_family, &column_description.foreign_key) {
-//        (SqlFamily::Mysql, Some(_)) => {
-//            let add = if add_fk_prefix { "ADD" } else { "" };
-//            let fk_line = format!("{} FOREIGN KEY ({}) {}", add, column_name, references_str);
-//            format!(
-//                "{} {} {} {},{}",
-//                column_name, tpe_str, nullability_str, default_str, fk_line
-//            )
-//        }
-//        _ => format!(
-//            "{} {} {} {} {}",
-//            column_name, tpe_str, nullability_str, default_str, references_str
-//        ),
-//    }
-    unimplemented!()
+    let foreign_key = table.foreign_keys.iter().next();
+    let references_str = match (sql_family, foreign_key) {
+        (SqlFamily::Postgres, Some(fk)) => format!(
+            "REFERENCES \"{}\".\"{}\"(\"{}\") {}",
+            schema_name,
+            fk.referenced_table,
+            fk.referenced_columns.first().unwrap(),
+            render_on_delete(&fk.on_delete_action)
+        ),
+        (SqlFamily::Mysql, Some(fk)) => format!(
+            "REFERENCES `{}`.`{}`(`{}`) {}",
+            schema_name,
+            fk.referenced_table,
+            fk.referenced_columns.first().unwrap(),
+            render_on_delete(&fk.on_delete_action)
+        ),
+        (SqlFamily::Sqlite, Some(fk)) => format!(
+            "REFERENCES \"{}\"({}) {}",
+            fk.referenced_table,
+            fk.referenced_columns.first().unwrap(),
+            render_on_delete(&fk.on_delete_action)
+        ),
+        (_, None) => "".to_string(),
+    };
+    match (sql_family, foreign_key) {
+        (SqlFamily::Mysql, Some(_)) => {
+            let add = if add_fk_prefix { "ADD" } else { "" };
+            let fk_line = format!("{} FOREIGN KEY ({}) {}", add, column_name, references_str);
+            format!(
+                "{} {} {} {},{}",
+                column_name, tpe_str, nullability_str, default_str, fk_line
+            )
+        }
+        _ => format!(
+            "{} {} {} {} {}",
+            column_name, tpe_str, nullability_str, default_str, references_str
+        ),
+    }
 }
 
 fn render_on_delete(on_delete: &ForeignKeyAction) -> &'static str {
