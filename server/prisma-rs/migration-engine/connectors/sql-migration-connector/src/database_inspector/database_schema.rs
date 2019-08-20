@@ -1,11 +1,11 @@
 use datamodel::Value;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct DatabaseSchema {
+pub struct DatabaseSchemaOld {
     pub tables: Vec<Table>,
 }
 
-impl DatabaseSchema {
+impl DatabaseSchemaOld {
     pub fn table(&self, name: &str) -> Result<&Table, String> {
         match self.tables.iter().find(|t| t.name == name) {
             Some(t) => Ok(t),
@@ -21,8 +21,8 @@ impl DatabaseSchema {
         self.table(name).is_ok()
     }
 
-    pub fn empty() -> DatabaseSchema {
-        DatabaseSchema { tables: Vec::new() }
+    pub fn empty() -> DatabaseSchemaOld {
+        DatabaseSchemaOld { tables: Vec::new() }
     }
 }
 

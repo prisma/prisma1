@@ -8,8 +8,8 @@ pub struct Sqlite {
 }
 
 impl DatabaseInspector for Sqlite {
-    fn introspect(&self, schema: &String) -> DatabaseSchema {
-        DatabaseSchema {
+    fn introspect(&self, schema: &String) -> DatabaseSchemaOld {
+        DatabaseSchemaOld {
             tables: self
                 .get_table_names(schema)
                 .into_iter()

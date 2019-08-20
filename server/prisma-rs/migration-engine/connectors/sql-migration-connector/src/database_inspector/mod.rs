@@ -23,7 +23,7 @@ use std::sync::Arc;
 use url::Url;
 
 pub trait DatabaseInspector: Send + Sync + 'static {
-    fn introspect(&self, schema: &String) -> DatabaseSchema;
+    fn introspect(&self, schema: &String) -> DatabaseSchemaOld;
 }
 
 impl DatabaseInspector {

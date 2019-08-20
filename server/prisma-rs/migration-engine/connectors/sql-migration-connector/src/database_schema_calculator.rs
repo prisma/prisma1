@@ -10,12 +10,12 @@ pub struct DatabaseSchemaCalculator<'a> {
 }
 
 impl<'a> DatabaseSchemaCalculator<'a> {
-    pub fn calculate(data_model: &Datamodel) -> SqlResult<DatabaseSchema> {
+    pub fn calculate(data_model: &Datamodel) -> SqlResult<DatabaseSchemaOld> {
         let calculator = DatabaseSchemaCalculator { data_model };
         calculator.calculate_internal()
     }
 
-    fn calculate_internal(&self) -> SqlResult<DatabaseSchema> {
+    fn calculate_internal(&self) -> SqlResult<DatabaseSchemaOld> {
         let mut tables = Vec::new();
         let model_tables_without_inline_relations = self.calculate_model_tables()?;
         let mut model_tables = self.add_inline_relations_to_model_tables(model_tables_without_inline_relations)?;
@@ -26,7 +26,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
         tables.append(&mut scalar_list_tables);
         tables.append(&mut relation_tables);
 
-        Ok(DatabaseSchema { tables })
+        Ok(DatabaseSchemaOld { tables })
     }
 
     fn calculate_model_tables(&self) -> SqlResult<Vec<ModelTable>> {

@@ -9,8 +9,8 @@ pub struct MysqlInspector {
 }
 
 impl DatabaseInspector for MysqlInspector {
-    fn introspect(&self, schema: &String) -> DatabaseSchema {
-        DatabaseSchema {
+    fn introspect(&self, schema: &String) -> DatabaseSchemaOld {
+        DatabaseSchemaOld {
             tables: self
                 .information_schema
                 .get_table_names(schema)

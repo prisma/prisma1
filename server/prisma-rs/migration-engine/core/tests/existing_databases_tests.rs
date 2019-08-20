@@ -375,7 +375,7 @@ struct BarrelMigrationExecutor {
 }
 
 impl BarrelMigrationExecutor {
-    fn execute<F>(&self, mut migrationFn: F) -> DatabaseSchema
+    fn execute<F>(&self, mut migrationFn: F) -> DatabaseSchemaOld
     where
         F: FnMut(&mut Migration) -> (),
     {

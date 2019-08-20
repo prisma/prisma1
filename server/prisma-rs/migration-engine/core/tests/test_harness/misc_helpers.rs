@@ -89,7 +89,7 @@ where
     api
 }
 
-pub fn introspect_database(api: &dyn GenericApi) -> DatabaseSchema {
+pub fn introspect_database(api: &dyn GenericApi) -> DatabaseSchemaOld {
     let inspector: Box<dyn DatabaseInspector> = match api.connector_type() {
         "postgresql" => Box::new(DatabaseInspector::postgres(postgres_url())),
         "sqlite" => Box::new(DatabaseInspector::sqlite(sqlite_test_file())),

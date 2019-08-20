@@ -1,4 +1,4 @@
-use crate::database_inspector::{DatabaseInspector, DatabaseSchema, Table};
+use crate::database_inspector::{DatabaseInspector, DatabaseSchemaOld, Table};
 use crate::database_schema_calculator::{DatabaseSchemaCalculator, FieldExtensions, ModelExtensions};
 use crate::database_schema_differ::{DatabaseSchemaDiff, DatabaseSchemaDiffer};
 use crate::*;
@@ -35,8 +35,8 @@ impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
 }
 
 fn infer(
-    current_database_schema: &DatabaseSchema,
-    expected_database_schema: &DatabaseSchema,
+    current_database_schema: &DatabaseSchemaOld,
+    expected_database_schema: &DatabaseSchemaOld,
     schema_name: &str,
     sql_family: SqlFamily,
     previous: &Datamodel,
@@ -144,8 +144,8 @@ fn infer_based_on_datamodel_diff(
 }
 
 fn infer_based_on_db_schema_diff(
-    current: &DatabaseSchema,
-    next: &DatabaseSchema,
+    current: &DatabaseSchemaOld,
+    next: &DatabaseSchemaOld,
     schema_name: &str,
     sql_family: SqlFamily,
 ) -> ConnectorResult<SqlMigration> {
@@ -158,8 +158,8 @@ fn infer_based_on_db_schema_diff(
 }
 
 fn infer_database_migration_steps_and_fix(
-    from: &DatabaseSchema,
-    to: &DatabaseSchema,
+    from: &DatabaseSchemaOld,
+    to: &DatabaseSchemaOld,
     schema_name: &str,
     sql_family: SqlFamily,
 ) -> SqlResult<Vec<SqlMigrationStep>> {
@@ -175,8 +175,8 @@ fn infer_database_migration_steps_and_fix(
 }
 
 fn fix_id_column_type_change(
-    from: &DatabaseSchema,
-    to: &DatabaseSchema,
+    from: &DatabaseSchemaOld,
+    to: &DatabaseSchemaOld,
     _schema_name: &str,
     steps: Vec<SqlMigrationStep>,
 ) -> SqlResult<Vec<SqlMigrationStep>> {
@@ -214,7 +214,7 @@ fn fix_id_column_type_change(
             .map(|t| t.name.clone())
             .collect();
         radical_steps.push(SqlMigrationStep::DropTables(DropTables { names: tables_to_drop }));
-        let diff_from_empty = DatabaseSchemaDiffer::diff(&DatabaseSchema::empty(), &to);
+        let diff_from_empty = DatabaseSchemaDiffer::diff(&DatabaseSchemaOld::empty(), &to);
         let mut steps_from_empty = delay_foreign_key_creation(diff_from_empty);
         radical_steps.append(&mut steps_from_empty);
 
@@ -270,8 +270,8 @@ fn delay_foreign_key_creation(mut diff: DatabaseSchemaDiff) -> Vec<SqlMigrationS
 
 fn fix_stupid_sqlite(
     diff: DatabaseSchemaDiff,
-    current_database_schema: &DatabaseSchema,
-    next_database_schema: &DatabaseSchema,
+    current_database_schema: &DatabaseSchemaOld,
+    next_database_schema: &DatabaseSchemaOld,
     schema_name: &str,
 ) -> SqlResult<Vec<SqlMigrationStep>> {
     let steps = diff.into_steps();

@@ -1,11 +1,11 @@
-use crate::database_inspector::{Column, DatabaseSchema, Table};
+use crate::database_inspector::{Column, DatabaseSchemaOld, Table};
 use crate::*;
 
 const MIGRATION_TABLE_NAME: &str = "_Migration";
 
 pub struct DatabaseSchemaDiffer<'a> {
-    previous: &'a DatabaseSchema,
-    next: &'a DatabaseSchema,
+    previous: &'a DatabaseSchemaOld,
+    next: &'a DatabaseSchemaOld,
 }
 
 #[derive(Clone)]
@@ -30,7 +30,7 @@ impl DatabaseSchemaDiff {
 }
 
 impl<'a> DatabaseSchemaDiffer<'a> {
-    pub fn diff(previous: &DatabaseSchema, next: &DatabaseSchema) -> DatabaseSchemaDiff {
+    pub fn diff(previous: &DatabaseSchemaOld, next: &DatabaseSchemaOld) -> DatabaseSchemaDiff {
         let differ = DatabaseSchemaDiffer { previous, next };
         differ.diff_internal()
     }
