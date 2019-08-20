@@ -1,0 +1,134 @@
+{
+  "tables": [
+    {
+      "name": "table1",
+      "columns": [
+        {
+          "name": "column1",
+          "tpe": {
+            "raw": "raw type",
+            "family": "int"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column2",
+          "tpe": {
+            "raw": "raw type",
+            "family": "float"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column3",
+          "tpe": {
+            "raw": "raw type",
+            "family": "boolean"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column4",
+          "tpe": {
+            "raw": "raw type",
+            "family": "string"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column5",
+          "tpe": {
+            "raw": "raw type",
+            "family": "dateTime"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column6",
+          "tpe": {
+            "raw": "raw type",
+            "family": "binary"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column7",
+          "tpe": {
+            "raw": "raw type",
+            "family": "json"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column8",
+          "tpe": {
+            "raw": "raw type",
+            "family": "uuid"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column9",
+          "tpe": {
+            "raw": "raw type",
+            "family": "geometric"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column10",
+          "tpe": {
+            "raw": "raw type",
+            "family": "logSequenceNumber"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column11",
+          "tpe": {
+            "raw": "raw type",
+            "family": "textSearch"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column12",
+          "tpe": {
+            "raw": "raw type",
+            "family": "transactionId"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        }
+      ],
+      "indices": [],
+      "primaryKey": null,
+      "foreignKeys": []
+    }
+  ],
+  "enums": [],
+  "sequences": []
+}
