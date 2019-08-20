@@ -145,3 +145,43 @@ fn database_schema_is_serializable() {
     // Verify that schema deserialized from reference JSON is equivalent
     assert_eq!(ref_schema, schema);
 }
+
+#[test]
+fn database_schema_without_primary_key_is_serializable() {
+    setup();
+
+    let schema = DatabaseSchema {
+        tables: vec![
+            Table {
+                name: "table1".to_string(),
+                columns: vec![
+                    Column {
+                        name: "column1".to_string(),
+                        tpe: ColumnType {
+                            raw: "integer".to_string(),
+                            family: ColumnTypeFamily::Int,
+                        },
+                        arity: ColumnArity::Nullable,
+                        default: None,
+                        auto_increment: false,
+                    },
+                ],
+                indices: vec![],
+                primary_key: None,
+                foreign_keys: vec![],
+            },
+        ],
+        enums: vec![],
+        sequences: vec![],
+    };
+    let ref_schema_json = include_str!("./resources/schema-without-primary-key.json");
+    let ref_schema: DatabaseSchema = serde_json::from_str(ref_schema_json).expect("deserialize reference schema");
+
+    let schema_json = serde_json::to_string(&schema).expect("serialize schema to JSON");
+    let schema_deser: DatabaseSchema = serde_json::from_str(&schema_json).expect("deserialize schema");
+
+    // Verify that deserialized schema is equivalent
+    assert_eq!(schema_deser, schema);
+    // Verify that schema deserialized from reference JSON is equivalent
+    assert_eq!(ref_schema, schema);
+}
