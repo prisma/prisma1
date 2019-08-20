@@ -38,9 +38,6 @@ pub enum SqlMigrationStep {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateTable {
-    pub name: String,
-    pub columns: Vec<Column>,
-    pub primary_columns: Vec<String>,
     pub table: Table,
 }
 
@@ -92,12 +89,12 @@ pub struct AlterColumn {
 //    pub default: Option<Value>,
 //}
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct ForeignKey {
-    pub table: String,
-    pub column: String,
-    pub on_delete: OnDelete,
-}
+//#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+//pub struct ForeignKey {
+//    pub table: String,
+//    pub column: String,
+//    pub on_delete: OnDelete,
+//}
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum OnDelete {

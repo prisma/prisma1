@@ -116,6 +116,13 @@ impl Table {
             fk.columns.contains(&column.to_string())
         }).is_some()
     }
+
+    pub fn primary_key_columns(&self) -> Vec<String> {
+        match &self.primary_key {
+            Some(pk) => pk.columns.clone(),
+            None => Vec::new(),
+        }
+    }
 }
 
 /// An index of a table.

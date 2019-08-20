@@ -77,13 +77,10 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
 
     match step {
         SqlMigrationStep::CreateTable(CreateTable {
-            name,
-            columns,
-            primary_columns,
             table,
         }) => {
-            let cloned_columns = columns.clone();
-            let primary_columns = primary_columns.clone();
+            let cloned_columns = table.columns.clone();
+            let primary_columns = table.primary_key_columns();
             let mut lines = Vec::new();
             for column in cloned_columns.clone() {
                 let col_sql = render_column(sql_family, schema_name.to_string(), &table, &column, false);
@@ -100,7 +97,7 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
             format!(
                 "CREATE TABLE {}.{}({})\n{};",
                 quote(&schema_name, sql_family),
-                quote(name, sql_family),
+                quote(&table.name, sql_family),
                 lines.join(","),
                 create_table_suffix(sql_family),
             )
