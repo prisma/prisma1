@@ -14,7 +14,6 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 
     fn introspect(&self, schema: &str) -> Result<DatabaseSchema> {
         debug!("Introspecting schema '{}'", schema);
-        println!("Introspecting schema '{}'", schema);
         let tables = self
             .get_table_names(schema)
             .into_iter()
@@ -169,7 +168,7 @@ impl IntrospectionConnector {
                     con1.conrelid,
                     con1.conname,
                     con1.confdeltype
-                FROM 
+                FROM
                     pg_class cl
                     join pg_namespace ns on cl.relnamespace = ns.oid
                     join pg_constraint con1 on con1.conrelid = cl.oid
