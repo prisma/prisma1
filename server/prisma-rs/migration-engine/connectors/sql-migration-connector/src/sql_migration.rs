@@ -1,6 +1,7 @@
 use datamodel::Value;
 use migration_connector::DatabaseMigrationMarker;
 use serde::{Deserialize, Serialize};
+use database_introspection::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SqlMigration {
@@ -38,8 +39,9 @@ pub enum SqlMigrationStep {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateTable {
     pub name: String,
-    pub columns: Vec<ColumnDescription>,
+    pub columns: Vec<Column>,
     pub primary_columns: Vec<String>,
+    pub table: Table,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -54,7 +56,7 @@ pub struct DropTables {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AlterTable {
-    pub table: String,
+    pub table: Table,
     pub changes: Vec<TableChange>,
 }
 
@@ -67,7 +69,7 @@ pub enum TableChange {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AddColumn {
-    pub column: ColumnDescription,
+    pub column: Column,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -78,17 +80,17 @@ pub struct DropColumn {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AlterColumn {
     pub name: String,
-    pub column: ColumnDescription,
+    pub column: Column,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct ColumnDescription {
-    pub name: String,
-    pub tpe: ColumnType,
-    pub required: bool,
-    pub foreign_key: Option<ForeignKey>,
-    pub default: Option<Value>,
-}
+//#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+//pub struct ColumnDescription {
+//    pub name: String,
+//    pub tpe: ColumnType,
+//    pub required: bool,
+//    pub foreign_key: Option<ForeignKey>,
+//    pub default: Option<Value>,
+//}
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct ForeignKey {
@@ -104,14 +106,14 @@ pub enum OnDelete {
     Cascade,
 }
 
-#[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub enum ColumnType {
-    Int,
-    Float,
-    Boolean,
-    String,
-    DateTime,
-}
+//#[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize, Deserialize)]
+//pub enum ColumnType {
+//    Int,
+//    Float,
+//    Boolean,
+//    String,
+//    DateTime,
+//}
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CreateIndex {

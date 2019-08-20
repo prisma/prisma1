@@ -110,6 +110,12 @@ impl Table {
     pub fn has_column(&self, name: &str) -> bool {
         self.column(name).is_some()
     }
+
+    pub fn is_part_of_foreign_key(&self, column: &str) -> bool {
+        self.foreign_keys.iter().find(|fk|{
+            fk.columns.contains(&column.to_string())
+        }).is_some()
+    }
 }
 
 /// An index of a table.
@@ -147,6 +153,20 @@ pub struct Column {
     pub default: Option<String>,
     /// Column auto increment setting, MySQL/SQLite only.
     pub auto_increment: bool,
+}
+
+impl Column {
+    pub fn is_required(&self) -> bool {
+        self.arity == ColumnArity::Required
+    }
+
+    pub fn differs_in_something_except_default(&self, other: &Column) -> bool {
+        self.name != other.name
+            || self.tpe != other.tpe
+            || self.arity != other.arity
+            || self.default != other.default
+            || self.auto_increment != other.auto_increment
+    }
 }
 
 /// The type of a column.

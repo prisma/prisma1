@@ -4,15 +4,17 @@ use chrono::*;
 use datamodel::common::*;
 use datamodel::*;
 use prisma_models::{DatamodelConverter, TempManifestationHolder, TempRelationHolder};
+use database_introspection::DatabaseSchema;
 
 pub struct DatabaseSchemaCalculator<'a> {
     data_model: &'a Datamodel,
 }
 
 impl<'a> DatabaseSchemaCalculator<'a> {
-    pub fn calculate(data_model: &Datamodel) -> SqlResult<DatabaseSchemaOld> {
-        let calculator = DatabaseSchemaCalculator { data_model };
-        calculator.calculate_internal()
+    pub fn calculate(data_model: &Datamodel) -> SqlResult<DatabaseSchema> {
+//        let calculator = DatabaseSchemaCalculator { data_model };
+//        calculator.calculate_internal()
+        unimplemented!()
     }
 
     fn calculate_internal(&self) -> SqlResult<DatabaseSchemaOld> {
