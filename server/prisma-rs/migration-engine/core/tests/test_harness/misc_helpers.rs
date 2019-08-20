@@ -10,7 +10,7 @@ use sql_migration_connector::{database_inspector::*, migration_database::*, SqlF
 use std::convert::TryFrom;
 use url::Url;
 
-pub const SCHEMA_NAME: &str = "migration_engine";
+pub const SCHEMA_NAME: &str = "migration-engine";
 
 pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
     parse_datamodel(datamodel_string).unwrap()
