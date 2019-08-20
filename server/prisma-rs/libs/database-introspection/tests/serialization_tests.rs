@@ -238,3 +238,47 @@ fn database_schema_is_serializable_for_every_column_type_family() {
     // Verify that schema deserialized from reference JSON is equivalent
     assert_eq!(ref_schema, schema);
 }
+
+#[test]
+fn database_schema_is_serializable_for_every_column_arity() {
+    setup();
+
+    // Add a column of every arity
+    let mut columns: Vec<Column> = vec![
+        ColumnArity::Required,
+        ColumnArity::Nullable,
+        ColumnArity::List,
+    ].iter().enumerate().map(|(i, arity)| Column {
+        name: format!("column{}", i + 1),
+        tpe: ColumnType {
+            raw: "int".to_string(),
+            family: ColumnTypeFamily::Int,
+        },
+        arity: arity.to_owned(),
+        default: None,
+        auto_increment: false,
+    }).collect();
+    let schema = DatabaseSchema {
+        tables: vec![
+            Table {
+                name: "table1".to_string(),
+                columns,
+                indices: vec![],
+                primary_key: None,
+                foreign_keys: vec![],
+            },
+        ],
+        enums: vec![],
+        sequences: vec![],
+    };
+    let ref_schema_json = include_str!("./resources/schema-all-column-arities.json");
+    let ref_schema: DatabaseSchema = serde_json::from_str(ref_schema_json).expect("deserialize reference schema");
+
+    let schema_json = serde_json::to_string(&schema).expect("serialize schema to JSON");
+    let schema_deser: DatabaseSchema = serde_json::from_str(&schema_json).expect("deserialize schema");
+
+    // Verify that deserialized schema is equivalent
+    assert_eq!(schema_deser, schema);
+    // Verify that schema deserialized from reference JSON is equivalent
+    assert_eq!(ref_schema, schema);
+}
