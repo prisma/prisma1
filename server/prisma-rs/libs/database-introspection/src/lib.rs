@@ -18,12 +18,12 @@ pub enum IntrospectionError {
 pub type IntrospectionResult<T> = core::result::Result<T, Error>;
 
 /// Connection abstraction for the introspection connectors.
-pub trait IntrospectionConnection {
+pub trait IntrospectionConnection: Send + Sync + 'static {
     fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet>;
 }
 
 /// A database introspection connector.
-pub trait IntrospectionConnector {
+pub trait IntrospectionConnector: Send + Sync + 'static {
     /// List the database's schemas.
     fn list_schemas(&self) -> IntrospectionResult<Vec<String>>;
     /// Introspect a database schema.

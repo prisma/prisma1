@@ -25,6 +25,13 @@ impl From<prisma_query::error::Error> for SqlError {
     }
 }
 
+// TODO: this is too generic
+impl From<failure::Error> for SqlError {
+    fn from(error: failure::Error) -> Self {
+        SqlError::QueryError(error.into())
+    }
+}
+
 impl From<String> for SqlError {
     fn from(error: String) -> Self {
         SqlError::Generic(error)

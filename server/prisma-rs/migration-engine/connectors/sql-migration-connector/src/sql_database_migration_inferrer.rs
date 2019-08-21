@@ -1,4 +1,4 @@
-use crate::database_inspector::{DatabaseInspector, DatabaseSchemaOld, Table};
+
 use crate::database_schema_calculator::{DatabaseSchemaCalculator, FieldExtensions, ModelExtensions};
 use crate::database_schema_differ::{DatabaseSchemaDiff, DatabaseSchemaDiffer};
 use crate::*;
@@ -6,11 +6,11 @@ use datamodel::*;
 use migration_connector::steps::*;
 use migration_connector::*;
 use std::sync::Arc;
-use database_introspection::{ColumnArity, DatabaseSchema};
+use database_introspection::*;
 
 pub struct SqlDatabaseMigrationInferrer {
     pub sql_family: SqlFamily,
-    pub inspector: Arc<DatabaseInspector + Send + Sync + 'static>,
+    pub introspector: Arc<dyn IntrospectionConnector + Send + Sync + 'static>,
     pub schema_name: String,
 }
 
@@ -21,7 +21,7 @@ impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
         next: &Datamodel,
         steps: &Vec<MigrationStep>,
     ) -> ConnectorResult<SqlMigration> {
-        let current_database_schema: DatabaseSchema= unimplemented!();// = self.inspector.introspect(&self.schema_name);
+        let current_database_schema: DatabaseSchema = self.introspect(&self.schema_name)?;
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
         infer(
             &current_database_schema,
@@ -32,6 +32,12 @@ impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
             next,
             steps,
         )
+    }
+}
+
+impl SqlDatabaseMigrationInferrer {
+    fn introspect(&self, schema: &str) -> SqlResult<DatabaseSchema> {
+        Ok(self.introspector.introspect(&schema)?)
     }
 }
 
@@ -164,7 +170,7 @@ fn infer_database_migration_steps_and_fix(
     schema_name: &str,
     sql_family: SqlFamily,
 ) -> SqlResult<Vec<SqlMigrationStep>> {
-    let diff: DatabaseSchemaDiff = unimplemented!(); // DatabaseSchemaDiffer::diff(&from, &to);
+    let diff: DatabaseSchemaDiff = DatabaseSchemaDiffer::diff(&from, &to);
     let is_sqlite = sql_family == SqlFamily::Sqlite;
 
     if is_sqlite {
@@ -215,7 +221,7 @@ fn fix_id_column_type_change(
             .map(|t| t.name.clone())
             .collect();
         radical_steps.push(SqlMigrationStep::DropTables(DropTables { names: tables_to_drop }));
-        let diff_from_empty: DatabaseSchemaDiff = unimplemented!(); // DatabaseSchemaDiffer::diff(&DatabaseSchemaOld::empty(), &to);
+        let diff_from_empty: DatabaseSchemaDiff = DatabaseSchemaDiffer::diff(&DatabaseSchema::empty(), &to);
         let mut steps_from_empty = delay_foreign_key_creation(diff_from_empty);
         radical_steps.append(&mut steps_from_empty);
 
