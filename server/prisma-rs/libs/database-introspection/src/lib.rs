@@ -1,4 +1,4 @@
-use failure::{Error, Fail};
+use failure::Fail;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -15,7 +15,7 @@ pub enum IntrospectionError {
 }
 
 /// The result type.
-pub type IntrospectionResult<T> = core::result::Result<T, Error>;
+pub type IntrospectionResult<T> = core::result::Result<T, IntrospectionError>;
 
 /// Connection abstraction for the introspection connectors.
 pub trait IntrospectionConnection {

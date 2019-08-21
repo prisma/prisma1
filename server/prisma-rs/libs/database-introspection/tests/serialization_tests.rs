@@ -151,26 +151,22 @@ fn database_schema_without_primary_key_is_serializable() {
     setup();
 
     let schema = DatabaseSchema {
-        tables: vec![
-            Table {
-                name: "table1".to_string(),
-                columns: vec![
-                    Column {
-                        name: "column1".to_string(),
-                        tpe: ColumnType {
-                            raw: "integer".to_string(),
-                            family: ColumnTypeFamily::Int,
-                        },
-                        arity: ColumnArity::Nullable,
-                        default: None,
-                        auto_increment: false,
-                    },
-                ],
-                indices: vec![],
-                primary_key: None,
-                foreign_keys: vec![],
-            },
-        ],
+        tables: vec![Table {
+            name: "table1".to_string(),
+            columns: vec![Column {
+                name: "column1".to_string(),
+                tpe: ColumnType {
+                    raw: "integer".to_string(),
+                    family: ColumnTypeFamily::Int,
+                },
+                arity: ColumnArity::Nullable,
+                default: None,
+                auto_increment: false,
+            }],
+            indices: vec![],
+            primary_key: None,
+            foreign_keys: vec![],
+        }],
         enums: vec![],
         sequences: vec![],
     };
@@ -204,7 +200,10 @@ fn database_schema_is_serializable_for_every_column_type_family() {
         ColumnTypeFamily::LogSequenceNumber,
         ColumnTypeFamily::TextSearch,
         ColumnTypeFamily::TransactionId,
-    ].iter().enumerate().map(|(i, family)| Column {
+    ]
+    .iter()
+    .enumerate()
+    .map(|(i, family)| Column {
         name: format!("column{}", i + 1),
         tpe: ColumnType {
             raw: "raw type".to_string(),
@@ -213,17 +212,16 @@ fn database_schema_is_serializable_for_every_column_type_family() {
         arity: ColumnArity::Nullable,
         default: None,
         auto_increment: false,
-    }).collect();
+    })
+    .collect();
     let schema = DatabaseSchema {
-        tables: vec![
-            Table {
-                name: "table1".to_string(),
-                columns,
-                indices: vec![],
-                primary_key: None,
-                foreign_keys: vec![],
-            },
-        ],
+        tables: vec![Table {
+            name: "table1".to_string(),
+            columns,
+            indices: vec![],
+            primary_key: None,
+            foreign_keys: vec![],
+        }],
         enums: vec![],
         sequences: vec![],
     };
@@ -244,30 +242,28 @@ fn database_schema_is_serializable_for_every_column_arity() {
     setup();
 
     // Add a column of every arity
-    let mut columns: Vec<Column> = vec![
-        ColumnArity::Required,
-        ColumnArity::Nullable,
-        ColumnArity::List,
-    ].iter().enumerate().map(|(i, arity)| Column {
-        name: format!("column{}", i + 1),
-        tpe: ColumnType {
-            raw: "int".to_string(),
-            family: ColumnTypeFamily::Int,
-        },
-        arity: arity.to_owned(),
-        default: None,
-        auto_increment: false,
-    }).collect();
-    let schema = DatabaseSchema {
-        tables: vec![
-            Table {
-                name: "table1".to_string(),
-                columns,
-                indices: vec![],
-                primary_key: None,
-                foreign_keys: vec![],
+    let mut columns: Vec<Column> = vec![ColumnArity::Required, ColumnArity::Nullable, ColumnArity::List]
+        .iter()
+        .enumerate()
+        .map(|(i, arity)| Column {
+            name: format!("column{}", i + 1),
+            tpe: ColumnType {
+                raw: "int".to_string(),
+                family: ColumnTypeFamily::Int,
             },
-        ],
+            arity: arity.to_owned(),
+            default: None,
+            auto_increment: false,
+        })
+        .collect();
+    let schema = DatabaseSchema {
+        tables: vec![Table {
+            name: "table1".to_string(),
+            columns,
+            indices: vec![],
+            primary_key: None,
+            foreign_keys: vec![],
+        }],
         enums: vec![],
         sequences: vec![],
     };
@@ -289,97 +285,95 @@ fn database_schema_is_serializable_for_every_foreign_key_action() {
 
     // Add a foreign key of every possible action
     let schema = DatabaseSchema {
-        tables: vec![
-            Table {
-                name: "table1".to_string(),
-                columns: vec![
-                    Column {
-                        name: "column1".to_string(),
-                        tpe: ColumnType {
-                            raw: "int".to_string(),
-                            family: ColumnTypeFamily::Int,
-                        },
-                        arity: ColumnArity::Nullable,
-                        auto_increment: false,
-                        default: None,
+        tables: vec![Table {
+            name: "table1".to_string(),
+            columns: vec![
+                Column {
+                    name: "column1".to_string(),
+                    tpe: ColumnType {
+                        raw: "int".to_string(),
+                        family: ColumnTypeFamily::Int,
                     },
-                    Column {
-                        name: "column2".to_string(),
-                        tpe: ColumnType {
-                            raw: "int".to_string(),
-                            family: ColumnTypeFamily::Int,
-                        },
-                        arity: ColumnArity::Nullable,
-                        auto_increment: false,
-                        default: None,
+                    arity: ColumnArity::Nullable,
+                    auto_increment: false,
+                    default: None,
+                },
+                Column {
+                    name: "column2".to_string(),
+                    tpe: ColumnType {
+                        raw: "int".to_string(),
+                        family: ColumnTypeFamily::Int,
                     },
-                    Column {
-                        name: "column3".to_string(),
-                        tpe: ColumnType {
-                            raw: "int".to_string(),
-                            family: ColumnTypeFamily::Int,
-                        },
-                        arity: ColumnArity::Nullable,
-                        auto_increment: false,
-                        default: None,
+                    arity: ColumnArity::Nullable,
+                    auto_increment: false,
+                    default: None,
+                },
+                Column {
+                    name: "column3".to_string(),
+                    tpe: ColumnType {
+                        raw: "int".to_string(),
+                        family: ColumnTypeFamily::Int,
                     },
-                    Column {
-                        name: "column4".to_string(),
-                        tpe: ColumnType {
-                            raw: "int".to_string(),
-                            family: ColumnTypeFamily::Int,
-                        },
-                        arity: ColumnArity::Nullable,
-                        auto_increment: false,
-                        default: None,
+                    arity: ColumnArity::Nullable,
+                    auto_increment: false,
+                    default: None,
+                },
+                Column {
+                    name: "column4".to_string(),
+                    tpe: ColumnType {
+                        raw: "int".to_string(),
+                        family: ColumnTypeFamily::Int,
                     },
-                    Column {
-                        name: "column5".to_string(),
-                        tpe: ColumnType {
-                            raw: "int".to_string(),
-                            family: ColumnTypeFamily::Int,
-                        },
-                        arity: ColumnArity::Nullable,
-                        auto_increment: false,
-                        default: None,
+                    arity: ColumnArity::Nullable,
+                    auto_increment: false,
+                    default: None,
+                },
+                Column {
+                    name: "column5".to_string(),
+                    tpe: ColumnType {
+                        raw: "int".to_string(),
+                        family: ColumnTypeFamily::Int,
                     },
-                ],
-                indices: vec![],
-                primary_key: None,
-                foreign_keys: vec![
-                    ForeignKey {
-                        columns: vec!["column1".to_string()],
-                        referenced_table: "table2".to_string(),
-                        referenced_columns: vec!["id".to_string()],
-                        on_delete_action: ForeignKeyAction::NoAction,
-                    },
-                    ForeignKey {
-                        columns: vec!["column2".to_string()],
-                        referenced_table: "table2".to_string(),
-                        referenced_columns: vec!["id".to_string()],
-                        on_delete_action: ForeignKeyAction::Restrict,
-                    },
-                    ForeignKey {
-                        columns: vec!["column3".to_string()],
-                        referenced_table: "table2".to_string(),
-                        referenced_columns: vec!["id".to_string()],
-                        on_delete_action: ForeignKeyAction::Cascade,
-                    },
-                    ForeignKey {
-                        columns: vec!["column4".to_string()],
-                        referenced_table: "table2".to_string(),
-                        referenced_columns: vec!["id".to_string()],
-                        on_delete_action: ForeignKeyAction::SetNull,
-                    },
-                    ForeignKey {
-                        columns: vec!["column5".to_string()],
-                        referenced_table: "table2".to_string(),
-                        referenced_columns: vec!["id".to_string()],
-                        on_delete_action: ForeignKeyAction::SetDefault,
-                    },
-                ],
-            },
-        ],
+                    arity: ColumnArity::Nullable,
+                    auto_increment: false,
+                    default: None,
+                },
+            ],
+            indices: vec![],
+            primary_key: None,
+            foreign_keys: vec![
+                ForeignKey {
+                    columns: vec!["column1".to_string()],
+                    referenced_table: "table2".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::NoAction,
+                },
+                ForeignKey {
+                    columns: vec!["column2".to_string()],
+                    referenced_table: "table2".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::Restrict,
+                },
+                ForeignKey {
+                    columns: vec!["column3".to_string()],
+                    referenced_table: "table2".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::Cascade,
+                },
+                ForeignKey {
+                    columns: vec!["column4".to_string()],
+                    referenced_table: "table2".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::SetNull,
+                },
+                ForeignKey {
+                    columns: vec!["column5".to_string()],
+                    referenced_table: "table2".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::SetDefault,
+                },
+            ],
+        }],
         enums: vec![],
         sequences: vec![],
     };
