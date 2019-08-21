@@ -116,49 +116,49 @@ trait IntoRenderer<'a, T> {
 }
 
 impl<'a> IntoRenderer<'a, ()> for QuerySchemaRef {
-    fn into_renderer(&'a self) -> Box<Renderer<'a, ()> + 'a> {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, ()> + 'a> {
         Box::new(DMMFSchemaRenderer::new(Arc::clone(self)))
     }
 }
 
 impl<'a> IntoRenderer<'a, DMMFTypeInfo> for OutputType {
-    fn into_renderer(&'a self) -> Box<Renderer<'a, DMMFTypeInfo> + 'a> {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, DMMFTypeInfo> + 'a> {
         Box::new(DMMFTypeRenderer::Output(self))
     }
 }
 
 impl<'a> IntoRenderer<'a, DMMFTypeInfo> for InputType {
-    fn into_renderer(&'a self) -> Box<Renderer<'a, DMMFTypeInfo> + 'a> {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, DMMFTypeInfo> + 'a> {
         Box::new(DMMFTypeRenderer::Input(self))
     }
 }
 
 impl<'a> IntoRenderer<'a, ()> for EnumType {
-    fn into_renderer(&'a self) -> Box<Renderer<'a, ()> + 'a> {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, ()> + 'a> {
         Box::new(DMMFEnumRenderer::new(self))
     }
 }
 
 impl<'a> IntoRenderer<'a, DMMFFieldWrapper> for InputFieldRef {
-    fn into_renderer(&'a self) -> Box<Renderer<'a, DMMFFieldWrapper> + 'a> {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, DMMFFieldWrapper> + 'a> {
         Box::new(DMMFFieldRenderer::Input(Arc::clone(self)))
     }
 }
 
 impl<'a> IntoRenderer<'a, DMMFFieldWrapper> for FieldRef {
-    fn into_renderer(&'a self) -> Box<Renderer<'a, DMMFFieldWrapper> + 'a> {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, DMMFFieldWrapper> + 'a> {
         Box::new(DMMFFieldRenderer::Output(Arc::clone(self)))
     }
 }
 
 impl<'a> IntoRenderer<'a, ()> for InputObjectTypeRef {
-    fn into_renderer(&'a self) -> Box<Renderer<'a, ()> + 'a> {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, ()> + 'a> {
         Box::new(DMMFObjectRenderer::Input(Weak::clone(self)))
     }
 }
 
 impl<'a> IntoRenderer<'a, ()> for ObjectTypeRef {
-    fn into_renderer(&'a self) -> Box<Renderer<'a, ()> + 'a> {
+    fn into_renderer(&'a self) -> Box<dyn Renderer<'a, ()> + 'a> {
         Box::new(DMMFObjectRenderer::Output(Weak::clone(self)))
     }
 }

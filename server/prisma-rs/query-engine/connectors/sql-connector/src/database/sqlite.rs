@@ -54,7 +54,7 @@ impl SqlCapabilities for Sqlite {
 impl Transactional for Sqlite {
     fn with_transaction<F, T>(&self, db: &str, f: F) -> crate::Result<T>
     where
-        F: FnOnce(&mut Transaction) -> crate::Result<T>,
+        F: FnOnce(&mut dyn Transaction) -> crate::Result<T>,
     {
         let mut conn = self.pool.get()?;
 
