@@ -186,6 +186,15 @@ pub struct ColumnType {
     pub family: ColumnTypeFamily,
 }
 
+impl ColumnType {
+    pub fn pure(family: ColumnTypeFamily) -> ColumnType {
+        ColumnType {
+            raw: "".to_string(),
+            family,
+        }
+    }
+}
+
 /// Enumeration of column type families.
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

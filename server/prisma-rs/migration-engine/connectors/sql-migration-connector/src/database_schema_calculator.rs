@@ -1,10 +1,11 @@
-use crate::database_inspector::*;
+//use crate::database_inspector::*;
 use crate::SqlResult;
 use chrono::*;
 use datamodel::common::*;
 use datamodel::*;
 use prisma_models::{DatamodelConverter, TempManifestationHolder, TempRelationHolder};
-use database_introspection::DatabaseSchema;
+use database_introspection::*;
+use prisma_query::error::Error::ColumnNotFound;
 
 pub struct DatabaseSchemaCalculator<'a> {
     data_model: &'a Datamodel,
@@ -12,12 +13,11 @@ pub struct DatabaseSchemaCalculator<'a> {
 
 impl<'a> DatabaseSchemaCalculator<'a> {
     pub fn calculate(data_model: &Datamodel) -> SqlResult<DatabaseSchema> {
-//        let calculator = DatabaseSchemaCalculator { data_model };
-//        calculator.calculate_internal()
-        unimplemented!()
+        let calculator = DatabaseSchemaCalculator { data_model };
+        calculator.calculate_internal()
     }
 
-    fn calculate_internal(&self) -> SqlResult<DatabaseSchemaOld> {
+    fn calculate_internal(&self) -> SqlResult<DatabaseSchema> {
         let mut tables = Vec::new();
         let model_tables_without_inline_relations = self.calculate_model_tables()?;
         let mut model_tables = self.add_inline_relations_to_model_tables(model_tables_without_inline_relations)?;
@@ -28,7 +28,10 @@ impl<'a> DatabaseSchemaCalculator<'a> {
         tables.append(&mut scalar_list_tables);
         tables.append(&mut relation_tables);
 
-        Ok(DatabaseSchemaOld { tables })
+        let enums = Vec::new();
+        let sequences = Vec::new();
+
+        Ok(DatabaseSchema { tables, enums, sequences })
     }
 
     fn calculate_model_tables(&self) -> SqlResult<Vec<ModelTable>> {
@@ -42,21 +45,24 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             Some(Column {
                                 name: f.db_name(),
                                 tpe: column_type(f),
-                                is_required: arity == &FieldArity::Required,
-                                foreign_key: None,
-                                sequence: None,
-                                default: Some(f.migration_value(&self.data_model)),
+                                arity: column_arity(&f),
+                                default: None, //TODO: bring back defaults Some(f.migration_value(&self.data_model)),
+                                auto_increment: false,
                             })
                         }
                         _ => None,
                     })
                     .collect();
 
+                let primary_key = PrimaryKey {
+                    columns: vec![model.id_field()?.db_name()]
+                };
                 let table = Table {
                     name: model.db_name(),
                     columns,
-                    indexes: Vec::new(),
-                    primary_key_columns: vec![model.id_field()?.db_name()],
+                    indices: Vec::new(),
+                    primary_key: Some(primary_key),
+                    foreign_keys: Vec::new(),
                 };
                 Ok(ModelTable {
                     model: model.clone(),
@@ -76,20 +82,45 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                 .collect();
             for field in list_fields {
                 let id_field = model.id_field()?;
+                let primary_key = PrimaryKey {
+                    columns: vec!["nodeId".to_string(), "position".to_string()]
+                };
+                let foreign_keys = vec![
+                    ForeignKey {
+                        columns: vec!["nodeId".to_string()],
+                        referenced_table: model.db_name(),
+                        referenced_columns: vec![model.id_field()?.db_name()],
+                        on_delete_action: ForeignKeyAction::Cascade,
+                    }
+                ];
                 let table = Table {
                     name: format!("{}_{}", model.db_name(), field.db_name()),
                     columns: vec![
-                        Column::with_foreign_key(
-                            "nodeId".to_string(),
-                            column_type(&id_field),
-                            true,
-                            ForeignKey::new(model.db_name(), model.id_field()?.db_name(), OnDelete::Cascade),
-                        ),
-                        Column::new("position".to_string(), ColumnType::Int, true),
-                        Column::new("value".to_string(), column_type(&field), true),
+                        Column {
+                            name: "nodeId".to_string(),
+                            tpe: column_type(&id_field),
+                            arity: ColumnArity::Required,
+                            default: None,
+                            auto_increment: false,
+                        },
+                        Column {
+                            name: "position".to_string(),
+                            tpe: ColumnType::pure(ColumnTypeFamily::Int),
+                            arity: ColumnArity::Required,
+                            default: None,
+                            auto_increment: false,
+                        },
+                        Column {
+                            name: "value".to_string(),
+                            tpe: column_type(&field),
+                            arity: ColumnArity::Required,
+                            default: None,
+                            auto_increment: false,
+                        },
                     ],
-                    indexes: Vec::new(),
-                    primary_key_columns: vec!["nodeId".to_string(), "position".to_string()],
+                    indices: Vec::new(),
+                    primary_key: Some(primary_key),
+                    foreign_keys,
                 };
                 result.push(table);
             }
@@ -114,17 +145,21 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             (&relation.model_b, &relation.model_a)
                         };
                         let field = model.fields().find(|f| &f.db_name() == column).unwrap();
-                        let column = Column::with_foreign_key(
-                            column.to_string(),
-                            column_type(related_model.id_field()?),
-                            field.is_required(),
-                            ForeignKey::new(
-                                related_model.db_name(),
-                                related_model.id_field()?.db_name(),
-                                OnDelete::SetNull,
-                            ),
-                        );
+                        let foreign_key = ForeignKey {
+                            columns: vec![column.to_string(),],
+                            referenced_table: related_model.db_name(),
+                            referenced_columns: vec![related_model.id_field()?.db_name()],
+                            on_delete_action: ForeignKeyAction::SetNull,
+                        };
+                        let column = Column {
+                            name: column.to_string(),
+                            tpe: column_type(related_model.id_field()?),
+                            arity: column_arity(&field),
+                            default: None,
+                            auto_increment: false,
+                        };
                         model_table.table.columns.push(column);
+                        model_table.table.foreign_keys.push(foreign_key)
                     }
                     _ => {}
                 }
@@ -139,32 +174,41 @@ impl<'a> DatabaseSchemaCalculator<'a> {
         for relation in self.calculate_relations().iter() {
             match &relation.manifestation {
                 TempManifestationHolder::Table => {
+                    let foreign_keys = vec![
+                        ForeignKey {
+                            columns: vec![relation.model_a_column()],
+                            referenced_table: relation.model_a.db_name(),
+                            referenced_columns: vec![relation.model_a.id_field()?.db_name()],
+                            on_delete_action: ForeignKeyAction::Cascade,
+                        },
+                        ForeignKey {
+                            columns: vec![relation.model_b_column()],
+                            referenced_table: relation.model_b.db_name(),
+                            referenced_columns: vec![relation.model_b.id_field()?.db_name()],
+                            on_delete_action: ForeignKeyAction::Cascade,
+                        },
+                    ];
                     let table = Table {
                         name: relation.table_name(),
                         columns: vec![
-                            Column::with_foreign_key(
-                                relation.model_a_column(),
-                                column_type(relation.model_a.id_field()?),
-                                true,
-                                ForeignKey::new(
-                                    relation.model_a.db_name(),
-                                    relation.model_a.id_field()?.db_name(),
-                                    OnDelete::Cascade,
-                                ),
-                            ),
-                            Column::with_foreign_key(
-                                relation.model_b_column(),
-                                column_type(relation.model_b.id_field()?),
-                                true,
-                                ForeignKey::new(
-                                    relation.model_b.db_name(),
-                                    relation.model_b.id_field()?.db_name(),
-                                    OnDelete::Cascade,
-                                ),
-                            ),
+                            Column {
+                                name: relation.model_a_column(),
+                                tpe: column_type(relation.model_a.id_field()?),
+                                arity: ColumnArity::Required,
+                                default: None,
+                                auto_increment: false,
+                            },
+                            Column {
+                                name: relation.model_b_column(),
+                                tpe: column_type(relation.model_b.id_field()?),
+                                arity: ColumnArity::Required,
+                                default: None,
+                                auto_increment: false,
+                            },
                         ],
-                        indexes: Vec::new(),
-                        primary_key_columns: Vec::new(),
+                        indices: Vec::new(),
+                        primary_key: None,
+                        foreign_keys,
                     };
                     result.push(table);
                 }
@@ -271,7 +315,7 @@ fn is_scalar(field: &Field) -> bool {
 fn column_type(field: &Field) -> ColumnType {
     match &field.field_type {
         FieldType::Base(ref scalar) => column_type_for_scalar_type(&scalar),
-        FieldType::Enum(_) => ColumnType::String,
+        FieldType::Enum(_) => column_type_for_scalar_type(&ScalarType::String),
         x => panic!(format!(
             "This field type is not suported here. Field type is {:?} on field {}",
             x, field.name
@@ -279,13 +323,21 @@ fn column_type(field: &Field) -> ColumnType {
     }
 }
 
+fn column_arity(field: &Field) -> ColumnArity {
+    match &field.arity {
+        FieldArity::Required => ColumnArity::Required,
+        FieldArity::List => ColumnArity::List,
+        FieldArity::Optional => ColumnArity::Nullable,
+    }
+}
+
 fn column_type_for_scalar_type(scalar_type: &ScalarType) -> ColumnType {
     match scalar_type {
-        ScalarType::Int => ColumnType::Int,
-        ScalarType::Float => ColumnType::Float,
-        ScalarType::Boolean => ColumnType::Boolean,
-        ScalarType::String => ColumnType::String,
-        ScalarType::DateTime => ColumnType::DateTime,
+        ScalarType::Int => ColumnType::pure(ColumnTypeFamily::Int),
+        ScalarType::Float => ColumnType::pure(ColumnTypeFamily::Float),
+        ScalarType::Boolean => ColumnType::pure(ColumnTypeFamily::Boolean),
+        ScalarType::String => ColumnType::pure(ColumnTypeFamily::String),
+        ScalarType::DateTime => ColumnType::pure(ColumnTypeFamily::DateTime),
         ScalarType::Decimal => unimplemented!(),
     }
 }
