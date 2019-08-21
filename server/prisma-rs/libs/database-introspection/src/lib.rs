@@ -187,8 +187,7 @@ impl Column {
     pub fn differs_in_something_except_default(&self, other: &Column) -> bool {
         let result = self.name != other.name
             || self.tpe.family != other.tpe.family // TODO: must respect full type
-            || self.arity != other.arity
-            || self.default != other.default;
+            || self.arity != other.arity;
             //|| self.auto_increment != other.auto_increment;
 
 //        if result {

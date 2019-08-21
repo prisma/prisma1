@@ -45,7 +45,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                                 name: f.db_name(),
                                 tpe: column_type(f),
                                 arity: column_arity(&f),
-                                default: None, //TODO: bring back defaults Some(f.migration_value(&self.data_model)),
+                                default: Some(f.migration_value_new(&self.data_model)), //TODO: bring back defaults Some(f.migration_value(&self.data_model)),
                                 auto_increment: false,
                             })
                         }
@@ -257,6 +257,8 @@ pub trait FieldExtensions {
     fn db_name(&self) -> String;
 
     fn migration_value(&self, datamodel: &Datamodel) -> Value;
+
+    fn migration_value_new(&self, datamodel: &Datamodel) -> String;
 }
 
 impl FieldExtensions for Field {
@@ -277,29 +279,60 @@ impl FieldExtensions for Field {
     }
 
     fn migration_value(&self, datamodel: &Datamodel) -> Value {
-        self.default_value.clone().unwrap_or_else(|| match self.field_type {
-            FieldType::Base(PrismaType::Boolean) => Value::Boolean(false),
-            FieldType::Base(PrismaType::Int) => Value::Int(0),
-            FieldType::Base(PrismaType::Float) => Value::Float(0.0),
-            FieldType::Base(PrismaType::String) => Value::String("".to_string()),
-            FieldType::Base(PrismaType::Decimal) => Value::Decimal(0.0),
-            FieldType::Base(PrismaType::DateTime) => {
-                let naive = NaiveDateTime::from_timestamp(0, 0);
-                let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
-                PrismaValue::DateTime(datetime)
+        self.default_value.clone().unwrap_or_else(|| default_migration_value(&self.field_type, datamodel))
+    }
+
+    fn migration_value_new(&self, datamodel: &Datamodel) -> String {
+        let value = match &self.default_value {
+            Some(x) => {
+                match x {
+                    PrismaValue::Expression(_,_,_) => default_migration_value(&self.field_type, datamodel),
+                    x => x.clone(),
+                }
+            },
+            None => default_migration_value(&self.field_type, datamodel),
+        };
+        match value {
+            Value::Boolean(x) => if x { "true".to_string() } else { "false".to_string() },
+            Value::Int(x) => format!("{}", x),
+            Value::Float(x) => format!("{}", x),
+            Value::Decimal(x) => format!("{}", x),
+            Value::String(x) => format!("'{}'", x),
+
+            Value::DateTime(x) => {
+                let mut raw = format!("{}", x); // this will produce a String 1970-01-01 00:00:00 UTC
+                raw.truncate(raw.len() - 4); // strip the UTC suffix
+                format!("'{}'", raw) // add quotes
             }
-            FieldType::Enum(ref enum_name) => {
-                let inum = datamodel
-                    .find_enum(&enum_name)
-                    .expect(&format!("Enum {} was not present in the Datamodel.", enum_name));
-                let first_value = inum
-                    .values
-                    .first()
-                    .expect(&format!("Enum {} did not contain any values.", enum_name));
-                Value::String(first_value.to_string())
-            }
-            _ => unimplemented!("this functions must only be called for scalar fields"),
-        })
+            Value::ConstantLiteral(x) => format!("'{}'", x), // this represents enum values
+            Value::Expression(_,_,_) => unreachable!("expressions must have been filtered out in the preceding pattern match"),
+        }
+    }
+}
+
+fn default_migration_value(field_type: &FieldType, datamodel: &Datamodel) -> Value {
+    match field_type {
+        FieldType::Base(PrismaType::Boolean) => Value::Boolean(false),
+        FieldType::Base(PrismaType::Int) => Value::Int(0),
+        FieldType::Base(PrismaType::Float) => Value::Float(0.0),
+        FieldType::Base(PrismaType::String) => Value::String("".to_string()),
+        FieldType::Base(PrismaType::Decimal) => Value::Decimal(0.0),
+        FieldType::Base(PrismaType::DateTime) => {
+            let naive = NaiveDateTime::from_timestamp(0, 0);
+            let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+            PrismaValue::DateTime(datetime)
+        }
+        FieldType::Enum(ref enum_name) => {
+            let inum = datamodel
+                .find_enum(&enum_name)
+                .expect(&format!("Enum {} was not present in the Datamodel.", enum_name));
+            let first_value = inum
+                .values
+                .first()
+                .expect(&format!("Enum {} did not contain any values.", enum_name));
+            Value::String(first_value.to_string())
+        }
+        _ => unimplemented!("this functions must only be called for scalar fields"),
     }
 }
 

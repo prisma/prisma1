@@ -3,12 +3,13 @@ use database_introspection::*;
 
 const MIGRATION_TABLE_NAME: &str = "_Migration";
 
+#[derive(Debug)]
 pub struct DatabaseSchemaDiffer<'a> {
     previous: &'a DatabaseSchema,
     next: &'a DatabaseSchema,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct DatabaseSchemaDiff {
     pub drop_tables: Vec<DropTable>,
     pub create_tables: Vec<CreateTable>,

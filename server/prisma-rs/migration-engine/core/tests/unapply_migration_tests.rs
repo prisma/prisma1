@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 mod test_harness;
 use test_harness::*;
+use pretty_assertions::{assert_eq, assert_ne};
 
 #[test]
 fn unapply_must_work() {

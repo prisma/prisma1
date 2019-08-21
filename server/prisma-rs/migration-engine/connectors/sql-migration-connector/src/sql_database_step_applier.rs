@@ -240,7 +240,7 @@ fn render_column(
         }
         None => "".to_string(),
     };
-    let foreign_key = dbg!(table.foreign_key_for_column(&column.name));
+    let foreign_key = table.foreign_key_for_column(&column.name);
     let references_str = match (sql_family, foreign_key) {
         (SqlFamily::Postgres, Some(fk)) => format!(
             "REFERENCES \"{}\".\"{}\"(\"{}\") {}",

@@ -196,7 +196,7 @@ fn fix_id_column_type_change(
                         TableChange::AlterColumn(alter_column) => {
                             let current_column = current_table.column_bang(&alter_column.name);
                             let current_column_type = &current_column.tpe;
-                            let has_type_changed = current_column_type != &alter_column.column.tpe;
+                            let has_type_changed = current_column_type.family != alter_column.column.tpe.family; // TODO: take into account raw type
                             let is_part_of_pk = current_table.primary_key.clone().map(|pk|pk.columns).unwrap_or(vec![]).contains(&alter_column.name);
                             is_part_of_pk && has_type_changed
                         }
