@@ -27,6 +27,11 @@ impl<'a> DatabaseSchemaCalculator<'a> {
         tables.append(&mut scalar_list_tables);
         tables.append(&mut relation_tables);
 
+        // guarantee same sorting as in the database-introspection
+        for mut table in &mut tables {
+            table.columns.sort_unstable_by_key(|col| col.name.clone());
+        }
+
         let enums = Vec::new();
         let sequences = Vec::new();
 

@@ -5,7 +5,7 @@ pub fn convert_introspected_columns(
     foreign_keys: Vec<IntrospectedForeignKey>,
     column_type: Box<Fn(&IntrospectedColumn) -> ColumnType>,
 ) -> Vec<Column> {
-    columns
+    let mut result: Vec<Column> = columns
         .iter()
         .map(|c| {
             let foreign_key = foreign_keys
@@ -26,7 +26,12 @@ pub fn convert_introspected_columns(
                 default: None,
             }
         })
-        .collect()
+        .collect();
+
+    // guarantee same sorting as in the database-introspection
+    result.sort_unstable_by_key(|col| col.name.clone());
+
+    result
 }
 
 #[derive(Debug)]
