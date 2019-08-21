@@ -4,7 +4,7 @@ use prisma_query::ast::ParameterizedValue;
 use std::sync::Arc;
 
 pub struct Sqlite {
-    pub database: Arc<MigrationDatabase>,
+    pub database: Arc<dyn MigrationDatabase>,
 }
 
 impl DatabaseInspector for Sqlite {
@@ -20,7 +20,7 @@ impl DatabaseInspector for Sqlite {
 }
 
 impl Sqlite {
-    pub fn new(database: Arc<MigrationDatabase>) -> Sqlite {
+    pub fn new(database: Arc<dyn MigrationDatabase>) -> Sqlite {
         Sqlite { database }
     }
 

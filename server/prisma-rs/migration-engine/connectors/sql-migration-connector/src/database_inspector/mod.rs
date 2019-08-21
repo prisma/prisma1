@@ -22,69 +22,63 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 use url::Url;
 
+const PARSE_ERROR: &'static str = "Parsing of the provided connector url failed.";
+
 pub trait DatabaseInspector: Send + Sync + 'static {
     fn introspect(&self, schema: &String) -> DatabaseSchema;
 }
 
-impl DatabaseInspector {
-    const PARSE_ERROR: &'static str = "Parsing of the provided connector url failed.";
+pub fn sqlite(file_path: String) -> Sqlite {
+    let conn = Arc::new(SqliteDriver::new(&file_path).unwrap());
+    sqlite_with_database(conn)
+}
 
-    pub fn empty() -> EmptyDatabaseInspectorImpl {
-        EmptyDatabaseInspectorImpl {}
-    }
+pub fn sqlite_with_database(database: Arc<dyn MigrationDatabase + Send + Sync + 'static>) -> Sqlite {
+    Sqlite::new(database)
+}
 
-    pub fn sqlite(file_path: String) -> Sqlite {
-        let conn = Arc::new(SqliteDriver::new(&file_path).unwrap());
-        Self::sqlite_with_database(conn)
-    }
+pub fn postgres(url: String) -> Postgres {
+    let url = Url::parse(&url).expect(PARSE_ERROR);
+    let db_name = url.path().trim_start_matches("/");
 
-    pub fn sqlite_with_database(database: Arc<MigrationDatabase + Send + Sync + 'static>) -> Sqlite {
-        Sqlite::new(database)
-    }
+    let mut root_url = url.clone();
+    root_url.set_path("postgres");
 
-    pub fn postgres(url: String) -> Postgres {
-        let url = Url::parse(&url).expect(Self::PARSE_ERROR);
-        let db_name = url.path().trim_start_matches("/");
+    let root_params = connector::PostgresParams::try_from(root_url).expect(PARSE_ERROR);
 
-        let mut root_url = url.clone();
-        root_url.set_path("postgres");
+    let schema_name = root_params.schema.clone();
+    let root_connection = Arc::new(PostgresDriver::new(root_params).unwrap());
 
-        let root_params = connector::PostgresParams::try_from(root_url).expect(Self::PARSE_ERROR);
+    let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
+    debug!("{}", db_sql);
 
-        let schema_name = root_params.schema.clone();
-        let root_connection = Arc::new(PostgresDriver::new(root_params).unwrap());
+    let _ = root_connection.query_raw(&schema_name, &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
 
-        let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
-        debug!("{}", db_sql);
+    let params = connector::PostgresParams::try_from(url).expect(PARSE_ERROR);
+    let schema_connection = Arc::new(PostgresDriver::new(params).unwrap());
 
-        let _ = root_connection.query_raw(&schema_name, &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
+    let schema_sql = format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &schema_name);
+    debug!("{}", schema_sql);
 
-        let params = connector::PostgresParams::try_from(url).expect(Self::PARSE_ERROR);
-        let schema_connection = Arc::new(PostgresDriver::new(params).unwrap());
+    schema_connection
+        .query_raw(&schema_name, &schema_sql, &[])
+        .expect("Creation of Postgres Schema failed");
 
-        let schema_sql = format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &schema_name);
-        debug!("{}", schema_sql);
+    Postgres::new(schema_connection)
+}
 
-        schema_connection
-            .query_raw(&schema_name, &schema_sql, &[])
-            .expect("Creation of Postgres Schema failed");
+pub fn postgres_with_database(database: Arc<dyn MigrationDatabase + Send + Sync + 'static>) -> Postgres {
+    Postgres::new(database)
+}
 
-        Postgres::new(schema_connection)
-    }
+pub fn mysql(url: String) -> MysqlInspector {
+    let url = Url::parse(&url).expect(PARSE_ERROR);
+    let params = connector::MysqlParams::try_from(url).expect(PARSE_ERROR);
+    let database = MysqlDriver::new(params).unwrap();
 
-    pub fn postgres_with_database(database: Arc<MigrationDatabase + Send + Sync + 'static>) -> Postgres {
-        Postgres::new(database)
-    }
+    mysql_with_database(Arc::new(database))
+}
 
-    pub fn mysql(url: String) -> MysqlInspector {
-        let url = Url::parse(&url).expect(Self::PARSE_ERROR);
-        let params = connector::MysqlParams::try_from(url).expect(Self::PARSE_ERROR);
-        let database = MysqlDriver::new(params).unwrap();
-
-        Self::mysql_with_database(Arc::new(database))
-    }
-
-    pub fn mysql_with_database(database: Arc<MigrationDatabase + Send + Sync + 'static>) -> MysqlInspector {
-        MysqlInspector::new(database)
-    }
+pub fn mysql_with_database(database: Arc<dyn MigrationDatabase + Send + Sync + 'static>) -> MysqlInspector {
+    MysqlInspector::new(database)
 }

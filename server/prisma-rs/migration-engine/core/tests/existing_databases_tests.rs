@@ -157,7 +157,7 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
                 tags String[]
             }
         "#;
-        let final_result = infer_and_apply(api, &dm2);
+        let _final_result = infer_and_apply(api, &dm2);
         // TODO: this assertion fails because of an odering problem within the tables :shrug:
         //assert_eq!(result, final_result);
     });
@@ -309,7 +309,7 @@ where
     // SQLite
     if !ignores.contains(&SqlFamily::Sqlite) {
         println!("Testing with SQLite now");
-        let (inspector, database) = sqlite();
+        let (inspector, database) = get_sqlite();
 
         println!("Running the test function now");
         let connector = SqlMigrationConnector::sqlite(&sqlite_test_file()).unwrap();
@@ -328,7 +328,7 @@ where
     // POSTGRES
     if !ignores.contains(&SqlFamily::Postgres) {
         println!("Testing with Postgres now");
-        let (inspector, database) = postgres();
+        let (inspector, database) = get_postgres();
 
         println!("Running the test function now");
         let connector = SqlMigrationConnector::postgres(&postgres_url()).unwrap();
@@ -346,31 +346,31 @@ where
     }
 }
 
-fn sqlite() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
+fn get_sqlite() -> (Arc<dyn DatabaseInspector>, Arc<dyn MigrationDatabase>) {
     let database_file_path = sqlite_test_file();
     let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
 
-    let inspector = DatabaseInspector::sqlite(database_file_path);
+    let inspector = sqlite(database_file_path);
     let database = Arc::clone(&inspector.database);
 
     (Arc::new(inspector), database)
 }
 
-fn postgres() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
+fn get_postgres() -> (Arc<dyn DatabaseInspector>, Arc<dyn MigrationDatabase>) {
     let url = postgres_url();
     let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA_NAME));
-    let setup_database = DatabaseInspector::postgres(url.to_string()).database;
+    let setup_database = postgres(url.to_string()).database;
     let _ = setup_database.query_raw(SCHEMA_NAME, &drop_schema, &[]);
 
-    let inspector = DatabaseInspector::postgres(url.to_string());
+    let inspector = postgres(url.to_string());
     let database = Arc::clone(&inspector.database);
 
     (Arc::new(inspector), database)
 }
 
 struct BarrelMigrationExecutor {
-    inspector: Arc<DatabaseInspector>,
-    database: Arc<MigrationDatabase>,
+    inspector: Arc<dyn DatabaseInspector>,
+    database: Arc<dyn MigrationDatabase>,
     sql_variant: barrel::backend::SqlVariant,
 }
 
@@ -390,7 +390,7 @@ impl BarrelMigrationExecutor {
     }
 }
 
-fn run_full_sql(database: &Arc<MigrationDatabase>, full_sql: &str) {
+fn run_full_sql(database: &Arc<dyn MigrationDatabase>, full_sql: &str) {
     for sql in full_sql.split(";") {
         if sql != "" {
             database.query_raw(SCHEMA_NAME, &sql, &[]).unwrap();

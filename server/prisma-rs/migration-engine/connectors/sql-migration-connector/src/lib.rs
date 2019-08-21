@@ -16,7 +16,7 @@ mod sql_migration_persistence;
 pub use error::*;
 pub use sql_migration::*;
 
-use database_inspector::DatabaseInspector;
+use database_inspector::{DatabaseInspector, sqlite_with_database, postgres_with_database, mysql_with_database};
 use migration_connector::*;
 use migration_database::*;
 use prisma_query::connector::{MysqlParams, PostgresParams};
@@ -140,9 +140,9 @@ impl SqlMigrationConnector {
         file_path: Option<String>,
     ) -> Self {
         let inspector: Arc<dyn DatabaseInspector + Send + Sync + 'static> = match sql_family {
-            SqlFamily::Sqlite => Arc::new(DatabaseInspector::sqlite_with_database(Arc::clone(&conn))),
-            SqlFamily::Postgres => Arc::new(DatabaseInspector::postgres_with_database(Arc::clone(&conn))),
-            SqlFamily::Mysql => Arc::new(DatabaseInspector::mysql_with_database(Arc::clone(&conn))),
+            SqlFamily::Sqlite => Arc::new(sqlite_with_database(Arc::clone(&conn))),
+            SqlFamily::Postgres => Arc::new(postgres_with_database(Arc::clone(&conn))),
+            SqlFamily::Mysql => Arc::new(mysql_with_database(Arc::clone(&conn))),
         };
 
         let migration_persistence = Arc::new(SqlMigrationPersistence {
@@ -230,19 +230,19 @@ impl MigrationConnector for SqlMigrationConnector {
         Ok(())
     }
 
-    fn migration_persistence(&self) -> Arc<MigrationPersistence> {
+    fn migration_persistence(&self) -> Arc<dyn MigrationPersistence> {
         Arc::clone(&self.migration_persistence)
     }
 
-    fn database_migration_inferrer(&self) -> Arc<DatabaseMigrationInferrer<SqlMigration>> {
+    fn database_migration_inferrer(&self) -> Arc<dyn DatabaseMigrationInferrer<SqlMigration>> {
         Arc::clone(&self.database_migration_inferrer)
     }
 
-    fn database_migration_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<SqlMigration>> {
+    fn database_migration_step_applier(&self) -> Arc<dyn DatabaseMigrationStepApplier<SqlMigration>> {
         Arc::clone(&self.database_migration_step_applier)
     }
 
-    fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<SqlMigration>> {
+    fn destructive_changes_checker(&self) -> Arc<dyn DestructiveChangesChecker<SqlMigration>> {
         Arc::clone(&self.destructive_changes_checker)
     }
 

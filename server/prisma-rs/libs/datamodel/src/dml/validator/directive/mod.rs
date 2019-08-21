@@ -55,7 +55,7 @@ pub trait DirectiveValidator<T> {
 /// This is mainly used with custom source blocks. It wraps a directive and
 /// preprends the source name in front of the directive name.
 pub struct DirectiveScope<T> {
-    inner: Box<DirectiveValidator<T>>,
+    inner: Box<dyn DirectiveValidator<T>>,
     #[allow(dead_code)]
     scope: String,
     name: String,
@@ -64,7 +64,7 @@ pub struct DirectiveScope<T> {
 impl<T> DirectiveScope<T> {
     /// Creates a new instance, using the given directive and
     /// a namespae name.
-    fn new(inner: Box<DirectiveValidator<T>>, scope: &str) -> DirectiveScope<T> {
+    fn new(inner: Box<dyn DirectiveValidator<T>>, scope: &str) -> DirectiveScope<T> {
         DirectiveScope {
             name: format!("{}.{}", scope, inner.directive_name()),
             inner,
@@ -89,7 +89,7 @@ impl<T> DirectiveValidator<T> for DirectiveScope<T> {
 /// picks the right one for each directive in the given object.
 #[derive(Default)]
 pub struct DirectiveListValidator<T> {
-    known_directives: BTreeMap<String, Box<DirectiveValidator<T>>>,
+    known_directives: BTreeMap<String, Box<dyn DirectiveValidator<T>>>,
 }
 
 impl<T: 'static> DirectiveListValidator<T> {
@@ -101,7 +101,7 @@ impl<T: 'static> DirectiveListValidator<T> {
     }
 
     /// Adds a directive validator.
-    pub fn add(&mut self, validator: Box<DirectiveValidator<T>>) {
+    pub fn add(&mut self, validator: Box<dyn DirectiveValidator<T>>) {
         let name = validator.directive_name();
 
         if self.known_directives.contains_key(name) {
@@ -112,20 +112,20 @@ impl<T: 'static> DirectiveListValidator<T> {
     }
 
     /// Adds a directive validator with a namespace scope.
-    pub fn add_scoped(&mut self, validator: Box<DirectiveValidator<T>>, scope: &str) {
-        let boxed: Box<DirectiveValidator<T>> = Box::new(DirectiveScope::new(validator, scope));
+    pub fn add_scoped(&mut self, validator: Box<dyn DirectiveValidator<T>>, scope: &str) {
+        let boxed: Box<dyn DirectiveValidator<T>> = Box::new(DirectiveScope::new(validator, scope));
         self.add(boxed)
     }
 
     /// Adds all directive validators from the given list.
-    pub fn add_all(&mut self, validators: Vec<Box<DirectiveValidator<T>>>) {
+    pub fn add_all(&mut self, validators: Vec<Box<dyn DirectiveValidator<T>>>) {
         for validator in validators {
             self.add(validator);
         }
     }
 
     /// Adds all directive validators from the given list, with a namespace scope.
-    pub fn add_all_scoped(&mut self, validators: Vec<Box<DirectiveValidator<T>>>, scope: &str) {
+    pub fn add_all_scoped(&mut self, validators: Vec<Box<dyn DirectiveValidator<T>>>, scope: &str) {
         for validator in validators {
             self.add_scoped(validator, scope);
         }
@@ -133,7 +133,7 @@ impl<T: 'static> DirectiveListValidator<T> {
 
     /// For each directive in the given object, picks the correct
     /// directive definition and uses it to validate and apply the directive.
-    pub fn validate_and_apply(&self, ast: &ast::WithDirectives, t: &mut T) -> Result<(), ErrorCollection> {
+    pub fn validate_and_apply(&self, ast: &dyn ast::WithDirectives, t: &mut T) -> Result<(), ErrorCollection> {
         let mut errors = ErrorCollection::new();
 
         for directive in ast.directives() {

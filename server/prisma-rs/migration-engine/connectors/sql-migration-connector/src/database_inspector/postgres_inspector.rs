@@ -4,7 +4,7 @@ use super::*;
 use std::sync::Arc;
 
 pub struct Postgres {
-    pub database: Arc<MigrationDatabase>,
+    pub database: Arc<dyn MigrationDatabase>,
     information_schema: InformationSchema,
 }
 
@@ -22,7 +22,7 @@ impl DatabaseInspector for Postgres {
 }
 
 impl Postgres {
-    pub fn new(database: Arc<MigrationDatabase>) -> Postgres {
+    pub fn new(database: Arc<dyn MigrationDatabase>) -> Postgres {
         Postgres {
             database: Arc::clone(&database),
             information_schema: InformationSchema {

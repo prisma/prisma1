@@ -7,7 +7,7 @@ use crate::StringFromEnvVar;
 /// Helper struct to load and validate source configuration blocks.
 #[derive(Default)]
 pub struct SourceLoader {
-    source_declarations: Vec<Box<SourceDefinition>>,
+    source_declarations: Vec<Box<dyn SourceDefinition>>,
 }
 
 impl SourceLoader {
@@ -17,12 +17,12 @@ impl SourceLoader {
     }
 
     /// Adds a source definition to this loader.
-    pub fn add_source_definition(&mut self, source_definition: Box<SourceDefinition>) {
+    pub fn add_source_definition(&mut self, source_definition: Box<dyn SourceDefinition>) {
         self.source_declarations.push(source_definition);
     }
 
     /// Internal: Loads a single source from a source config block in the datamodel.
-    pub fn load_source(&self, ast_source: &ast::SourceConfig) -> Result<Option<Box<Source>>, ValidationError> {
+    pub fn load_source(&self, ast_source: &ast::SourceConfig) -> Result<Option<Box<dyn Source>>, ValidationError> {
         let mut args = Arguments::new(&ast_source.properties, ast_source.span);
         let (env_var_for_url, url) = args.arg("url")?.as_str_from_env()?;
         let provider_arg = args.arg("provider")?;
@@ -61,8 +61,8 @@ impl SourceLoader {
 
     /// Loads all source config blocks form the given AST,
     /// and returns a Source instance for each.
-    pub fn load(&self, ast_schema: &ast::Datamodel) -> Result<Vec<Box<Source>>, ErrorCollection> {
-        let mut sources: Vec<Box<Source>> = vec![];
+    pub fn load(&self, ast_schema: &ast::Datamodel) -> Result<Vec<Box<dyn Source>>, ErrorCollection> {
+        let mut sources: Vec<Box<dyn Source>> = vec![];
         let mut errors = ErrorCollection::new();
 
         for ast_obj in &ast_schema.models {
