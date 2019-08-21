@@ -35,6 +35,7 @@ tokio-threadpool = "0.1"
 prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 barrel = { version = "0.6.2", features = ["sqlite3", "mysql", "pg"] }
 pretty_assertions = "0.6"
+database-introspection = { path = "../../libs/database-introspection" }
 
 [[bin]]
 name = "migration-engine"
