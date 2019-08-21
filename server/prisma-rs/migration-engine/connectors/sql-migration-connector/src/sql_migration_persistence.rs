@@ -76,7 +76,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
     }
 
     fn load_all(&self) -> Vec<Migration> {
-        let query = Select::from_table(self.table());
+        let query = Select::from_table(self.table()).order_by(REVISION_COLUMN.ascend());
 
         let result_set = self.connection.query(&self.schema_name, query.into()).unwrap();
         parse_rows_new(result_set)
