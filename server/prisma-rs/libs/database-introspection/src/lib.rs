@@ -15,7 +15,7 @@ pub enum IntrospectionError {
 }
 
 /// The result type.
-pub type Result<T> = core::result::Result<T, Error>;
+pub type IntrospectionResult<T> = core::result::Result<T, Error>;
 
 /// Connection abstraction for the introspection connectors.
 pub trait IntrospectionConnection {
@@ -25,9 +25,9 @@ pub trait IntrospectionConnection {
 /// A database introspection connector.
 pub trait IntrospectionConnector {
     /// List the database's schemas.
-    fn list_schemas(&self) -> Result<Vec<String>>;
+    fn list_schemas(&self) -> IntrospectionResult<Vec<String>>;
     /// Introspect a database schema.
-    fn introspect(&self, schema: &str) -> Result<DatabaseSchema>;
+    fn introspect(&self, schema: &str) -> IntrospectionResult<DatabaseSchema>;
 }
 
 /// The result of introspecting a database schema.

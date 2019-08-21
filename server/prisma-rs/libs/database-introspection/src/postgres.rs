@@ -8,11 +8,11 @@ pub struct IntrospectionConnector {
 }
 
 impl super::IntrospectionConnector for IntrospectionConnector {
-    fn list_schemas(&self) -> Result<Vec<String>> {
+    fn list_schemas(&self) -> IntrospectionResult<Vec<String>> {
         Ok(vec![])
     }
 
-    fn introspect(&self, schema: &str) -> Result<DatabaseSchema> {
+    fn introspect(&self, schema: &str) -> IntrospectionResult<DatabaseSchema> {
         debug!("Introspecting schema '{}'", schema);
         let tables = self
             .get_table_names(schema)
@@ -315,7 +315,7 @@ impl IntrospectionConnector {
         (indices, pk)
     }
 
-    fn get_sequences(&self, schema: &str) -> Result<Vec<Sequence>> {
+    fn get_sequences(&self, schema: &str) -> IntrospectionResult<Vec<Sequence>> {
         debug!("Getting sequences");
         let sql = format!(
             "SELECT start_value, sequence_name
@@ -351,7 +351,7 @@ impl IntrospectionConnector {
         Ok(sequences)
     }
 
-    fn get_enums(&self, schema: &str) -> Result<Vec<Enum>> {
+    fn get_enums(&self, schema: &str) -> IntrospectionResult<Vec<Enum>> {
         debug!("Getting enums");
         let sql = format!(
             "SELECT t.typname as name, e.enumlabel as value

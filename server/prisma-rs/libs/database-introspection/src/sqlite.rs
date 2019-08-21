@@ -11,11 +11,11 @@ pub struct IntrospectionConnector {
 }
 
 impl super::IntrospectionConnector for IntrospectionConnector {
-    fn list_schemas(&self) -> Result<Vec<String>> {
+    fn list_schemas(&self) -> IntrospectionResult<Vec<String>> {
         Ok(vec![])
     }
 
-    fn introspect(&self, schema: &str) -> Result<DatabaseSchema> {
+    fn introspect(&self, schema: &str) -> IntrospectionResult<DatabaseSchema> {
         debug!("Introspecting schema '{}'", schema);
         let tables = self
             .get_table_names(schema)
