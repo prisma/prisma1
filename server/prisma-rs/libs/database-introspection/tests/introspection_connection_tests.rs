@@ -1,16 +1,12 @@
-#![allow(non_snake_case)]
-#![allow(unused)]
-
 use barrel::{types, Migration};
 use database_introspection::*;
 use log::{debug, LevelFilter};
 use pretty_assertions::assert_eq;
-use prisma_query::connector::{Queryable, Sqlite as SqliteDatabaseClient};
+use prisma_query::connector::{Queryable};
 use std::collections::HashSet;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use std::{thread, time};
 
 const SCHEMA: &str = "DatabaseInspectorTest";
 
@@ -149,15 +145,14 @@ fn int_type(db_type: DbType) -> String {
         DbType::Postgres => "int4".to_string(),
         DbType::Sqlite => "INTEGER".to_string(),
         DbType::MySql => "int".to_string(),
-        _ => panic!(format!("unrecognized database type {:?}", db_type)),
     }
 }
 
 fn text_type(db_type: DbType) -> String {
     match db_type {
         DbType::Postgres => "text".to_string(),
+        DbType::MySql => "TEXT".to_string(),
         DbType::Sqlite => "TEXT".to_string(),
-        _ => panic!(format!("unrecognized database type {:?}", db_type)),
     }
 }
 
@@ -166,7 +161,6 @@ fn varchar_type(db_type: DbType, length: u64) -> String {
         DbType::Postgres => "varchar".to_string(),
         DbType::MySql => "varchar".to_string(),
         DbType::Sqlite => format!("VARCHAR({})", length),
-        _ => panic!(format!("unrecognized database type {:?}", db_type)),
     }
 }
 
@@ -224,7 +218,7 @@ fn all_postgres_column_types_must_work() {
     });
 
     let full_sql = migration.make::<barrel::backend::Pg>();
-    let mut inspector = get_postgres_connector(&full_sql);
+    let inspector = get_postgres_connector(&full_sql);
     let result = inspector.introspect(SCHEMA).expect("introspection");
     let mut table = result.get_table("User").expect("couldn't get User table").to_owned();
     // Ensure columns are sorted as expected when comparing
@@ -747,12 +741,11 @@ fn all_mysql_column_types_must_work() {
     });
 
     let full_sql = migration.make::<barrel::backend::MySql>();
-    let mut inspector = get_mysql_connector(&full_sql);
+    let inspector = get_mysql_connector(&full_sql);
     let result = inspector.introspect(&SCHEMA.to_string()).expect("introspection");
     let mut table = result.get_table("User").expect("couldn't get User table").to_owned();
     // Ensure columns are sorted as expected when comparing
     table.columns.sort_unstable_by_key(|c| c.name.to_owned());
-    let db_type = DbType::MySql;
     let mut expected_columns = vec![
         Column {
             name: "primary_col".to_string(),
@@ -1164,10 +1157,9 @@ fn sqlite_column_types_must_work() {
     });
 
     let full_sql = migration.make::<barrel::backend::Pg>();
-    let mut inspector = get_sqlite_connector(&full_sql);
+    let inspector = get_sqlite_connector(&full_sql);
     let result = inspector.introspect(SCHEMA).expect("introspection");
     let table = result.get_table("User").expect("couldn't get User table");
-    let db_type = DbType::Sqlite;
     let mut expected_columns = vec![
         Column {
             name: "int4_col".to_string(),
@@ -1231,7 +1223,7 @@ fn is_required_must_work() {
     setup();
 
     test_each_backend(
-        |_, mut migration| {
+        |_, migration| {
             migration.create_table("User", |t| {
                 t.add_column("column1", types::integer().nullable(false));
                 t.add_column("column2", types::integer().nullable(true));
@@ -1272,7 +1264,7 @@ fn foreign_keys_must_work() {
     setup();
 
     test_each_backend(
-        |db_type, mut migration| {
+        |db_type, migration| {
             migration.create_table("City", |t| {
                 t.add_column("id", types::primary());
             });
@@ -1325,7 +1317,7 @@ fn multi_column_foreign_keys_must_work() {
     setup();
 
     test_each_backend(
-        |db_type, mut migration| {
+        |db_type, migration| {
             migration.create_table("City", move |t| {
                 t.add_column("id", types::primary());
                 t.add_column("name", types::varchar(255));
@@ -1412,7 +1404,7 @@ fn postgres_foreign_key_on_delete_must_be_handled() {
         ",
         SCHEMA
     );
-    let mut inspector = get_postgres_connector(&sql);
+    let inspector = get_postgres_connector(&sql);
 
     let schema = inspector.introspect(SCHEMA).expect("introspection");
     let mut table = schema.get_table("User").expect("get User table").to_owned();
@@ -1528,7 +1520,7 @@ fn postgres_foreign_key_on_delete_must_be_handled() {
 fn postgres_enums_must_work() {
     setup();
 
-    let mut inspector = get_postgres_connector(&format!(
+    let inspector = get_postgres_connector(&format!(
         "CREATE TYPE \"{}\".\"mood\" AS ENUM ('sad', 'ok', 'happy')",
         SCHEMA
     ));
@@ -1553,7 +1545,7 @@ fn postgres_enums_must_work() {
 fn postgres_sequences_must_work() {
     setup();
 
-    let mut inspector = get_postgres_connector(&format!("CREATE SEQUENCE \"{}\".\"test\"", SCHEMA));
+    let inspector = get_postgres_connector(&format!("CREATE SEQUENCE \"{}\".\"test\"", SCHEMA));
 
     let schema = inspector.introspect(SCHEMA).expect("introspection");
     let got_seq = schema.get_sequence("test").expect("get sequence");
@@ -1573,7 +1565,7 @@ fn indices_must_work() {
     setup();
 
     test_each_backend(
-        |db_type, mut migration| {
+        |_, migration| {
             migration.create_table("User", move |t| {
                 t.add_column("id", types::primary());
                 t.add_column("count", types::integer());
@@ -1629,7 +1621,7 @@ fn indices_must_work() {
     );
 }
 
-fn test_each_backend<MigrationFn, TestFn>(mut migrationFn: MigrationFn, testFn: TestFn)
+fn test_each_backend<MigrationFn, TestFn>(mut migration_fn: MigrationFn, test_fn: TestFn)
 where
     MigrationFn: FnMut(DbType, &mut Migration) -> (),
     TestFn: Fn(DbType, &mut dyn IntrospectionConnector) -> (),
@@ -1637,29 +1629,29 @@ where
     // SQLite
     {
         let mut migration = Migration::new().schema(SCHEMA);
-        migrationFn(DbType::Sqlite, &mut migration);
+        migration_fn(DbType::Sqlite, &mut migration);
         let full_sql = migration.make::<barrel::backend::Sqlite>();
         let mut inspector = get_sqlite_connector(&full_sql);
 
-        testFn(DbType::Sqlite, &mut inspector);
+        test_fn(DbType::Sqlite, &mut inspector);
     }
     // Postgres
     {
         let mut migration = Migration::new().schema(SCHEMA);
-        migrationFn(DbType::Postgres, &mut migration);
+        migration_fn(DbType::Postgres, &mut migration);
         let full_sql = migration.make::<barrel::backend::Pg>();
         let mut inspector = get_postgres_connector(&full_sql);
 
-        testFn(DbType::Postgres, &mut inspector);
+        test_fn(DbType::Postgres, &mut inspector);
     }
     // MySQL
     {
         let mut migration = Migration::new().schema(SCHEMA);
-        migrationFn(DbType::MySql, &mut migration);
+        migration_fn(DbType::MySql, &mut migration);
         let full_sql = migration.make::<barrel::backend::MySql>();
         let mut inspector = get_mysql_connector(&full_sql);
 
-        testFn(DbType::MySql, &mut inspector);
+        test_fn(DbType::MySql, &mut inspector);
     }
 }
 
@@ -1668,7 +1660,7 @@ struct SqliteConnection {
 }
 
 impl crate::IntrospectionConnection for SqliteConnection {
-    fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet> {
+    fn query_raw(&self, sql: &str, _schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet> {
         self.client.lock().expect("self.client.lock").query_raw(sql, &[])
     }
 }
@@ -1706,7 +1698,7 @@ struct PostgresConnection {
 }
 
 impl crate::IntrospectionConnection for PostgresConnection {
-    fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet> {
+    fn query_raw(&self, sql: &str, _: &str) -> prisma_query::Result<prisma_query::connector::ResultSet> {
         self.client.lock().expect("self.client.lock").query_raw(sql, &[])
     }
 }
@@ -1751,7 +1743,7 @@ struct MySqlConnection {
 }
 
 impl crate::IntrospectionConnection for MySqlConnection {
-    fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet> {
+    fn query_raw(&self, sql: &str, _: &str) -> prisma_query::Result<prisma_query::connector::ResultSet> {
         self.client.lock().expect("self.client.lock").query_raw(sql, &[])
     }
 }
@@ -1796,7 +1788,7 @@ fn get_mysql_connector(sql: &str) -> mysql::IntrospectionConnector {
         .user(Some(user))
         .pass(Some(password))
         .db_name(Some(SCHEMA));
-    let mut conn = prisma_query::connector::Mysql::new(opts_builder).expect("connect to MySQL");
+    let conn = prisma_query::connector::Mysql::new(opts_builder).expect("connect to MySQL");
 
     mysql::IntrospectionConnector::new(Arc::new(MySqlConnection {
         client: Mutex::new(conn),
