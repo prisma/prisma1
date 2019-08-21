@@ -3,6 +3,7 @@ mod test_harness;
 use datamodel::dml::*;
 use migration_core::commands::*;
 use test_harness::*;
+use pretty_assertions::{assert_eq, assert_ne};
 
 #[test]
 fn assume_to_be_applied_must_work() {

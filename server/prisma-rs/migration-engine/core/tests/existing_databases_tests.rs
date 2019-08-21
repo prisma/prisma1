@@ -6,6 +6,8 @@ use sql_migration_connector::SqlFamily;
 use sql_migration_connector::{database_inspector::*, migration_database::MigrationDatabase, SqlMigrationConnector};
 use std::sync::Arc;
 use test_harness::*;
+use pretty_assertions::{assert_eq, assert_ne};
+
 
 #[test]
 fn adding_a_model_for_an_existing_table_must_work() {

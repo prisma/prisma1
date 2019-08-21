@@ -5,6 +5,7 @@ use migration_connector::steps::*;
 use migration_core::migration::datamodel_calculator::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
 use test_harness::parse;
+use pretty_assertions::{assert_eq, assert_ne};
 
 // TODO: We could unify the tests for inferrer and calculator.
 

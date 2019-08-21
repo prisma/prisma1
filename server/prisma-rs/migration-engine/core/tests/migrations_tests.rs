@@ -4,6 +4,7 @@ mod test_harness;
 use sql_migration_connector::database_inspector::*;
 use sql_migration_connector::SqlFamily;
 use test_harness::*;
+use pretty_assertions::{assert_eq, assert_ne};
 
 #[test]
 fn adding_a_scalar_field_must_work() {
