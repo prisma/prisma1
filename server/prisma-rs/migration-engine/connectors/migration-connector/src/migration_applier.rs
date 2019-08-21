@@ -8,8 +8,8 @@ pub trait MigrationApplier<T> {
 }
 
 pub struct MigrationApplierImpl<T> {
-    pub migration_persistence: Arc<MigrationPersistence>,
-    pub step_applier: Arc<DatabaseMigrationStepApplier<T>>,
+    pub migration_persistence: Arc<dyn MigrationPersistence>,
+    pub step_applier: Arc<dyn DatabaseMigrationStepApplier<T>>,
 }
 
 impl<T: 'static> MigrationApplier<T> for MigrationApplierImpl<T> {

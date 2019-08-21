@@ -10,7 +10,7 @@ pub trait LineWriteable {
 }
 
 pub struct Renderer<'a> {
-    stream: &'a mut std::io::Write,
+    stream: &'a mut dyn std::io::Write,
     indent: usize,
     new_line: usize,
     is_new: bool,
@@ -20,7 +20,7 @@ pub struct Renderer<'a> {
 
 // TODO: It would be soooo cool if we could pass format strings around.
 impl<'a> Renderer<'a> {
-    pub fn new(stream: &'a mut std::io::Write, indent_width: usize) -> Renderer<'a> {
+    pub fn new(stream: &'a mut dyn std::io::Write, indent_width: usize) -> Renderer<'a> {
         Renderer {
             stream,
             indent: 0,
@@ -73,7 +73,7 @@ impl<'a> Renderer<'a> {
         }
     }
 
-    pub fn render_documentation(target: &mut LineWriteable, obj: &ast::WithDocumentation) {
+    pub fn render_documentation(target: &mut dyn LineWriteable, obj: &dyn ast::WithDocumentation) {
         if let Some(doc) = &obj.documentation() {
             for line in doc.text.split('\n') {
                 target.write("/// ");
@@ -241,7 +241,7 @@ impl<'a> Renderer<'a> {
         target.end_line();
     }
 
-    pub fn render_field_arity(target: &mut LineWriteable, field_arity: &ast::FieldArity) {
+    pub fn render_field_arity(target: &mut dyn LineWriteable, field_arity: &ast::FieldArity) {
         match field_arity {
             ast::FieldArity::List => target.write("[]"),
             ast::FieldArity::Optional => target.write("?"),
@@ -249,7 +249,7 @@ impl<'a> Renderer<'a> {
         };
     }
 
-    pub fn render_field_directive(target: &mut LineWriteable, directive: &ast::Directive) {
+    pub fn render_field_directive(target: &mut dyn LineWriteable, directive: &ast::Directive) {
         target.write("@");
         target.write(&directive.name.name);
 
@@ -273,7 +273,7 @@ impl<'a> Renderer<'a> {
         self.end_line();
     }
 
-    pub fn render_arguments(target: &mut LineWriteable, args: &[ast::Argument]) {
+    pub fn render_arguments(target: &mut dyn LineWriteable, args: &[ast::Argument]) {
         for (idx, arg) in args.iter().enumerate() {
             if idx > 0 {
                 target.write(&", ");
@@ -282,7 +282,7 @@ impl<'a> Renderer<'a> {
         }
     }
 
-    pub fn render_argument(target: &mut LineWriteable, args: &ast::Argument) {
+    pub fn render_argument(target: &mut dyn LineWriteable, args: &ast::Argument) {
         if args.name.name != "" {
             target.write(&args.name.name);
             target.write(&": ");
@@ -297,7 +297,7 @@ impl<'a> Renderer<'a> {
         builder.to_string()
     }
 
-    pub fn render_value(target: &mut LineWriteable, val: &ast::Value) {
+    pub fn render_value(target: &mut dyn LineWriteable, val: &ast::Value) {
         match val {
             ast::Value::Array(vals, _) => Self::render_array(target, &vals),
             ast::Value::BooleanValue(val, _) => target.write(&val),
@@ -309,7 +309,7 @@ impl<'a> Renderer<'a> {
         };
     }
 
-    pub fn render_func(target: &mut LineWriteable, name: &str, vals: &[ast::Value]) {
+    pub fn render_func(target: &mut dyn LineWriteable, name: &str, vals: &[ast::Value]) {
         target.write(name);
         target.write("(");
         for val in vals {
@@ -329,7 +329,7 @@ impl<'a> Renderer<'a> {
         self.indent -= 1
     }
 
-    pub fn render_array(target: &mut LineWriteable, vals: &[ast::Value]) {
+    pub fn render_array(target: &mut dyn LineWriteable, vals: &[ast::Value]) {
         target.write(&"[");
         for (idx, arg) in vals.iter().enumerate() {
             if idx > 0 {
@@ -340,7 +340,7 @@ impl<'a> Renderer<'a> {
         target.write(&"]");
     }
 
-    fn render_str(target: &mut LineWriteable, param: &str) {
+    fn render_str(target: &mut dyn LineWriteable, param: &str) {
         target.write("\"");
         target.write(param);
         target.write("\"");

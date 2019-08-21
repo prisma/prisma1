@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 pub struct SqlDatabaseMigrationInferrer {
     pub sql_family: SqlFamily,
-    pub inspector: Arc<DatabaseInspector + Send + Sync + 'static>,
+    pub inspector: Arc<dyn DatabaseInspector + Send + Sync + 'static>,
     pub schema_name: String,
 }
 

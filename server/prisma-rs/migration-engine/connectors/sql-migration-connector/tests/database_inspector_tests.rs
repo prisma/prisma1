@@ -161,7 +161,7 @@ fn foreign_keys_must_work() {
 fn test_each_backend<MigrationFn, TestFn>(mut migrationFn: MigrationFn, testFn: TestFn)
 where
     MigrationFn: FnMut(&'static str, &mut Migration) -> (),
-    TestFn: Fn(Arc<DatabaseInspector>) -> (),
+    TestFn: Fn(Arc<dyn DatabaseInspector>) -> (),
 {
     println!("Testing with SQLite now");
     // SQLITE
@@ -200,7 +200,7 @@ where
     }
 }
 
-fn run_full_sql(database: &Arc<MigrationDatabase>, full_sql: &str) {
+fn run_full_sql(database: &Arc<dyn MigrationDatabase>, full_sql: &str) {
     for sql in full_sql.split(";") {
         dbg!(sql);
         if sql != "" {
@@ -209,7 +209,7 @@ fn run_full_sql(database: &Arc<MigrationDatabase>, full_sql: &str) {
     }
 }
 
-fn sqlite() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
+fn sqlite() -> (Arc<dyn DatabaseInspector>, Arc<dyn MigrationDatabase>) {
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
     let database_file_path = dbg!(format!("{}/{}.db", database_folder_path, SCHEMA));
@@ -221,7 +221,7 @@ fn sqlite() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
     (Arc::new(inspector), database)
 }
 
-fn postgres() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
+fn postgres() -> (Arc<dyn DatabaseInspector>, Arc<dyn MigrationDatabase>) {
     let url = format!(
         "postgresql://postgres:prisma@{}:5432/db?schema={}",
         db_host_postgres(),
@@ -238,7 +238,7 @@ fn postgres() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
     (Arc::new(inspector), database)
 }
 
-fn mysql() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
+fn mysql() -> (Arc<dyn DatabaseInspector>, Arc<dyn MigrationDatabase>) {
     let url_without_db = format!("mysql://root:prisma@{}:3306", db_host_mysql());
     let drop_database = dbg!(format!("DROP DATABASE IF EXISTS `{}`;", SCHEMA));
 

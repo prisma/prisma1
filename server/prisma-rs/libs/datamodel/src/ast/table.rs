@@ -103,7 +103,7 @@ impl TableFormat {
         self.row += 1;
     }
 
-    pub fn render(&self, target: &mut LineWriteable) {
+    pub fn render(&self, target: &mut dyn LineWriteable) {
         // First, measure cols
         let mut len = 0;
 

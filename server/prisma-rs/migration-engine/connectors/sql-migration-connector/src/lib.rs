@@ -230,19 +230,19 @@ impl MigrationConnector for SqlMigrationConnector {
         Ok(())
     }
 
-    fn migration_persistence(&self) -> Arc<MigrationPersistence> {
+    fn migration_persistence(&self) -> Arc<dyn MigrationPersistence> {
         Arc::clone(&self.migration_persistence)
     }
 
-    fn database_migration_inferrer(&self) -> Arc<DatabaseMigrationInferrer<SqlMigration>> {
+    fn database_migration_inferrer(&self) -> Arc<dyn DatabaseMigrationInferrer<SqlMigration>> {
         Arc::clone(&self.database_migration_inferrer)
     }
 
-    fn database_migration_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<SqlMigration>> {
+    fn database_migration_step_applier(&self) -> Arc<dyn DatabaseMigrationStepApplier<SqlMigration>> {
         Arc::clone(&self.database_migration_step_applier)
     }
 
-    fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<SqlMigration>> {
+    fn destructive_changes_checker(&self) -> Arc<dyn DestructiveChangesChecker<SqlMigration>> {
         Arc::clone(&self.destructive_changes_checker)
     }
 

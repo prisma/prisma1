@@ -26,7 +26,7 @@ pub trait DatabaseInspector: Send + Sync + 'static {
     fn introspect(&self, schema: &String) -> DatabaseSchema;
 }
 
-impl DatabaseInspector {
+impl dyn DatabaseInspector {
     const PARSE_ERROR: &'static str = "Parsing of the provided connector url failed.";
 
     pub fn empty() -> EmptyDatabaseInspectorImpl {
@@ -38,7 +38,7 @@ impl DatabaseInspector {
         Self::sqlite_with_database(conn)
     }
 
-    pub fn sqlite_with_database(database: Arc<MigrationDatabase + Send + Sync + 'static>) -> Sqlite {
+    pub fn sqlite_with_database(database: Arc<dyn MigrationDatabase + Send + Sync + 'static>) -> Sqlite {
         Sqlite::new(database)
     }
 
@@ -72,7 +72,7 @@ impl DatabaseInspector {
         Postgres::new(schema_connection)
     }
 
-    pub fn postgres_with_database(database: Arc<MigrationDatabase + Send + Sync + 'static>) -> Postgres {
+    pub fn postgres_with_database(database: Arc<dyn MigrationDatabase + Send + Sync + 'static>) -> Postgres {
         Postgres::new(database)
     }
 
@@ -84,7 +84,7 @@ impl DatabaseInspector {
         Self::mysql_with_database(Arc::new(database))
     }
 
-    pub fn mysql_with_database(database: Arc<MigrationDatabase + Send + Sync + 'static>) -> MysqlInspector {
+    pub fn mysql_with_database(database: Arc<dyn MigrationDatabase + Send + Sync + 'static>) -> MysqlInspector {
         MysqlInspector::new(database)
     }
 }

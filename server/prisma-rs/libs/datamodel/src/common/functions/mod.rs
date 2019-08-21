@@ -27,7 +27,7 @@ const BUILTIN_UUID_FUNCTIONAL: builtin::ServerSideTrivialFunctional = builtin::S
 };
 
 /// Array of all builtin functionals.
-const BUILTIN_FUNCTIONALS: [&Functional; 4] = [
+const BUILTIN_FUNCTIONALS: [&dyn Functional; 4] = [
     &BUILTIN_ENV_FUNCTIONAL,
     &BUILTIN_NOW_FUNCTIONAL,
     &BUILTIN_CUID_FUNCTIONAL,
