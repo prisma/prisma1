@@ -309,7 +309,7 @@ where
     // SQLite
     if !ignores.contains(&SqlFamily::Sqlite) {
         println!("Testing with SQLite now");
-        let (inspector, database) = sqlite();
+        let (inspector, database) = get_sqlite();
 
         println!("Running the test function now");
         let connector = SqlMigrationConnector::sqlite(&sqlite_test_file()).unwrap();
@@ -328,7 +328,7 @@ where
     // POSTGRES
     if !ignores.contains(&SqlFamily::Postgres) {
         println!("Testing with Postgres now");
-        let (inspector, database) = postgres();
+        let (inspector, database) = get_postgres();
 
         println!("Running the test function now");
         let connector = SqlMigrationConnector::postgres(&postgres_url()).unwrap();
@@ -346,23 +346,23 @@ where
     }
 }
 
-fn sqlite() -> (Arc<dyn DatabaseInspector>, Arc<dyn MigrationDatabase>) {
+fn get_sqlite() -> (Arc<dyn DatabaseInspector>, Arc<dyn MigrationDatabase>) {
     let database_file_path = sqlite_test_file();
     let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
 
-    let inspector = DatabaseInspector::sqlite(database_file_path);
+    let inspector = sqlite(database_file_path);
     let database = Arc::clone(&inspector.database);
 
     (Arc::new(inspector), database)
 }
 
-fn postgres() -> (Arc<dyn DatabaseInspector>, Arc<dyn MigrationDatabase>) {
+fn get_postgres() -> (Arc<dyn DatabaseInspector>, Arc<dyn MigrationDatabase>) {
     let url = postgres_url();
     let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA_NAME));
-    let setup_database = DatabaseInspector::postgres(url.to_string()).database;
+    let setup_database = postgres(url.to_string()).database;
     let _ = setup_database.query_raw(SCHEMA_NAME, &drop_schema, &[]);
 
-    let inspector = DatabaseInspector::postgres(url.to_string());
+    let inspector = postgres(url.to_string());
     let database = Arc::clone(&inspector.database);
 
     (Arc::new(inspector), database)
