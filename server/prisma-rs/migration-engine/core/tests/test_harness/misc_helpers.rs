@@ -37,18 +37,6 @@ pub fn test_each_connector_with_ignores<F>(ignores: Vec<SqlFamily>, test_fn: F)
 where
     F: Fn(SqlFamily, &dyn GenericApi) -> () + std::panic::RefUnwindSafe,
 {
-    // SQLite
-    if !ignores.contains(&SqlFamily::Sqlite) {
-        println!("Testing with SQLite now");
-
-        let connector = SqlMigrationConnector::sqlite(&sqlite_test_file()).unwrap();
-        let api = test_api(connector);
-
-        test_fn(SqlFamily::Sqlite, &api);
-    } else {
-        println!("Ignoring SQLite")
-    }
-
     // POSTGRES
     if !ignores.contains(&SqlFamily::Postgres) {
         println!("Testing with Postgres now");
@@ -73,6 +61,18 @@ where
         test_fn(SqlFamily::Mysql, &api);
     } else {
         println!("Ignoring MySQL")
+    }
+
+    // SQLite
+    if !ignores.contains(&SqlFamily::Sqlite) {
+        println!("Testing with SQLite now");
+
+        let connector = SqlMigrationConnector::sqlite(&sqlite_test_file()).unwrap();
+        let api = test_api(connector);
+
+        test_fn(SqlFamily::Sqlite, &api);
+    } else {
+        println!("Ignoring SQLite")
     }
 }
 

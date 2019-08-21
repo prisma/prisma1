@@ -82,7 +82,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
 
                 if !changes.is_empty() {
                     let update = AlterTable {
-                        table: previous_table.clone(),
+                        table: next_table.clone(),
                         changes,
                     };
                     result.push(update);
@@ -122,7 +122,9 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         let mut result = Vec::new();
         for next_column in &next.columns {
             if let Some(previous_column) = previous.column(&next_column.name) {
-                if previous_column.differs_in_something_except_default(next_column) {
+                let previous_fk = previous.foreign_key_for_column(&previous.name);
+                let next_fk = next.foreign_key_for_column(&next.name);
+                if previous_column.differs_in_something_except_default(next_column) || previous_fk != next_fk {
                     let change = AlterColumn {
                         name: previous_column.name.clone(),
                         column: next_column.clone(),
