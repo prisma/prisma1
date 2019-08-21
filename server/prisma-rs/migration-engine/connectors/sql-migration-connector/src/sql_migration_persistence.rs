@@ -132,7 +132,6 @@ impl MigrationPersistence for SqlMigrationPersistence {
                     cloned.revision = row["revision"].as_i64().unwrap() as usize;
                 });
             }
-            // SqlFamily::Mysql => unimplemented!(),
         }
         cloned
     }

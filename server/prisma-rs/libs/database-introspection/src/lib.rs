@@ -112,9 +112,20 @@ impl Table {
     }
 
     pub fn is_part_of_foreign_key(&self, column: &str) -> bool {
+        self.foreign_key_for_column(column).is_some()
+    }
+
+    pub fn foreign_key_for_column(&self, column: &str) -> Option<&ForeignKey> {
         self.foreign_keys.iter().find(|fk|{
             fk.columns.contains(&column.to_string())
-        }).is_some()
+        })
+    }
+
+    pub fn is_part_of_primary_key(&self, column: &str) -> bool {
+        match &self.primary_key {
+            Some(pk) => pk.columns.contains(&column.to_string()),
+            None => false,
+        }
     }
 
     pub fn primary_key_columns(&self) -> Vec<String> {
@@ -143,6 +154,12 @@ pub struct Index {
 pub struct PrimaryKey {
     /// Columns.
     pub columns: Vec<String>,
+}
+
+impl PrimaryKey {
+    pub fn contains_column(&self, column: &String) -> bool {
+        self.columns.contains(column)
+    }
 }
 
 /// A column of a table.
