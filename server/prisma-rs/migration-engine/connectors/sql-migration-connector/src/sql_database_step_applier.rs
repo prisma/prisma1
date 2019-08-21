@@ -231,7 +231,11 @@ fn render_column(
     };
     let default_str = match &column.default {
         Some(value) => {
-            format!("DEFAULT {}", value) // TODO: check if this is right
+            if value != "" {
+                format!("DEFAULT {}", value) // TODO: check if this is right
+            } else {
+                "".to_string()
+            }
 //            match render_value(value) {
 //                Some(ref default) if column_description.required => format!("DEFAULT {}", default),
 //                Some(_) => "".to_string(), // we use the default value right now only to smoothen migrations. So we only use it when absolutely needed.
