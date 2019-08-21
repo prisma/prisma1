@@ -63,7 +63,7 @@ impl SourceDefinition for CustomDbDefinition {
         url: StringFromEnvVar,
         arguments: &mut Arguments,
         documentation: &Option<String>,
-    ) -> Result<Box<Source>, ValidationError> {
+    ) -> Result<Box<dyn Source>, ValidationError> {
         Ok(Box::new(CustomDb {
             name: String::from(name),
             url: url,
@@ -107,15 +107,15 @@ impl Source for CustomDb {
             value: url.to_string(),
         };
     }
-    fn get_field_directives(&self) -> Vec<Box<DirectiveValidator<dml::Field>>> {
+    fn get_field_directives(&self) -> Vec<Box<dyn DirectiveValidator<dml::Field>>> {
         vec![Box::new(CustomDirective {
             base_type: self.base_type,
         })]
     }
-    fn get_model_directives(&self) -> Vec<Box<DirectiveValidator<dml::Model>>> {
+    fn get_model_directives(&self) -> Vec<Box<dyn DirectiveValidator<dml::Model>>> {
         vec![]
     }
-    fn get_enum_directives(&self) -> Vec<Box<DirectiveValidator<dml::Enum>>> {
+    fn get_enum_directives(&self) -> Vec<Box<dyn DirectiveValidator<dml::Enum>>> {
         vec![]
     }
     fn documentation(&self) -> &Option<String> {

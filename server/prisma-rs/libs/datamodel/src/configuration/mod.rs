@@ -17,7 +17,7 @@ pub struct SerializeableMcf {
 
 pub struct Configuration {
     pub generators: Vec<Generator>,
-    pub datasources: Vec<Box<Source>>,
+    pub datasources: Vec<Box<dyn Source>>,
 }
 
 impl Configuration {

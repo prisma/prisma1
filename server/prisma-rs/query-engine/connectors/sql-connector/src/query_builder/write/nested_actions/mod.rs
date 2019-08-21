@@ -15,7 +15,7 @@ use connector_interface::{error::RecordFinderInfo, filter::RecordFinder};
 use prisma_models::*;
 use prisma_query::ast::*;
 
-pub type ResultCheck = Box<FnOnce(bool) -> crate::Result<()> + Send + Sync + 'static>;
+pub type ResultCheck = Box<dyn FnOnce(bool) -> crate::Result<()> + Send + Sync + 'static>;
 
 pub trait NestedActions {
     fn required_check(&self, parent_id: &GraphqlId) -> crate::Result<Option<(Select<'static>, ResultCheck)>>;

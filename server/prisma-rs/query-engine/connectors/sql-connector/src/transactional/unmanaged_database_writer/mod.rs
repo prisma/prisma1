@@ -22,7 +22,7 @@ where
 {
     fn execute(&self, db_name: String, write_query: RootWriteQuery) -> connector_interface::Result<WriteQueryResult> {
         let result = self.executor.with_transaction(&db_name, |conn| {
-            fn create(conn: &mut Transaction, cn: &CreateRecord) -> crate::Result<WriteQueryResult> {
+            fn create(conn: &mut dyn Transaction, cn: &CreateRecord) -> crate::Result<WriteQueryResult> {
                 let parent_id = create::execute(conn, Arc::clone(&cn.model), &cn.non_list_args, &cn.list_args)?;
                 nested::execute(conn, &cn.nested_writes, &parent_id)?;
 
@@ -32,7 +32,7 @@ where
                 })
             }
 
-            fn update(conn: &mut Transaction, un: &UpdateRecord) -> crate::Result<WriteQueryResult> {
+            fn update(conn: &mut dyn Transaction, un: &UpdateRecord) -> crate::Result<WriteQueryResult> {
                 let parent_id = update::execute(conn, &un.where_, &un.non_list_args, &un.list_args)?;
                 nested::execute(conn, &un.nested_writes, &parent_id)?;
 

@@ -37,7 +37,7 @@ impl Sqlite {
 
     fn with_connection<F, T>(&self, db: &str, f: F) -> T
     where
-        F: FnOnce(&mut Queryable) -> T,
+        F: FnOnce(&mut dyn Queryable) -> T,
     {
         let mut conn = self.pool.get().unwrap();
 
@@ -96,7 +96,7 @@ impl PostgreSql {
 
     fn with_connection<F, T>(&self, f: F) -> T
     where
-        F: FnOnce(&mut Queryable) -> T,
+        F: FnOnce(&mut dyn Queryable) -> T,
     {
         let mut conn = self.pool.get().unwrap();
         f(conn.deref_mut())
@@ -139,7 +139,7 @@ impl Mysql {
 
     fn with_connection<F, T>(&self, f: F) -> T
     where
-        F: FnOnce(&mut Queryable) -> T,
+        F: FnOnce(&mut dyn Queryable) -> T,
     {
         let mut conn = self.pool.get().unwrap();
         f(conn.deref_mut())

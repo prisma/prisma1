@@ -25,15 +25,15 @@ pub trait Source {
     /// Gets all field directives defined by this source.
     ///
     /// The directives returned here are unscoped.
-    fn get_field_directives(&self) -> Vec<Box<DirectiveValidator<dml::Field>>>;
+    fn get_field_directives(&self) -> Vec<Box<dyn DirectiveValidator<dml::Field>>>;
     /// Gets all model directives defined by this source.
     ///
     /// The directives returned here are unscoped.
-    fn get_model_directives(&self) -> Vec<Box<DirectiveValidator<dml::Model>>>;
+    fn get_model_directives(&self) -> Vec<Box<dyn DirectiveValidator<dml::Model>>>;
     /// Gets all enum directives defined by this source.
     ///
     /// The directives returned here are unscoped.
-    fn get_enum_directives(&self) -> Vec<Box<DirectiveValidator<dml::Enum>>>;
+    fn get_enum_directives(&self) -> Vec<Box<dyn DirectiveValidator<dml::Enum>>>;
 
     /// Documentation of this source.
     fn documentation(&self) -> &Option<String>;
@@ -52,5 +52,5 @@ pub trait SourceDefinition {
         url: StringFromEnvVar,
         arguments: &mut Arguments,
         documentation: &Option<String>,
-    ) -> Result<Box<Source>, ValidationError>;
+    ) -> Result<Box<dyn Source>, ValidationError>;
 }
