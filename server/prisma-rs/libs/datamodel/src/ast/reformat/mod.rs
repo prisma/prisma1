@@ -13,14 +13,14 @@ fn count_lines(text: &str) -> usize {
     bytecount::count(text.as_bytes(), b'\n')
 }
 
-fn newlines(target: &mut LineWriteable, text: &str, _identifier: &str) {
+fn newlines(target: &mut dyn LineWriteable, text: &str, _identifier: &str) {
     for _i in 0..count_lines(text) {
         // target.write(&format!("{}{}", i, identifier));
         target.end_line();
     }
 }
 
-fn comment(target: &mut LineWriteable, comment_text: &str) {
+fn comment(target: &mut dyn LineWriteable, comment_text: &str) {
     let trimmed = &comment_text[0..comment_text.len() - 1]; // slice away line break.
 
     if !target.line_empty() {
@@ -33,7 +33,7 @@ fn comment(target: &mut LineWriteable, comment_text: &str) {
 }
 
 impl Reformatter {
-    pub fn reformat_to(input: &str, output: &mut std::io::Write, ident_width: usize) {
+    pub fn reformat_to(input: &str, output: &mut dyn std::io::Write, ident_width: usize) {
         let mut ast = PrismaDatamodelParser::parse(Rule::datamodel, input).unwrap(); // TODO: Handle error.
         let mut top_formatter = RefCell::new(Renderer::new(output, ident_width));
         Self::reformat_top(&mut top_formatter, &ast.next().unwrap());
@@ -393,7 +393,7 @@ impl Reformatter {
         panic!("No identifier found.")
     }
 
-    pub fn reformat_directive(target: &mut LineWriteable, token: &Token, owl: &str) {
+    pub fn reformat_directive(target: &mut dyn LineWriteable, token: &Token, owl: &str) {
         for current in token.clone().into_inner() {
             match current.as_rule() {
                 Rule::directive_name => {
@@ -412,7 +412,7 @@ impl Reformatter {
         }
     }
 
-    pub fn reformat_directive_args(target: &mut LineWriteable, token: &Token) {
+    pub fn reformat_directive_args(target: &mut dyn LineWriteable, token: &Token) {
         let mut builder = StringBuilder::default();
 
         for current in token.clone().into_inner() {
@@ -447,7 +447,7 @@ impl Reformatter {
         }
     }
 
-    pub fn reformat_directive_arg(target: &mut LineWriteable, token: &Token) {
+    pub fn reformat_directive_arg(target: &mut dyn LineWriteable, token: &Token) {
         for current in token.clone().into_inner() {
             match current.as_rule() {
                 Rule::argument_name => {
@@ -465,7 +465,7 @@ impl Reformatter {
         }
     }
 
-    pub fn reformat_arg_value(target: &mut LineWriteable, token: &Token) {
+    pub fn reformat_arg_value(target: &mut dyn LineWriteable, token: &Token) {
         for current in token.clone().into_inner() {
             match current.as_rule() {
                 Rule::expression => Self::reformat_expression(target, &current),
@@ -480,7 +480,7 @@ impl Reformatter {
     }
 
     /// Parses an expression, given a Pest parser token.
-    pub fn reformat_expression(target: &mut LineWriteable, token: &Token) {
+    pub fn reformat_expression(target: &mut dyn LineWriteable, token: &Token) {
         for current in token.clone().into_inner() {
             match current.as_rule() {
                 Rule::numeric_literal => target.write(current.as_str()),
@@ -496,7 +496,7 @@ impl Reformatter {
         }
     }
 
-    pub fn reformat_array_expression(target: &mut LineWriteable, token: &Token) {
+    pub fn reformat_array_expression(target: &mut dyn LineWriteable, token: &Token) {
         target.write("[");
         let mut expr_count = 0;
 
@@ -518,7 +518,7 @@ impl Reformatter {
         target.write("]");
     }
 
-    pub fn reformat_function_expression(target: &mut LineWriteable, token: &Token) {
+    pub fn reformat_function_expression(target: &mut dyn LineWriteable, token: &Token) {
         let mut expr_count = 0;
 
         for current in token.clone().into_inner() {

@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 /// Creates a new root record and any associated list records to the database.
 pub fn execute<S>(
-    conn: &mut Transaction,
+    conn: &mut dyn Transaction,
     model: ModelRef,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
@@ -66,9 +66,9 @@ where
 /// Creates a new nested item related to a parent, including any associated
 /// list values, and is connected with the `parent_id` to the parent record.
 pub fn execute_nested<S>(
-    conn: &mut Transaction,
+    conn: &mut dyn Transaction,
     parent_id: &GraphqlId,
-    actions: &NestedActions,
+    actions: &dyn NestedActions,
     relation_field: RelationFieldRef,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],

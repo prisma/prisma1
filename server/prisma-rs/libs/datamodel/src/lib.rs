@@ -63,7 +63,7 @@ pub use validator::directive::DirectiveValidator;
 use std::io::Write;
 
 // Convenience Helpers
-pub fn get_builtin_sources() -> Vec<Box<SourceDefinition>> {
+pub fn get_builtin_sources() -> Vec<Box<dyn SourceDefinition>> {
     vec![
         Box::new(configuration::builtin::MySqlSourceDefinition::new()),
         Box::new(configuration::builtin::PostgresSourceDefinition::new()),
@@ -75,7 +75,7 @@ pub fn get_builtin_sources() -> Vec<Box<SourceDefinition>> {
 /// If plugin loading failes, validation continues, but an error is returned.
 pub fn parse_with_plugins(
     datamodel_string: &str,
-    source_definitions: Vec<Box<configuration::SourceDefinition>>,
+    source_definitions: Vec<Box<dyn configuration::SourceDefinition>>,
 ) -> Result<Datamodel, errors::ErrorCollection> {
     let ast = parser::parse(datamodel_string)?;
     let mut source_loader = SourceLoader::new();
@@ -110,8 +110,8 @@ pub fn parse_with_plugins(
 #[deprecated(note = "please use `load_configuration_with_plugins` instead")]
 pub fn load_data_source_configuration_with_plugins(
     datamodel_string: &str,
-    source_definitions: Vec<Box<configuration::SourceDefinition>>,
-) -> Result<Vec<Box<Source>>, errors::ErrorCollection> {
+    source_definitions: Vec<Box<dyn configuration::SourceDefinition>>,
+) -> Result<Vec<Box<dyn Source>>, errors::ErrorCollection> {
     let ast = parser::parse(datamodel_string)?;
     let mut source_loader = SourceLoader::new();
     for source in get_builtin_sources() {
@@ -126,7 +126,7 @@ pub fn load_data_source_configuration_with_plugins(
 /// Loads all configuration blocks from a datamodel using the given source definitions.
 pub fn load_configuration_with_plugins(
     datamodel_string: &str,
-    source_definitions: Vec<Box<configuration::SourceDefinition>>,
+    source_definitions: Vec<Box<dyn configuration::SourceDefinition>>,
 ) -> Result<Configuration, errors::ErrorCollection> {
     let ast = parser::parse(datamodel_string)?;
 
@@ -150,7 +150,7 @@ pub fn load_configuration_with_plugins(
 
 /// Loads all source configuration blocks from a datamodel using the built-in source definitions.
 #[deprecated(note = "please use `load_configuration` instead")]
-pub fn load_data_source_configuration(datamodel_string: &str) -> Result<Vec<Box<Source>>, errors::ErrorCollection> {
+pub fn load_data_source_configuration(datamodel_string: &str) -> Result<Vec<Box<dyn Source>>, errors::ErrorCollection> {
     #[allow(deprecated)]
     load_data_source_configuration_with_plugins(datamodel_string, vec![])
 }
@@ -191,13 +191,13 @@ pub fn parse_to_ast(datamodel_string: &str) -> Result<ast::Datamodel, errors::Er
 }
 
 /// Renders an datamodel AST to a stream as datamodel string. For internal use only.
-pub fn render_ast_to(stream: &mut std::io::Write, datamodel: &ast::Datamodel, ident_width: usize) {
+pub fn render_ast_to(stream: &mut dyn std::io::Write, datamodel: &ast::Datamodel, ident_width: usize) {
     let mut renderer = renderer::Renderer::new(stream, ident_width);
     renderer.render(datamodel);
 }
 
 /// Renders a datamodel to a stream as datamodel string.
-pub fn render_to(stream: &mut std::io::Write, datamodel: &dml::Datamodel) -> Result<(), errors::ErrorCollection> {
+pub fn render_to(stream: &mut dyn std::io::Write, datamodel: &dml::Datamodel) -> Result<(), errors::ErrorCollection> {
     let lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
     render_ast_to(stream, &lowered, 2);
     Ok(())
@@ -206,9 +206,9 @@ pub fn render_to(stream: &mut std::io::Write, datamodel: &dml::Datamodel) -> Res
 /// Renders a datamodel and sources to a stream as datamodel string.
 #[deprecated(note = "please use `render_with_config_to` instead")]
 pub fn render_with_sources_to(
-    stream: &mut std::io::Write,
+    stream: &mut dyn std::io::Write,
     datamodel: &dml::Datamodel,
-    sources: &Vec<Box<Source>>,
+    sources: &Vec<Box<dyn Source>>,
 ) -> Result<(), errors::ErrorCollection> {
     let mut lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
     SourceSerializer::add_sources_to_ast(sources, &mut lowered);
@@ -218,7 +218,7 @@ pub fn render_with_sources_to(
 
 /// Renders a datamodel, generators and sources to a stream as datamodel string.
 pub fn render_with_config_to(
-    stream: &mut std::io::Write,
+    stream: &mut dyn std::io::Write,
     datamodel: &dml::Datamodel,
     config: Configuration,
 ) -> Result<(), errors::ErrorCollection> {
@@ -246,7 +246,7 @@ pub fn render(datamodel: &dml::Datamodel) -> Result<String, errors::ErrorCollect
 #[deprecated(note = "please use `render_with_config` instead")]
 pub fn render_with_sources(
     datamodel: &dml::Datamodel,
-    sources: &Vec<Box<Source>>,
+    sources: &Vec<Box<dyn Source>>,
 ) -> Result<String, errors::ErrorCollection> {
     let mut lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
     SourceSerializer::add_sources_to_ast(sources, &mut lowered);

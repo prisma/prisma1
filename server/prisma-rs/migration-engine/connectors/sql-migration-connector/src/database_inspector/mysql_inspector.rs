@@ -4,7 +4,7 @@ use super::*;
 use std::sync::Arc;
 
 pub struct MysqlInspector {
-    pub database: Arc<MigrationDatabase>,
+    pub database: Arc<dyn MigrationDatabase>,
     information_schema: InformationSchema,
 }
 
@@ -22,7 +22,7 @@ impl DatabaseInspector for MysqlInspector {
 }
 
 impl MysqlInspector {
-    pub fn new(database: Arc<MigrationDatabase>) -> MysqlInspector {
+    pub fn new(database: Arc<dyn MigrationDatabase>) -> MysqlInspector {
         MysqlInspector {
             database: Arc::clone(&database),
             information_schema: InformationSchema {

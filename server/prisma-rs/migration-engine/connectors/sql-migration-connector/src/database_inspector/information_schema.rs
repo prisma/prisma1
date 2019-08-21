@@ -3,7 +3,7 @@ use prisma_query::ast::ParameterizedValue;
 use std::sync::Arc;
 
 pub struct InformationSchema {
-    pub database: Arc<MigrationDatabase>,
+    pub database: Arc<dyn MigrationDatabase>,
     pub data_type_column: String,
 }
 

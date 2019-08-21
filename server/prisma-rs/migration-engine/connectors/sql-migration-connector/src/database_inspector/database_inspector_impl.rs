@@ -3,7 +3,7 @@ use super::*;
 pub fn convert_introspected_columns(
     columns: Vec<IntrospectedColumn>,
     foreign_keys: Vec<IntrospectedForeignKey>,
-    column_type: Box<Fn(&IntrospectedColumn) -> ColumnType>,
+    column_type: Box<dyn Fn(&IntrospectedColumn) -> ColumnType>,
 ) -> Vec<Column> {
     let mut result: Vec<Column> = columns
         .iter()

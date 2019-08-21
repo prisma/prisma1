@@ -7,7 +7,7 @@ use database_introspection::*;
 pub struct SqlDatabaseStepApplier {
     pub sql_family: SqlFamily,
     pub schema_name: String,
-    pub conn: Arc<MigrationDatabase + Send + Sync + 'static>,
+    pub conn: Arc<dyn MigrationDatabase + Send + Sync + 'static>,
 }
 
 #[allow(unused, dead_code)]

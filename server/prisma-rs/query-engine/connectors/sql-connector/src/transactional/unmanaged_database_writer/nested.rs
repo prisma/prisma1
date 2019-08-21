@@ -5,11 +5,11 @@ use prisma_models::GraphqlId;
 use std::sync::Arc;
 
 pub fn execute(
-    conn: &mut Transaction,
+    conn: &mut dyn Transaction,
     nested_write_writes: &NestedWriteQueries,
     parent_id: &GraphqlId,
 ) -> crate::Result<()> {
-    fn create(conn: &mut Transaction, parent_id: &GraphqlId, cn: &NestedCreateRecord) -> crate::Result<()> {
+    fn create(conn: &mut dyn Transaction, parent_id: &GraphqlId, cn: &NestedCreateRecord) -> crate::Result<()> {
         let parent_id = create::execute_nested(
             conn,
             parent_id,
@@ -24,7 +24,7 @@ pub fn execute(
         Ok(())
     }
 
-    fn update(conn: &mut Transaction, parent_id: &GraphqlId, un: &NestedUpdateRecord) -> crate::Result<()> {
+    fn update(conn: &mut dyn Transaction, parent_id: &GraphqlId, un: &NestedUpdateRecord) -> crate::Result<()> {
         let parent_id = update::execute_nested(
             conn,
             parent_id,

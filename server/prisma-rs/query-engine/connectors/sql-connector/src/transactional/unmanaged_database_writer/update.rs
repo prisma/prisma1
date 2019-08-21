@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 /// Updates one record and any associated list record in the database.
 pub fn execute<S>(
-    conn: &mut Transaction,
+    conn: &mut dyn Transaction,
     record_finder: &RecordFinder,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
@@ -28,7 +28,7 @@ where
 /// Updates a nested item related to the parent, including any associated
 /// list values.
 pub fn execute_nested<S>(
-    conn: &mut Transaction,
+    conn: &mut dyn Transaction,
     parent_id: &GraphqlId,
     record_finder: &Option<RecordFinder>,
     relation_field: RelationFieldRef,
@@ -50,7 +50,7 @@ where
 
 /// Updates list args related to the given records.
 pub fn update_list_args<S>(
-    conn: &mut Transaction,
+    conn: &mut dyn Transaction,
     ids: &[GraphqlId],
     model: ModelRef,
     list_args: &[(S, PrismaListValue)],

@@ -29,7 +29,7 @@ impl SqlCapabilities for PostgreSql {
 impl Transactional for PostgreSql {
     fn with_transaction<F, T>(&self, _: &str, f: F) -> crate::Result<T>
     where
-        F: FnOnce(&mut Transaction) -> crate::Result<T>,
+        F: FnOnce(&mut dyn Transaction) -> crate::Result<T>,
     {
         let mut conn = self.pool.get()?;
         let mut tx = conn.start_transaction()?;

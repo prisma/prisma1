@@ -241,7 +241,7 @@ pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
 
 pub fn parse_with_plugins(
     datamodel_string: &str,
-    source_definitions: Vec<Box<SourceDefinition>>,
+    source_definitions: Vec<Box<dyn SourceDefinition>>,
 ) -> datamodel::Datamodel {
     match datamodel::parse_with_plugins(datamodel_string, source_definitions) {
         Ok(s) => s,
@@ -262,7 +262,7 @@ pub fn parse_error(datamodel_string: &str) -> ErrorCollection {
 
 pub fn parse_with_plugins_error(
     datamodel_string: &str,
-    source_definitions: Vec<Box<SourceDefinition>>,
+    source_definitions: Vec<Box<dyn SourceDefinition>>,
 ) -> ErrorCollection {
     match datamodel::parse_with_plugins(datamodel_string, source_definitions) {
         Ok(_) => panic!("Expected an error when parsing schema."),

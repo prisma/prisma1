@@ -161,14 +161,14 @@ fn foreign_keys_must_work() {
 fn test_each_backend<MigrationFn, TestFn>(mut migrationFn: MigrationFn, testFn: TestFn)
 where
     MigrationFn: FnMut(&'static str, &mut Migration) -> (),
-    TestFn: Fn(Arc<DatabaseInspector>) -> (),
+    TestFn: Fn(Arc<dyn DatabaseInspector>) -> (),
 {
     println!("Testing with SQLite now");
     // SQLITE
     {
         let mut migration = Migration::new().schema(SCHEMA);
         migrationFn("sqlite", &mut migration);
-        let (inspector, database) = sqlite();
+        let (inspector, database) = get_sqlite();
         let full_sql = migration.make::<barrel::backend::Sqlite>();
         run_full_sql(&database, &full_sql);
         println!("Running the test function now");
@@ -179,7 +179,7 @@ where
     {
         let mut migration = Migration::new().schema(SCHEMA);
         migrationFn("postgres", &mut migration);
-        let (inspector, database) = postgres();
+        let (inspector, database) = get_postgres();
         let full_sql = migration.make::<barrel::backend::Pg>();
         run_full_sql(&database, &full_sql);
         println!("Running the test function now");
@@ -191,7 +191,7 @@ where
         let mut migration = Migration::new().schema(SCHEMA);
         migrationFn("mysql", &mut migration);
 
-        let (inspector, database) = mysql();
+        let (inspector, database) = get_mysql();
         let full_sql = dbg!(migration.make::<barrel::backend::MySql>());
 
         run_full_sql(&database, &full_sql);
@@ -200,7 +200,7 @@ where
     }
 }
 
-fn run_full_sql(database: &Arc<MigrationDatabase>, full_sql: &str) {
+fn run_full_sql(database: &Arc<dyn MigrationDatabase>, full_sql: &str) {
     for sql in full_sql.split(";") {
         dbg!(sql);
         if sql != "" {
@@ -209,19 +209,19 @@ fn run_full_sql(database: &Arc<MigrationDatabase>, full_sql: &str) {
     }
 }
 
-fn sqlite() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
+fn get_sqlite() -> (Arc<dyn DatabaseInspector>, Arc<dyn MigrationDatabase>) {
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
     let database_file_path = dbg!(format!("{}/{}.db", database_folder_path, SCHEMA));
     let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
 
-    let inspector = DatabaseInspector::sqlite(database_file_path);
+    let inspector = sqlite(database_file_path);
     let database = Arc::clone(&inspector.database);
 
     (Arc::new(inspector), database)
 }
 
-fn postgres() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
+fn get_postgres() -> (Arc<dyn DatabaseInspector>, Arc<dyn MigrationDatabase>) {
     let url = format!(
         "postgresql://postgres:prisma@{}:5432/db?schema={}",
         db_host_postgres(),
@@ -229,27 +229,27 @@ fn postgres() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
     );
 
     let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA));
-    let setup_database = DatabaseInspector::postgres(url.to_string()).database;
+    let setup_database = postgres(url.to_string()).database;
     let _ = setup_database.query_raw(SCHEMA, &drop_schema, &[]);
 
-    let inspector = DatabaseInspector::postgres(url.to_string());
+    let inspector = postgres(url.to_string());
     let database = Arc::clone(&inspector.database);
 
     (Arc::new(inspector), database)
 }
 
-fn mysql() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
+fn get_mysql() -> (Arc<dyn DatabaseInspector>, Arc<dyn MigrationDatabase>) {
     let url_without_db = format!("mysql://root:prisma@{}:3306", db_host_mysql());
     let drop_database = dbg!(format!("DROP DATABASE IF EXISTS `{}`;", SCHEMA));
 
     let create_database = dbg!(format!("CREATE DATABASE `{}`;", SCHEMA));
-    let setup_database = DatabaseInspector::mysql(url_without_db.to_string()).database;
+    let setup_database = mysql(url_without_db.to_string()).database;
 
     let _ = setup_database.query_raw(SCHEMA, &drop_database, &[]);
     let _ = setup_database.query_raw(SCHEMA, &create_database, &[]);
 
     let url = format!("mysql://root:prisma@{}:3306/{}", db_host_mysql(), SCHEMA);
-    let inspector = DatabaseInspector::mysql(url.to_string());
+    let inspector = mysql(url.to_string());
     let database = Arc::clone(&inspector.database);
 
     (Arc::new(inspector), database)

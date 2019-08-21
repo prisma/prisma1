@@ -15,7 +15,7 @@ use connector_interface::{error::RecordFinderInfo, filter::RecordFinder};
 use prisma_models::*;
 use prisma_query::ast::*;
 
-pub type ResultCheck = Box<FnOnce(bool) -> crate::Result<()> + Send + Sync + 'static>;
+pub type ResultCheck = Box<dyn FnOnce(bool) -> crate::Result<()> + Send + Sync + 'static>;
 
 pub trait NestedActions {
     fn required_check(&self, parent_id: &GraphqlId) -> crate::Result<Option<(Select<'static>, ResultCheck)>>;
@@ -39,8 +39,12 @@ pub trait NestedActions {
     fn records_not_connected(&self, parent_id: Option<GraphqlId>, child_id: Option<GraphqlId>) -> SqlError {
         let rf = self.relation_field();
 
-        let parent_where = parent_id.map(|parent_id| RecordFinderInfo::for_id(rf.model(), &parent_id)).map(Box::new);
-        let child_where = child_id.map(|child_id| RecordFinderInfo::for_id(rf.model(), &child_id)).map(Box::new);
+        let parent_where = parent_id
+            .map(|parent_id| RecordFinderInfo::for_id(rf.model(), &parent_id))
+            .map(Box::new);
+        let child_where = child_id
+            .map(|child_id| RecordFinderInfo::for_id(rf.model(), &child_id))
+            .map(Box::new);
 
         SqlError::RecordsNotConnected {
             relation_name: rf.relation().name.clone(),
