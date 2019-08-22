@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #![allow(unused)]
 mod test_harness;
-use sql_migration_connector::database_inspector::*;
+use database_introspection::*;
 use sql_migration_connector::SqlFamily;
 use test_harness::*;
 use pretty_assertions::{assert_eq, assert_ne};
@@ -27,14 +27,14 @@ fn adding_a_scalar_field_must_work() {
         "#;
         let result = infer_and_apply(api, &dm2);
         let table = result.table_bang("Test");
-        table.columns.iter().for_each(|c| assert_eq!(c.is_required, true));
+        table.columns.iter().for_each(|c| assert_eq!(c.is_required(), true));
 
-        assert_eq!(table.column_bang("int").tpe, ColumnType::Int);
-        assert_eq!(table.column_bang("float").tpe, ColumnType::Float);
-        assert_eq!(table.column_bang("boolean").tpe, ColumnType::Boolean);
-        assert_eq!(table.column_bang("string").tpe, ColumnType::String);
-        assert_eq!(table.column_bang("dateTime").tpe, ColumnType::DateTime);
-        assert_eq!(table.column_bang("enum").tpe, ColumnType::String);
+        assert_eq!(table.column_bang("int").tpe.family, ColumnTypeFamily::Int);
+        assert_eq!(table.column_bang("float").tpe.family, ColumnTypeFamily::Float);
+        assert_eq!(table.column_bang("boolean").tpe.family, ColumnTypeFamily::Boolean);
+        assert_eq!(table.column_bang("string").tpe.family, ColumnTypeFamily::String);
+        assert_eq!(table.column_bang("dateTime").tpe.family, ColumnTypeFamily::DateTime);
+        assert_eq!(table.column_bang("enum").tpe.family, ColumnTypeFamily::String);
     });
 }
 
@@ -73,7 +73,7 @@ fn adding_an_optional_field_must_work() {
         "#;
         let result = infer_and_apply(api, &dm2);
         let column = result.table_bang("Test").column_bang("field");
-        assert_eq!(column.is_required, false);
+        assert_eq!(column.is_required(), false);
     });
 }
 
@@ -126,7 +126,7 @@ fn can_handle_reserved_sql_keywords_for_model_name() {
         "#;
         let result = infer_and_apply(api, &dm1);
         let column = result.table_bang("Group").column_bang("field");
-        assert_eq!(column.tpe, ColumnType::String);
+        assert_eq!(column.tpe.family, ColumnTypeFamily::String);
 
         let dm2 = r#"
             model Group {
@@ -136,7 +136,7 @@ fn can_handle_reserved_sql_keywords_for_model_name() {
         "#;
         let result = infer_and_apply(api, &dm2);
         let column = result.table_bang("Group").column_bang("field");
-        assert_eq!(column.tpe, ColumnType::Int);
+        assert_eq!(column.tpe.family, ColumnTypeFamily::Int);
     });
 }
 
@@ -151,7 +151,7 @@ fn can_handle_reserved_sql_keywords_for_field_name() {
         "#;
         let result = infer_and_apply(api, &dm1);
         let column = result.table_bang("Test").column_bang("Group");
-        assert_eq!(column.tpe, ColumnType::String);
+        assert_eq!(column.tpe.family, ColumnTypeFamily::String);
 
         let dm2 = r#"
             model Test {
@@ -161,7 +161,7 @@ fn can_handle_reserved_sql_keywords_for_field_name() {
         "#;
         let result = infer_and_apply(api, &dm2);
         let column = result.table_bang("Test").column_bang("Group");
-        assert_eq!(column.tpe, ColumnType::Int);
+        assert_eq!(column.tpe.family, ColumnTypeFamily::Int);
     });
 }
 
@@ -176,7 +176,7 @@ fn update_type_of_scalar_field_must_work() {
         "#;
         let result = infer_and_apply(api, &dm1);
         let column1 = result.table_bang("Test").column_bang("field");
-        assert_eq!(column1.tpe, ColumnType::String);
+        assert_eq!(column1.tpe.family, ColumnTypeFamily::String);
 
         let dm2 = r#"
             model Test {
@@ -186,7 +186,7 @@ fn update_type_of_scalar_field_must_work() {
         "#;
         let result = infer_and_apply(api, &dm2);
         let column2 = result.table_bang("Test").column_bang("field");
-        assert_eq!(column2.tpe, ColumnType::Int);
+        assert_eq!(column2.tpe.family, ColumnTypeFamily::Int);
     });
 }
 
@@ -203,11 +203,19 @@ fn changing_the_type_of_an_id_field_must_work() {
             }
         "#;
         let result = infer_and_apply(api, &dm1);
-        let column = result.table_bang("A").column_bang("b");
-        assert_eq!(column.tpe, ColumnType::Int);
+        let table = result.table_bang("A");
+        let column = table.column_bang("b");
+        assert_eq!(column.tpe.family, ColumnTypeFamily::Int);
         assert_eq!(
-            column.foreign_key,
-            Some(ForeignKey::new("B".to_string(), "id".to_string(), OnDelete::NoAction))
+            table.foreign_keys,
+            vec![
+                ForeignKey {
+                    columns: vec![column.name.clone()],
+                    referenced_table: "B".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::SetNull,
+                }
+            ]
         );
 
         let dm2 = r#"
@@ -220,11 +228,19 @@ fn changing_the_type_of_an_id_field_must_work() {
             }
         "#;
         let result = infer_and_apply(api, &dm2);
-        let column = result.table_bang("A").column_bang("b");
-        assert_eq!(column.tpe, ColumnType::String);
+        let table = result.table_bang("A");
+        let column = table.column_bang("b");
+        assert_eq!(column.tpe.family, ColumnTypeFamily::String);
         assert_eq!(
-            column.foreign_key,
-            Some(ForeignKey::new("B".to_string(), "id".to_string(), OnDelete::NoAction))
+            table.foreign_keys,
+            vec![
+                ForeignKey {
+                    columns: vec![column.name.clone()],
+                    referenced_table: "B".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::SetNull,
+                }
+            ]
         );
     });
 }
@@ -268,9 +284,20 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
             }
         "#;
         let result = infer_and_apply(api, &dm1);
-        let column = result.table_bang("A").column_bang("b");
-        assert_eq!(column.foreign_key.is_some(), true);
-        assert_eq!(column.tpe, ColumnType::Int);
+        let table = result.table_bang("A");
+        let column = table.column_bang("b");
+        assert_eq!(column.tpe.family, ColumnTypeFamily::Int);
+        assert_eq!(
+            table.foreign_keys,
+            vec![
+                ForeignKey {
+                    columns: vec![column.name.clone()],
+                    referenced_table: "B".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::SetNull,
+                }
+            ]
+        );
 
         let dm2 = r#"
             model A {
@@ -282,9 +309,13 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
             }
         "#;
         let result = infer_and_apply(api, &dm2);
-        let column = result.table_bang("A").column_bang("b");
-        assert_eq!(column.foreign_key.is_some(), false);
-        assert_eq!(column.tpe, ColumnType::String);
+        let table = result.table_bang("A");
+        let column = table.column_bang("b");
+        assert_eq!(column.tpe.family, ColumnTypeFamily::String);
+        assert_eq!(
+            table.foreign_keys,
+            vec![]
+        );
     });
 }
 
@@ -301,9 +332,13 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
             }
         "#;
         let result = infer_and_apply(api, &dm1);
-        let column = result.table_bang("A").column_bang("b");
-        assert_eq!(column.foreign_key.is_some(), false);
-        assert_eq!(column.tpe, ColumnType::String);
+        let table = result.table_bang("A");
+        let column = table.column_bang("b");
+        assert_eq!(column.tpe.family, ColumnTypeFamily::String);
+        assert_eq!(
+            table.foreign_keys,
+            vec![]
+        );
 
         let dm2 = r#"
             model A {
@@ -316,9 +351,20 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
             }
         "#;
         let result = infer_and_apply(api, &dm2);
+        let table = result.table_bang("A");
         let column = result.table_bang("A").column_bang("b");
-        assert_eq!(column.foreign_key.is_some(), true);
-        assert_eq!(column.tpe, ColumnType::Int);
+        assert_eq!(column.tpe.family, ColumnTypeFamily::Int);
+        assert_eq!(
+            table.foreign_keys,
+            vec![
+                ForeignKey {
+                    columns: vec![column.name.clone()],
+                    referenced_table: "B".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::SetNull,
+                }
+            ]
+        );
     });
 }
 
@@ -338,19 +384,32 @@ fn adding_a_many_to_many_relation_must_result_in_a_prisma_style_relation_table()
         "#;
         let result = infer_and_apply(api, &dm1);
         let relation_table = result.table_bang("_AToB");
+        println!("{:?}", relation_table.foreign_keys);
         assert_eq!(relation_table.columns.len(), 2);
+
         let aColumn = relation_table.column_bang("A");
-        assert_eq!(aColumn.tpe, ColumnType::Int);
-        assert_eq!(
-            aColumn.foreign_key,
-            Some(ForeignKey::new("A".to_string(), "id".to_string(), OnDelete::NoAction))
-        );
+        assert_eq!(aColumn.tpe.family, ColumnTypeFamily::Int);
         let bColumn = relation_table.column_bang("B");
-        assert_eq!(bColumn.tpe, ColumnType::Int);
+        assert_eq!(bColumn.tpe.family, ColumnTypeFamily::Int);
+
         assert_eq!(
-            bColumn.foreign_key,
-            Some(ForeignKey::new("B".to_string(), "id".to_string(), OnDelete::NoAction))
+            relation_table.foreign_keys,
+            vec![
+                ForeignKey {
+                    columns: vec![aColumn.name.clone()],
+                    referenced_table: "A".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::Cascade,
+                },
+                ForeignKey {
+                    columns: vec![bColumn.name.clone()],
+                    referenced_table: "B".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::Cascade,
+                },
+            ]
         );
+
     });
 }
 
@@ -373,17 +432,26 @@ fn adding_a_many_to_many_relation_with_custom_name_must_work() {
         assert_eq!(relation_table.columns.len(), 2);
 
         let aColumn = relation_table.column_bang("A");
-        assert_eq!(aColumn.tpe, ColumnType::Int);
-        assert_eq!(
-            aColumn.foreign_key,
-            Some(ForeignKey::new("A".to_string(), "id".to_string(), OnDelete::NoAction))
-        );
-
+        assert_eq!(aColumn.tpe.family, ColumnTypeFamily::Int);
         let bColumn = relation_table.column_bang("B");
-        assert_eq!(bColumn.tpe, ColumnType::Int);
+        assert_eq!(bColumn.tpe.family, ColumnTypeFamily::Int);
+
         assert_eq!(
-            bColumn.foreign_key,
-            Some(ForeignKey::new("B".to_string(), "id".to_string(), OnDelete::NoAction))
+            relation_table.foreign_keys,
+            vec![
+                ForeignKey {
+                    columns: vec![aColumn.name.clone()],
+                    referenced_table: "A".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::Cascade,
+                },
+                ForeignKey {
+                    columns: vec![bColumn.name.clone()],
+                    referenced_table: "B".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::Cascade,
+                }
+            ]
         );
     });
 }
@@ -431,11 +499,19 @@ fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
             }
         "#;
         let result = dbg!(infer_and_apply(api, &dm1));
-        let column = result.table_bang("A").column_bang("b");
-        assert_eq!(column.tpe, ColumnType::Int);
+        let table = result.table_bang("A");
+        let column = table.column_bang("b");
+        assert_eq!(column.tpe.family, ColumnTypeFamily::Int);
         assert_eq!(
-            column.foreign_key,
-            Some(ForeignKey::new("B".to_string(), "id".to_string(), OnDelete::NoAction))
+            table.foreign_keys,
+            vec![
+                ForeignKey {
+                    columns: vec![column.name.clone()],
+                    referenced_table: "B".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::SetNull,
+                }
+            ]
         );
     });
 }
@@ -454,12 +530,20 @@ fn specifying_a_db_name_for_an_inline_relation_must_work() {
                 a A // todo: remove when implicit back relation field is implemented
             }
         "#;
-        let result = dbg!(infer_and_apply(api, &dm1));
-        let column = result.table_bang("A").column_bang("b_column");
-        assert_eq!(column.tpe, ColumnType::Int);
+        let result = infer_and_apply(api, &dm1);
+        let table = result.table_bang("A");
+        let column = table.column_bang("b_column");
+        assert_eq!(column.tpe.family, ColumnTypeFamily::Int);
         assert_eq!(
-            column.foreign_key,
-            Some(ForeignKey::new("B".to_string(), "id".to_string(), OnDelete::NoAction))
+            table.foreign_keys,
+            vec![
+                ForeignKey {
+                    columns: vec![column.name.clone()],
+                    referenced_table: "B".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::SetNull,
+                }
+            ]
         );
     });
 }
@@ -479,11 +563,19 @@ fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
             }
         "#;
         let result = dbg!(infer_and_apply(api, &dm1));
-        let column = result.table_bang("A").column_bang("b");
-        assert_eq!(column.tpe, ColumnType::String);
+        let table = result.table_bang("A");
+        let column = table.column_bang("b");
+        assert_eq!(column.tpe.family, ColumnTypeFamily::String);
         assert_eq!(
-            column.foreign_key,
-            Some(ForeignKey::new("B".to_string(), "id".to_string(), OnDelete::NoAction))
+            table.foreign_keys,
+            vec![
+                ForeignKey {
+                    columns: vec![column.name.clone()],
+                    referenced_table: "B".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::SetNull,
+                }
+            ]
         );
     });
 }
@@ -536,10 +628,17 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
             }
         "#;
         let result = dbg!(infer_and_apply(api, &dm1));
-        let column = result.table_bang("A").column_bang("b");
+        let table = result.table_bang("A");
         assert_eq!(
-            column.foreign_key,
-            Some(ForeignKey::new("B".to_string(), "id".to_string(), OnDelete::NoAction))
+            table.foreign_keys,
+            vec![
+                ForeignKey {
+                    columns: vec!["b".to_string()],
+                    referenced_table: "B".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::SetNull,
+                }
+            ]
         );
 
         let dm2 = r#"
@@ -554,10 +653,17 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
             }
         "#;
         let result = dbg!(infer_and_apply(api, &dm2));
-        let column = result.table_bang("B").column_bang("a");
+        let table = result.table_bang("B");
         assert_eq!(
-            column.foreign_key,
-            Some(ForeignKey::new("A".to_string(), "id".to_string(), OnDelete::NoAction))
+            table.foreign_keys,
+            vec![
+                ForeignKey {
+                    columns: vec!["a".to_string()],
+                    referenced_table: "A".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::SetNull,
+                }
+            ]
         );
     });
 }
@@ -574,12 +680,12 @@ fn adding_a_new_unique_field_must_work() {
         let result = dbg!(infer_and_apply(api, &dm1));
         let index = result
             .table_bang("A")
-            .indexes
+            .indices
             .iter()
             .find(|i| i.columns == vec!["field"]);
         // FIXME: bring assertion back once introspection can handle indexes
         //        assert_eq!(index.is_some(), true);
-        //        assert_eq!(index.unwrap().tpe, IndexType::Unique);
+        //        assert_eq!(index.unwrap().tpe.family, IndexType::Unique);
     });
 }
 
@@ -601,7 +707,7 @@ fn removing_an_existing_unique_field_must_work() {
         //            .iter()
         //            .find(|i| i.columns == vec!["field"]);
         //        assert_eq!(index.is_some(), true);
-        //        assert_eq!(index.unwrap().tpe, IndexType::Unique);
+        //        assert_eq!(index.unwrap().tpe.family, IndexType::Unique);
 
         let dm2 = r#"
             model A {
@@ -636,7 +742,7 @@ fn adding_unique_to_an_existing_field_must_work() {
         //            .iter()
         //            .find(|i| i.columns == vec!["field"]);
         //        assert_eq!(index.is_some(), true);
-        //        assert_eq!(index.unwrap().tpe, IndexType::Unique);
+        //        assert_eq!(index.unwrap().tpe.family, IndexType::Unique);
 
         let dm2 = r#"
             model A {
@@ -673,7 +779,7 @@ fn removing_unique_from_an_existing_field_must_work() {
         //            .iter()
         //            .find(|i| i.columns == vec!["field"]);
         //        assert_eq!(index.is_some(), true);
-        //        assert_eq!(index.unwrap().tpe, IndexType::Unique);
+        //        assert_eq!(index.unwrap().tpe.family, IndexType::Unique);
 
         let dm2 = r#"
             model A {
@@ -710,16 +816,16 @@ fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
         let result = infer_and_apply(api, &dm1);
         let scalar_list_table_for_strings = result.table_bang("A_strings");
         let node_id_column = scalar_list_table_for_strings.column_bang("nodeId");
-        assert_eq!(node_id_column.tpe, ColumnType::Int);
+        assert_eq!(node_id_column.tpe.family, ColumnTypeFamily::Int);
         assert_eq!(
-            scalar_list_table_for_strings.primary_key_columns,
+            scalar_list_table_for_strings.primary_key_columns(),
             vec!["nodeId", "position"]
         );
         let scalar_list_table_for_enums = result.table_bang("A_enums");
         let node_id_column = scalar_list_table_for_enums.column_bang("nodeId");
-        assert_eq!(node_id_column.tpe, ColumnType::Int);
+        assert_eq!(node_id_column.tpe.family, ColumnTypeFamily::Int);
         assert_eq!(
-            scalar_list_table_for_enums.primary_key_columns,
+            scalar_list_table_for_enums.primary_key_columns(),
             vec!["nodeId", "position"]
         );
     });
@@ -736,7 +842,7 @@ fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
         "#;
         let result = infer_and_apply(api, &dm);
         let node_id_column = result.table_bang("A_strings").column_bang("nodeId");
-        assert_eq!(node_id_column.tpe, ColumnType::Int);
+        assert_eq!(node_id_column.tpe.family, ColumnTypeFamily::Int);
 
         let dm = r#"
             model A {
@@ -746,7 +852,7 @@ fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
         "#;
         let result = infer_and_apply(api, &dm);
         let node_id_column = result.table_bang("A_strings").column_bang("nodeId");
-        assert_eq!(node_id_column.tpe, ColumnType::String);
+        assert_eq!(node_id_column.tpe.family, ColumnTypeFamily::String);
     });
 }
 
@@ -763,15 +869,18 @@ fn reserved_sql_key_words_must_work() {
         "#;
         let result = infer_and_apply(api, &dm);
 
-        let relation_column = result.table_bang("Group").column_bang("parent");
+        let table = result.table_bang("Group");
+        let relation_column = table.column_bang("parent");
         assert_eq!(
-            relation_column.foreign_key,
-            Some(ForeignKey {
-                name: None,
-                table: "Group".to_string(),
-                column: "id".to_string(),
-                on_delete: OnDelete::NoAction,
-            })
-        )
+            table.foreign_keys,
+            vec![
+                ForeignKey {
+                    columns: vec!["parent".to_string()],
+                    referenced_table: "Group".to_string(),
+                    referenced_columns: vec!["id".to_string()],
+                    on_delete_action: ForeignKeyAction::SetNull,
+                }
+            ]
+        );
     });
 }

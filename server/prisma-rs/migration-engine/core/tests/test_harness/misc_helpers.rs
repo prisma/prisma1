@@ -6,9 +6,11 @@ use migration_core::{
     parse_datamodel,
 };
 use prisma_query::connector::{MysqlParams, PostgresParams};
-use sql_migration_connector::{database_inspector::*, migration_database::*, SqlFamily, SqlMigrationConnector};
+use sql_migration_connector::{migration_database::*, SqlFamily, SqlMigrationConnector};
 use std::convert::TryFrom;
 use url::Url;
+use database_introspection::{DatabaseSchema, IntrospectionConnection, IntrospectionConnector};
+use std::sync::Arc;
 
 pub const SCHEMA_NAME: &str = "migration-engine";
 
@@ -89,15 +91,24 @@ where
     api
 }
 
-pub fn introspect_database(api: &dyn GenericApi) -> DatabaseSchemaOld {
-    let inspector: Box<dyn DatabaseInspector> = match api.connector_type() {
-        "postgresql" => Box::new(postgres(postgres_url())),
-        "sqlite" => Box::new(sqlite(sqlite_test_file())),
-        "mysql" => Box::new(mysql(mysql_url())),
+pub fn introspect_database(api: &dyn GenericApi) -> DatabaseSchema {
+    let inspector: Box<dyn IntrospectionConnector> = match api.connector_type() {
+        "postgresql" => {
+            let db = Arc::new(database_wrapper(SqlFamily::Postgres));
+            Box::new(database_introspection::postgres::IntrospectionConnector::new(db))
+        },
+        "sqlite" => {
+            let db = Arc::new(database_wrapper(SqlFamily::Sqlite));
+            Box::new(database_introspection::sqlite::IntrospectionConnector::new(db))
+        },
+        "mysql" => {
+            let db = Arc::new(database_wrapper(SqlFamily::Mysql));
+            Box::new(database_introspection::mysql::IntrospectionConnector::new(db))
+        },
         _ => unimplemented!(),
     };
 
-    let mut result = inspector.introspect(&SCHEMA_NAME.to_string());
+    let mut result = inspector.introspect(&SCHEMA_NAME.to_string()).expect("Introspection failed");
 
     // the presence of the _Migration table makes assertions harder. Therefore remove it from the result.
     result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
@@ -105,7 +116,13 @@ pub fn introspect_database(api: &dyn GenericApi) -> DatabaseSchemaOld {
     result
 }
 
-pub fn database(sql_family: SqlFamily) -> Box<dyn MigrationDatabase> {
+pub fn database_wrapper(sql_family: SqlFamily) -> MigrationDatabaseWrapper {
+    MigrationDatabaseWrapper {
+        database: database(sql_family).into(),
+    }
+}
+
+pub fn database(sql_family: SqlFamily) -> Box<dyn MigrationDatabase + Send + Sync + 'static> {
     match sql_family {
         SqlFamily::Postgres => {
             let url = Url::parse(&postgres_url()).unwrap();
