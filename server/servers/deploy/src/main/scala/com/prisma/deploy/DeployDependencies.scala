@@ -9,7 +9,8 @@ import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.SchemaBuilder
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.errors.ErrorReporter
-import com.prisma.jwt.Auth
+import com.prisma.auth.Auth
+import com.prisma.deploy.server.auth.ManagementAuth
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.metrics.MetricsRegistry
 import com.prisma.shared.models.ProjectIdEncoder
@@ -27,7 +28,7 @@ trait DeployDependencies extends AwaitUtils {
 
   def config: PrismaConfig
   def migrator: Migrator
-  def managementAuth: Auth
+  def managementAuth: ManagementAuth
   def invalidationPublisher: PubSubPublisher[String]
   def deployConnector: DeployConnector
   def functionValidator: FunctionValidator

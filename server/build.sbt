@@ -94,10 +94,6 @@ lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma")
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
 
-lazy val prismaLocalGraalVM = imageProject("prisma-local-graalvm", imageName = "prisma", baseImage = "prismagraphql/runtime-image", tag = "graal")
-  .dependsOn(prismaLocal)
-
-
 lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod")
   .settings(
     libraryDependencies ++= slick ++ Seq(postgresClient, mariaDbClient)
@@ -105,47 +101,6 @@ lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod")
   .dependsOn(graphQlClient)
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
-
-lazy val prismaProdGraalVM = imageProject("prisma-prod-graalvm", imageName = "prisma-prod", baseImage = "prismagraphql/runtime-image", tag = "graal")
-  .dependsOn(prismaProd)
-
-lazy val prismaNative = imageProject("prisma-native", "prisma-native")
-  .settings(
-    libraryDependencies ++= Seq(registry, checks)
-  )
-  .dependsOn(api)
-  .dependsOn(deploy)
-  .dependsOn(subscriptions)
-  .dependsOn(workers)
-  .dependsOn(graphQlClient)
-  .dependsOn(prismaConfig)
-  .dependsOn(allConnectorProjects)
-  .dependsOn(jdbcNative)
-  .enablePlugins(PrismaGraalPlugin)
-  .settings(
-    nativeImageOptions ++= Seq(
-      "--enable-all-security-services",
-      s"-H:CLibraryPath=${absolute("libs/jdbc-native/src/main/resources")}",
-      s"-H:CLibraryPath=${absolute("libs/jwt-native/src/main/resources")}",
-      s"-H:CLibraryPath=${absolute("prisma-rs/build")}",
-      "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext,java.sql.DriverManager,com.prisma.native_jdbc.CustomJdbcDriver,com.zaxxer.hikari.pool.HikariPool,com.prisma.logging.PrismaLogger$LogLevel",
-      "-H:IncludeResources=playground.html|.*/.*.h$|org/joda/time/tz/data/.*|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf",
-      s"-H:ReflectionConfigurationFiles=${absolute("images/prisma-native/reflection_config.json")}",
-      "--verbose",
-      "--no-server",
-      "-H:+AllowVMInspection"
-    ),
-    unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/svm/builder/svm.jar"),
-    mappings in (Compile, packageBin) ~= { _.filter { case (_, path) =>
-      val exclude = path.contains("mariadb") || path.contains("org.postgresql") || path.contains("micrometer") || path.contains("org.LatencyUtils") || path.contains("io.prometheus")
-      if (exclude) {
-        println(s"Excluded Mapping: $path")
-      }
-
-      !exclude
-    }},
-    excludeJars := Seq("org/latencyutils", "io/prometheus", "org\\latencyutils", "io\\prometheus")
-  )
 
 lazy val schemaInferrerBin = imageProject("schema-inferrer-bin", "schema-inferrer-bin")
   .dependsOn(deploy)
@@ -184,7 +139,7 @@ lazy val deploy = serverProject("deploy")
   .dependsOn(messageBus)
   .dependsOn(graphQlClient)
   .dependsOn(sangriaUtils)
-  .dependsOn(jwtNative)
+  .dependsOn(auth)
   .dependsOn(cache)
   .settings( // Drivers used for testing
     libraryDependencies ++= slick ++ Seq(postgresClient % "test", mariaDbClient % "test")
@@ -198,7 +153,7 @@ lazy val api = serverProject("api")
   .dependsOn(akkaUtils)
   .dependsOn(metrics)
   .dependsOn(cache)
-  .dependsOn(jwtNative)
+  .dependsOn(auth)
   .dependsOn(sangriaUtils)
   .settings( // Drivers used for testing
     libraryDependencies ++= slick ++ Seq(postgresClient % "test", mariaDbClient % "test")
@@ -231,7 +186,6 @@ lazy val serversShared = serverProject("servers-shared")
 lazy val connectorUtils = connectorProject("utils")
   .dependsOn(deployConnectorProjects)
   .dependsOn(apiConnectorProjects)
-  .dependsOn(jdbcNative)
 
 lazy val connectorShared = connectorProject("shared")
   .settings(
@@ -333,30 +287,13 @@ lazy val integrationTestsMySql = integrationTestProject("integration-tests-mysql
 //       LIBS
 // ################
 
+lazy val auth = libProject("auth").settings(libraryDependencies ++= Seq(jwt))
 lazy val tracing = libProject("tracing")
 lazy val logging = libProject("logging").settings(libraryDependencies ++= Seq(scalaLogging))
 lazy val scalaUtils = libProject("scala-utils")
 lazy val slickUtils = libProject("slick-utils").settings(libraryDependencies ++= slick)
 lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies ++= Seq(snakeYML, scalaUri))
 lazy val mongoUtils = libProject("mongo-utils").settings(libraryDependencies ++= Seq(mongoClient)).dependsOn(jsonUtils)
-
-lazy val jdbcNative = libProject("jdbc-native")
-  .dependsOn(logging)
-  .settings(libraryDependencies ++= Seq(
-    jna,
-    scalaTest,
-    playJson
-  ), // todo skip compile if no native image / graal present
-  unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar"))
-
-lazy val jwtNative = libProject("jwt-native")
-  .dependsOn(logging)
-  .settings(libraryDependencies ++= Seq(
-    jna,
-    scalaTest,
-    playJson
-  ) ++ jooq, // todo skip compile if no native image / graal present
-  unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar"))
 
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
@@ -487,11 +424,8 @@ lazy val sangriaServer = libProject("sangria-server")
   ) ++ http4s ++ ujson)
 
 val allDockerImageProjects = List(
-  prismaNative,
   prismaLocal,
-  prismaLocalGraalVM,
   prismaProd,
-  prismaProdGraalVM,
   schemaInferrerBin
 )
 
@@ -539,8 +473,6 @@ val allLibProjects = List(
   sangriaUtils,
   prismaConfig,
   mongoUtils,
-  jdbcNative,
-  jwtNative,
   logging,
   prismaRsBinding
 )
