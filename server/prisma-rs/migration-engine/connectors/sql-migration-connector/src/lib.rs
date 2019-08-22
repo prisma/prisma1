@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate log;
 
-pub mod database_inspector;
 pub mod migration_database;
 
 mod database_schema_calculator;
