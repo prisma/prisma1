@@ -41,40 +41,38 @@ where
 {
     // POSTGRES
     if !ignores.contains(&SqlFamily::Postgres) {
-        println!("Testing with Postgres now");
+        println!("--------------- Testing with Postgres now ---------------");
 
         let connector = SqlMigrationConnector::postgres(&postgres_url()).unwrap();
         let api = test_api(connector);
 
         test_fn(SqlFamily::Postgres, &api);
     } else {
-        println!("Ignoring Postgres")
+        println!("--------------- Ignoring Postgres ---------------")
     }
 
     // MYSQL
     if !ignores.contains(&SqlFamily::Mysql) {
-        println!("Testing with MySQL now");
+        println!("--------------- Testing with MySQL now ---------------");
 
         let connector = SqlMigrationConnector::mysql(&mysql_url()).unwrap();
         let api = test_api(connector);
 
-        println!("ENGINE DONE");
-
         test_fn(SqlFamily::Mysql, &api);
     } else {
-        println!("Ignoring MySQL")
+        println!("--------------- Ignoring MySQL ---------------")
     }
 
     // SQLite
     if !ignores.contains(&SqlFamily::Sqlite) {
-        println!("Testing with SQLite now");
+        println!("--------------- Testing with SQLite now ---------------");
 
         let connector = SqlMigrationConnector::sqlite(&sqlite_test_file()).unwrap();
         let api = test_api(connector);
 
         test_fn(SqlFamily::Sqlite, &api);
     } else {
-        println!("Ignoring SQLite")
+        println!("--------------- Ignoring SQLite ---------------")
     }
 }
 
