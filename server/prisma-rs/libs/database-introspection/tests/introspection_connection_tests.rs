@@ -1293,6 +1293,10 @@ fn foreign_keys_must_work() {
                 auto_increment: false,
             }];
 
+            let on_delete_action = match db_type {
+                DbType::MySql => ForeignKeyAction::Restrict,
+                _ => ForeignKeyAction::NoAction,
+            };
             assert_eq!(
                 user_table,
                 &Table {
@@ -1304,7 +1308,7 @@ fn foreign_keys_must_work() {
                         columns: vec!["city".to_string()],
                         referenced_columns: vec!["id".to_string()],
                         referenced_table: "City".to_string(),
-                        on_delete_action: ForeignKeyAction::NoAction,
+                        on_delete_action,
                     }],
                 }
             );
@@ -1368,6 +1372,10 @@ fn multi_column_foreign_keys_must_work() {
                 },
             ];
 
+            let on_delete_action = match db_type {
+                DbType::MySql => ForeignKeyAction::Restrict,
+                _ => ForeignKeyAction::NoAction,
+            };
             assert_eq!(
                 user_table,
                 &Table {
@@ -1379,7 +1387,7 @@ fn multi_column_foreign_keys_must_work() {
                         columns: vec!["city".to_string(), "city_name".to_string()],
                         referenced_columns: vec!["id".to_string(), "name".to_string()],
                         referenced_table: "City".to_string(),
-                        on_delete_action: ForeignKeyAction::NoAction,
+                        on_delete_action,
                     },],
                 }
             );
