@@ -14,6 +14,8 @@ pub struct DatabaseSchemaDiff {
     pub drop_tables: Vec<DropTable>,
     pub create_tables: Vec<CreateTable>,
     pub alter_tables: Vec<AlterTable>,
+    pub create_indexes: Vec<CreateIndex>,
+    pub drop_indexes: Vec<DropIndex>,
 }
 
 impl DatabaseSchemaDiff {
@@ -25,6 +27,12 @@ impl DatabaseSchemaDiff {
         }));
         steps.append(&mut wrap_as_step(self.alter_tables, |x| {
             SqlMigrationStep::AlterTable(x)
+        }));
+        steps.append(&mut wrap_as_step(self.create_indexes, |x| {
+            SqlMigrationStep::CreateIndex(x)
+        }));
+        steps.append(&mut wrap_as_step(self.drop_indexes, |x| {
+            SqlMigrationStep::DropIndex(x)
         }));
         steps
     }
@@ -41,6 +49,8 @@ impl<'a> DatabaseSchemaDiffer<'a> {
             drop_tables: self.drop_tables(),
             create_tables: self.create_tables(),
             alter_tables: self.alter_tables(),
+            create_indexes: self.create_indexes(),
+            drop_indexes: self.drop_indexes(),
         }
     }
 
@@ -136,40 +146,11 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         result
     }
 
-    //    pub fn column_descriptions(columns: &Vec<Column>) -> Vec<ColumnDescription> {
-    //        columns.iter().map(Self::column_description).collect()
-    //    }
+    fn create_indexes(&self) -> Vec<CreateIndex> {
+        Vec::new()
+    }
 
-    //    fn column_description(column: &Column) -> ColumnDescription {
-    //        let fk = column.foreign_key.as_ref().map(|fk| ForeignKey {
-    //            table: fk.table.clone(),
-    //            column: fk.column.clone(),
-    //            on_delete: Self::convert_on_delete(fk.on_delete),
-    //        });
-    //        ColumnDescription {
-    //            name: column.name.clone(),
-    //            tpe: Self::convert_column_type(column.tpe),
-    //            required: column.is_required,
-    //            foreign_key: fk,
-    //            default: column.default.clone(),
-    //        }
-    //    }
-
-    //    fn convert_on_delete(on_delete: database_inspector::OnDelete) -> OnDelete {
-    //        match on_delete {
-    //            database_inspector::OnDelete::NoAction => OnDelete::NoAction,
-    //            database_inspector::OnDelete::SetNull => OnDelete::SetNull,
-    //            database_inspector::OnDelete::Cascade => OnDelete::Cascade,
-    //        }
-    //    }
-
-    //    pub fn convert_column_type(inspector_type: database_inspector::ColumnType) -> ColumnType {
-    //        match inspector_type {
-    //            database_inspector::ColumnType::Boolean => ColumnType::Boolean,
-    //            database_inspector::ColumnType::Int => ColumnType::Int,
-    //            database_inspector::ColumnType::Float => ColumnType::Float,
-    //            database_inspector::ColumnType::String => ColumnType::String,
-    //            database_inspector::ColumnType::DateTime => ColumnType::DateTime,
-    //        }
-    //    }
+    fn drop_indexes(&self) -> Vec<DropIndex> {
+        Vec::new()
+    }
 }
