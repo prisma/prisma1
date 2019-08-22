@@ -8,7 +8,7 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-const SCHEMA: &str = "DatabaseInspectorTest";
+const SCHEMA: &str = "DatabaseInspector-Test";
 
 static IS_SETUP: AtomicBool = AtomicBool::new(false);
 
@@ -1561,8 +1561,8 @@ fn mysql_foreign_key_on_delete_must_be_handled() {
     // NB: We don't test the SET DEFAULT variety since it isn't supported on InnoDB and will
     // just cause an error
     let sql = format!(
-        "CREATE TABLE {0}.City (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY);
-         CREATE TABLE {0}.User (
+        "CREATE TABLE `{0}`.City (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY);
+         CREATE TABLE `{0}`.User (
             id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
             city INTEGER, FOREIGN KEY(city) REFERENCES City (id) ON DELETE NO ACTION,
             city_cascade INTEGER, FOREIGN KEY(city_cascade) REFERENCES City (id) ON DELETE CASCADE,
