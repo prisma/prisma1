@@ -274,7 +274,7 @@ fn get_column_type(data_type: &str) -> ColumnType {
     let family = match data_type {
         "int" => ColumnTypeFamily::Int,
         "smallint" => ColumnTypeFamily::Int,
-        "tinyint" => ColumnTypeFamily::Int,
+        "tinyint" => ColumnTypeFamily::Boolean,
         "mediumint" => ColumnTypeFamily::Int,
         "bigint" => ColumnTypeFamily::Int,
         "decimal" => ColumnTypeFamily::Float,
