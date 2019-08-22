@@ -2,7 +2,7 @@ use barrel::{types, Migration};
 use database_introspection::*;
 use log::{debug, LevelFilter};
 use pretty_assertions::assert_eq;
-use prisma_query::connector::{Queryable};
+use prisma_query::connector::Queryable;
 use std::collections::HashSet;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
