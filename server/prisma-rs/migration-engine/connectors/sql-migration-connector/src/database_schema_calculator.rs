@@ -210,7 +210,13 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                                 auto_increment: false,
                             },
                         ],
-                        indices: Vec::new(),
+                        indices: vec![
+                            Index {
+                               name: format!("{}_AB_unique", relation.table_name()),
+                               columns: vec![relation.model_a_column(), relation.model_b_column()],
+                               unique: true,
+                            }
+                        ],
                         primary_key: None,
                         foreign_keys,
                     };
