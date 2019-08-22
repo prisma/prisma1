@@ -1,4 +1,4 @@
-use crate::{data_model_loader::load_data_model_components, dmmf, PrismaResult};
+use crate::{data_model_loader::{load_data_model_components, load_configuration}, dmmf, PrismaResult};
 use clap::ArgMatches;
 use core::{
     schema::{QuerySchemaBuilder, QuerySchemaRef, SupportedCapabilities},
@@ -88,7 +88,7 @@ impl CliCommand {
     }
 
     fn get_config(input: GetConfigInput) -> PrismaResult<()> {
-        let config = datamodel::load_configuration(&input.datamodel)?;
+        let config = load_configuration(&input.datamodel)?;
         let json = datamodel::config_to_mcf_json_value(&config);
         let serialized = serde_json::to_string(&json)?;
 
