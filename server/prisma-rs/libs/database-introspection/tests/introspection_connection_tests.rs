@@ -1396,6 +1396,36 @@ fn multi_column_foreign_keys_must_work() {
 }
 
 #[test]
+fn names_with_hyphens_must_work() {
+    setup();
+
+    test_each_backend(
+        |_, migration| {
+            migration.create_table("User-table", |t| {
+                t.add_column("column-1", types::integer().nullable(false));
+            });
+        },
+        |db_type, inspector| {
+            let result = inspector.introspect(SCHEMA).expect("introspecting");
+            let user_table = result.get_table("User-table").expect("getting User table");
+            let expected_columns = vec![
+                Column {
+                    name: "column-1".to_string(),
+                    tpe: ColumnType {
+                        raw: int_type(db_type),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: false,
+                },
+            ];
+            assert_eq!(user_table.columns, expected_columns);
+        },
+    );
+}
+
+#[test]
 fn postgres_foreign_key_on_delete_must_be_handled() {
     setup();
 
@@ -2016,9 +2046,9 @@ fn get_mysql_connector(sql: &str) -> mysql::IntrospectionConnector {
         .pass(Some(password));
     let mut conn = prisma_query::connector::Mysql::new(opts_builder).expect("connect to MySQL");
 
-    conn.execute_raw(&format!("DROP SCHEMA IF EXISTS {}", SCHEMA), &[])
+    conn.execute_raw(&format!("DROP SCHEMA IF EXISTS `{}`", SCHEMA), &[])
         .expect("dropping schema");
-    conn.execute_raw(&format!("CREATE SCHEMA {}", SCHEMA), &[])
+    conn.execute_raw(&format!("CREATE SCHEMA `{}`", SCHEMA), &[])
         .expect("creating schema");
 
     debug!("Executing MySQL migrations: {}", sql);
