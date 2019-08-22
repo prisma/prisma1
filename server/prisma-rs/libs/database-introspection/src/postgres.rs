@@ -238,7 +238,7 @@ impl IntrospectionConnector {
             };
         }
 
-        let fks: Vec<ForeignKey> = intermediate_fks
+        let mut fks: Vec<ForeignKey> = intermediate_fks
             .values()
             .map(|intermediate_fk| intermediate_fk.to_owned())
             .collect();
@@ -248,6 +248,8 @@ impl IntrospectionConnector {
                 fk.columns, fk.referenced_table, fk.referenced_columns
             );
         }
+
+        fks.sort_unstable_by_key(|fk| fk.columns.clone());
 
         fks
     }

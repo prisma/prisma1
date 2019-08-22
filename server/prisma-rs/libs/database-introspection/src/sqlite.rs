@@ -176,7 +176,7 @@ impl IntrospectionConnector {
             };
         }
 
-        intermediate_fks
+        let mut fks: Vec<ForeignKey> = intermediate_fks
             .values()
             .into_iter()
             .map(|intermediate_fk| {
@@ -205,7 +205,11 @@ impl IntrospectionConnector {
                 debug!("Detected foreign key {:?}", fk);
                 fk
             })
-            .collect()
+            .collect();
+
+        fks.sort_unstable_by_key(|fk| fk.columns.clone());
+
+        fks
     }
 
     fn get_indices(&self, schema: &str, table: &str) -> Vec<Index> {
