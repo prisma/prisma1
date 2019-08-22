@@ -80,38 +80,6 @@ pub struct AlterColumn {
     pub column: Column,
 }
 
-//#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-//pub struct ColumnDescription {
-//    pub name: String,
-//    pub tpe: ColumnType,
-//    pub required: bool,
-//    pub foreign_key: Option<ForeignKey>,
-//    pub default: Option<Value>,
-//}
-
-//#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-//pub struct ForeignKey {
-//    pub table: String,
-//    pub column: String,
-//    pub on_delete: OnDelete,
-//}
-
-//#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-//pub enum OnDelete {
-//    NoAction,
-//    SetNull,
-//    Cascade,
-//}
-
-//#[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize, Deserialize)]
-//pub enum ColumnType {
-//    Int,
-//    Float,
-//    Boolean,
-//    String,
-//    DateTime,
-//}
-
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CreateIndex {
     pub table: String,
