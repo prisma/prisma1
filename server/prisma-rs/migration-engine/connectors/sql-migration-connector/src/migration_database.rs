@@ -3,8 +3,8 @@ use prisma_query::{
     connector::{MysqlParams, PostgresParams, Queryable, ResultSet, SqliteParams},
     pool::{mysql::*, postgres::*, sqlite::*, PrismaConnectionManager},
 };
-use std::{convert::TryFrom, ops::DerefMut, time::Duration};
 use std::sync::Arc;
+use std::{convert::TryFrom, ops::DerefMut, time::Duration};
 
 pub trait MigrationDatabase: Send + Sync + 'static {
     fn execute(&self, db: &str, q: Query) -> prisma_query::Result<Option<Id>>;
@@ -14,7 +14,7 @@ pub trait MigrationDatabase: Send + Sync + 'static {
 }
 
 pub struct MigrationDatabaseWrapper {
-    pub database: Arc<dyn MigrationDatabase + Send + Sync + 'static>
+    pub database: Arc<dyn MigrationDatabase + Send + Sync + 'static>,
 }
 
 impl database_introspection::IntrospectionConnection for MigrationDatabaseWrapper {

@@ -113,10 +113,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
 
         match self.sql_family {
             SqlFamily::Sqlite | SqlFamily::Mysql => {
-                let id = self
-                    .connection
-                    .execute(&self.schema_name, insert.into())
-                    .unwrap();
+                let id = self.connection.execute(&self.schema_name, insert.into()).unwrap();
                 match id {
                     Some(prisma_query::ast::Id::Int(id)) => cloned.revision = id,
                     _ => panic!("This insert must return an int"),

@@ -52,7 +52,6 @@ impl<'a> DatabaseSchemaDiffer<'a> {
                     table: next_table.clone(),
                 };
                 result.push(create);
-
             }
         }
         result
@@ -137,40 +136,40 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         result
     }
 
-//    pub fn column_descriptions(columns: &Vec<Column>) -> Vec<ColumnDescription> {
-//        columns.iter().map(Self::column_description).collect()
-//    }
+    //    pub fn column_descriptions(columns: &Vec<Column>) -> Vec<ColumnDescription> {
+    //        columns.iter().map(Self::column_description).collect()
+    //    }
 
-//    fn column_description(column: &Column) -> ColumnDescription {
-//        let fk = column.foreign_key.as_ref().map(|fk| ForeignKey {
-//            table: fk.table.clone(),
-//            column: fk.column.clone(),
-//            on_delete: Self::convert_on_delete(fk.on_delete),
-//        });
-//        ColumnDescription {
-//            name: column.name.clone(),
-//            tpe: Self::convert_column_type(column.tpe),
-//            required: column.is_required,
-//            foreign_key: fk,
-//            default: column.default.clone(),
-//        }
-//    }
+    //    fn column_description(column: &Column) -> ColumnDescription {
+    //        let fk = column.foreign_key.as_ref().map(|fk| ForeignKey {
+    //            table: fk.table.clone(),
+    //            column: fk.column.clone(),
+    //            on_delete: Self::convert_on_delete(fk.on_delete),
+    //        });
+    //        ColumnDescription {
+    //            name: column.name.clone(),
+    //            tpe: Self::convert_column_type(column.tpe),
+    //            required: column.is_required,
+    //            foreign_key: fk,
+    //            default: column.default.clone(),
+    //        }
+    //    }
 
-//    fn convert_on_delete(on_delete: database_inspector::OnDelete) -> OnDelete {
-//        match on_delete {
-//            database_inspector::OnDelete::NoAction => OnDelete::NoAction,
-//            database_inspector::OnDelete::SetNull => OnDelete::SetNull,
-//            database_inspector::OnDelete::Cascade => OnDelete::Cascade,
-//        }
-//    }
+    //    fn convert_on_delete(on_delete: database_inspector::OnDelete) -> OnDelete {
+    //        match on_delete {
+    //            database_inspector::OnDelete::NoAction => OnDelete::NoAction,
+    //            database_inspector::OnDelete::SetNull => OnDelete::SetNull,
+    //            database_inspector::OnDelete::Cascade => OnDelete::Cascade,
+    //        }
+    //    }
 
-//    pub fn convert_column_type(inspector_type: database_inspector::ColumnType) -> ColumnType {
-//        match inspector_type {
-//            database_inspector::ColumnType::Boolean => ColumnType::Boolean,
-//            database_inspector::ColumnType::Int => ColumnType::Int,
-//            database_inspector::ColumnType::Float => ColumnType::Float,
-//            database_inspector::ColumnType::String => ColumnType::String,
-//            database_inspector::ColumnType::DateTime => ColumnType::DateTime,
-//        }
-//    }
+    //    pub fn convert_column_type(inspector_type: database_inspector::ColumnType) -> ColumnType {
+    //        match inspector_type {
+    //            database_inspector::ColumnType::Boolean => ColumnType::Boolean,
+    //            database_inspector::ColumnType::Int => ColumnType::Int,
+    //            database_inspector::ColumnType::Float => ColumnType::Float,
+    //            database_inspector::ColumnType::String => ColumnType::String,
+    //            database_inspector::ColumnType::DateTime => ColumnType::DateTime,
+    //        }
+    //    }
 }

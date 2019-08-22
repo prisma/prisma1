@@ -1,8 +1,8 @@
 use crate::*;
+use database_introspection::*;
 use datamodel::Value;
 use migration_connector::*;
 use std::sync::Arc;
-use database_introspection::*;
 
 pub struct SqlDatabaseStepApplier {
     pub sql_family: SqlFamily,
@@ -76,9 +76,7 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
     let schema_name = schema_name.to_string();
 
     match step {
-        SqlMigrationStep::CreateTable(CreateTable {
-            table,
-        }) => {
+        SqlMigrationStep::CreateTable(CreateTable { table }) => {
             let cloned_columns = table.columns.clone();
             let primary_columns = table.primary_key_columns();
             let mut lines = Vec::new();
@@ -239,8 +237,8 @@ fn render_column(
                     } else {
                         format!("DEFAULT '{}'", value)
                     }
-                },
-                _ => format!("DEFAULT {}", value)
+                }
+                _ => format!("DEFAULT {}", value),
             };
             // we use the default value right now only to smoothen migrations. So we only use it when absolutely needed.
             if column.is_required() {

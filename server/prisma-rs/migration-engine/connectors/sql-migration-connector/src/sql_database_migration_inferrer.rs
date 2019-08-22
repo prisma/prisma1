@@ -1,12 +1,11 @@
-
 use crate::database_schema_calculator::{DatabaseSchemaCalculator, FieldExtensions, ModelExtensions};
 use crate::database_schema_differ::{DatabaseSchemaDiff, DatabaseSchemaDiffer};
 use crate::*;
+use database_introspection::*;
 use datamodel::*;
 use migration_connector::steps::*;
 use migration_connector::*;
 use std::sync::Arc;
-use database_introspection::*;
 
 pub struct SqlDatabaseMigrationInferrer {
     pub sql_family: SqlFamily,
@@ -158,10 +157,7 @@ fn infer_based_on_db_schema_diff(
 ) -> ConnectorResult<SqlMigration> {
     let steps = infer_database_migration_steps_and_fix(&current, &next, &schema_name, sql_family)?;
     let rollback = infer_database_migration_steps_and_fix(&next, &current, &schema_name, sql_family)?;
-    Ok(SqlMigration {
-        steps,
-        rollback,
-    })
+    Ok(SqlMigration { steps, rollback })
 }
 
 fn infer_database_migration_steps_and_fix(
@@ -197,7 +193,12 @@ fn fix_id_column_type_change(
                             let current_column = current_table.column_bang(&alter_column.name);
                             let current_column_type = &current_column.tpe;
                             let has_type_changed = current_column_type.family != alter_column.column.tpe.family; // TODO: take into account raw type
-                            let is_part_of_pk = current_table.primary_key.clone().map(|pk|pk.columns).unwrap_or(vec![]).contains(&alter_column.name);
+                            let is_part_of_pk = current_table
+                                .primary_key
+                                .clone()
+                                .map(|pk| pk.columns)
+                                .unwrap_or(vec![])
+                                .contains(&alter_column.name);
                             is_part_of_pk && has_type_changed
                         }
                         _ => false,
@@ -236,7 +237,8 @@ fn fix_id_column_type_change(
 // We therefore split the creation of foreign key columns into separate steps when the referenced tables are not existing yet.
 // FIXME: This does not work with SQLite. A required column might get delayed. SQLite then fails with: "Cannot add a NOT NULL column with default value NULL"
 fn delay_foreign_key_creation(mut diff: DatabaseSchemaDiff) -> Vec<SqlMigrationStep> {
-    let names_of_tables_that_get_created: Vec<String> = diff.create_tables.iter().map(|t| t.table.name.clone()).collect();
+    let names_of_tables_that_get_created: Vec<String> =
+        diff.create_tables.iter().map(|t| t.table.name.clone()).collect();
     let mut extra_alter_tables = Vec::new();
 
     // This mutates the CreateTables in place to remove the foreign key creation. Instead the foreign key creation is moved into separate AlterTable statements.
@@ -244,7 +246,8 @@ fn delay_foreign_key_creation(mut diff: DatabaseSchemaDiff) -> Vec<SqlMigrationS
         let mut column_that_need_to_be_done_later_for_this_table = Vec::new();
         for column in &create_table.table.columns {
             if let Some(ref foreign_key) = create_table.table.foreign_key_for_column(&column.name) {
-                let references_non_existent_table = names_of_tables_that_get_created.contains(&foreign_key.referenced_table);
+                let references_non_existent_table =
+                    names_of_tables_that_get_created.contains(&foreign_key.referenced_table);
                 let is_part_of_primary_key = create_table.table.is_part_of_primary_key(&column.name);
                 let is_relation_table = create_table.table.name.starts_with("_"); // todo: this is a very weak check. find a better one
 
@@ -322,9 +325,7 @@ fn fix(_alter_table: &AlterTable, current: &Table, next: &Table, schema_name: &s
             raw: "PRAGMA foreign_keys=OFF;".to_string(),
         },
         // todo: start transaction now
-        SqlMigrationStep::CreateTable(CreateTable {
-            table: temporary_table,
-        }),
+        SqlMigrationStep::CreateTable(CreateTable { table: temporary_table }),
         // copy table contents; Here we have to handle escpaing ourselves.
         {
             let current_columns: Vec<String> = current.columns.iter().map(|c| c.name.clone()).collect();

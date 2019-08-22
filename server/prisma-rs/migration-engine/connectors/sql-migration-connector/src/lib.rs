@@ -138,11 +138,19 @@ impl SqlMigrationConnector {
         schema_name: String,
         file_path: Option<String>,
     ) -> Self {
-        let introspection_connection = Arc::new(MigrationDatabaseWrapper { database: Arc::clone(&conn) });
+        let introspection_connection = Arc::new(MigrationDatabaseWrapper {
+            database: Arc::clone(&conn),
+        });
         let inspector: Arc<dyn IntrospectionConnector + Send + Sync + 'static> = match sql_family {
-            SqlFamily::Sqlite => Arc::new(database_introspection::sqlite::IntrospectionConnector::new(introspection_connection)),
-            SqlFamily::Postgres => Arc::new(database_introspection::postgres::IntrospectionConnector::new(introspection_connection)),
-            SqlFamily::Mysql => Arc::new(database_introspection::mysql::IntrospectionConnector::new(introspection_connection)),
+            SqlFamily::Sqlite => Arc::new(database_introspection::sqlite::IntrospectionConnector::new(
+                introspection_connection,
+            )),
+            SqlFamily::Postgres => Arc::new(database_introspection::postgres::IntrospectionConnector::new(
+                introspection_connection,
+            )),
+            SqlFamily::Mysql => Arc::new(database_introspection::mysql::IntrospectionConnector::new(
+                introspection_connection,
+            )),
         };
 
         let migration_persistence = Arc::new(SqlMigrationPersistence {

@@ -1,9 +1,9 @@
 use crate::SqlResult;
 use chrono::*;
+use database_introspection::*;
 use datamodel::common::*;
 use datamodel::*;
 use prisma_models::{DatamodelConverter, TempManifestationHolder, TempRelationHolder};
-use database_introspection::*;
 use prisma_query::error::Error::ColumnNotFound;
 
 pub struct DatabaseSchemaCalculator<'a> {
@@ -35,7 +35,11 @@ impl<'a> DatabaseSchemaCalculator<'a> {
         let enums = Vec::new();
         let sequences = Vec::new();
 
-        Ok(DatabaseSchema { tables, enums, sequences })
+        Ok(DatabaseSchema {
+            tables,
+            enums,
+            sequences,
+        })
     }
 
     fn calculate_model_tables(&self) -> SqlResult<Vec<ModelTable>> {
@@ -59,7 +63,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                     .collect();
 
                 let primary_key = PrimaryKey {
-                    columns: vec![model.id_field()?.db_name()]
+                    columns: vec![model.id_field()?.db_name()],
                 };
                 let table = Table {
                     name: model.db_name(),
@@ -87,16 +91,14 @@ impl<'a> DatabaseSchemaCalculator<'a> {
             for field in list_fields {
                 let id_field = model.id_field()?;
                 let primary_key = PrimaryKey {
-                    columns: vec!["nodeId".to_string(), "position".to_string()]
+                    columns: vec!["nodeId".to_string(), "position".to_string()],
                 };
-                let foreign_keys = vec![
-                    ForeignKey {
-                        columns: vec!["nodeId".to_string()],
-                        referenced_table: model.db_name(),
-                        referenced_columns: vec![model.id_field()?.db_name()],
-                        on_delete_action: ForeignKeyAction::Cascade,
-                    }
-                ];
+                let foreign_keys = vec![ForeignKey {
+                    columns: vec!["nodeId".to_string()],
+                    referenced_table: model.db_name(),
+                    referenced_columns: vec![model.id_field()?.db_name()],
+                    on_delete_action: ForeignKeyAction::Cascade,
+                }];
                 let table = Table {
                     name: format!("{}_{}", model.db_name(), field.db_name()),
                     columns: vec![
@@ -150,7 +152,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         };
                         let field = model.fields().find(|f| &f.db_name() == column).unwrap();
                         let foreign_key = ForeignKey {
-                            columns: vec![column.to_string(),],
+                            columns: vec![column.to_string()],
                             referenced_table: related_model.db_name(),
                             referenced_columns: vec![related_model.id_field()?.db_name()],
                             on_delete_action: ForeignKeyAction::SetNull,
@@ -210,13 +212,11 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                                 auto_increment: false,
                             },
                         ],
-                        indices: vec![
-                            Index {
-                               name: format!("{}_AB_unique", relation.table_name()),
-                               columns: vec![relation.model_a_column(), relation.model_b_column()],
-                               unique: true,
-                            }
-                        ],
+                        indices: vec![Index {
+                            name: format!("{}_AB_unique", relation.table_name()),
+                            columns: vec![relation.model_a_column(), relation.model_b_column()],
+                            unique: true,
+                        }],
                         primary_key: None,
                         foreign_keys,
                     };
@@ -290,21 +290,27 @@ impl FieldExtensions for Field {
     }
 
     fn migration_value(&self, datamodel: &Datamodel) -> Value {
-        self.default_value.clone().unwrap_or_else(|| default_migration_value(&self.field_type, datamodel))
+        self.default_value
+            .clone()
+            .unwrap_or_else(|| default_migration_value(&self.field_type, datamodel))
     }
 
     fn migration_value_new(&self, datamodel: &Datamodel) -> String {
         let value = match &self.default_value {
-            Some(x) => {
-                match x {
-                    PrismaValue::Expression(_,_,_) => default_migration_value(&self.field_type, datamodel),
-                    x => x.clone(),
-                }
+            Some(x) => match x {
+                PrismaValue::Expression(_, _, _) => default_migration_value(&self.field_type, datamodel),
+                x => x.clone(),
             },
             None => default_migration_value(&self.field_type, datamodel),
         };
         match value {
-            Value::Boolean(x) => if x { "true".to_string() } else { "false".to_string() },
+            Value::Boolean(x) => {
+                if x {
+                    "true".to_string()
+                } else {
+                    "false".to_string()
+                }
+            }
             Value::Int(x) => format!("{}", x),
             Value::Float(x) => format!("{}", x),
             Value::Decimal(x) => format!("{}", x),
@@ -316,7 +322,9 @@ impl FieldExtensions for Field {
                 format!("{}", raw)
             }
             Value::ConstantLiteral(x) => format!("{}", x), // this represents enum values
-            Value::Expression(_,_,_) => unreachable!("expressions must have been filtered out in the preceding pattern match"),
+            Value::Expression(_, _, _) => {
+                unreachable!("expressions must have been filtered out in the preceding pattern match")
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
+use database_introspection::*;
 use datamodel::Value;
 use migration_connector::DatabaseMigrationMarker;
 use serde::{Deserialize, Serialize};
-use database_introspection::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SqlMigration {
