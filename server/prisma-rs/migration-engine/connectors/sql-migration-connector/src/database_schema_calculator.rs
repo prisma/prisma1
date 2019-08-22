@@ -50,7 +50,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                                 name: f.db_name(),
                                 tpe: column_type(f),
                                 arity: column_arity(&f),
-                                default: Some(f.migration_value_new(&self.data_model)), //TODO: bring back defaults Some(f.migration_value(&self.data_model)),
+                                default: Some(f.migration_value_new(&self.data_model)),
                                 auto_increment: false,
                             })
                         }
@@ -302,14 +302,14 @@ impl FieldExtensions for Field {
             Value::Int(x) => format!("{}", x),
             Value::Float(x) => format!("{}", x),
             Value::Decimal(x) => format!("{}", x),
-            Value::String(x) => format!("'{}'", x),
+            Value::String(x) => format!("{}", x),
 
             Value::DateTime(x) => {
                 let mut raw = format!("{}", x); // this will produce a String 1970-01-01 00:00:00 UTC
                 raw.truncate(raw.len() - 4); // strip the UTC suffix
-                format!("'{}'", raw) // add quotes
+                format!("{}", raw)
             }
-            Value::ConstantLiteral(x) => format!("'{}'", x), // this represents enum values
+            Value::ConstantLiteral(x) => format!("{}", x), // this represents enum values
             Value::Expression(_,_,_) => unreachable!("expressions must have been filtered out in the preceding pattern match"),
         }
     }
