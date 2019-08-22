@@ -139,6 +139,7 @@ impl IntrospectionConnector {
             pub columns: HashMap<i64, String>,
             pub referenced_table: String,
             pub referenced_columns: HashMap<i64, String>,
+            pub on_delete_action: ForeignKeyAction,
         }
 
         let sql = format!(r#"Pragma "{}".foreign_key_list("{}");"#, schema, table);
@@ -166,10 +167,20 @@ impl IntrospectionConnector {
                     columns.insert(seq, column);
                     let mut referenced_columns: HashMap<i64, String> = HashMap::new();
                     referenced_columns.insert(seq, referenced_column);
+                    let on_delete_action = match row.get("on_delete").and_then(
+                        |x| x.to_string()).expect("on_delete").to_lowercase().as_str() {
+                        "no action" => ForeignKeyAction::NoAction,
+                        "restrict" => ForeignKeyAction::Restrict,
+                        "set null" => ForeignKeyAction::SetNull,
+                        "set default" => ForeignKeyAction::SetDefault,
+                        "cascade" => ForeignKeyAction::Cascade,
+                        s @ _ => panic!(format!("Unrecognized on delete action '{}'", s)),
+                    };
                     let fk = IntermediateForeignKey {
                         columns,
                         referenced_table,
                         referenced_columns,
+                        on_delete_action,
                     };
                     intermediate_fks.insert(id, fk);
                 }
@@ -200,7 +211,7 @@ impl IntrospectionConnector {
                     columns,
                     referenced_table: intermediate_fk.referenced_table.to_owned(),
                     referenced_columns,
-                    on_delete_action: ForeignKeyAction::NoAction,
+                    on_delete_action: intermediate_fk.on_delete_action.to_owned(),
                 };
                 debug!("Detected foreign key {:?}", fk);
                 fk
