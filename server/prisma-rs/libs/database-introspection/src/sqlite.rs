@@ -38,7 +38,7 @@ impl IntrospectionConnector {
     }
 
     fn get_table_names(&self, schema: &str) -> Vec<String> {
-        let sql = format!("SELECT name FROM {}.sqlite_master WHERE type='table'", schema);
+        let sql = format!("SELECT name FROM \"{}\".sqlite_master WHERE type='table'", schema);
         debug!("Introspecting table names with query: '{}'", sql);
         let result_set = self.conn.query_raw(&sql, schema).expect("get table names");
         let names = result_set

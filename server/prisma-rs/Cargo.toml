@@ -16,4 +16,4 @@ members = [
 ]
 
 [patch.crates-io]
-barrel = { git = "https://github.com/aknuds1/barrel.git", branch = "bugfix/fix-index-creation" }
+barrel = { git = "https://github.com/aknuds1/barrel.git", branch = "master" }
