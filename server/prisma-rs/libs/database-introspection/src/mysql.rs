@@ -188,14 +188,17 @@ impl IntrospectionConnector {
             let on_delete_action = match row
                 .get("delete_rule")
                 .and_then(|x| x.to_string())
-                .expect("get delete_rule").to_lowercase().as_str() {
-                    "cascade" => ForeignKeyAction::Cascade,
-                    "set null" => ForeignKeyAction::SetNull,
-                    "set default" => ForeignKeyAction::SetDefault,
-                    "restrict" => ForeignKeyAction::Restrict,
-                    "no action" => ForeignKeyAction::NoAction,
-                    s @ _ => panic!(format!("Unrecognized on delete action '{}'", s)),
-                };
+                .expect("get delete_rule")
+                .to_lowercase()
+                .as_str()
+            {
+                "cascade" => ForeignKeyAction::Cascade,
+                "set null" => ForeignKeyAction::SetNull,
+                "set default" => ForeignKeyAction::SetDefault,
+                "restrict" => ForeignKeyAction::Restrict,
+                "no action" => ForeignKeyAction::NoAction,
+                s @ _ => panic!(format!("Unrecognized on delete action '{}'", s)),
+            };
             match intermediate_fks.get_mut(&constraint_name) {
                 Some(fk) => {
                     let pos = ord_pos as usize - 1;

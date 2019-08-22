@@ -167,8 +167,13 @@ impl IntrospectionConnector {
                     columns.insert(seq, column);
                     let mut referenced_columns: HashMap<i64, String> = HashMap::new();
                     referenced_columns.insert(seq, referenced_column);
-                    let on_delete_action = match row.get("on_delete").and_then(
-                        |x| x.to_string()).expect("on_delete").to_lowercase().as_str() {
+                    let on_delete_action = match row
+                        .get("on_delete")
+                        .and_then(|x| x.to_string())
+                        .expect("on_delete")
+                        .to_lowercase()
+                        .as_str()
+                    {
                         "no action" => ForeignKeyAction::NoAction,
                         "restrict" => ForeignKeyAction::Restrict,
                         "set null" => ForeignKeyAction::SetNull,
