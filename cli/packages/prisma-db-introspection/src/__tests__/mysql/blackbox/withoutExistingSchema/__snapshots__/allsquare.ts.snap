@@ -1,0 +1,3831 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector allsquare 1`] = `
+"type AccessType @pgTable(name: \\"access_types\\") {
+  id: Int! @unique
+  name: String
+}
+
+type Address @pgTable(name: \\"addresses\\") {
+  id: Int! @unique
+  city: String
+  countryId: Int @pgColumn(name: \\"country_id\\")
+  googleId: String @pgColumn(name: \\"google_id\\")
+  lat: Float
+  lng: Float
+}
+
+type AhoyEvent @pgTable(name: \\"ahoy_events\\") {
+  # Type binary(16) is not supported
+  # id: binary(16)! @unique
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  name: String
+  properties: String
+  time: DateTime
+  type: String
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+  # Type binary(16) is not supported
+  # visitId: binary(16) @pgColumn(name: \\"visit_id\\")
+}
+
+type Album @pgTable(name: \\"albums\\") {
+  id: Int! @unique
+  albumableId: Int @pgColumn(name: \\"albumable_id\\")
+  albumableType: String @pgColumn(name: \\"albumable_type\\")
+  attachmentId: Int @pgColumn(name: \\"attachment_id\\")
+  content: String
+  coverPictureId: Int @pgColumn(name: \\"cover_picture_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  mediaId: Int @pgColumn(name: \\"media_id\\")
+  priority: Int
+  title: String
+  type: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type AmbassadorContest @pgTable(name: \\"ambassador_contests\\") {
+  id: Int! @unique
+  contestType: String @pgColumn(name: \\"contest_type\\")
+  counter: Int
+  dateTitle: String @pgColumn(name: \\"date_title\\")
+  description: String
+  finished: Boolean @default(value: 0)
+  open: Boolean @default(value: 0)
+  pictureId: Int @pgColumn(name: \\"picture_id\\")
+  prizeId: Int @pgColumn(name: \\"prize_id\\")
+  slug: String
+  smallDescription: String @pgColumn(name: \\"small_description\\")
+  startAt: DateTime @pgColumn(name: \\"start_at\\")
+  title: String
+  winnerId: Int @pgColumn(name: \\"winner_id\\")
+}
+
+type AmbassadorUserContest @pgTable(name: \\"ambassador_user_contests\\") {
+  id: Int! @unique
+  ambassadorContestId: Int @pgColumn(name: \\"ambassador_contest_id\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+  validated: Boolean @default(value: 0)
+  win: Boolean @default(value: 0)
+}
+
+type AmenitiesClub @pgTable(name: \\"amenities_clubs\\") @relationTable {
+  id: Int! @unique
+  amenity: Amenity @pgColumn(name: \\"amenity_id\\")
+  club: Club @pgColumn(name: \\"club_id\\")
+}
+
+type Amenity @pgTable(name: \\"amenities\\") {
+  id: Int! @unique
+  amenitiesClubs: [AmenitiesClub]
+  amenityType: String @pgColumn(name: \\"amenity_type\\")
+  friendlyId: String @pgColumn(name: \\"friendly_id\\")
+  name: String
+  picture: String
+  priority: Int
+  priorityType: Int @pgColumn(name: \\"priority_type\\")
+}
+
+type Architect @pgTable(name: \\"architects\\") {
+  id: Int! @unique
+  biography: String
+  comittee: String
+  comitteeWebsite: String @pgColumn(name: \\"comittee_website\\")
+  company: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  email: String
+  firstname: String
+  lastname: String
+  slug: String
+  topRanking: Int @pgColumn(name: \\"top_ranking\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  website: String
+}
+
+type Area @pgTable(name: \\"areas\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  description: String
+  name: String
+  nbTop100: Int @pgColumn(name: \\"nb_top100\\")
+  rank: Int
+  slug: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Article @pgTable(name: \\"articles\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  content: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime @pgColumn(name: \\"deleted_at\\")
+  mobilePictureContentType: String @pgColumn(name: \\"mobile_picture_content_type\\")
+  mobilePictureFileName: String @pgColumn(name: \\"mobile_picture_file_name\\")
+  mobilePictureFileSize: Int @pgColumn(name: \\"mobile_picture_file_size\\")
+  mobilePictureUpdatedAt: DateTime @pgColumn(name: \\"mobile_picture_updated_at\\")
+  pictureContentType: String @pgColumn(name: \\"picture_content_type\\")
+  pictureFileName: String @pgColumn(name: \\"picture_file_name\\")
+  pictureFileSize: Int @pgColumn(name: \\"picture_file_size\\")
+  pictureUpdatedAt: DateTime @pgColumn(name: \\"picture_updated_at\\")
+  private: Boolean @default(value: 0)
+  title: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  url: String
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Attachment @pgTable(name: \\"attachments\\") {
+  id: Int! @unique
+  attachableId: Int @pgColumn(name: \\"attachable_id\\")
+  attachableType: String @pgColumn(name: \\"attachable_type\\")
+  attachedId: Int @pgColumn(name: \\"attached_id\\")
+  attachedType: String @pgColumn(name: \\"attached_type\\")
+  fileContentType: String @pgColumn(name: \\"file_content_type\\")
+  fileFileName: String @pgColumn(name: \\"file_file_name\\")
+  fileFileSize: Int @pgColumn(name: \\"file_file_size\\")
+  fileUpdatedAt: DateTime @pgColumn(name: \\"file_updated_at\\")
+  mime: String
+  pos: Int
+  title: String
+}
+
+type Attending @pgTable(name: \\"attendings\\") {
+  id: Int! @unique
+  attending: Int @default(value: 1)
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  eventId: Int @pgColumn(name: \\"event_id\\")
+  invitorId: Int @pgColumn(name: \\"invitor_id\\")
+  invitorType: String @pgColumn(name: \\"invitor_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Blog @pgTable(name: \\"blogs\\") {
+  id: Int! @unique
+  articleUrl: String @pgColumn(name: \\"article_url\\")
+  content: String
+  contentPreview: String @pgColumn(name: \\"content_preview\\")
+  coverContentType: String @pgColumn(name: \\"cover_content_type\\")
+  coverFileName: String @pgColumn(name: \\"cover_file_name\\")
+  coverFileSize: Int @pgColumn(name: \\"cover_file_size\\")
+  coverUpdatedAt: DateTime @pgColumn(name: \\"cover_updated_at\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  slug: String
+  title: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type BookingRequest @pgTable(name: \\"booking_requests\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type BraintreeCustomer @pgTable(name: \\"braintree_customers\\") {
+  id: Int! @unique
+  address: String
+  braintreeHandle: String @pgColumn(name: \\"braintree_handle\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+  vatNumber: String @pgColumn(name: \\"vat_number\\")
+}
+
+type BraintreeSubscription @pgTable(name: \\"braintree_subscriptions\\") {
+  id: Int! @unique
+  active: Boolean
+  amount: Float
+  braintreeCustomerId: Int @pgColumn(name: \\"braintree_customer_id\\")
+  braintreeHandle: String @pgColumn(name: \\"braintree_handle\\")
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  currency: String
+  date: DateTime
+  description: String
+  paymentMethod: String @pgColumn(name: \\"payment_method\\")
+  paymentMethodToken: String @pgColumn(name: \\"payment_method_token\\")
+}
+
+type BraintreeTransaction @pgTable(name: \\"braintree_transactions\\") {
+  id: Int! @unique
+  amount: Float
+  braintreeCustomerId: Int @pgColumn(name: \\"braintree_customer_id\\")
+  braintreeHandle: String @pgColumn(name: \\"braintree_handle\\")
+  braintreeSubscriptionId: Int @pgColumn(name: \\"braintree_subscription_id\\")
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  contactEmail: String @pgColumn(name: \\"contact_email\\")
+  currency: String
+  date: DateTime
+  description: String
+  paymentMethod: String @pgColumn(name: \\"payment_method\\")
+  receiptPath: String @pgColumn(name: \\"receipt_path\\")
+  success: Boolean
+}
+
+type Brand @pgTable(name: \\"brands\\") {
+  id: Int! @unique
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BrandsCompetitor.brand.
+  # brandsCompetitors: [BrandsCompetitor] @relation(name: \\"BrandBrandsCompetitorsToBrandsCompetitorBrand\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BrandsCompetitor.competitor.
+  # brandsCompetitors: [BrandsCompetitor] @relation(name: \\"BrandBrandsCompetitorsToBrandsCompetitorCompetitor\\")
+  coverPictureId: Int @pgColumn(name: \\"cover_picture_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  description: String
+  mediaId: Int @pgColumn(name: \\"media_id\\")
+  name: String
+  pageId: Int @pgColumn(name: \\"page_id\\")
+  pictureId: Int @pgColumn(name: \\"picture_id\\")
+  slug: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  year: Int
+}
+
+type BrandsCompetitor @pgTable(name: \\"brands_competitors\\") {
+  id: Int! @unique
+  brand: Brand @pgColumn(name: \\"brand_id\\") @relation(name: \\"BrandBrandsCompetitorsToBrandsCompetitorBrand\\")
+  competitor: Brand @pgColumn(name: \\"competitor_id\\") @relation(name: \\"BrandBrandsCompetitorsToBrandsCompetitorCompetitor\\")
+  productType: String @pgColumn(name: \\"product_type\\")
+}
+
+type BusinessAdmin @pgTable(name: \\"business_admins\\") {
+  id: Int! @unique
+  businessId: Int @pgColumn(name: \\"business_id\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Checkin @pgTable(name: \\"checkins\\") {
+  id: Int! @unique
+  albumId: Int @pgColumn(name: \\"album_id\\")
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  mediaProcessing: Boolean @default(value: 0) @pgColumn(name: \\"media_processing\\")
+  message: String
+  pictureUrlShortcut: String @pgColumn(name: \\"picture_url_shortcut\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type CheckinsUser @pgTable(name: \\"checkins_users\\") {
+  id: Int! @unique
+  checkinId: Int @pgColumn(name: \\"checkin_id\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type ClientAccess @pgTable(name: \\"client_accesses\\") {
+  id: Int! @unique
+  accessesCount: Int @pgColumn(name: \\"accesses_count\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  ipAddress: String @pgColumn(name: \\"ip_address\\")
+  lastAccessDate: DateTime @pgColumn(name: \\"last_access_date\\")
+  platform: Int
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+  version: String
+}
+
+type ClothesProduct @pgTable(name: \\"clothes_products\\") {
+  id: Int! @unique
+  albumId: Int @pgColumn(name: \\"album_id\\")
+  brandId: Int @pgColumn(name: \\"brand_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  description: String
+  genderRestriction: Int @pgColumn(name: \\"gender_restriction\\")
+  internalVideoId: Int @pgColumn(name: \\"internal_video_id\\")
+  itemType: Int @pgColumn(name: \\"item_type\\")
+  name: String
+  pictureId: Int @pgColumn(name: \\"picture_id\\")
+  priceId: Int @pgColumn(name: \\"price_id\\")
+  slug: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type ClothesSize @pgTable(name: \\"clothes_sizes\\") {
+  id: Int! @unique
+  clothesProductId: Int @pgColumn(name: \\"clothes_product_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  size: Int
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Club @pgTable(name: \\"clubs\\") {
+  id: Int! @unique
+  accessTypeId: Int @pgColumn(name: \\"access_type_id\\")
+  altitude: Float
+  altitudeResolution: Float @pgColumn(name: \\"altitude_resolution\\")
+  amenitiesActivated: Boolean @default(value: 0) @pgColumn(name: \\"amenities_activated\\")
+  amenitiesClubs: [AmenitiesClub]
+  areaId: Int @pgColumn(name: \\"area_id\\")
+  bookingAvailable: Boolean @pgColumn(name: \\"booking_available\\")
+  bookingLink: String @pgColumn(name: \\"booking_link\\")
+  bookingType: String @pgColumn(name: \\"booking_type\\")
+  bookingUrl: String @pgColumn(name: \\"booking_url\\")
+  city: String
+  closestAirport: String @pgColumn(name: \\"closest_airport\\")
+  closestCity: String @pgColumn(name: \\"closest_city\\")
+  clubsAdministrators: [ClubsAdministrator]
+  content: String
+  continentId: Int @pgColumn(name: \\"continent_id\\")
+  countryId: Int @pgColumn(name: \\"country_id\\")
+  coverAlbumId: Int @pgColumn(name: \\"cover_album_id\\")
+  coverPictureId: Int @default(value: 1) @pgColumn(name: \\"cover_picture_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  destinationId: Int @pgColumn(name: \\"destination_id\\")
+  editKey: String @pgColumn(name: \\"edit_key\\")
+  email: String
+  externalVideoId: Int @pgColumn(name: \\"external_video_id\\")
+  facebookToken: String @pgColumn(name: \\"facebook_token\\")
+  facebookUserId: String @pgColumn(name: \\"facebook_user_id\\")
+  greenFee: String @pgColumn(name: \\"green_fee\\")
+  handicap: String
+  hasCarts: Boolean @pgColumn(name: \\"has_carts\\")
+  hasDrivingRange: Boolean @pgColumn(name: \\"has_driving_range\\")
+  latitude: Float
+  logoContentType: String @pgColumn(name: \\"logo_content_type\\")
+  logoFileName: String @pgColumn(name: \\"logo_file_name\\")
+  logoFileSize: Int @pgColumn(name: \\"logo_file_size\\")
+  logoPictureId: Int @default(value: 3) @pgColumn(name: \\"logo_picture_id\\")
+  logoUpdatedAt: DateTime @pgColumn(name: \\"logo_updated_at\\")
+  longitude: Float
+  managerEmail: String @pgColumn(name: \\"manager_email\\")
+  managerFullname: String @pgColumn(name: \\"manager_fullname\\")
+  managerPhone: String @pgColumn(name: \\"manager_phone\\")
+  mergeCourse: Boolean @default(value: 1) @pgColumn(name: \\"merge_course\\")
+  metaVisible: Boolean @default(value: 0) @pgColumn(name: \\"meta_visible\\")
+  name: String
+  online: Boolean @default(value: 1)
+  openInformations: String @pgColumn(name: \\"open_informations\\")
+  perma: String
+  phone: String
+  pinType: String @pgColumn(name: \\"pin_type\\")
+  score: Float @default(value: 0)
+  scorecardContentType: String @pgColumn(name: \\"scorecard_content_type\\")
+  scorecardFileName: String @pgColumn(name: \\"scorecard_file_name\\")
+  scorecardFileSize: Int @pgColumn(name: \\"scorecard_file_size\\")
+  scorecardUpdatedAt: DateTime @pgColumn(name: \\"scorecard_updated_at\\")
+  simple: Boolean @default(value: 0)
+  slug: String
+  street: String
+  top100area: Int
+  top100continent: Int
+  top100country: Int
+  top100world: Int
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userClubActivities: [UserClubActivity]
+  website: String
+  zipcode: String
+}
+
+type ClubAdministrator @pgTable(name: \\"club_administrators\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type ClubAmenity @pgTable(name: \\"club_amenities\\") {
+  id: Int! @unique
+  amenityId: Int @pgColumn(name: \\"amenity_id\\")
+  clubId: Int @pgColumn(name: \\"club_id\\")
+}
+
+type ClubBooking @pgTable(name: \\"club_bookings\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  commentStatus: String @pgColumn(name: \\"comment_status\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  currentStatus: String @pgColumn(name: \\"current_status\\")
+  date: DateTime
+  golfCart: Boolean @pgColumn(name: \\"golf_cart\\")
+  nbPlayers: Int @pgColumn(name: \\"nb_players\\")
+  ownerId: Int @pgColumn(name: \\"owner_id\\")
+  ownerType: String @pgColumn(name: \\"owner_type\\")
+  rentalClubs: Boolean @pgColumn(name: \\"rental_clubs\\")
+  responsibleId: Int @pgColumn(name: \\"responsible_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type ClubCourseReview @pgTable(name: \\"club_course_reviews\\") {
+  id: Int! @unique
+  courseId: Int @pgColumn(name: \\"course_id\\")
+  courseReviewId: Int @pgColumn(name: \\"course_review_id\\")
+}
+
+type ClubRequest @pgTable(name: \\"club_requests\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  seen: Boolean @default(value: 0)
+  status: Int @default(value: 0)
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type ClubWord @pgTable(name: \\"club_words\\") {
+  id: Int! @unique
+  checked: Boolean @default(value: 0)
+  word: String
+}
+
+type ClubWordsClub @pgTable(name: \\"club_words_clubs\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  clubWordId: Int @pgColumn(name: \\"club_word_id\\")
+}
+
+type ClubsAdministrator @pgTable(name: \\"clubs_administrators\\") @relationTable {
+  id: Int! @unique
+  club: Club @pgColumn(name: \\"club_id\\")
+  user: User @pgColumn(name: \\"user_id\\")
+}
+
+type ClubsGeographicalArea @pgTable(name: \\"clubs_geographical_areas\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  geographicalAreaId: Int @pgColumn(name: \\"geographical_area_id\\")
+}
+
+type Comment @pgTable(name: \\"comments\\") {
+  id: Int! @unique
+  authorId: Int @pgColumn(name: \\"author_id\\")
+  authorType: String @pgColumn(name: \\"author_type\\")
+  commentableId: Int @pgColumn(name: \\"commentable_id\\")
+  commentableType: String @pgColumn(name: \\"commentable_type\\")
+  content: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  public: Boolean
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Continent @pgTable(name: \\"continents\\") {
+  id: Int! @unique
+  code: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  description: String
+  latitude: Float
+  longitude: Float
+  name: String
+  nbTop100: Int @pgColumn(name: \\"nb_top100\\")
+  rank: Int
+  slug: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Country @pgTable(name: \\"countries\\") {
+  id: Int! @unique
+  # Type tinytext is not supported
+  # alpha2: tinytext
+  # Type tinytext is not supported
+  # alpha3: tinytext
+  # Type tinytext is not supported
+  # calling: tinytext
+  # Type tinytext is not supported
+  # continent: tinytext
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  # Type tinytext is not supported
+  # currency: tinytext
+  description: String
+  googleId: String @pgColumn(name: \\"google_id\\")
+  googleName: String @pgColumn(name: \\"google_name\\")
+  latitude: Float
+  longitude: Float
+  name: String
+  nbTop100: Int @pgColumn(name: \\"nb_top100\\")
+  # Type tinytext is not supported
+  # numeric3: tinytext
+  position: Int
+  rank: Int
+  slug: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Course @pgTable(name: \\"courses\\") {
+  id: Int! @unique
+  allowedPlayers: Int @pgColumn(name: \\"allowed_players\\")
+  architect: String
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  courseRecord: Int @pgColumn(name: \\"course_record\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  currencyId: Int @pgColumn(name: \\"currency_id\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  description: String
+  designedAt: String @pgColumn(name: \\"designed_at\\")
+  genderRestriction: Int @pgColumn(name: \\"gender_restriction\\")
+  greenFeePrice: Float @pgColumn(name: \\"green_fee_price\\")
+  holes: Int
+  latitude: Float
+  length: Int
+  longitude: Float
+  name: String
+  par: Int
+  slope: Int
+  top100Area: Int @pgColumn(name: \\"top100_area\\")
+  top100Continent: Int @pgColumn(name: \\"top100_continent\\")
+  top100Country: Int @pgColumn(name: \\"top100_country\\")
+  top100World: Int @pgColumn(name: \\"top100_world\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  visitors: String
+  yearBuilt: Int @pgColumn(name: \\"year_built\\")
+}
+
+type CourseReview @pgTable(name: \\"course_reviews\\") {
+  id: Int! @unique
+  content: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  online: Boolean @default(value: 0)
+  score: Int
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type CoursesArchitect @pgTable(name: \\"courses_architects\\") {
+  id: Int! @unique
+  architectId: Int @pgColumn(name: \\"architect_id\\")
+  courseId: Int @pgColumn(name: \\"course_id\\")
+  firstname: String
+  lastname: String
+}
+
+type CoursesGolfType @pgTable(name: \\"courses_golf_types\\") {
+  id: Int! @unique
+  courseId: Int @pgColumn(name: \\"course_id\\")
+  golfTypeId: Int @pgColumn(name: \\"golf_type_id\\")
+}
+
+type Currency @pgTable(name: \\"currencies\\") {
+  id: Int! @unique
+  code: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  name: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Destination @pgTable(name: \\"destinations\\") {
+  id: Int! @unique
+  albumId: Int @pgColumn(name: \\"album_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  description: String
+  locationType: String @default(value: \\"destination\\") @pgColumn(name: \\"location_type\\")
+  name: String
+  pictureId: Int @pgColumn(name: \\"picture_id\\")
+  rank: Int
+  slug: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type DeviceToken @pgTable(name: \\"device_tokens\\") {
+  id: Int! @unique
+  device: String
+  oneSignalPlayerId: String @pgColumn(name: \\"one_signal_player_id\\")
+  pushToken: String @pgColumn(name: \\"push_token\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Discussion @pgTable(name: \\"discussions\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  discussionType: String @pgColumn(name: \\"discussion_type\\")
+  pictureContentType: String @pgColumn(name: \\"picture_content_type\\")
+  pictureFileName: String @pgColumn(name: \\"picture_file_name\\")
+  pictureFileSize: Int @pgColumn(name: \\"picture_file_size\\")
+  pictureUpdatedAt: DateTime @pgColumn(name: \\"picture_updated_at\\")
+  title: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type DiscussionsUser @pgTable(name: \\"discussions_users\\") {
+  id: Int! @unique
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  discussionId: Int @pgColumn(name: \\"discussion_id\\")
+  lastReceived: DateTime @pgColumn(name: \\"last_received\\")
+  lastSeen: DateTime @pgColumn(name: \\"last_seen\\")
+  lastTyping: DateTime @pgColumn(name: \\"last_typing\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type DrivingRange @pgTable(name: \\"driving_ranges\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  rangeType: String @pgColumn(name: \\"range_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Email @pgTable(name: \\"emails\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  email: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type EmailNotification @pgTable(name: \\"email_notifications\\") {
+  id: Int! @unique
+  activated: Boolean @default(value: 0)
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  emailType: String @pgColumn(name: \\"email_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type EmailType @pgTable(name: \\"email_types\\") {
+  id: Int! @unique
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  name: String
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Event @pgTable(name: \\"events\\") {
+  id: Int! @unique
+  authorId: Int @pgColumn(name: \\"author_id\\")
+  authorType: String @pgColumn(name: \\"author_type\\")
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  content: String
+  countryId: Int @pgColumn(name: \\"country_id\\")
+  coverPictureId: Int @default(value: 1) @pgColumn(name: \\"cover_picture_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  currency: String
+  deleted: Boolean @default(value: 0)
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  endsAt: DateTime @pgColumn(name: \\"ends_at\\")
+  eventableId: Int @pgColumn(name: \\"eventable_id\\")
+  eventableType: String @pgColumn(name: \\"eventable_type\\")
+  fee: String
+  isTravel: Boolean @default(value: 0) @pgColumn(name: \\"is_travel\\")
+  online: Boolean @default(value: 1)
+  perma: String
+  price: Int
+  public: Boolean @default(value: 0)
+  slug: String
+  startsAt: DateTime @pgColumn(name: \\"starts_at\\")
+  title: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type ExternalVideo @pgTable(name: \\"external_videos\\") {
+  id: Int! @unique
+  mediaId: Int @pgColumn(name: \\"media_id\\")
+  provider: String
+  thumbnailUrl: String @pgColumn(name: \\"thumbnail_url\\")
+  url: String
+  videoId: String @pgColumn(name: \\"video_id\\")
+}
+
+type Feedback @pgTable(name: \\"feedbacks\\") {
+  id: Int! @unique
+  content: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  navigator: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Following @pgTable(name: \\"followings\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  followedId: Int @pgColumn(name: \\"followed_id\\")
+  followedType: String @pgColumn(name: \\"followed_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type FriendlyIdSlug @pgTable(name: \\"friendly_id_slugs\\") {
+  id: Int! @unique
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  slug: String!
+  sluggableId: Int! @pgColumn(name: \\"sluggable_id\\")
+  sluggableType: String @pgColumn(name: \\"sluggable_type\\")
+}
+
+type Game @pgTable(name: \\"games\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  startsAt: DateTime @pgColumn(name: \\"starts_at\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Gamer @pgTable(name: \\"gamers\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  gameId: Int @pgColumn(name: \\"game_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+  validated: Boolean @default(value: 0)
+}
+
+type GeographicalArea @pgTable(name: \\"geographical_areas\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  geographicalAreableId: Int @pgColumn(name: \\"geographical_areable_id\\")
+  geographicalAreableType: String @pgColumn(name: \\"geographical_areable_type\\")
+  parentId: Int @pgColumn(name: \\"parent_id\\")
+  pictureContentType: String @pgColumn(name: \\"picture_content_type\\")
+  pictureFileName: String @pgColumn(name: \\"picture_file_name\\")
+  pictureFileSize: Int @pgColumn(name: \\"picture_file_size\\")
+  pictureUpdatedAt: DateTime @pgColumn(name: \\"picture_updated_at\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type GlossaryTerm @pgTable(name: \\"glossary_terms\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  definition: String
+  deletedAt: DateTime @pgColumn(name: \\"deleted_at\\")
+  name: String
+  slug: String
+  topSearch: Int @pgColumn(name: \\"top_search\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type GolfType @pgTable(name: \\"golf_types\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  name: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Greenfee @pgTable(name: \\"greenfees\\") {
+  id: Int! @unique
+  comment: String
+  commentStatus: String @pgColumn(name: \\"comment_status\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  currentStatus: String @pgColumn(name: \\"current_status\\")
+  email: String
+  firstname: String
+  lastname: String
+  priority: Int @default(value: 0)
+  responsibleId: Int @pgColumn(name: \\"responsible_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Hit @pgTable(name: \\"hits\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Hoster @pgTable(name: \\"hosters\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  eventId: Int @pgColumn(name: \\"event_id\\")
+  roleId: Int @pgColumn(name: \\"role_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Hotel @pgTable(name: \\"hotels\\") {
+  id: Int! @unique
+  address: String
+  cc1: String
+  cityHotel: String @pgColumn(name: \\"city_hotel\\")
+  classs: Float
+  continentId: Float @pgColumn(name: \\"continent_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  hotelUrl: String @pgColumn(name: \\"hotel_url\\")
+  idBooking: Int @pgColumn(name: \\"id_booking\\") @unique
+  imageContentType: String @pgColumn(name: \\"image_content_type\\")
+  imageFileName: String @pgColumn(name: \\"image_file_name\\")
+  imageFileSize: Int @pgColumn(name: \\"image_file_size\\")
+  imageUpdatedAt: DateTime @pgColumn(name: \\"image_updated_at\\")
+  latitude: Float
+  longitude: Float
+  name: String
+  photoContentType: String @pgColumn(name: \\"photo_content_type\\")
+  photoFileName: String @pgColumn(name: \\"photo_file_name\\")
+  photoFileSize: Int @pgColumn(name: \\"photo_file_size\\")
+  photoUpdatedAt: DateTime @pgColumn(name: \\"photo_updated_at\\")
+  photoUrl: String @pgColumn(name: \\"photo_url\\")
+  publicRanking: Float @pgColumn(name: \\"public_ranking\\")
+  reviewScore: Float @pgColumn(name: \\"review_score\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  zip: String
+}
+
+type HotelBooking @pgTable(name: \\"hotel_bookings\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  date: DateTime
+  hotelId: Int @pgColumn(name: \\"hotel_id\\")
+  nbNights: Int @pgColumn(name: \\"nb_nights\\")
+  nbPlayers: Int @pgColumn(name: \\"nb_players\\")
+  ownerId: Int @pgColumn(name: \\"owner_id\\")
+  ownerType: String @pgColumn(name: \\"owner_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Influencer @pgTable(name: \\"influencers\\") {
+  id: Int! @unique
+  influencableId: Int @pgColumn(name: \\"influencable_id\\")
+  influencableType: String @pgColumn(name: \\"influencable_type\\")
+  priority: Int
+}
+
+type InternalVideo @pgTable(name: \\"internal_videos\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  mediaId: Int @pgColumn(name: \\"media_id\\")
+  mediaProcessing: Boolean @pgColumn(name: \\"media_processing\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  videoContentType: String @pgColumn(name: \\"video_content_type\\")
+  videoFileName: String @pgColumn(name: \\"video_file_name\\")
+  videoFileSize: Int @pgColumn(name: \\"video_file_size\\")
+  videoHeight: Int @pgColumn(name: \\"video_height\\")
+  videoUpdatedAt: DateTime @pgColumn(name: \\"video_updated_at\\")
+  videoWidth: Int @pgColumn(name: \\"video_width\\")
+}
+
+type Invitation @pgTable(name: \\"invitations\\") {
+  id: Int! @unique
+  content: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  email: String
+  invitableId: Int @pgColumn(name: \\"invitable_id\\")
+  invitableType: String @pgColumn(name: \\"invitable_type\\")
+  invitedUserId: Int @pgColumn(name: \\"invited_user_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Item @pgTable(name: \\"items\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  name: String
+  position: Int
+  preposition: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  year: Int
+}
+
+type JobOffer @pgTable(name: \\"job_offers\\") {
+  id: Int! @unique
+  active: Boolean
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  department: String
+  description: String
+  location: String
+  slug: String
+  status: Int
+  title: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Like @pgTable(name: \\"likes\\") {
+  id: Int! @unique
+  authorId: Int @pgColumn(name: \\"author_id\\")
+  authorType: String @pgColumn(name: \\"author_type\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime @pgColumn(name: \\"deleted_at\\")
+  likableId: Int @pgColumn(name: \\"likable_id\\")
+  likableType: String @pgColumn(name: \\"likable_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type LinkedClub @pgTable(name: \\"linked_clubs\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  ownerId: Int @pgColumn(name: \\"owner_id\\")
+  ownerType: String @pgColumn(name: \\"owner_type\\")
+  persistent: Boolean
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Login @pgTable(name: \\"logins\\") {
+  id: Int! @unique
+  countryId: Int @pgColumn(name: \\"country_id\\")
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  deviceDesc: String @pgColumn(name: \\"device_desc\\")
+  # Type tinytext is not supported
+  # deviceType: tinytext @pgColumn(name: \\"device_type\\")
+  # Type tinytext is not supported
+  # ip: tinytext
+  latitude: Float
+  loggedInAt: DateTime @pgColumn(name: \\"logged_in_at\\")
+  longitude: Float
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Media @pgTable(name: \\"medias\\") {
+  id: Int! @unique
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  mediableId: Int @pgColumn(name: \\"mediable_id\\")
+  mediableType: String @pgColumn(name: \\"mediable_type\\")
+  ownerId: Int @pgColumn(name: \\"owner_id\\")
+  ownerType: String @pgColumn(name: \\"owner_type\\")
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+}
+
+type MembershipWish @pgTable(name: \\"membership_wishes\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  hasAccepted: Boolean @pgColumn(name: \\"has_accepted\\")
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type MergedPicture @pgTable(name: \\"merged_pictures\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type MergedPicturesPicture @pgTable(name: \\"merged_pictures_pictures\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  mergedPictureId: Int @pgColumn(name: \\"merged_picture_id\\")
+  pictureId: Int @pgColumn(name: \\"picture_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type MergedRelationship @pgTable(name: \\"merged_relationships\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type MergedRelationshipsRelationship @pgTable(name: \\"merged_relationships_relationships\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  mergedRelationshipId: Int @pgColumn(name: \\"merged_relationship_id\\")
+  relationshipId: Int @pgColumn(name: \\"relationship_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Message @pgTable(name: \\"messages\\") {
+  id: Int! @unique
+  content: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  discussionId: Int @pgColumn(name: \\"discussion_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type MessageRead @pgTable(name: \\"message_reads\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  messageId: Int @pgColumn(name: \\"message_id\\")
+  status: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Metatag @pgTable(name: \\"metatags\\") {
+  id: Int! @unique
+  description: String
+  image: String
+  title: String
+  url: String
+}
+
+type Meteo @pgTable(name: \\"meteos\\") {
+  id: Int! @unique
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  day: DateTime
+  icon: String
+  latitude: Int
+  longitude: Int
+  temperatureC: Int @pgColumn(name: \\"temperature_c\\")
+  temperatureF: Int @pgColumn(name: \\"temperature_f\\")
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+  wind: Int
+}
+
+type ModelsLink @pgTable(name: \\"models_links\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  sourceId: Int @pgColumn(name: \\"source_id\\")
+  sourceType: String @pgColumn(name: \\"source_type\\")
+  targetId: Int @pgColumn(name: \\"target_id\\")
+  targetType: String @pgColumn(name: \\"target_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Multimedia @pgTable(name: \\"multimedias\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  mediaId: Int @pgColumn(name: \\"media_id\\")
+  mediaType: String @pgColumn(name: \\"media_type\\")
+  ownerId: Int @pgColumn(name: \\"owner_id\\")
+  ownerType: String @pgColumn(name: \\"owner_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Notation @pgTable(name: \\"notations\\") {
+  id: Int! @unique
+  authorId: Int @pgColumn(name: \\"author_id\\")
+  cons: String
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  notableId: Int @pgColumn(name: \\"notable_id\\")
+  notableType: String @pgColumn(name: \\"notable_type\\")
+  pros: String
+  score: Int
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+}
+
+type NotationLabel @pgTable(name: \\"notation_labels\\") {
+  id: Int! @unique
+  label: Int
+  notationId: Int @pgColumn(name: \\"notation_id\\")
+  score: Int
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Notice @pgTable(name: \\"notices\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  noticeType: Int @pgColumn(name: \\"notice_type\\")
+  reviewId: Int @pgColumn(name: \\"review_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Notification @pgTable(name: \\"notifications\\") {
+  id: Int! @unique
+  authorId: Int @pgColumn(name: \\"author_id\\")
+  authorType: String @pgColumn(name: \\"author_type\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  date: DateTime
+  groupingKey: Int @default(value: 0) @pgColumn(name: \\"grouping_key\\")
+  notifableId: Int @pgColumn(name: \\"notifable_id\\")
+  notifableType: String @pgColumn(name: \\"notifable_type\\")
+  notificationType: Int @pgColumn(name: \\"notification_type\\")
+  notifiedId: Int @pgColumn(name: \\"notified_id\\")
+  notifiedType: String @pgColumn(name: \\"notified_type\\")
+  params: String
+  postId: Int @pgColumn(name: \\"post_id\\")
+  read: Boolean @default(value: 0)
+  seen: Boolean @default(value: 0)
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  version: Int @default(value: 2)
+}
+
+type NotificationDispatch @pgTable(name: \\"notification_dispatches\\") {
+  id: Int! @unique
+  args: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  currentUserId: Int @pgColumn(name: \\"current_user_id\\")
+  dispatcherName: String @pgColumn(name: \\"dispatcher_name\\")
+  error: String
+  notificationNotifies: [NotificationNotify]
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type NotificationNotifiesTarget @pgTable(name: \\"notification_notifies_targets\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  disabled: Boolean
+  notify: NotificationNotify @pgColumn(name: \\"notify_id\\")
+  targetId: Int @pgColumn(name: \\"target_id\\")
+  targetType: String @pgColumn(name: \\"target_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type NotificationNotify @pgTable(name: \\"notification_notifies\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  disabled: Boolean
+  dispatch: NotificationDispatch @pgColumn(name: \\"dispatch_id\\")
+  error: String
+  identifier: String
+  notificationNotifiesTargets: [NotificationNotifiesTarget]
+  notifierName: String @pgColumn(name: \\"notifier_name\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type OpeningDay @pgTable(name: \\"opening_days\\") {
+  id: Int! @unique
+  closeTime: String @pgColumn(name: \\"close_time\\")
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  day: String
+  fullday: Boolean
+  open: Boolean
+  openTime: String @pgColumn(name: \\"open_time\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Page @pgTable(name: \\"pages\\") {
+  id: Int! @unique
+  category: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  description: String
+  email: String
+  hide: Boolean @default(value: 1)
+  logoContentType: String @pgColumn(name: \\"logo_content_type\\")
+  logoFileName: String @pgColumn(name: \\"logo_file_name\\")
+  logoFileSize: Int @pgColumn(name: \\"logo_file_size\\")
+  logoPictureId: Int @default(value: 3) @pgColumn(name: \\"logo_picture_id\\")
+  logoUpdatedAt: DateTime @pgColumn(name: \\"logo_updated_at\\")
+  name: String
+  slug: String
+  suggestionPriority: Int @pgColumn(name: \\"suggestion_priority\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  website: String
+}
+
+type PageAdmin @pgTable(name: \\"page_admins\\") {
+  id: Int! @unique
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  pageId: Int @pgColumn(name: \\"page_id\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Pdf @pgTable(name: \\"pdfs\\") {
+  id: Int! @unique
+  attachmentId: Int @pgColumn(name: \\"attachment_id\\")
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  fileContentType: String @pgColumn(name: \\"file_content_type\\")
+  fileFileName: String @pgColumn(name: \\"file_file_name\\")
+  fileFileSize: Int @pgColumn(name: \\"file_file_size\\")
+  fileUpdatedAt: DateTime @pgColumn(name: \\"file_updated_at\\")
+  mediaProcessing: Boolean @default(value: 1) @pgColumn(name: \\"media_processing\\")
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+}
+
+type Picture @pgTable(name: \\"pictures\\") {
+  id: Int! @unique
+  albumId: Int @pgColumn(name: \\"album_id\\")
+  albumPosition: Float @pgColumn(name: \\"album_position\\")
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  content: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  height: Int
+  mediaId: Int @pgColumn(name: \\"media_id\\")
+  mediaProcessing: Boolean @default(value: 0) @pgColumn(name: \\"media_processing\\")
+  pictureContentType: String @pgColumn(name: \\"picture_content_type\\")
+  pictureFileName: String @pgColumn(name: \\"picture_file_name\\")
+  pictureFileSize: Int @pgColumn(name: \\"picture_file_size\\")
+  pictureUrlShortcut: String @pgColumn(name: \\"picture_url_shortcut\\")
+  position: Int
+  title: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  width: Int
+}
+
+type Place @pgTable(name: \\"places\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  distance: Float
+  handPicked: Int @pgColumn(name: \\"hand_picked\\")
+  placableId: Int @pgColumn(name: \\"placable_id\\")
+  placableType: String @pgColumn(name: \\"placable_type\\")
+  priority: Int @default(value: 0)
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Post @pgTable(name: \\"posts\\") {
+  id: Int! @unique
+  action: Int @default(value: 0)
+  authorId: Int @pgColumn(name: \\"author_id\\")
+  authorType: String @pgColumn(name: \\"author_type\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  items: String
+  postableId: Int @pgColumn(name: \\"postable_id\\")
+  postableType: String @pgColumn(name: \\"postable_type\\")
+  postedId: Int @pgColumn(name: \\"posted_id\\")
+  postedType: String @pgColumn(name: \\"posted_type\\")
+  postsViews: [PostsView]
+  publish: DateTime
+  sharedFrom: Int @pgColumn(name: \\"shared_from\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  videoLink: String @pgColumn(name: \\"video_link\\")
+  webLink: String @pgColumn(name: \\"web_link\\")
+}
+
+type PostView @pgTable(name: \\"post_views\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  postId: Int @pgColumn(name: \\"post_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type PostsView @pgTable(name: \\"posts_views\\") {
+  id: Int! @unique
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  post: Post @pgColumn(name: \\"post_id\\")
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+  user: User @pgColumn(name: \\"user_id\\")
+}
+
+type Price @pgTable(name: \\"prices\\") {
+  id: Int! @unique
+  currency: String
+  description: String
+  pricableId: Int @pgColumn(name: \\"pricable_id\\")
+  pricableType: String @pgColumn(name: \\"pricable_type\\")
+  priceValue: Int @pgColumn(name: \\"price_value\\")
+  title: String
+}
+
+type Prize @pgTable(name: \\"prizes\\") {
+  id: Int! @unique
+  description: String
+  pictureId: Int @pgColumn(name: \\"picture_id\\")
+  sponsorId: Int @pgColumn(name: \\"sponsor_id\\")
+  title: String
+}
+
+type Product @pgTable(name: \\"products\\") {
+  id: Int! @unique
+  albumId: Int @pgColumn(name: \\"album_id\\")
+  brandId: Int @pgColumn(name: \\"brand_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  description: String
+  genderRestriction: Int @pgColumn(name: \\"gender_restriction\\")
+  internalVideoId: Int @pgColumn(name: \\"internal_video_id\\")
+  itemId: Int @pgColumn(name: \\"item_id\\")
+  name: String
+  photoContentType: String @pgColumn(name: \\"photo_content_type\\")
+  photoFileName: String @pgColumn(name: \\"photo_file_name\\")
+  photoFileSize: Int @pgColumn(name: \\"photo_file_size\\")
+  photoUpdatedAt: DateTime @pgColumn(name: \\"photo_updated_at\\")
+  pictureId: Int @pgColumn(name: \\"picture_id\\")
+  priceId: Int @pgColumn(name: \\"price_id\\")
+  productsReviews: [ProductsReview]
+  productType: String @pgColumn(name: \\"product_type\\")
+  score: Float
+  scoreAccuracy: Float @pgColumn(name: \\"score_accuracy\\")
+  scoreDesign: Float @pgColumn(name: \\"score_design\\")
+  scoreDistance: Float @pgColumn(name: \\"score_distance\\")
+  scoreFeel: Float @pgColumn(name: \\"score_feel\\")
+  scoreForgiveness: Float @pgColumn(name: \\"score_forgiveness\\")
+  slug: String
+  specPictureId: Int @pgColumn(name: \\"spec_picture_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  website: String
+  year: Int
+}
+
+type ProductsReview @pgTable(name: \\"products_reviews\\") {
+  id: Int! @unique
+  cons: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  online: Boolean
+  product: Product @pgColumn(name: \\"product_id\\")
+  pros: String
+  score: Int
+  scoreAccuracy: Int @pgColumn(name: \\"score_accuracy\\")
+  scoreDesign: Int @pgColumn(name: \\"score_design\\")
+  scoreDistance: Int @pgColumn(name: \\"score_distance\\")
+  scoreFeel: Int @pgColumn(name: \\"score_feel\\")
+  scoreForgiveness: Int @pgColumn(name: \\"score_forgiveness\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  user: User @pgColumn(name: \\"user_id\\")
+}
+
+type Ranking @pgTable(name: \\"rankings\\") {
+  id: Int! @unique
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Relationship @pgTable(name: \\"relationships\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  state: String
+  targetId: Int @pgColumn(name: \\"target_id\\")
+  targetState: String @pgColumn(name: \\"target_state\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Report @pgTable(name: \\"reports\\") {
+  id: Int! @unique
+  content: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  reportableId: Int @pgColumn(name: \\"reportable_id\\")
+  reportableType: String @pgColumn(name: \\"reportable_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Restaurant @pgTable(name: \\"restaurants\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  cookingType: String @pgColumn(name: \\"cooking_type\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Review @pgTable(name: \\"reviews\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  content: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  online: Boolean @default(value: 0)
+  score: Int
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type ReviewStat @pgTable(name: \\"review_stats\\") {
+  id: Int! @unique
+  average: Int
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  nbReviews: Int @pgColumn(name: \\"nb_reviews\\")
+}
+
+type Role @pgTable(name: \\"roles\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  name: String
+  resourceId: Int @pgColumn(name: \\"resource_id\\")
+  resourceType: String @pgColumn(name: \\"resource_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type SavedError @pgTable(name: \\"saved_errors\\") {
+  id: Int! @unique
+  code: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  currentUserId: Int @pgColumn(name: \\"current_user_id\\")
+  discardedAt: DateTime @pgColumn(name: \\"discarded_at\\")
+  environment: String
+  kind: Int
+  message: String
+  numOccurences: Int @pgColumn(name: \\"num_occurences\\")
+  numOccurencesWhenDiscarded: Int @pgColumn(name: \\"num_occurences_when_discarded\\")
+  operationName: String @pgColumn(name: \\"operation_name\\")
+  origin: String
+  query: String
+  stack: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userAgent: String @pgColumn(name: \\"user_agent\\")
+  variables: String
+}
+
+type SchemaMigration @pgTable(name: \\"schema_migrations\\") {
+  id: ID @pgColumn(name: \\"version\\") @unique
+}
+
+type SerializedAmenity @pgTable(name: \\"serialized_amenities\\") {
+  id: Int! @unique
+  approved: Boolean
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  serializedData: String @pgColumn(name: \\"serialized_data\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Session @pgTable(name: \\"sessions\\") {
+  id: Int! @unique
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  data: String
+  sessionId: String @pgColumn(name: \\"session_id\\") @unique
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+}
+
+type ShaftFlex @pgTable(name: \\"shaft_flexes\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  flexTypeId: Int @pgColumn(name: \\"flex_type_id\\")
+  shaftId: Int @pgColumn(name: \\"shaft_id\\")
+  torqueMax: Float @pgColumn(name: \\"torque_max\\")
+  torqueMin: Float @pgColumn(name: \\"torque_min\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type ShaftFlexesType @pgTable(name: \\"shaft_flexes_types\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  name: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type ShaftFlexesWeight @pgTable(name: \\"shaft_flexes_weights\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  flexId: Int @pgColumn(name: \\"flex_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  weight: Float
+}
+
+type ShaftProduct @pgTable(name: \\"shaft_products\\") {
+  id: Int! @unique
+  albumId: Int @pgColumn(name: \\"album_id\\")
+  brandId: Int @pgColumn(name: \\"brand_id\\")
+  buttFrequency: Float @pgColumn(name: \\"butt_frequency\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  description: String
+  genderRestriction: Int @pgColumn(name: \\"gender_restriction\\")
+  internalVideoId: Int @pgColumn(name: \\"internal_video_id\\")
+  itemType: Int @pgColumn(name: \\"item_type\\")
+  launch: Int
+  length: Float
+  name: String
+  pictureId: Int @pgColumn(name: \\"picture_id\\")
+  priceId: Int @pgColumn(name: \\"price_id\\")
+  slug: String
+  spin: Int
+  tipDiameter: Float @pgColumn(name: \\"tip_diameter\\")
+  tipFrequency: Float @pgColumn(name: \\"tip_frequency\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type ShoesSize @pgTable(name: \\"shoes_sizes\\") {
+  id: Int! @unique
+  clothesProductId: Int @pgColumn(name: \\"clothes_product_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  size: Float
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type SignupStatsFollowing @pgTable(name: \\"signup_stats_followings\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  followedId: Int @pgColumn(name: \\"followed_id\\")
+  followedType: String @pgColumn(name: \\"followed_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type SignupStatsUserSuggestion @pgTable(name: \\"signup_stats_user_suggestions\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  numRequests: Int @pgColumn(name: \\"num_requests\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type SimpleReview @pgTable(name: \\"simple_reviews\\") {
+  id: Int! @unique
+  authorId: Int @pgColumn(name: \\"author_id\\")
+  authorType: String @pgColumn(name: \\"author_type\\")
+  content: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  reviewedId: Int @pgColumn(name: \\"reviewed_id\\")
+  reviewedType: String @pgColumn(name: \\"reviewed_type\\")
+  score: Int
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type SinupStatsFollowing @pgTable(name: \\"sinup_stats_followings\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  followedId: Int @pgColumn(name: \\"followed_id\\")
+  followedType: String @pgColumn(name: \\"followed_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Slope @pgTable(name: \\"slopes\\") {
+  id: Int! @unique
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  length: Int
+  name: String
+  par: Int
+  slope: Int
+  unit: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Slug @pgTable(name: \\"slugs\\") {
+  id: Int! @unique
+  baseSlug: String @pgColumn(name: \\"base_slug\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  resourceId: Int @pgColumn(name: \\"resource_id\\")
+  resourceType: String @pgColumn(name: \\"resource_type\\")
+  slug: String
+  suffix: Int
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type SocialNetworkAccount @pgTable(name: \\"social_network_accounts\\") {
+  id: Int! @unique
+  appid: String
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  facebookUserId: String @pgColumn(name: \\"facebook_user_id\\")
+  name: String
+  pictureUrl: String @pgColumn(name: \\"picture_url\\")
+  provider: String
+  publish: Boolean @default(value: 0)
+  secretToken: String @pgColumn(name: \\"secret_token\\")
+  token: String
+  username: String
+}
+
+type Sponsor @pgTable(name: \\"sponsors\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  logoContentType: String @pgColumn(name: \\"logo_content_type\\")
+  logoFileName: String @pgColumn(name: \\"logo_file_name\\")
+  logoFileSize: Int @pgColumn(name: \\"logo_file_size\\")
+  logoUpdatedAt: DateTime @pgColumn(name: \\"logo_updated_at\\")
+  name: String
+  sponsorableId: Int @pgColumn(name: \\"sponsorable_id\\")
+  sponsorableType: String @pgColumn(name: \\"sponsorable_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  website: String
+}
+
+type Status @pgTable(name: \\"statuses\\") {
+  id: Int! @unique
+  authorId: Int @pgColumn(name: \\"author_id\\")
+  authorType: String @pgColumn(name: \\"author_type\\")
+  content: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  externalVideoId: Int @pgColumn(name: \\"external_video_id\\")
+  imageContentType: String @pgColumn(name: \\"image_content_type\\")
+  imageFileName: String @pgColumn(name: \\"image_file_name\\")
+  imageFileSize: Int @pgColumn(name: \\"image_file_size\\")
+  imageHeight: Int @pgColumn(name: \\"image_height\\")
+  imageUpdatedAt: DateTime @pgColumn(name: \\"image_updated_at\\")
+  imageWidth: Int @pgColumn(name: \\"image_width\\")
+  mediaProcessing: Boolean @default(value: 0) @pgColumn(name: \\"media_processing\\")
+  online: Boolean @default(value: 1)
+  private: Boolean @default(value: 0)
+  publish: DateTime
+  push: Boolean @default(value: 0)
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  videoContentType: String @pgColumn(name: \\"video_content_type\\")
+  videoFileName: String @pgColumn(name: \\"video_file_name\\")
+  videoFileSize: Int @pgColumn(name: \\"video_file_size\\")
+  videoHeight: Int @pgColumn(name: \\"video_height\\")
+  videoProcessing: Boolean @pgColumn(name: \\"video_processing\\")
+  videoUpdatedAt: DateTime @pgColumn(name: \\"video_updated_at\\")
+  videoWidth: Int @pgColumn(name: \\"video_width\\")
+}
+
+type StickyNote @pgTable(name: \\"sticky_notes\\") {
+  id: Int! @unique
+  content: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  externalVideoId: Int @pgColumn(name: \\"external_video_id\\")
+  pictureId: Int @pgColumn(name: \\"picture_id\\")
+  stickyNotesUsers: [StickyNotesUser]
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type StickyNoteUser @pgTable(name: \\"sticky_note_users\\") {
+  id: Int! @unique
+  clicked: Boolean
+  seen: Boolean
+  stickyNoteId: Int @pgColumn(name: \\"sticky_note_id\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type StickyNotesUser @pgTable(name: \\"sticky_notes_users\\") {
+  id: Int! @unique
+  clicked: Boolean @default(value: 0)
+  seen: Boolean @default(value: 0)
+  stickyNote: StickyNote @pgColumn(name: \\"sticky_note_id\\")
+  user: User @pgColumn(name: \\"user_id\\")
+}
+
+type Suggestion @pgTable(name: \\"suggestions\\") {
+  id: Int! @unique
+  accepted: Boolean @default(value: 0)
+  matchScore: Int @default(value: 0) @pgColumn(name: \\"match_score\\")
+  nbTimeDisplayed: Int @default(value: 0) @pgColumn(name: \\"nb_time_displayed\\")
+  rejected: Boolean @default(value: 0)
+  suggestedUserId: Int @pgColumn(name: \\"suggested_user_id\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type SuggestionsView @pgTable(name: \\"suggestions_views\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  suggestedUserId: Int @pgColumn(name: \\"suggested_user_id\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  user: User @pgColumn(name: \\"user_id\\")
+}
+
+type Tag @pgTable(name: \\"tags\\") {
+  id: Int! @unique
+  attachmentId: Int @pgColumn(name: \\"attachment_id\\")
+  taggedId: Int @pgColumn(name: \\"tagged_id\\")
+  taggedType: String @pgColumn(name: \\"tagged_type\\")
+}
+
+type TaggedItem @pgTable(name: \\"tagged_items\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  taggableId: Int @pgColumn(name: \\"taggable_id\\")
+  taggableType: String @pgColumn(name: \\"taggable_type\\")
+  taggedId: Int @pgColumn(name: \\"tagged_id\\")
+  taggedType: String @pgColumn(name: \\"tagged_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+}
+
+type Text @pgTable(name: \\"texts\\") {
+  id: Int! @unique
+  attachmentId: Int @pgColumn(name: \\"attachment_id\\")
+  content: String
+}
+
+type Token @pgTable(name: \\"tokens\\") {
+  id: Int! @unique
+  application: String
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  deletedAt: DateTime @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  expireAt: DateTime @pgColumn(name: \\"expire_at\\")
+  refreshToken: String @pgColumn(name: \\"refresh_token\\")
+  refreshTokenExpire: DateTime @pgColumn(name: \\"refresh_token_expire\\")
+  scope: String
+  token: String
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Travel @pgTable(name: \\"travels\\") {
+  id: Int! @unique
+  budget: String
+  comment: String
+  commentStatus: String @pgColumn(name: \\"comment_status\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  currency: String
+  currentStatus: String @pgColumn(name: \\"current_status\\")
+  email: String
+  endsAt: DateTime @pgColumn(name: \\"ends_at\\")
+  firstname: String
+  lastname: String
+  priority: Int @default(value: 0)
+  responsibleId: Int @pgColumn(name: \\"responsible_id\\")
+  startsAt: DateTime @pgColumn(name: \\"starts_at\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type TrendingCategoriesItem @pgTable(name: \\"trending_categories_items\\") {
+  id: Int! @unique
+  categoryId: Int @pgColumn(name: \\"category_id\\")
+  itemId: Int @pgColumn(name: \\"item_id\\")
+}
+
+type TrendingCategory @pgTable(name: \\"trending_categories\\") {
+  id: Int! @unique
+  description: String
+  itemType: String @pgColumn(name: \\"item_type\\")
+  name: String
+  parentAreaId: Int @pgColumn(name: \\"parent_area_id\\")
+  parentAreaType: String @pgColumn(name: \\"parent_area_type\\")
+  randomize: Boolean
+  rankingType: String @pgColumn(name: \\"ranking_type\\")
+  sitemap: Boolean @default(value: 1)
+  slug: String
+  virtualType: Int @default(value: -1) @pgColumn(name: \\"virtual_type\\")
+}
+
+type UnsentPush @pgTable(name: \\"unsent_pushes\\") {
+  id: Int! @unique
+  dataId: Int @pgColumn(name: \\"data_id\\")
+  errorMessage: String @pgColumn(name: \\"error_message\\")
+  errorStatus: String @pgColumn(name: \\"error_status\\")
+  message: String
+  pushType: String @pgColumn(name: \\"push_type\\")
+}
+
+type UnsentPushesUser @pgTable(name: \\"unsent_pushes_users\\") {
+  id: Int! @unique
+  unsentPushId: Int @pgColumn(name: \\"unsent_push_id\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type User @pgTable(name: \\"users\\") {
+  id: Int! @unique
+  addressId: Int @pgColumn(name: \\"address_id\\")
+  ambassadorClubId: Int @pgColumn(name: \\"ambassador_club_id\\")
+  androidApp: Boolean @default(value: 0) @pgColumn(name: \\"android_app\\")
+  authenticationToken: String @pgColumn(name: \\"authentication_token\\") @unique
+  birthdate: DateTime
+  city: String
+  clubId: Int @pgColumn(name: \\"club_id\\")
+  clubsAdministrators: [ClubsAdministrator]
+  confirmationSentAt: DateTime @pgColumn(name: \\"confirmation_sent_at\\")
+  confirmationToken: String @pgColumn(name: \\"confirmation_token\\")
+  confirmedAt: DateTime @pgColumn(name: \\"confirmed_at\\")
+  countryId: Int @pgColumn(name: \\"country_id\\")
+  coverPictureId: Int @default(value: 1) @pgColumn(name: \\"cover_picture_id\\")
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  currentSignInAt: DateTime @pgColumn(name: \\"current_sign_in_at\\")
+  currentSignInIp: String @pgColumn(name: \\"current_sign_in_ip\\")
+  deletedAt: DateTime! @default(value: \\"1970-01-01 00:00:00\\") @pgColumn(name: \\"deleted_at\\")
+  description: String
+  email: String
+  enableNotifications: Boolean @default(value: 1) @pgColumn(name: \\"enable_notifications\\")
+  encryptedPassword: String @pgColumn(name: \\"encrypted_password\\")
+  fahrenheit: Boolean
+  firstname: String
+  fromCountryId: Int @pgColumn(name: \\"from_country_id\\")
+  googlePlaceId: String @pgColumn(name: \\"google_place_id\\")
+  handicap: Int
+  iosApp: Boolean @default(value: 0) @pgColumn(name: \\"ios_app\\")
+  ipAddress: String @pgColumn(name: \\"ip_address\\")
+  isAdmin: Boolean @default(value: 0) @pgColumn(name: \\"is_admin\\")
+  job: String
+  lastname: String
+  lastSignInAt: DateTime @pgColumn(name: \\"last_sign_in_at\\")
+  lastSignInIp: String @pgColumn(name: \\"last_sign_in_ip\\")
+  latitude: Float
+  location: String
+  longitude: Float
+  miles: Boolean
+  mixpanelDistinctId: String @pgColumn(name: \\"mixpanel_distinct_id\\")
+  noClub: Boolean @default(value: 0) @pgColumn(name: \\"no_club\\")
+  notificationToken: String @pgColumn(name: \\"notification_token\\")
+  oauthExpiresAt: DateTime @pgColumn(name: \\"oauth_expires_at\\")
+  oauthSecret: String @pgColumn(name: \\"oauth_secret\\")
+  oauthToken: String @pgColumn(name: \\"oauth_token\\")
+  official: Boolean @default(value: 0)
+  points: Int @default(value: 0)
+  postsViews: [PostsView]
+  private: Boolean @default(value: 0)
+  pro: Boolean @default(value: 0)
+  productsReviews: [ProductsReview]
+  profilePictureId: Int @default(value: 2) @pgColumn(name: \\"profile_picture_id\\")
+  provider: String
+  rankingId: Int @pgColumn(name: \\"ranking_id\\")
+  rememberCreatedAt: DateTime @pgColumn(name: \\"remember_created_at\\")
+  resetPasswordSentAt: DateTime @pgColumn(name: \\"reset_password_sent_at\\")
+  resetPasswordToken: String @pgColumn(name: \\"reset_password_token\\")
+  sex: Int
+  signInCount: Int @default(value: 0) @pgColumn(name: \\"sign_in_count\\")
+  signupNbCoursesPlayed: String @pgColumn(name: \\"signup_nb_courses_played\\")
+  slug: String
+  step: String @default(value: \\"step1\\")
+  stickyNotesUsers: [StickyNotesUser]
+  suggestionsViews: [SuggestionsView]
+  tokens: String
+  uid: String
+  unconfirmedEmail: String @pgColumn(name: \\"unconfirmed_email\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userClubActivities: [UserClubActivity]
+  username: String
+  verifiedAmbassador: Boolean @default(value: 0) @pgColumn(name: \\"verified_ambassador\\")
+  work: String
+}
+
+type UserClubActivity @pgTable(name: \\"user_club_activities\\") {
+  id: Int! @unique
+  checkedIn: Boolean @pgColumn(name: \\"checked_in\\")
+  club: Club @pgColumn(name: \\"club_id\\")
+  following: Boolean
+  played: Int @default(value: 0)
+  reviewScore: Int @pgColumn(name: \\"review_score\\")
+  user: User @pgColumn(name: \\"user_id\\")
+  wishing: Boolean
+  wishingMembership: Boolean @pgColumn(name: \\"wishing_membership\\")
+}
+
+type UserProduct @pgTable(name: \\"user_products\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  itemId: Int @pgColumn(name: \\"item_id\\")
+  productId: Int @pgColumn(name: \\"product_id\\")
+  productType: String @pgColumn(name: \\"product_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+  year: Int
+}
+
+type Username @pgTable(name: \\"usernames\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  name: String
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  usernamableId: Int @pgColumn(name: \\"usernamable_id\\")
+  usernamableType: String @pgColumn(name: \\"usernamable_type\\")
+}
+
+type UsersInteraction @pgTable(name: \\"users_interactions\\") {
+  id: Int! @unique
+  action: String
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  platform: Int
+  referrer: String
+  resourceId: Int @pgColumn(name: \\"resource_id\\")
+  resourceType: String @pgColumn(name: \\"resource_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type UsersRole @pgTable(name: \\"users_roles\\") {
+  id: Int! @unique
+  roleId: Int @pgColumn(name: \\"role_id\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+}
+
+type Version @pgTable(name: \\"versions\\") {
+  id: Int! @unique
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  event: String
+  itemId: Int! @pgColumn(name: \\"item_id\\")
+  itemType: String @pgColumn(name: \\"item_type\\")
+  object: String
+  whodunnit: String
+}
+
+type Villa @pgTable(name: \\"villas\\") {
+  id: Int! @unique
+  address: String
+  city: String
+  latitude: Float
+  link: String
+  longitude: Float
+  name: String
+}
+
+type Visit @pgTable(name: \\"visits\\") {
+  # Type binary(16) is not supported
+  # id: binary(16)! @unique
+  browser: String
+  city: String
+  country: String
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  deviceType: String @pgColumn(name: \\"device_type\\")
+  ip: String
+  landingPage: String @pgColumn(name: \\"landing_page\\")
+  os: String
+  referrer: String
+  referringDomain: String @pgColumn(name: \\"referring_domain\\")
+  region: String
+  screenHeight: Int @pgColumn(name: \\"screen_height\\")
+  screenWidth: Int @pgColumn(name: \\"screen_width\\")
+  searchKeyword: String @pgColumn(name: \\"search_keyword\\")
+  startedAt: DateTime @pgColumn(name: \\"started_at\\")
+  updatedAt: DateTime @pgColumn(name: \\"updated_at\\")
+  userAgent: String @pgColumn(name: \\"user_agent\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+  utmCampaign: String @pgColumn(name: \\"utm_campaign\\")
+  utmContent: String @pgColumn(name: \\"utm_content\\")
+  utmMedium: String @pgColumn(name: \\"utm_medium\\")
+  utmSource: String @pgColumn(name: \\"utm_source\\")
+  utmTerm: String @pgColumn(name: \\"utm_term\\")
+  # Type binary(16) is not supported
+  # visitorId: binary(16) @pgColumn(name: \\"visitor_id\\")
+}
+
+type Vote @pgTable(name: \\"votes\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  resourceId: Int @pgColumn(name: \\"resource_id\\")
+  resourceType: String @pgColumn(name: \\"resource_type\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+  value: Int
+}
+
+type Weather @pgTable(name: \\"weathers\\") {
+  id: Int! @unique
+  date: DateTime
+  description: String
+  tempMax: Int @pgColumn(name: \\"temp_max\\")
+  tempMin: Int @pgColumn(name: \\"temp_min\\")
+  weatherableId: Int @pgColumn(name: \\"weatherable_id\\")
+  weatherableType: String @pgColumn(name: \\"weatherable_type\\")
+  weathering: Int
+  windDirection: Int @pgColumn(name: \\"wind_direction\\")
+  windSpeed: Int @pgColumn(name: \\"wind_speed\\")
+}
+
+type Wish @pgTable(name: \\"wishes\\") {
+  id: Int! @unique
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  updatedAt: DateTime! @pgColumn(name: \\"updated_at\\")
+  userId: Int @pgColumn(name: \\"user_id\\")
+  wishableId: Int @pgColumn(name: \\"wishable_id\\")
+  wishableType: String @pgColumn(name: \\"wishable_type\\")
+}"
+`;
+
+exports[`Introspector allsquare 2`] = `
+"type AccessType @db(name: \\"access_types\\") {
+  id: Int! @id
+  name: String
+}
+
+type Address @db(name: \\"addresses\\") {
+  id: Int! @id
+  city: String
+  countryId: Int @db(name: \\"country_id\\")
+  googleId: String @db(name: \\"google_id\\")
+  lat: Float
+  lng: Float
+}
+
+type AhoyEvent @db(name: \\"ahoy_events\\") {
+  # Type binary(16) is not supported
+  # id: binary(16)! @id
+  createdAt: DateTime @db(name: \\"created_at\\")
+  name: String
+  properties: String
+  time: DateTime
+  type: String
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+  # Type binary(16) is not supported
+  # visitId: binary(16) @db(name: \\"visit_id\\")
+}
+
+type Album @db(name: \\"albums\\") {
+  id: Int! @id
+  albumableId: Int @db(name: \\"albumable_id\\")
+  albumableType: String @db(name: \\"albumable_type\\")
+  attachmentId: Int @db(name: \\"attachment_id\\")
+  content: String
+  coverPictureId: Int @db(name: \\"cover_picture_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  mediaId: Int @db(name: \\"media_id\\")
+  priority: Int
+  title: String
+  type: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type AmbassadorContest @db(name: \\"ambassador_contests\\") {
+  id: Int! @id
+  contestType: String @db(name: \\"contest_type\\")
+  counter: Int
+  dateTitle: String @db(name: \\"date_title\\")
+  description: String
+  finished: Boolean @default(value: 0)
+  open: Boolean @default(value: 0)
+  pictureId: Int @db(name: \\"picture_id\\")
+  prizeId: Int @db(name: \\"prize_id\\")
+  slug: String
+  smallDescription: String @db(name: \\"small_description\\")
+  startAt: DateTime @db(name: \\"start_at\\")
+  title: String
+  winnerId: Int @db(name: \\"winner_id\\")
+}
+
+type AmbassadorUserContest @db(name: \\"ambassador_user_contests\\") {
+  id: Int! @id
+  ambassadorContestId: Int @db(name: \\"ambassador_contest_id\\")
+  userId: Int @db(name: \\"user_id\\")
+  validated: Boolean @default(value: 0)
+  win: Boolean @default(value: 0)
+}
+
+type AmenitiesClub @db(name: \\"amenities_clubs\\") @relationTable {
+  id: Int! @id
+  amenity: Amenity @db(name: \\"amenity_id\\")
+  club: Club @db(name: \\"club_id\\")
+}
+
+type Amenity @db(name: \\"amenities\\") {
+  id: Int! @id
+  amenitiesClubs: [AmenitiesClub]
+  amenityType: String @db(name: \\"amenity_type\\")
+  friendlyId: String @db(name: \\"friendly_id\\")
+  name: String
+  picture: String
+  priority: Int
+  priorityType: Int @db(name: \\"priority_type\\")
+}
+
+type Architect @db(name: \\"architects\\") {
+  id: Int! @id
+  biography: String
+  comittee: String
+  comitteeWebsite: String @db(name: \\"comittee_website\\")
+  company: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  email: String
+  firstname: String
+  lastname: String
+  slug: String
+  topRanking: Int @db(name: \\"top_ranking\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  website: String
+}
+
+type Area @db(name: \\"areas\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  description: String
+  name: String
+  nbTop100: Int @db(name: \\"nb_top100\\")
+  rank: Int
+  slug: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Article @db(name: \\"articles\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  content: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime @db(name: \\"deleted_at\\")
+  mobilePictureContentType: String @db(name: \\"mobile_picture_content_type\\")
+  mobilePictureFileName: String @db(name: \\"mobile_picture_file_name\\")
+  mobilePictureFileSize: Int @db(name: \\"mobile_picture_file_size\\")
+  mobilePictureUpdatedAt: DateTime @db(name: \\"mobile_picture_updated_at\\")
+  pictureContentType: String @db(name: \\"picture_content_type\\")
+  pictureFileName: String @db(name: \\"picture_file_name\\")
+  pictureFileSize: Int @db(name: \\"picture_file_size\\")
+  pictureUpdatedAt: DateTime @db(name: \\"picture_updated_at\\")
+  private: Boolean @default(value: 0)
+  title: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  url: String
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Attachment @db(name: \\"attachments\\") {
+  id: Int! @id
+  attachableId: Int @db(name: \\"attachable_id\\")
+  attachableType: String @db(name: \\"attachable_type\\")
+  attachedId: Int @db(name: \\"attached_id\\")
+  attachedType: String @db(name: \\"attached_type\\")
+  fileContentType: String @db(name: \\"file_content_type\\")
+  fileFileName: String @db(name: \\"file_file_name\\")
+  fileFileSize: Int @db(name: \\"file_file_size\\")
+  fileUpdatedAt: DateTime @db(name: \\"file_updated_at\\")
+  mime: String
+  pos: Int
+  title: String
+}
+
+type Attending @db(name: \\"attendings\\") {
+  id: Int! @id
+  attending: Int @default(value: 1)
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  eventId: Int @db(name: \\"event_id\\")
+  invitorId: Int @db(name: \\"invitor_id\\")
+  invitorType: String @db(name: \\"invitor_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Blog @db(name: \\"blogs\\") {
+  id: Int! @id
+  articleUrl: String @db(name: \\"article_url\\")
+  content: String
+  contentPreview: String @db(name: \\"content_preview\\")
+  coverContentType: String @db(name: \\"cover_content_type\\")
+  coverFileName: String @db(name: \\"cover_file_name\\")
+  coverFileSize: Int @db(name: \\"cover_file_size\\")
+  coverUpdatedAt: DateTime @db(name: \\"cover_updated_at\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  slug: String
+  title: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type BookingRequest @db(name: \\"booking_requests\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime @db(name: \\"created_at\\")
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type BraintreeCustomer @db(name: \\"braintree_customers\\") {
+  id: Int! @id
+  address: String
+  braintreeHandle: String @db(name: \\"braintree_handle\\")
+  userId: Int @db(name: \\"user_id\\")
+  vatNumber: String @db(name: \\"vat_number\\")
+}
+
+type BraintreeSubscription @db(name: \\"braintree_subscriptions\\") {
+  id: Int! @id
+  active: Boolean
+  amount: Float
+  braintreeCustomerId: Int @db(name: \\"braintree_customer_id\\")
+  braintreeHandle: String @db(name: \\"braintree_handle\\")
+  clubId: Int @db(name: \\"club_id\\")
+  currency: String
+  date: DateTime
+  description: String
+  paymentMethod: String @db(name: \\"payment_method\\")
+  paymentMethodToken: String @db(name: \\"payment_method_token\\")
+}
+
+type BraintreeTransaction @db(name: \\"braintree_transactions\\") {
+  id: Int! @id
+  amount: Float
+  braintreeCustomerId: Int @db(name: \\"braintree_customer_id\\")
+  braintreeHandle: String @db(name: \\"braintree_handle\\")
+  braintreeSubscriptionId: Int @db(name: \\"braintree_subscription_id\\")
+  clubId: Int @db(name: \\"club_id\\")
+  contactEmail: String @db(name: \\"contact_email\\")
+  currency: String
+  date: DateTime
+  description: String
+  paymentMethod: String @db(name: \\"payment_method\\")
+  receiptPath: String @db(name: \\"receipt_path\\")
+  success: Boolean
+}
+
+type Brand @db(name: \\"brands\\") {
+  id: Int! @id
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BrandsCompetitor.brand.
+  # brandsCompetitors: [BrandsCompetitor] @relation(name: \\"BrandBrandsCompetitorsToBrandsCompetitorBrand\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BrandsCompetitor.competitor.
+  # brandsCompetitors: [BrandsCompetitor] @relation(name: \\"BrandBrandsCompetitorsToBrandsCompetitorCompetitor\\")
+  coverPictureId: Int @db(name: \\"cover_picture_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  description: String
+  mediaId: Int @db(name: \\"media_id\\")
+  name: String
+  pageId: Int @db(name: \\"page_id\\")
+  pictureId: Int @db(name: \\"picture_id\\")
+  slug: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  year: Int
+}
+
+type BrandsCompetitor @db(name: \\"brands_competitors\\") {
+  id: Int! @id
+  brand: Brand @db(name: \\"brand_id\\") @relation(name: \\"BrandBrandsCompetitorsToBrandsCompetitorBrand\\")
+  competitor: Brand @db(name: \\"competitor_id\\") @relation(name: \\"BrandBrandsCompetitorsToBrandsCompetitorCompetitor\\")
+  productType: String @db(name: \\"product_type\\")
+}
+
+type BusinessAdmin @db(name: \\"business_admins\\") {
+  id: Int! @id
+  businessId: Int @db(name: \\"business_id\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Checkin @db(name: \\"checkins\\") {
+  id: Int! @id
+  albumId: Int @db(name: \\"album_id\\")
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  mediaProcessing: Boolean @db(name: \\"media_processing\\") @default(value: 0)
+  message: String
+  pictureUrlShortcut: String @db(name: \\"picture_url_shortcut\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type CheckinsUser @db(name: \\"checkins_users\\") {
+  id: Int! @id
+  checkinId: Int @db(name: \\"checkin_id\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type ClientAccess @db(name: \\"client_accesses\\") {
+  id: Int! @id
+  accessesCount: Int @db(name: \\"accesses_count\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  ipAddress: String @db(name: \\"ip_address\\")
+  lastAccessDate: DateTime @db(name: \\"last_access_date\\")
+  platform: Int
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+  version: String
+}
+
+type ClothesProduct @db(name: \\"clothes_products\\") {
+  id: Int! @id
+  albumId: Int @db(name: \\"album_id\\")
+  brandId: Int @db(name: \\"brand_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  description: String
+  genderRestriction: Int @db(name: \\"gender_restriction\\")
+  internalVideoId: Int @db(name: \\"internal_video_id\\")
+  itemType: Int @db(name: \\"item_type\\")
+  name: String
+  pictureId: Int @db(name: \\"picture_id\\")
+  priceId: Int @db(name: \\"price_id\\")
+  slug: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type ClothesSize @db(name: \\"clothes_sizes\\") {
+  id: Int! @id
+  clothesProductId: Int @db(name: \\"clothes_product_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  size: Int
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Club @db(name: \\"clubs\\") {
+  id: Int! @id
+  accessTypeId: Int @db(name: \\"access_type_id\\")
+  altitude: Float
+  altitudeResolution: Float @db(name: \\"altitude_resolution\\")
+  amenitiesActivated: Boolean @db(name: \\"amenities_activated\\") @default(value: 0)
+  amenitiesClubs: [AmenitiesClub]
+  areaId: Int @db(name: \\"area_id\\")
+  bookingAvailable: Boolean @db(name: \\"booking_available\\")
+  bookingLink: String @db(name: \\"booking_link\\")
+  bookingType: String @db(name: \\"booking_type\\")
+  bookingUrl: String @db(name: \\"booking_url\\")
+  city: String
+  closestAirport: String @db(name: \\"closest_airport\\")
+  closestCity: String @db(name: \\"closest_city\\")
+  clubsAdministrators: [ClubsAdministrator]
+  content: String
+  continentId: Int @db(name: \\"continent_id\\")
+  countryId: Int @db(name: \\"country_id\\")
+  coverAlbumId: Int @db(name: \\"cover_album_id\\")
+  coverPictureId: Int @db(name: \\"cover_picture_id\\") @default(value: 1)
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  destinationId: Int @db(name: \\"destination_id\\")
+  editKey: String @db(name: \\"edit_key\\")
+  email: String
+  externalVideoId: Int @db(name: \\"external_video_id\\")
+  facebookToken: String @db(name: \\"facebook_token\\")
+  facebookUserId: String @db(name: \\"facebook_user_id\\")
+  greenFee: String @db(name: \\"green_fee\\")
+  handicap: String
+  hasCarts: Boolean @db(name: \\"has_carts\\")
+  hasDrivingRange: Boolean @db(name: \\"has_driving_range\\")
+  latitude: Float
+  logoContentType: String @db(name: \\"logo_content_type\\")
+  logoFileName: String @db(name: \\"logo_file_name\\")
+  logoFileSize: Int @db(name: \\"logo_file_size\\")
+  logoPictureId: Int @db(name: \\"logo_picture_id\\") @default(value: 3)
+  logoUpdatedAt: DateTime @db(name: \\"logo_updated_at\\")
+  longitude: Float
+  managerEmail: String @db(name: \\"manager_email\\")
+  managerFullname: String @db(name: \\"manager_fullname\\")
+  managerPhone: String @db(name: \\"manager_phone\\")
+  mergeCourse: Boolean @db(name: \\"merge_course\\") @default(value: 1)
+  metaVisible: Boolean @db(name: \\"meta_visible\\") @default(value: 0)
+  name: String
+  online: Boolean @default(value: 1)
+  openInformations: String @db(name: \\"open_informations\\")
+  perma: String
+  phone: String
+  pinType: String @db(name: \\"pin_type\\")
+  score: Float @default(value: 0)
+  scorecardContentType: String @db(name: \\"scorecard_content_type\\")
+  scorecardFileName: String @db(name: \\"scorecard_file_name\\")
+  scorecardFileSize: Int @db(name: \\"scorecard_file_size\\")
+  scorecardUpdatedAt: DateTime @db(name: \\"scorecard_updated_at\\")
+  simple: Boolean @default(value: 0)
+  slug: String
+  street: String
+  top100area: Int
+  top100continent: Int
+  top100country: Int
+  top100world: Int
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userClubActivities: [UserClubActivity]
+  website: String
+  zipcode: String
+}
+
+type ClubAdministrator @db(name: \\"club_administrators\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type ClubAmenity @db(name: \\"club_amenities\\") {
+  id: Int! @id
+  amenityId: Int @db(name: \\"amenity_id\\")
+  clubId: Int @db(name: \\"club_id\\")
+}
+
+type ClubBooking @db(name: \\"club_bookings\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  commentStatus: String @db(name: \\"comment_status\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  currentStatus: String @db(name: \\"current_status\\")
+  date: DateTime
+  golfCart: Boolean @db(name: \\"golf_cart\\")
+  nbPlayers: Int @db(name: \\"nb_players\\")
+  ownerId: Int @db(name: \\"owner_id\\")
+  ownerType: String @db(name: \\"owner_type\\")
+  rentalClubs: Boolean @db(name: \\"rental_clubs\\")
+  responsibleId: Int @db(name: \\"responsible_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type ClubCourseReview @db(name: \\"club_course_reviews\\") {
+  id: Int! @id
+  courseId: Int @db(name: \\"course_id\\")
+  courseReviewId: Int @db(name: \\"course_review_id\\")
+}
+
+type ClubRequest @db(name: \\"club_requests\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  seen: Boolean @default(value: 0)
+  status: Int @default(value: 0)
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type ClubWord @db(name: \\"club_words\\") {
+  id: Int! @id
+  checked: Boolean @default(value: 0)
+  word: String
+}
+
+type ClubWordsClub @db(name: \\"club_words_clubs\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  clubWordId: Int @db(name: \\"club_word_id\\")
+}
+
+type ClubsAdministrator @db(name: \\"clubs_administrators\\") @relationTable {
+  id: Int! @id
+  club: Club @db(name: \\"club_id\\")
+  user: User @db(name: \\"user_id\\")
+}
+
+type ClubsGeographicalArea @db(name: \\"clubs_geographical_areas\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  geographicalAreaId: Int @db(name: \\"geographical_area_id\\")
+}
+
+type Comment @db(name: \\"comments\\") {
+  id: Int! @id
+  authorId: Int @db(name: \\"author_id\\")
+  authorType: String @db(name: \\"author_type\\")
+  commentableId: Int @db(name: \\"commentable_id\\")
+  commentableType: String @db(name: \\"commentable_type\\")
+  content: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  public: Boolean
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Continent @db(name: \\"continents\\") {
+  id: Int! @id
+  code: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  description: String
+  latitude: Float
+  longitude: Float
+  name: String
+  nbTop100: Int @db(name: \\"nb_top100\\")
+  rank: Int
+  slug: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Country @db(name: \\"countries\\") {
+  id: Int! @id
+  # Type tinytext is not supported
+  # alpha2: tinytext
+  # Type tinytext is not supported
+  # alpha3: tinytext
+  # Type tinytext is not supported
+  # calling: tinytext
+  # Type tinytext is not supported
+  # continent: tinytext
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  # Type tinytext is not supported
+  # currency: tinytext
+  description: String
+  googleId: String @db(name: \\"google_id\\")
+  googleName: String @db(name: \\"google_name\\")
+  latitude: Float
+  longitude: Float
+  name: String
+  nbTop100: Int @db(name: \\"nb_top100\\")
+  # Type tinytext is not supported
+  # numeric3: tinytext
+  position: Int
+  rank: Int
+  slug: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Course @db(name: \\"courses\\") {
+  id: Int! @id
+  allowedPlayers: Int @db(name: \\"allowed_players\\")
+  architect: String
+  clubId: Int @db(name: \\"club_id\\")
+  courseRecord: Int @db(name: \\"course_record\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  currencyId: Int @db(name: \\"currency_id\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  description: String
+  designedAt: String @db(name: \\"designed_at\\")
+  genderRestriction: Int @db(name: \\"gender_restriction\\")
+  greenFeePrice: Float @db(name: \\"green_fee_price\\")
+  holes: Int
+  latitude: Float
+  length: Int
+  longitude: Float
+  name: String
+  par: Int
+  slope: Int
+  top100Area: Int @db(name: \\"top100_area\\")
+  top100Continent: Int @db(name: \\"top100_continent\\")
+  top100Country: Int @db(name: \\"top100_country\\")
+  top100World: Int @db(name: \\"top100_world\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  visitors: String
+  yearBuilt: Int @db(name: \\"year_built\\")
+}
+
+type CourseReview @db(name: \\"course_reviews\\") {
+  id: Int! @id
+  content: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  online: Boolean @default(value: 0)
+  score: Int
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type CoursesArchitect @db(name: \\"courses_architects\\") {
+  id: Int! @id
+  architectId: Int @db(name: \\"architect_id\\")
+  courseId: Int @db(name: \\"course_id\\")
+  firstname: String
+  lastname: String
+}
+
+type CoursesGolfType @db(name: \\"courses_golf_types\\") {
+  id: Int! @id
+  courseId: Int @db(name: \\"course_id\\")
+  golfTypeId: Int @db(name: \\"golf_type_id\\")
+}
+
+type Currency @db(name: \\"currencies\\") {
+  id: Int! @id
+  code: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  name: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Destination @db(name: \\"destinations\\") {
+  id: Int! @id
+  albumId: Int @db(name: \\"album_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  description: String
+  locationType: String @db(name: \\"location_type\\") @default(value: \\"destination\\")
+  name: String
+  pictureId: Int @db(name: \\"picture_id\\")
+  rank: Int
+  slug: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type DeviceToken @db(name: \\"device_tokens\\") {
+  id: Int! @id
+  device: String
+  oneSignalPlayerId: String @db(name: \\"one_signal_player_id\\")
+  pushToken: String @db(name: \\"push_token\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Discussion @db(name: \\"discussions\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  discussionType: String @db(name: \\"discussion_type\\")
+  pictureContentType: String @db(name: \\"picture_content_type\\")
+  pictureFileName: String @db(name: \\"picture_file_name\\")
+  pictureFileSize: Int @db(name: \\"picture_file_size\\")
+  pictureUpdatedAt: DateTime @db(name: \\"picture_updated_at\\")
+  title: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type DiscussionsUser @db(name: \\"discussions_users\\") {
+  id: Int! @id
+  createdAt: DateTime @db(name: \\"created_at\\")
+  discussionId: Int @db(name: \\"discussion_id\\")
+  lastReceived: DateTime @db(name: \\"last_received\\")
+  lastSeen: DateTime @db(name: \\"last_seen\\")
+  lastTyping: DateTime @db(name: \\"last_typing\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type DrivingRange @db(name: \\"driving_ranges\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  rangeType: String @db(name: \\"range_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Email @db(name: \\"emails\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  email: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type EmailNotification @db(name: \\"email_notifications\\") {
+  id: Int! @id
+  activated: Boolean @default(value: 0)
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  emailType: String @db(name: \\"email_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type EmailType @db(name: \\"email_types\\") {
+  id: Int! @id
+  createdAt: DateTime @db(name: \\"created_at\\")
+  name: String
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Event @db(name: \\"events\\") {
+  id: Int! @id
+  authorId: Int @db(name: \\"author_id\\")
+  authorType: String @db(name: \\"author_type\\")
+  clubId: Int @db(name: \\"club_id\\")
+  content: String
+  countryId: Int @db(name: \\"country_id\\")
+  coverPictureId: Int @db(name: \\"cover_picture_id\\") @default(value: 1)
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  currency: String
+  deleted: Boolean @default(value: 0)
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  endsAt: DateTime @db(name: \\"ends_at\\")
+  eventableId: Int @db(name: \\"eventable_id\\")
+  eventableType: String @db(name: \\"eventable_type\\")
+  fee: String
+  isTravel: Boolean @db(name: \\"is_travel\\") @default(value: 0)
+  online: Boolean @default(value: 1)
+  perma: String
+  price: Int
+  public: Boolean @default(value: 0)
+  slug: String
+  startsAt: DateTime @db(name: \\"starts_at\\")
+  title: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type ExternalVideo @db(name: \\"external_videos\\") {
+  id: Int! @id
+  mediaId: Int @db(name: \\"media_id\\")
+  provider: String
+  thumbnailUrl: String @db(name: \\"thumbnail_url\\")
+  url: String
+  videoId: String @db(name: \\"video_id\\")
+}
+
+type Feedback @db(name: \\"feedbacks\\") {
+  id: Int! @id
+  content: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  navigator: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Following @db(name: \\"followings\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  followedId: Int @db(name: \\"followed_id\\")
+  followedType: String @db(name: \\"followed_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type FriendlyIdSlug @db(name: \\"friendly_id_slugs\\") {
+  id: Int! @id
+  createdAt: DateTime @db(name: \\"created_at\\")
+  slug: String!
+  sluggableId: Int! @db(name: \\"sluggable_id\\")
+  sluggableType: String @db(name: \\"sluggable_type\\")
+}
+
+type Game @db(name: \\"games\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  startsAt: DateTime @db(name: \\"starts_at\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Gamer @db(name: \\"gamers\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  gameId: Int @db(name: \\"game_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+  validated: Boolean @default(value: 0)
+}
+
+type GeographicalArea @db(name: \\"geographical_areas\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  geographicalAreableId: Int @db(name: \\"geographical_areable_id\\")
+  geographicalAreableType: String @db(name: \\"geographical_areable_type\\")
+  parentId: Int @db(name: \\"parent_id\\")
+  pictureContentType: String @db(name: \\"picture_content_type\\")
+  pictureFileName: String @db(name: \\"picture_file_name\\")
+  pictureFileSize: Int @db(name: \\"picture_file_size\\")
+  pictureUpdatedAt: DateTime @db(name: \\"picture_updated_at\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type GlossaryTerm @db(name: \\"glossary_terms\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  definition: String
+  deletedAt: DateTime @db(name: \\"deleted_at\\")
+  name: String
+  slug: String
+  topSearch: Int @db(name: \\"top_search\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type GolfType @db(name: \\"golf_types\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  name: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Greenfee @db(name: \\"greenfees\\") {
+  id: Int! @id
+  comment: String
+  commentStatus: String @db(name: \\"comment_status\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  currentStatus: String @db(name: \\"current_status\\")
+  email: String
+  firstname: String
+  lastname: String
+  priority: Int @default(value: 0)
+  responsibleId: Int @db(name: \\"responsible_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Hit @db(name: \\"hits\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Hoster @db(name: \\"hosters\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  eventId: Int @db(name: \\"event_id\\")
+  roleId: Int @db(name: \\"role_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Hotel @db(name: \\"hotels\\") {
+  id: Int! @id
+  address: String
+  cc1: String
+  cityHotel: String @db(name: \\"city_hotel\\")
+  classs: Float
+  continentId: Float @db(name: \\"continent_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  hotelUrl: String @db(name: \\"hotel_url\\")
+  idBooking: Int @db(name: \\"id_booking\\") @unique
+  imageContentType: String @db(name: \\"image_content_type\\")
+  imageFileName: String @db(name: \\"image_file_name\\")
+  imageFileSize: Int @db(name: \\"image_file_size\\")
+  imageUpdatedAt: DateTime @db(name: \\"image_updated_at\\")
+  latitude: Float
+  longitude: Float
+  name: String
+  photoContentType: String @db(name: \\"photo_content_type\\")
+  photoFileName: String @db(name: \\"photo_file_name\\")
+  photoFileSize: Int @db(name: \\"photo_file_size\\")
+  photoUpdatedAt: DateTime @db(name: \\"photo_updated_at\\")
+  photoUrl: String @db(name: \\"photo_url\\")
+  publicRanking: Float @db(name: \\"public_ranking\\")
+  reviewScore: Float @db(name: \\"review_score\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  zip: String
+}
+
+type HotelBooking @db(name: \\"hotel_bookings\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  date: DateTime
+  hotelId: Int @db(name: \\"hotel_id\\")
+  nbNights: Int @db(name: \\"nb_nights\\")
+  nbPlayers: Int @db(name: \\"nb_players\\")
+  ownerId: Int @db(name: \\"owner_id\\")
+  ownerType: String @db(name: \\"owner_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Influencer @db(name: \\"influencers\\") {
+  id: Int! @id
+  influencableId: Int @db(name: \\"influencable_id\\")
+  influencableType: String @db(name: \\"influencable_type\\")
+  priority: Int
+}
+
+type InternalVideo @db(name: \\"internal_videos\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  mediaId: Int @db(name: \\"media_id\\")
+  mediaProcessing: Boolean @db(name: \\"media_processing\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  videoContentType: String @db(name: \\"video_content_type\\")
+  videoFileName: String @db(name: \\"video_file_name\\")
+  videoFileSize: Int @db(name: \\"video_file_size\\")
+  videoHeight: Int @db(name: \\"video_height\\")
+  videoUpdatedAt: DateTime @db(name: \\"video_updated_at\\")
+  videoWidth: Int @db(name: \\"video_width\\")
+}
+
+type Invitation @db(name: \\"invitations\\") {
+  id: Int! @id
+  content: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  email: String
+  invitableId: Int @db(name: \\"invitable_id\\")
+  invitableType: String @db(name: \\"invitable_type\\")
+  invitedUserId: Int @db(name: \\"invited_user_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Item @db(name: \\"items\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  name: String
+  position: Int
+  preposition: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  year: Int
+}
+
+type JobOffer @db(name: \\"job_offers\\") {
+  id: Int! @id
+  active: Boolean
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  department: String
+  description: String
+  location: String
+  slug: String
+  status: Int
+  title: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Like @db(name: \\"likes\\") {
+  id: Int! @id
+  authorId: Int @db(name: \\"author_id\\")
+  authorType: String @db(name: \\"author_type\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime @db(name: \\"deleted_at\\")
+  likableId: Int @db(name: \\"likable_id\\")
+  likableType: String @db(name: \\"likable_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type LinkedClub @db(name: \\"linked_clubs\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  ownerId: Int @db(name: \\"owner_id\\")
+  ownerType: String @db(name: \\"owner_type\\")
+  persistent: Boolean
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Login @db(name: \\"logins\\") {
+  id: Int! @id
+  countryId: Int @db(name: \\"country_id\\")
+  createdAt: DateTime @db(name: \\"created_at\\")
+  deviceDesc: String @db(name: \\"device_desc\\")
+  # Type tinytext is not supported
+  # deviceType: tinytext @db(name: \\"device_type\\")
+  # Type tinytext is not supported
+  # ip: tinytext
+  latitude: Float
+  loggedInAt: DateTime @db(name: \\"logged_in_at\\")
+  longitude: Float
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Media @db(name: \\"medias\\") {
+  id: Int! @id
+  createdAt: DateTime @db(name: \\"created_at\\")
+  mediableId: Int @db(name: \\"mediable_id\\")
+  mediableType: String @db(name: \\"mediable_type\\")
+  ownerId: Int @db(name: \\"owner_id\\")
+  ownerType: String @db(name: \\"owner_type\\")
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+}
+
+type MembershipWish @db(name: \\"membership_wishes\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime @db(name: \\"created_at\\")
+  hasAccepted: Boolean @db(name: \\"has_accepted\\")
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type MergedPicture @db(name: \\"merged_pictures\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type MergedPicturesPicture @db(name: \\"merged_pictures_pictures\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  mergedPictureId: Int @db(name: \\"merged_picture_id\\")
+  pictureId: Int @db(name: \\"picture_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type MergedRelationship @db(name: \\"merged_relationships\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type MergedRelationshipsRelationship @db(name: \\"merged_relationships_relationships\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  mergedRelationshipId: Int @db(name: \\"merged_relationship_id\\")
+  relationshipId: Int @db(name: \\"relationship_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Message @db(name: \\"messages\\") {
+  id: Int! @id
+  content: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  discussionId: Int @db(name: \\"discussion_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type MessageRead @db(name: \\"message_reads\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  messageId: Int @db(name: \\"message_id\\")
+  status: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Metatag @db(name: \\"metatags\\") {
+  id: Int! @id
+  description: String
+  image: String
+  title: String
+  url: String
+}
+
+type Meteo @db(name: \\"meteos\\") {
+  id: Int! @id
+  createdAt: DateTime @db(name: \\"created_at\\")
+  day: DateTime
+  icon: String
+  latitude: Int
+  longitude: Int
+  temperatureC: Int @db(name: \\"temperature_c\\")
+  temperatureF: Int @db(name: \\"temperature_f\\")
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+  wind: Int
+}
+
+type ModelsLink @db(name: \\"models_links\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  sourceId: Int @db(name: \\"source_id\\")
+  sourceType: String @db(name: \\"source_type\\")
+  targetId: Int @db(name: \\"target_id\\")
+  targetType: String @db(name: \\"target_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Multimedia @db(name: \\"multimedias\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  mediaId: Int @db(name: \\"media_id\\")
+  mediaType: String @db(name: \\"media_type\\")
+  ownerId: Int @db(name: \\"owner_id\\")
+  ownerType: String @db(name: \\"owner_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Notation @db(name: \\"notations\\") {
+  id: Int! @id
+  authorId: Int @db(name: \\"author_id\\")
+  cons: String
+  createdAt: DateTime @db(name: \\"created_at\\")
+  notableId: Int @db(name: \\"notable_id\\")
+  notableType: String @db(name: \\"notable_type\\")
+  pros: String
+  score: Int
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+}
+
+type NotationLabel @db(name: \\"notation_labels\\") {
+  id: Int! @id
+  label: Int
+  notationId: Int @db(name: \\"notation_id\\")
+  score: Int
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Notice @db(name: \\"notices\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  noticeType: Int @db(name: \\"notice_type\\")
+  reviewId: Int @db(name: \\"review_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Notification @db(name: \\"notifications\\") {
+  id: Int! @id
+  authorId: Int @db(name: \\"author_id\\")
+  authorType: String @db(name: \\"author_type\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  date: DateTime
+  groupingKey: Int @db(name: \\"grouping_key\\") @default(value: 0)
+  notifableId: Int @db(name: \\"notifable_id\\")
+  notifableType: String @db(name: \\"notifable_type\\")
+  notificationType: Int @db(name: \\"notification_type\\")
+  notifiedId: Int @db(name: \\"notified_id\\")
+  notifiedType: String @db(name: \\"notified_type\\")
+  params: String
+  postId: Int @db(name: \\"post_id\\")
+  read: Boolean @default(value: 0)
+  seen: Boolean @default(value: 0)
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  version: Int @default(value: 2)
+}
+
+type NotificationDispatch @db(name: \\"notification_dispatches\\") {
+  id: Int! @id
+  args: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  currentUserId: Int @db(name: \\"current_user_id\\")
+  dispatcherName: String @db(name: \\"dispatcher_name\\")
+  error: String
+  notificationNotifies: [NotificationNotify]
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type NotificationNotifiesTarget @db(name: \\"notification_notifies_targets\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  disabled: Boolean
+  notify: NotificationNotify @db(name: \\"notify_id\\")
+  targetId: Int @db(name: \\"target_id\\")
+  targetType: String @db(name: \\"target_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type NotificationNotify @db(name: \\"notification_notifies\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  disabled: Boolean
+  dispatch: NotificationDispatch @db(name: \\"dispatch_id\\")
+  error: String
+  identifier: String
+  notificationNotifiesTargets: [NotificationNotifiesTarget]
+  notifierName: String @db(name: \\"notifier_name\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type OpeningDay @db(name: \\"opening_days\\") {
+  id: Int! @id
+  closeTime: String @db(name: \\"close_time\\")
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  day: String
+  fullday: Boolean
+  open: Boolean
+  openTime: String @db(name: \\"open_time\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Page @db(name: \\"pages\\") {
+  id: Int! @id
+  category: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  description: String
+  email: String
+  hide: Boolean @default(value: 1)
+  logoContentType: String @db(name: \\"logo_content_type\\")
+  logoFileName: String @db(name: \\"logo_file_name\\")
+  logoFileSize: Int @db(name: \\"logo_file_size\\")
+  logoPictureId: Int @db(name: \\"logo_picture_id\\") @default(value: 3)
+  logoUpdatedAt: DateTime @db(name: \\"logo_updated_at\\")
+  name: String
+  slug: String
+  suggestionPriority: Int @db(name: \\"suggestion_priority\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  website: String
+}
+
+type PageAdmin @db(name: \\"page_admins\\") {
+  id: Int! @id
+  createdAt: DateTime @db(name: \\"created_at\\")
+  pageId: Int @db(name: \\"page_id\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Pdf @db(name: \\"pdfs\\") {
+  id: Int! @id
+  attachmentId: Int @db(name: \\"attachment_id\\")
+  createdAt: DateTime @db(name: \\"created_at\\")
+  fileContentType: String @db(name: \\"file_content_type\\")
+  fileFileName: String @db(name: \\"file_file_name\\")
+  fileFileSize: Int @db(name: \\"file_file_size\\")
+  fileUpdatedAt: DateTime @db(name: \\"file_updated_at\\")
+  mediaProcessing: Boolean @db(name: \\"media_processing\\") @default(value: 1)
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+}
+
+type Picture @db(name: \\"pictures\\") {
+  id: Int! @id
+  albumId: Int @db(name: \\"album_id\\")
+  albumPosition: Float @db(name: \\"album_position\\")
+  clubId: Int @db(name: \\"club_id\\")
+  content: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  height: Int
+  mediaId: Int @db(name: \\"media_id\\")
+  mediaProcessing: Boolean @db(name: \\"media_processing\\") @default(value: 0)
+  pictureContentType: String @db(name: \\"picture_content_type\\")
+  pictureFileName: String @db(name: \\"picture_file_name\\")
+  pictureFileSize: Int @db(name: \\"picture_file_size\\")
+  pictureUrlShortcut: String @db(name: \\"picture_url_shortcut\\")
+  position: Int
+  title: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  width: Int
+}
+
+type Place @db(name: \\"places\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  distance: Float
+  handPicked: Int @db(name: \\"hand_picked\\")
+  placableId: Int @db(name: \\"placable_id\\")
+  placableType: String @db(name: \\"placable_type\\")
+  priority: Int @default(value: 0)
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Post @db(name: \\"posts\\") {
+  id: Int! @id
+  action: Int @default(value: 0)
+  authorId: Int @db(name: \\"author_id\\")
+  authorType: String @db(name: \\"author_type\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  items: String
+  postableId: Int @db(name: \\"postable_id\\")
+  postableType: String @db(name: \\"postable_type\\")
+  postedId: Int @db(name: \\"posted_id\\")
+  postedType: String @db(name: \\"posted_type\\")
+  postsViews: [PostsView]
+  publish: DateTime
+  sharedFrom: Int @db(name: \\"shared_from\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  videoLink: String @db(name: \\"video_link\\")
+  webLink: String @db(name: \\"web_link\\")
+}
+
+type PostView @db(name: \\"post_views\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  postId: Int @db(name: \\"post_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type PostsView @db(name: \\"posts_views\\") {
+  id: Int! @id
+  createdAt: DateTime @db(name: \\"created_at\\")
+  post: Post @db(name: \\"post_id\\")
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+  user: User @db(name: \\"user_id\\")
+}
+
+type Price @db(name: \\"prices\\") {
+  id: Int! @id
+  currency: String
+  description: String
+  pricableId: Int @db(name: \\"pricable_id\\")
+  pricableType: String @db(name: \\"pricable_type\\")
+  priceValue: Int @db(name: \\"price_value\\")
+  title: String
+}
+
+type Prize @db(name: \\"prizes\\") {
+  id: Int! @id
+  description: String
+  pictureId: Int @db(name: \\"picture_id\\")
+  sponsorId: Int @db(name: \\"sponsor_id\\")
+  title: String
+}
+
+type Product @db(name: \\"products\\") {
+  id: Int! @id
+  albumId: Int @db(name: \\"album_id\\")
+  brandId: Int @db(name: \\"brand_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  description: String
+  genderRestriction: Int @db(name: \\"gender_restriction\\")
+  internalVideoId: Int @db(name: \\"internal_video_id\\")
+  itemId: Int @db(name: \\"item_id\\")
+  name: String
+  photoContentType: String @db(name: \\"photo_content_type\\")
+  photoFileName: String @db(name: \\"photo_file_name\\")
+  photoFileSize: Int @db(name: \\"photo_file_size\\")
+  photoUpdatedAt: DateTime @db(name: \\"photo_updated_at\\")
+  pictureId: Int @db(name: \\"picture_id\\")
+  priceId: Int @db(name: \\"price_id\\")
+  productsReviews: [ProductsReview]
+  productType: String @db(name: \\"product_type\\")
+  score: Float
+  scoreAccuracy: Float @db(name: \\"score_accuracy\\")
+  scoreDesign: Float @db(name: \\"score_design\\")
+  scoreDistance: Float @db(name: \\"score_distance\\")
+  scoreFeel: Float @db(name: \\"score_feel\\")
+  scoreForgiveness: Float @db(name: \\"score_forgiveness\\")
+  slug: String
+  specPictureId: Int @db(name: \\"spec_picture_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  website: String
+  year: Int
+}
+
+type ProductsReview @db(name: \\"products_reviews\\") {
+  id: Int! @id
+  cons: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  online: Boolean
+  product: Product @db(name: \\"product_id\\")
+  pros: String
+  score: Int
+  scoreAccuracy: Int @db(name: \\"score_accuracy\\")
+  scoreDesign: Int @db(name: \\"score_design\\")
+  scoreDistance: Int @db(name: \\"score_distance\\")
+  scoreFeel: Int @db(name: \\"score_feel\\")
+  scoreForgiveness: Int @db(name: \\"score_forgiveness\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  user: User @db(name: \\"user_id\\")
+}
+
+type Ranking @db(name: \\"rankings\\") {
+  id: Int! @id
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Relationship @db(name: \\"relationships\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  state: String
+  targetId: Int @db(name: \\"target_id\\")
+  targetState: String @db(name: \\"target_state\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Report @db(name: \\"reports\\") {
+  id: Int! @id
+  content: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  reportableId: Int @db(name: \\"reportable_id\\")
+  reportableType: String @db(name: \\"reportable_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Restaurant @db(name: \\"restaurants\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  cookingType: String @db(name: \\"cooking_type\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Review @db(name: \\"reviews\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  content: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  online: Boolean @default(value: 0)
+  score: Int
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type ReviewStat @db(name: \\"review_stats\\") {
+  id: Int! @id
+  average: Int
+  clubId: Int @db(name: \\"club_id\\")
+  nbReviews: Int @db(name: \\"nb_reviews\\")
+}
+
+type Role @db(name: \\"roles\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  name: String
+  resourceId: Int @db(name: \\"resource_id\\")
+  resourceType: String @db(name: \\"resource_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type SavedError @db(name: \\"saved_errors\\") {
+  id: Int! @id
+  code: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  currentUserId: Int @db(name: \\"current_user_id\\")
+  discardedAt: DateTime @db(name: \\"discarded_at\\")
+  environment: String
+  kind: Int
+  message: String
+  numOccurences: Int @db(name: \\"num_occurences\\")
+  numOccurencesWhenDiscarded: Int @db(name: \\"num_occurences_when_discarded\\")
+  operationName: String @db(name: \\"operation_name\\")
+  origin: String
+  query: String
+  stack: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userAgent: String @db(name: \\"user_agent\\")
+  variables: String
+}
+
+type SchemaMigration @db(name: \\"schema_migrations\\") {
+  version: ID @id
+}
+
+type SerializedAmenity @db(name: \\"serialized_amenities\\") {
+  id: Int! @id
+  approved: Boolean
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  serializedData: String @db(name: \\"serialized_data\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Session @db(name: \\"sessions\\") {
+  id: Int! @id
+  createdAt: DateTime @db(name: \\"created_at\\")
+  data: String
+  sessionId: String @db(name: \\"session_id\\") @unique
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+}
+
+type ShaftFlex @db(name: \\"shaft_flexes\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  flexTypeId: Int @db(name: \\"flex_type_id\\")
+  shaftId: Int @db(name: \\"shaft_id\\")
+  torqueMax: Float @db(name: \\"torque_max\\")
+  torqueMin: Float @db(name: \\"torque_min\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type ShaftFlexesType @db(name: \\"shaft_flexes_types\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  name: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type ShaftFlexesWeight @db(name: \\"shaft_flexes_weights\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  flexId: Int @db(name: \\"flex_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  weight: Float
+}
+
+type ShaftProduct @db(name: \\"shaft_products\\") {
+  id: Int! @id
+  albumId: Int @db(name: \\"album_id\\")
+  brandId: Int @db(name: \\"brand_id\\")
+  buttFrequency: Float @db(name: \\"butt_frequency\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  description: String
+  genderRestriction: Int @db(name: \\"gender_restriction\\")
+  internalVideoId: Int @db(name: \\"internal_video_id\\")
+  itemType: Int @db(name: \\"item_type\\")
+  launch: Int
+  length: Float
+  name: String
+  pictureId: Int @db(name: \\"picture_id\\")
+  priceId: Int @db(name: \\"price_id\\")
+  slug: String
+  spin: Int
+  tipDiameter: Float @db(name: \\"tip_diameter\\")
+  tipFrequency: Float @db(name: \\"tip_frequency\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type ShoesSize @db(name: \\"shoes_sizes\\") {
+  id: Int! @id
+  clothesProductId: Int @db(name: \\"clothes_product_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  size: Float
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type SignupStatsFollowing @db(name: \\"signup_stats_followings\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  followedId: Int @db(name: \\"followed_id\\")
+  followedType: String @db(name: \\"followed_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type SignupStatsUserSuggestion @db(name: \\"signup_stats_user_suggestions\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  numRequests: Int @db(name: \\"num_requests\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type SimpleReview @db(name: \\"simple_reviews\\") {
+  id: Int! @id
+  authorId: Int @db(name: \\"author_id\\")
+  authorType: String @db(name: \\"author_type\\")
+  content: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  reviewedId: Int @db(name: \\"reviewed_id\\")
+  reviewedType: String @db(name: \\"reviewed_type\\")
+  score: Int
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type SinupStatsFollowing @db(name: \\"sinup_stats_followings\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  followedId: Int @db(name: \\"followed_id\\")
+  followedType: String @db(name: \\"followed_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Slope @db(name: \\"slopes\\") {
+  id: Int! @id
+  clubId: Int @db(name: \\"club_id\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  length: Int
+  name: String
+  par: Int
+  slope: Int
+  unit: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Slug @db(name: \\"slugs\\") {
+  id: Int! @id
+  baseSlug: String @db(name: \\"base_slug\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  resourceId: Int @db(name: \\"resource_id\\")
+  resourceType: String @db(name: \\"resource_type\\")
+  slug: String
+  suffix: Int
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type SocialNetworkAccount @db(name: \\"social_network_accounts\\") {
+  id: Int! @id
+  appid: String
+  clubId: Int @db(name: \\"club_id\\")
+  facebookUserId: String @db(name: \\"facebook_user_id\\")
+  name: String
+  pictureUrl: String @db(name: \\"picture_url\\")
+  provider: String
+  publish: Boolean @default(value: 0)
+  secretToken: String @db(name: \\"secret_token\\")
+  token: String
+  username: String
+}
+
+type Sponsor @db(name: \\"sponsors\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  logoContentType: String @db(name: \\"logo_content_type\\")
+  logoFileName: String @db(name: \\"logo_file_name\\")
+  logoFileSize: Int @db(name: \\"logo_file_size\\")
+  logoUpdatedAt: DateTime @db(name: \\"logo_updated_at\\")
+  name: String
+  sponsorableId: Int @db(name: \\"sponsorable_id\\")
+  sponsorableType: String @db(name: \\"sponsorable_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  website: String
+}
+
+type Status @db(name: \\"statuses\\") {
+  id: Int! @id
+  authorId: Int @db(name: \\"author_id\\")
+  authorType: String @db(name: \\"author_type\\")
+  content: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  externalVideoId: Int @db(name: \\"external_video_id\\")
+  imageContentType: String @db(name: \\"image_content_type\\")
+  imageFileName: String @db(name: \\"image_file_name\\")
+  imageFileSize: Int @db(name: \\"image_file_size\\")
+  imageHeight: Int @db(name: \\"image_height\\")
+  imageUpdatedAt: DateTime @db(name: \\"image_updated_at\\")
+  imageWidth: Int @db(name: \\"image_width\\")
+  mediaProcessing: Boolean @db(name: \\"media_processing\\") @default(value: 0)
+  online: Boolean @default(value: 1)
+  private: Boolean @default(value: 0)
+  publish: DateTime
+  push: Boolean @default(value: 0)
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  videoContentType: String @db(name: \\"video_content_type\\")
+  videoFileName: String @db(name: \\"video_file_name\\")
+  videoFileSize: Int @db(name: \\"video_file_size\\")
+  videoHeight: Int @db(name: \\"video_height\\")
+  videoProcessing: Boolean @db(name: \\"video_processing\\")
+  videoUpdatedAt: DateTime @db(name: \\"video_updated_at\\")
+  videoWidth: Int @db(name: \\"video_width\\")
+}
+
+type StickyNote @db(name: \\"sticky_notes\\") {
+  id: Int! @id
+  content: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  externalVideoId: Int @db(name: \\"external_video_id\\")
+  pictureId: Int @db(name: \\"picture_id\\")
+  stickyNotesUsers: [StickyNotesUser]
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type StickyNoteUser @db(name: \\"sticky_note_users\\") {
+  id: Int! @id
+  clicked: Boolean
+  seen: Boolean
+  stickyNoteId: Int @db(name: \\"sticky_note_id\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type StickyNotesUser @db(name: \\"sticky_notes_users\\") {
+  id: Int! @id
+  clicked: Boolean @default(value: 0)
+  seen: Boolean @default(value: 0)
+  stickyNote: StickyNote @db(name: \\"sticky_note_id\\")
+  user: User @db(name: \\"user_id\\")
+}
+
+type Suggestion @db(name: \\"suggestions\\") {
+  id: Int! @id
+  accepted: Boolean @default(value: 0)
+  matchScore: Int @db(name: \\"match_score\\") @default(value: 0)
+  nbTimeDisplayed: Int @db(name: \\"nb_time_displayed\\") @default(value: 0)
+  rejected: Boolean @default(value: 0)
+  suggestedUserId: Int @db(name: \\"suggested_user_id\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type SuggestionsView @db(name: \\"suggestions_views\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  suggestedUserId: Int @db(name: \\"suggested_user_id\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  user: User @db(name: \\"user_id\\")
+}
+
+type Tag @db(name: \\"tags\\") {
+  id: Int! @id
+  attachmentId: Int @db(name: \\"attachment_id\\")
+  taggedId: Int @db(name: \\"tagged_id\\")
+  taggedType: String @db(name: \\"tagged_type\\")
+}
+
+type TaggedItem @db(name: \\"tagged_items\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  taggableId: Int @db(name: \\"taggable_id\\")
+  taggableType: String @db(name: \\"taggable_type\\")
+  taggedId: Int @db(name: \\"tagged_id\\")
+  taggedType: String @db(name: \\"tagged_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+}
+
+type Text @db(name: \\"texts\\") {
+  id: Int! @id
+  attachmentId: Int @db(name: \\"attachment_id\\")
+  content: String
+}
+
+type Token @db(name: \\"tokens\\") {
+  id: Int! @id
+  application: String
+  createdAt: DateTime @db(name: \\"created_at\\")
+  deletedAt: DateTime @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  expireAt: DateTime @db(name: \\"expire_at\\")
+  refreshToken: String @db(name: \\"refresh_token\\")
+  refreshTokenExpire: DateTime @db(name: \\"refresh_token_expire\\")
+  scope: String
+  token: String
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Travel @db(name: \\"travels\\") {
+  id: Int! @id
+  budget: String
+  comment: String
+  commentStatus: String @db(name: \\"comment_status\\")
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  currency: String
+  currentStatus: String @db(name: \\"current_status\\")
+  email: String
+  endsAt: DateTime @db(name: \\"ends_at\\")
+  firstname: String
+  lastname: String
+  priority: Int @default(value: 0)
+  responsibleId: Int @db(name: \\"responsible_id\\")
+  startsAt: DateTime @db(name: \\"starts_at\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type TrendingCategoriesItem @db(name: \\"trending_categories_items\\") {
+  id: Int! @id
+  categoryId: Int @db(name: \\"category_id\\")
+  itemId: Int @db(name: \\"item_id\\")
+}
+
+type TrendingCategory @db(name: \\"trending_categories\\") {
+  id: Int! @id
+  description: String
+  itemType: String @db(name: \\"item_type\\")
+  name: String
+  parentAreaId: Int @db(name: \\"parent_area_id\\")
+  parentAreaType: String @db(name: \\"parent_area_type\\")
+  randomize: Boolean
+  rankingType: String @db(name: \\"ranking_type\\")
+  sitemap: Boolean @default(value: 1)
+  slug: String
+  virtualType: Int @db(name: \\"virtual_type\\") @default(value: -1)
+}
+
+type UnsentPush @db(name: \\"unsent_pushes\\") {
+  id: Int! @id
+  dataId: Int @db(name: \\"data_id\\")
+  errorMessage: String @db(name: \\"error_message\\")
+  errorStatus: String @db(name: \\"error_status\\")
+  message: String
+  pushType: String @db(name: \\"push_type\\")
+}
+
+type UnsentPushesUser @db(name: \\"unsent_pushes_users\\") {
+  id: Int! @id
+  unsentPushId: Int @db(name: \\"unsent_push_id\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type User @db(name: \\"users\\") {
+  id: Int! @id
+  addressId: Int @db(name: \\"address_id\\")
+  ambassadorClubId: Int @db(name: \\"ambassador_club_id\\")
+  androidApp: Boolean @db(name: \\"android_app\\") @default(value: 0)
+  authenticationToken: String @db(name: \\"authentication_token\\") @unique
+  birthdate: DateTime
+  city: String
+  clubId: Int @db(name: \\"club_id\\")
+  clubsAdministrators: [ClubsAdministrator]
+  confirmationSentAt: DateTime @db(name: \\"confirmation_sent_at\\")
+  confirmationToken: String @db(name: \\"confirmation_token\\")
+  confirmedAt: DateTime @db(name: \\"confirmed_at\\")
+  countryId: Int @db(name: \\"country_id\\")
+  coverPictureId: Int @db(name: \\"cover_picture_id\\") @default(value: 1)
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  currentSignInAt: DateTime @db(name: \\"current_sign_in_at\\")
+  currentSignInIp: String @db(name: \\"current_sign_in_ip\\")
+  deletedAt: DateTime! @db(name: \\"deleted_at\\") @default(value: \\"1970-01-01 00:00:00\\")
+  description: String
+  email: String
+  enableNotifications: Boolean @db(name: \\"enable_notifications\\") @default(value: 1)
+  encryptedPassword: String @db(name: \\"encrypted_password\\")
+  fahrenheit: Boolean
+  firstname: String
+  fromCountryId: Int @db(name: \\"from_country_id\\")
+  googlePlaceId: String @db(name: \\"google_place_id\\")
+  handicap: Int
+  iosApp: Boolean @db(name: \\"ios_app\\") @default(value: 0)
+  ipAddress: String @db(name: \\"ip_address\\")
+  isAdmin: Boolean @db(name: \\"is_admin\\") @default(value: 0)
+  job: String
+  lastname: String
+  lastSignInAt: DateTime @db(name: \\"last_sign_in_at\\")
+  lastSignInIp: String @db(name: \\"last_sign_in_ip\\")
+  latitude: Float
+  location: String
+  longitude: Float
+  miles: Boolean
+  mixpanelDistinctId: String @db(name: \\"mixpanel_distinct_id\\")
+  noClub: Boolean @db(name: \\"no_club\\") @default(value: 0)
+  notificationToken: String @db(name: \\"notification_token\\")
+  oauthExpiresAt: DateTime @db(name: \\"oauth_expires_at\\")
+  oauthSecret: String @db(name: \\"oauth_secret\\")
+  oauthToken: String @db(name: \\"oauth_token\\")
+  official: Boolean @default(value: 0)
+  points: Int @default(value: 0)
+  postsViews: [PostsView]
+  private: Boolean @default(value: 0)
+  pro: Boolean @default(value: 0)
+  productsReviews: [ProductsReview]
+  profilePictureId: Int @db(name: \\"profile_picture_id\\") @default(value: 2)
+  provider: String
+  rankingId: Int @db(name: \\"ranking_id\\")
+  rememberCreatedAt: DateTime @db(name: \\"remember_created_at\\")
+  resetPasswordSentAt: DateTime @db(name: \\"reset_password_sent_at\\")
+  resetPasswordToken: String @db(name: \\"reset_password_token\\")
+  sex: Int
+  signInCount: Int @db(name: \\"sign_in_count\\") @default(value: 0)
+  signupNbCoursesPlayed: String @db(name: \\"signup_nb_courses_played\\")
+  slug: String
+  step: String @default(value: \\"step1\\")
+  stickyNotesUsers: [StickyNotesUser]
+  suggestionsViews: [SuggestionsView]
+  tokens: String
+  uid: String
+  unconfirmedEmail: String @db(name: \\"unconfirmed_email\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userClubActivities: [UserClubActivity]
+  username: String
+  verifiedAmbassador: Boolean @db(name: \\"verified_ambassador\\") @default(value: 0)
+  work: String
+}
+
+type UserClubActivity @db(name: \\"user_club_activities\\") {
+  id: Int! @id
+  checkedIn: Boolean @db(name: \\"checked_in\\")
+  club: Club @db(name: \\"club_id\\")
+  following: Boolean
+  played: Int @default(value: 0)
+  reviewScore: Int @db(name: \\"review_score\\")
+  user: User @db(name: \\"user_id\\")
+  wishing: Boolean
+  wishingMembership: Boolean @db(name: \\"wishing_membership\\")
+}
+
+type UserProduct @db(name: \\"user_products\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  itemId: Int @db(name: \\"item_id\\")
+  productId: Int @db(name: \\"product_id\\")
+  productType: String @db(name: \\"product_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+  year: Int
+}
+
+type Username @db(name: \\"usernames\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  name: String
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  usernamableId: Int @db(name: \\"usernamable_id\\")
+  usernamableType: String @db(name: \\"usernamable_type\\")
+}
+
+type UsersInteraction @db(name: \\"users_interactions\\") {
+  id: Int! @id
+  action: String
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  platform: Int
+  referrer: String
+  resourceId: Int @db(name: \\"resource_id\\")
+  resourceType: String @db(name: \\"resource_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type UsersRole @db(name: \\"users_roles\\") {
+  id: Int! @id
+  roleId: Int @db(name: \\"role_id\\")
+  userId: Int @db(name: \\"user_id\\")
+}
+
+type Version @db(name: \\"versions\\") {
+  id: Int! @id
+  createdAt: DateTime @db(name: \\"created_at\\")
+  event: String
+  itemId: Int! @db(name: \\"item_id\\")
+  itemType: String @db(name: \\"item_type\\")
+  object: String
+  whodunnit: String
+}
+
+type Villa @db(name: \\"villas\\") {
+  id: Int! @id
+  address: String
+  city: String
+  latitude: Float
+  link: String
+  longitude: Float
+  name: String
+}
+
+type Visit @db(name: \\"visits\\") {
+  # Type binary(16) is not supported
+  # id: binary(16)! @id
+  browser: String
+  city: String
+  country: String
+  createdAt: DateTime @db(name: \\"created_at\\")
+  deviceType: String @db(name: \\"device_type\\")
+  ip: String
+  landingPage: String @db(name: \\"landing_page\\")
+  os: String
+  referrer: String
+  referringDomain: String @db(name: \\"referring_domain\\")
+  region: String
+  screenHeight: Int @db(name: \\"screen_height\\")
+  screenWidth: Int @db(name: \\"screen_width\\")
+  searchKeyword: String @db(name: \\"search_keyword\\")
+  startedAt: DateTime @db(name: \\"started_at\\")
+  updatedAt: DateTime @db(name: \\"updated_at\\")
+  userAgent: String @db(name: \\"user_agent\\")
+  userId: Int @db(name: \\"user_id\\")
+  utmCampaign: String @db(name: \\"utm_campaign\\")
+  utmContent: String @db(name: \\"utm_content\\")
+  utmMedium: String @db(name: \\"utm_medium\\")
+  utmSource: String @db(name: \\"utm_source\\")
+  utmTerm: String @db(name: \\"utm_term\\")
+  # Type binary(16) is not supported
+  # visitorId: binary(16) @db(name: \\"visitor_id\\")
+}
+
+type Vote @db(name: \\"votes\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  resourceId: Int @db(name: \\"resource_id\\")
+  resourceType: String @db(name: \\"resource_type\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+  value: Int
+}
+
+type Weather @db(name: \\"weathers\\") {
+  id: Int! @id
+  date: DateTime
+  description: String
+  tempMax: Int @db(name: \\"temp_max\\")
+  tempMin: Int @db(name: \\"temp_min\\")
+  weatherableId: Int @db(name: \\"weatherable_id\\")
+  weatherableType: String @db(name: \\"weatherable_type\\")
+  weathering: Int
+  windDirection: Int @db(name: \\"wind_direction\\")
+  windSpeed: Int @db(name: \\"wind_speed\\")
+}
+
+type Wish @db(name: \\"wishes\\") {
+  id: Int! @id
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  updatedAt: DateTime! @db(name: \\"updated_at\\")
+  userId: Int @db(name: \\"user_id\\")
+  wishableId: Int @db(name: \\"wishable_id\\")
+  wishableType: String @db(name: \\"wishable_type\\")
+}"
+`;

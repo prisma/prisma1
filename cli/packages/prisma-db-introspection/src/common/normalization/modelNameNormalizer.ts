@@ -4,13 +4,11 @@ import {
   IGQLField,
   ISDL,
   capitalize,
-  plural,
   toposort,
   isTypeIdentifier,
   camelCase,
 } from 'prisma-datamodel'
-import { INormalizer, Normalizer } from './normalizer'
-import { groupBy, uniqBy } from 'lodash'
+import { Normalizer } from './normalizer'
 
 export default class ModelNameNormalizer extends Normalizer {
   public normalize(model: ISDL) {
@@ -36,7 +34,10 @@ export default class ModelNameNormalizer extends Normalizer {
       return name
     }
 
-    const normalizedName = capitalize(camelCase(singular(name)))
+    // Replace all special chars.
+    let normalizedName = name.replace(/[^a-z0-9_]+/gi, '')
+
+    normalizedName = capitalize(camelCase(singular(normalizedName)))
 
     // if there is a naming conflict with a known scalar type, use the default name
     if (isTypeIdentifier(normalizedName) || isTypeIdentifier(singular(name))) {
@@ -77,6 +78,9 @@ export default class ModelNameNormalizer extends Normalizer {
     if (typeof field.type !== 'string' && name.toLowerCase().endsWith('_id')) {
       name = name.substring(0, name.length - 3)
     }
+
+    // Replace all special chars.
+    name = name.replace(/[^a-z0-9_]+/gi, '')
 
     // Follow prisma conventions.
     const normalizedName = camelCase(name)

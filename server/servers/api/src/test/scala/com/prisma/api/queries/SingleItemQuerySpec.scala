@@ -7,31 +7,33 @@ import org.scalatest.{FlatSpec, Matchers, WordSpecLike}
 class SingleItemQuerySpec extends WordSpecLike with Matchers with ApiSpecBase {
 
   "should return null if the id does not exist" in {
-    val project = SchemaDsl.fromStringV11() {
-      """type Todo {
-      |  id: ID! @id
-      |  title: String!
-      |}
-    """.stripMargin
+    ifIsNotPrisma2 {
+      val project = SchemaDsl.fromStringV11() {
+        """type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |}
+      """.stripMargin
+      }
+      database.setup(project)
+
+      val result = server.query(
+        s"""{
+           |  todo(where: {id: "5beea4aa6183dd734b2dbd9b"}){
+           |    ...todoFields
+           |  }
+           |}
+           |
+           |fragment todoFields on Todo {
+           |  id
+           |  title
+           |}
+           |""".stripMargin,
+        project
+      )
+
+      result.toString should equal("""{"data":{"todo":null}}""")
     }
-    database.setup(project)
-
-    val result = server.query(
-      s"""{
-         |  todo(where: {id: "5beea4aa6183dd734b2dbd9b"}){
-         |    ...todoFields
-         |  }
-         |}
-         |
-         |fragment todoFields on Todo {
-         |  id
-         |  title
-         |}
-         |""".stripMargin,
-      project
-    )
-
-    result.toString should equal("""{"data":{"todo":null}}""")
   }
 
   "should work by id" in {
@@ -101,31 +103,33 @@ class SingleItemQuerySpec extends WordSpecLike with Matchers with ApiSpecBase {
   }
 
   "should respect custom db names" in {
-    val project = SchemaDsl.fromStringV11() {
-      """
-        |type Todo @db(name: "my_table") {
-        |  id: ID! @id
-        |  title: String @db(name: "my_column")
-        |}
-      """.stripMargin
+    ifIsNotPrisma2 {
+      val project = SchemaDsl.fromStringV11() {
+        """
+          |type Todo @db(name: "my_table") {
+          |  id: ID! @id
+          |  title: String @db(name: "my_column")
+          |}
+        """.stripMargin
+      }
+      database.setup(project)
+
+      val result = server.query(
+        s"""{
+           |  todo(where: {id: "5beea4aa6183dd734b2dbd9b"}){
+           |    ...todoFields
+           |  }
+           |}
+           |
+           |fragment todoFields on Todo {
+           |  id
+           |  title
+           |}
+           |""".stripMargin,
+        project
+      )
+
+      result.toString should equal("""{"data":{"todo":null}}""")
     }
-    database.setup(project)
-
-    val result = server.query(
-      s"""{
-         |  todo(where: {id: "5beea4aa6183dd734b2dbd9b"}){
-         |    ...todoFields
-         |  }
-         |}
-         |
-         |fragment todoFields on Todo {
-         |  id
-         |  title
-         |}
-         |""".stripMargin,
-      project
-    )
-
-    result.toString should equal("""{"data":{"todo":null}}""")
   }
 }

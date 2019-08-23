@@ -1,33 +1,46 @@
 [package]
 name = "prisma"
 version = "0.1.0"
-authors = ["Dominic Petrick <dompetrick@gmail.com>"]
+authors = ["Dominic Petrick <dompetrick@gmail.com>", "Katharina Fey <kookie@spacekookie.de>"]
 edition = "2018"
 
 [features]
 default = ["sql", "graphql"]
-sql = ["sql-connector"]
+sql = ["sql-connector", "prisma-query"]
 graphql = ["graphql-parser"]
 
 [dependencies]
-actix-web = "0.7.18"
+actix-web = "0.7.19"
 actix = "0.7.5"
 lazy_static = "1.3"
-prisma-common = { path = "../../libs/prisma-common" }
+logger = { path = "../../libs/logger" }
 prisma-inflector = { path = "../../libs/prisma-inflector" }
+datamodel = { path = "../../libs/datamodel" }
 prisma-models = { path = "../../prisma-models" }
 core = { path = "../core" }
 connector = { path = "../connectors/connector" }
 sql-connector = { path = "../connectors/sql-connector", optional = true }
-env_logger = "0.6"
+prisma-query = { git = "https://github.com/prisma/prisma-query", optional = true }
 graphql-parser = { version = "0.2.2", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = [ "preserve_order" ] }
 base64 = "0.10"
-log = "0.4"
 rust-embed = { version = "4.3", features = ["debug-embed"] }
 failure = "0.1"
 failure_derive = "0.1"
 debug_stub_derive = "0.3"
 indexmap = { version = "1.0", features = [ "serde-1" ] }
 itertools = "0.8"
+url = "1.7"
+clap = "2.33"
+human-panic = "1.0"
+
+slog = "2.5"
+slog-async = "2.3"
+slog-json = "2.3"
+slog-stdlog = "3.0"
+slog-scope = "4.1"
+log = "0.4"
+
+[build-dependencies]
+rustc_version = "0.2.3"

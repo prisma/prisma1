@@ -1,48 +1,60 @@
+use crate::commands::CommandResult;
 use crate::migration::datamodel_calculator::*;
 use crate::migration::datamodel_migration_steps_inferrer::*;
 use datamodel::dml::*;
-use datamodel::validator::Validator;
 use migration_connector::*;
-use sql_migration_connector::SqlMigrationConnector;
-use std::path::Path;
 use std::sync::Arc;
 
-// todo: add MigrationConnector. does not work  because of GAT shinenigans
-
-pub struct MigrationEngine {
-    datamodel_migration_steps_inferrer: Arc<DataModelMigrationStepsInferrer>,
-    datamodel_calculator: Arc<DataModelCalculator>,
+pub struct MigrationEngine<C, D>
+where
+    C: MigrationConnector<DatabaseMigration = D>,
+    D: DatabaseMigrationMarker + 'static,
+{
+    datamodel_migration_steps_inferrer: Arc<dyn DataModelMigrationStepsInferrer>,
+    datamodel_calculator: Arc<dyn DataModelCalculator>,
+    connector: C,
 }
 
-impl MigrationEngine {
-    pub fn new() -> Box<MigrationEngine> {
+impl<C, D> MigrationEngine<C, D>
+where
+    C: MigrationConnector<DatabaseMigration = D>,
+    D: DatabaseMigrationMarker + 'static,
+{
+    pub fn new(connector: C) -> crate::Result<Self> {
         let engine = MigrationEngine {
             datamodel_migration_steps_inferrer: Arc::new(DataModelMigrationStepsInferrerImplWrapper {}),
-            datamodel_calculator: Arc::new(DataModelCalculatorSingleton {}),
+            datamodel_calculator: Arc::new(DataModelCalculatorImpl {}),
+            connector,
         };
-        engine.connector().initialize();
-        Box::new(engine)
+
+        engine.init()?;
+
+        Ok(engine)
     }
 
-    pub fn datamodel_migration_steps_inferrer(&self) -> Arc<DataModelMigrationStepsInferrer> {
-        Arc::clone(&self.datamodel_migration_steps_inferrer)
+    pub fn init(&self) -> CommandResult<()> {
+        self.connector().initialize()?;
+        Ok(())
     }
 
-    pub fn datamodel_calculator(&self) -> Arc<DataModelCalculator> {
-        Arc::clone(&self.datamodel_calculator)
+    pub fn reset(&self) -> CommandResult<()> {
+        self.connector().reset()?;
+        Ok(())
     }
 
-    pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigrationStep = impl DatabaseMigrationStepExt>> {
-        let file_path = file!(); // todo: the sqlite file name must be taken from the config
-        let file_name = Path::new(file_path).file_stem().unwrap().to_str().unwrap();
-        Arc::new(SqlMigrationConnector::new(file_name.to_string()))
+    pub fn connector(&self) -> &C {
+        &self.connector
     }
 
-    pub fn parse_datamodel(&self, datamodel_string: &String) -> Schema {
-        let ast = datamodel::parser::parse(datamodel_string).unwrap();
-        // TODO: this would need capabilities
-        // TODO: Special directives are injected via EmptyAttachmentValidator.
-        let validator = Validator::new();
-        validator.validate(&ast).unwrap()
+    pub fn datamodel_migration_steps_inferrer(&self) -> &Arc<dyn DataModelMigrationStepsInferrer> {
+        &self.datamodel_migration_steps_inferrer
+    }
+
+    pub fn datamodel_calculator(&self) -> &Arc<dyn DataModelCalculator> {
+        &self.datamodel_calculator
+    }
+
+    pub fn render_datamodel(&self, datamodel: &Datamodel) -> String {
+        datamodel::render(&datamodel).expect("Rendering the Datamodel failed.")
     }
 }

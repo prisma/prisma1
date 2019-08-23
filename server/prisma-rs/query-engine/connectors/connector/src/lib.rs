@@ -4,16 +4,17 @@ extern crate failure_derive;
 
 pub mod error;
 pub mod filter;
-pub mod mutaction;
+pub mod query_ast;
+pub mod result_ast;
 
 mod compare;
-mod data_resolver;
-mod database_mutaction_executor;
+mod interfaces;
 mod query_arguments;
 
 pub use compare::*;
-pub use data_resolver::*;
-pub use database_mutaction_executor::*;
+pub use interfaces::*;
 pub use query_arguments::*;
+pub use query_ast::*;
+pub use result_ast::*;
 
-pub type ConnectorResult<T> = Result<T, error::ConnectorError>;
+pub type Result<T> = std::result::Result<T, error::ConnectorError>;

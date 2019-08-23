@@ -7,9 +7,13 @@ members = [
   "query-engine/connectors/connector",
   "query-engine/connectors/sql-connector",
   "query-engine/prisma",
-  "query-engine/native-bridge",
   "query-engine/core",
+  "prisma-fmt",
   "libs/datamodel",
   "libs/prisma-inflector",
-  "libs/database-inspector"
+  "libs/database-introspection",
+  "libs/logger",
 ]
+
+[patch.crates-io]
+barrel = { git = "https://github.com/aknuds1/barrel.git", branch = "master" }

@@ -11,10 +11,10 @@ pub type ModelWeakRef = Weak<Model>;
 #[serde(rename_all = "camelCase")]
 pub struct ModelTemplate {
     pub name: String,
-    pub stable_identifier: String,
+    pub stable_identifier: String, // todo: remove once we fully switched to dm v2
     pub is_embedded: bool,
     pub fields: Vec<FieldTemplate>,
-    pub manifestation: Option<ModelManifestation>,
+    pub manifestation: Option<ModelManifestation>, // todo: convert to Option<String> once we fully switched to dm v2
 }
 
 #[derive(DebugStub)]
@@ -44,7 +44,7 @@ impl ModelTemplate {
             is_embedded: self.is_embedded,
             fields: OnceCell::new(),
             manifestation: self.manifestation,
-            internal_data_model: internal_data_model,
+            internal_data_model,
         });
 
         let fields = Fields::new(
@@ -85,8 +85,8 @@ impl Model {
         }
     }
 
-    pub fn table(&self) -> Table {
-        (self.internal_data_model().db_name.as_str(), self.db_name()).into()
+    pub fn table(&self) -> Table<'static> {
+        (self.internal_data_model().db_name.clone(), self.db_name().to_string()).into()
     }
 
     pub fn fields(&self) -> &Fields {
@@ -114,7 +114,7 @@ impl Model {
             .expect("InternalDataModel does not exist anymore. Parent internal_data_model is deleted without deleting the child internal_data_model.")
     }
 
-    pub fn id_column(&self) -> Column {
+    pub fn id_column(&self) -> Column<'static> {
         self.fields().id().as_column()
     }
 }

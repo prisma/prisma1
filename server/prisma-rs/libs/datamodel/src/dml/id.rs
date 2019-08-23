@@ -1,58 +1,44 @@
 use super::traits::*;
-use super::validator::value::ValueParserError;
 use crate::ast;
+use crate::errors::ValidationError;
 use serde::{Deserialize, Serialize};
 
-use std::str::FromStr;
+use crate::common::FromStrAndSpan;
 
+/// Represents a strategy for generating IDs.
 #[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
 pub enum IdStrategy {
     Auto,
     None,
 }
 
-impl FromStr for IdStrategy {
-    type Err = ValueParserError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+impl FromStrAndSpan for IdStrategy {
+    fn from_str_and_span(s: &str, span: ast::Span) -> Result<Self, ValidationError> {
         match s {
             "AUTO" => Ok(IdStrategy::Auto),
             "NONE" => Ok(IdStrategy::None),
-            _ => Err(ValueParserError::new(
-                &format!("Invalid id strategy {}.", s),
-                s,
-                &ast::Span::empty(),
-            )),
+            _ => Err(ValidationError::new_literal_parser_error("id strategy", s, span)),
         }
     }
 }
 
-#[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
-pub enum ScalarListStrategy {
-    Embedded,
-    Relation,
-}
-
-impl FromStr for ScalarListStrategy {
-    type Err = ValueParserError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "EMBEDDED" => Ok(ScalarListStrategy::Embedded),
-            "RELATION" => Ok(ScalarListStrategy::Relation),
-            _ => Err(ValueParserError::new(
-                &format!("Invalid scalar list strategy {}.", s),
-                s,
-                &ast::Span::empty(),
-            )),
+impl ToString for IdStrategy {
+    fn to_string(&self) -> String {
+        match self {
+            IdStrategy::Auto => String::from("AUTO"),
+            IdStrategy::None => String::from("NONE"),
         }
     }
 }
 
+/// Represents a sequence. Can be used to seed IDs.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Sequence {
+    /// The name of the sequence.
     pub name: String,
+    /// The initial value of the sequence.
     pub initial_value: i32,
+    /// The allocation size of the sequence.
     pub allocation_size: i32,
 }
 

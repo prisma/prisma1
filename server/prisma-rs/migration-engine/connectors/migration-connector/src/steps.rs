@@ -1,5 +1,5 @@
 use datamodel::*;
-use nullable::Nullable;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 #[serde(tag = "stepType")]
@@ -13,12 +13,19 @@ pub enum MigrationStep {
     CreateEnum(CreateEnum),
     UpdateEnum(UpdateEnum),
     DeleteEnum(DeleteEnum),
-    // CreateRelation(CreateRelation),
-    // DeleteRelation(DeleteRelation),
 }
 
 pub trait WithDbName {
     fn db_name(&self) -> String;
+}
+
+// Deserializes the cases undefined, null and Some(T) into an Option<Option<T>>
+fn some_option<'de, T, D>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+where
+    T: Deserialize<'de>,
+    D: Deserializer<'de>,
+{
+    Option::<T>::deserialize(deserializer).map(Some)
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Hash, Clone)]
@@ -40,15 +47,17 @@ pub struct UpdateModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub new_name: Option<String>,
 
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "nullable::optional_nullable_deserialize"
-    )]
-    pub db_name: Option<Nullable<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
+    pub db_name: Option<Option<String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub embedded: Option<bool>,
+}
+
+impl UpdateModel {
+    pub fn is_any_option_set(&self) -> bool {
+        self.new_name.is_some() || self.embedded.is_some() || self.db_name.is_some()
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
@@ -78,8 +87,10 @@ pub struct CreateField {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_updated_at: Option<bool>,
 
+    pub is_unique: bool,
+
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>, // fixme: change to behaviour
+    pub id: Option<IdInfo>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<Value>,
@@ -113,8 +124,8 @@ pub struct UpdateField {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub arity: Option<FieldArity>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub db_name: Option<Nullable<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
+    pub db_name: Option<Option<String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_created_at: Option<bool>,
@@ -123,23 +134,28 @@ pub struct UpdateField {
     pub is_updated_at: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<Nullable<String>>, // fixme: change to behaviour
+    pub is_unique: Option<bool>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub default: Option<Nullable<Value>>,
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
+    pub id_info: Option<Option<IdInfo>>, // fixme: change to behaviour
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub scalar_list: Option<Nullable<ScalarListStrategy>>,
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
+    pub default: Option<Option<Value>>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
+    pub scalar_list: Option<Option<ScalarListStrategy>>,
 }
 
 impl UpdateField {
     pub fn is_any_option_set(&self) -> bool {
         self.new_name.is_some()
+            || self.tpe.is_some()
             || self.arity.is_some()
             || self.db_name.is_some()
             || self.is_created_at.is_some()
             || self.is_updated_at.is_some()
-            || self.id.is_some()
+            || self.is_unique.is_some()
+            || self.id_info.is_some()
             || self.default.is_some()
             || self.scalar_list.is_some()
     }
@@ -157,6 +173,17 @@ pub struct DeleteField {
 pub struct CreateEnum {
     pub name: String,
     pub values: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub db_name: Option<String>,
+}
+
+impl WithDbName for CreateEnum {
+    fn db_name(&self) -> String {
+        match self.db_name {
+            Some(ref db_name) => db_name.clone(),
+            None => self.name.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
@@ -169,6 +196,15 @@ pub struct UpdateEnum {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub values: Option<Vec<String>>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
+    pub db_name: Option<Option<String>>,
+}
+
+impl UpdateEnum {
+    pub fn is_any_option_set(&self) -> bool {
+        self.new_name.is_some() || self.values.is_some() || self.db_name.is_some()
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
@@ -176,72 +212,3 @@ pub struct UpdateEnum {
 pub struct DeleteEnum {
     pub name: String,
 }
-
-// #[derive(Debug, Deserialize, Serialize, PartialEq)]
-// #[serde(rename_all = "camelCase", deny_unknown_fields)]
-// pub struct CreateRelation {
-//     pub name: String,
-//     pub model_a: RelationFieldSpec,
-//     pub model_b: RelationFieldSpec,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub table: Option<LinkTableSpec>,
-// }
-
-// #[derive(Debug, Deserialize, Serialize, PartialEq)]
-// #[serde(rename_all = "camelCase", deny_unknown_fields)]
-// pub struct UpdateRelation {
-//     pub name: String,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub new_name: Option<String>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub model_a: Option<RelationFieldSpec>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub model_b: Option<RelationFieldSpec>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub table: Option<LinkTableSpec>,
-// }
-
-// #[derive(Debug, Deserialize, Serialize, PartialEq)]
-// #[serde(rename_all = "camelCase", deny_unknown_fields)]
-// pub struct DeleteRelation {
-//     pub name: String,
-// }
-
-// // fixme: this data structure is used in create and update. It does not allow to set field to null though in update.
-// // fixme: the field inline_link does not allow to customize the underlying db name right now.
-// #[derive(Debug, Deserialize, Serialize, PartialEq)]
-// #[serde(rename_all = "camelCase", deny_unknown_fields)]
-// pub struct RelationFieldSpec {
-//     pub name: String,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub field: Option<String>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub is_list: Option<bool>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub is_optional: Option<bool>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub on_delete: Option<String>, // fixme: change to proper enum
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub inline_link: Option<bool>,
-// }
-
-// // fixme: this strucut does not allow to customize the db name of the link table.
-// #[derive(Debug, Deserialize, Serialize, PartialEq)]
-// #[serde(rename_all = "camelCase", deny_unknown_fields)]
-// pub struct LinkTableSpec {
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub model_a_column: Option<String>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub model_b_column: Option<String>,
-// }

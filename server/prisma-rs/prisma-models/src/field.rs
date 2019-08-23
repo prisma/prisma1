@@ -18,11 +18,11 @@ pub enum FieldTemplate {
 
 #[derive(Debug)]
 pub enum Field {
-    Relation(Arc<RelationField>),
-    Scalar(Arc<ScalarField>),
+    Relation(RelationFieldRef),
+    Scalar(ScalarFieldRef),
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct FieldManifestation {
     pub db_name: String,
@@ -43,7 +43,7 @@ pub enum TypeIdentifier {
 }
 
 impl TypeIdentifier {
-    pub fn user_friendly_type_name(&self) -> String {
+    pub fn user_friendly_type_name(self) -> String {
         match self {
             TypeIdentifier::GraphQLID => "ID".to_string(),
             _ => format!("{:?}", self),
@@ -72,6 +72,41 @@ impl Field {
             Field::Relation(ref rf) => rf.as_column(),
         }
     }
+
+    pub fn is_visible(&self) -> bool {
+        match self {
+            Field::Scalar(ref sf) => !sf.is_hidden,
+            Field::Relation(ref rf) => !rf.is_hidden,
+        }
+    }
+
+    pub fn is_scalar(&self) -> bool {
+        match self {
+            Field::Scalar(_) => true,
+            Field::Relation(_) => false,
+        }
+    }
+
+    pub fn is_list(&self) -> bool {
+        match self {
+            Field::Scalar(ref sf) => sf.is_list,
+            Field::Relation(ref rf) => rf.is_list,
+        }
+    }
+
+    pub fn is_required(&self) -> bool {
+        match self {
+            Field::Scalar(ref sf) => sf.is_required,
+            Field::Relation(ref rf) => rf.is_required,
+        }
+    }
+
+    pub fn type_identifier(&self) -> TypeIdentifier {
+        match self {
+            Field::Scalar(ref sf) => sf.type_identifier,
+            Field::Relation(ref rf) => rf.type_identifier,
+        }
+    }
 }
 
 impl FieldTemplate {
@@ -83,12 +118,14 @@ impl FieldTemplate {
                     type_identifier: st.type_identifier,
                     is_required: st.is_required,
                     is_list: st.is_list,
-                    is_unique: st.is_unique,
                     is_hidden: st.is_hidden,
                     is_auto_generated: st.is_auto_generated,
+                    is_unique: st.is_unique,
                     manifestation: st.manifestation,
+                    internal_enum: st.internal_enum,
                     behaviour: st.behaviour,
                     model,
+                    default_value: st.default_value,
                 };
 
                 Field::Scalar(Arc::new(scalar))
@@ -99,9 +136,9 @@ impl FieldTemplate {
                     type_identifier: rt.type_identifier,
                     is_required: rt.is_required,
                     is_list: rt.is_list,
-                    is_unique: rt.is_unique,
                     is_hidden: rt.is_hidden,
                     is_auto_generated: rt.is_auto_generated,
+                    is_unique: rt.is_unique,
                     relation_name: rt.relation_name,
                     relation_side: rt.relation_side,
                     model,

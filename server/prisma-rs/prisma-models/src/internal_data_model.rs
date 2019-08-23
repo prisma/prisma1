@@ -17,7 +17,13 @@ pub struct InternalDataModelTemplate {
 #[derive(DebugStub)]
 pub struct InternalDataModel {
     pub enums: Vec<InternalEnum>,
-    pub version: Option<String>,
+    version: Option<String>,
+
+    /// Todo clarify / rename.
+    /// The db name influences how data is queried from the database.
+    /// E.g. this influences the schema part of a postgres query: `database`.`schema`.`table`.
+    /// Other connectors do not use `schema`, like postgres does, and this variable would
+    /// influence the `database` part instead.
     pub db_name: String,
 
     models: OnceCell<Vec<ModelRef>>,
@@ -25,7 +31,7 @@ pub struct InternalDataModel {
     relation_fields: OnceCell<Vec<RelationFieldRef>>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct InternalEnum {
     pub name: String,
@@ -39,7 +45,7 @@ impl InternalDataModelTemplate {
             relations: OnceCell::new(),
             enums: self.enums,
             version: self.version,
-            db_name: db_name,
+            db_name,
             relation_fields: OnceCell::new(),
         });
 
@@ -93,7 +99,7 @@ impl InternalDataModel {
 
     pub fn fields_requiring_model(&self, model: ModelRef) -> Vec<RelationFieldRef> {
         self.relation_fields()
-            .into_iter()
+            .iter()
             .filter(|rf| rf.related_model() == model)
             .filter(|f| f.is_required && !f.is_list)
             .map(|f| Arc::clone(f))
@@ -109,5 +115,19 @@ impl InternalDataModel {
                     .collect()
             })
             .as_slice()
+    }
+}
+
+impl From<&InternalDataModelRef> for Project {
+    fn from(data_model: &InternalDataModelRef) -> Self {
+        let internal_data_model = OnceCell::new();
+        internal_data_model.set(Arc::clone(data_model)).unwrap();
+
+        Self {
+            id: data_model.db_name.clone(),
+            internal_data_model,
+            // This does _not_ seem correct
+            revision: Default::default(),
+        }
     }
 }

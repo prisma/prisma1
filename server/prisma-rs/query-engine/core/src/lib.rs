@@ -1,29 +1,54 @@
-#![deny(warnings)]
+#![warn(warnings)] // todo deny warnings once done
+
+// #[macro_use]
+// extern crate log;
 
 #[macro_use]
-extern crate log;
+extern crate debug_stub_derive;
 
-mod builders;
+#[macro_use]
+extern crate lazy_static;
+
 mod error;
-mod query_ast;
-mod query_results;
-mod executor;
-mod schema;
 
-pub mod ir;
+pub mod executor;
+pub mod query_builders;
+pub mod query_document;
+pub mod response_ir;
+pub mod schema;
 
-pub use builders::*;
 pub use error::*;
-pub use query_ast::*;
-pub use query_results::*;
-pub use executor::*;
+pub use executor::QueryExecutor;
 pub use schema::*;
+
+use connector::{Query, ReadQueryResult, WriteQueryResult};
 
 pub type CoreResult<T> = Result<T, CoreError>;
 
-/// A type wrapper around read and write queries
-#[derive(Debug, Clone)]
-pub enum Query {
-    Read(ReadQuery),
-    Write(WriteQuery),
+/// Augments connector queries with additional information on how to resolve their results.
+/// This is intended to be a temporary type to work around current dependent execution limitations.
+pub type QueryPair = (Query, ResultResolutionStrategy);
+
+#[derive(Debug)]
+pub enum ResultResolutionStrategy {
+    /// Resolve the actual result by evaluating another query.
+    Dependent(Box<QueryPair>),
+
+    /// Serialize the result as-is into the specified output type.
+    Serialize(OutputTypeRef),
+}
+
+#[derive(Debug)]
+pub enum ResultPair {
+    Read(ReadQueryResult, OutputTypeRef),
+    Write(WriteQueryResultWrapper, OutputTypeRef),
+}
+
+/// Purely a workaround to not mess with the internals of the write query and result ASTs for now.
+/// Reason: We need the name information of the query for serialization purposes.
+#[derive(Debug)]
+pub struct WriteQueryResultWrapper {
+    pub name: String,
+    pub alias: Option<String>,
+    pub result: WriteQueryResult,
 }

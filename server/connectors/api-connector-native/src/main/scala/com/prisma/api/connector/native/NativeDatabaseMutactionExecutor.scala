@@ -32,7 +32,8 @@ case class NativeDatabaseMutactionExecutor(
       query = query
     )
 
-    Future(NativeBinding.execute_raw(envelope))
+    val database_file = Some(s"${project.id}_DB")
+    Future(NativeBinding.execute_raw(database_file, envelope))
   }
 
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction)
@@ -40,7 +41,7 @@ case class NativeDatabaseMutactionExecutor(
 
   private def execute(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = {
     val actionsBuilder = JdbcActionsBuilder(mutaction.project, slickDatabaseArg)
-    val singleAction = executeTopLevelMutaction(mutaction, actionsBuilder)
+    val singleAction   = executeTopLevelMutaction(mutaction, actionsBuilder)
 
     runAttached(mutaction.project, singleAction)
   }
@@ -56,8 +57,9 @@ case class NativeDatabaseMutactionExecutor(
 
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = {
     import com.prisma.shared.models.ProjectJsonFormatter._
-    val projectJson = ByteString.copyFromUtf8(Json.toJson(mutaction.project).toString())
-    val headerName  = mutaction.getClass.getSimpleName
+    val projectJson   = ByteString.copyFromUtf8(Json.toJson(mutaction.project).toString())
+    val headerName    = mutaction.getClass.getSimpleName
+    val database_file = Some(s"${mutaction.project.id}_DB")
 
     mutaction match {
       case m: TopLevelCreateNode =>
@@ -65,14 +67,14 @@ case class NativeDatabaseMutactionExecutor(
           createNodeToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
-        top_level_mutaction_interpreter(envelope, m)
+        top_level_mutaction_interpreter(database_file, envelope, m)
 
       case m: TopLevelUpdateNode =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Update(
           updateNodeToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
-        top_level_mutaction_interpreter(envelope, m)
+        top_level_mutaction_interpreter(database_file, envelope, m)
 
       case m: TopLevelUpsertNode =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Upsert(
@@ -83,7 +85,7 @@ case class NativeDatabaseMutactionExecutor(
             update = updateNodeToProtocol(m.update),
           ))
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
-        top_level_mutaction_interpreter(envelope, m)
+        top_level_mutaction_interpreter(database_file, envelope, m)
 
       case m: TopLevelUpdateNodes =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.UpdateNodes(
@@ -95,7 +97,7 @@ case class NativeDatabaseMutactionExecutor(
             listArgs = listArgsToProtocolArgs(m.listArgs),
           ))
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
-        top_level_mutaction_interpreter(envelope, m)
+        top_level_mutaction_interpreter(database_file, envelope, m)
 
       case m: TopLevelDeleteNode =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Delete(
@@ -104,7 +106,7 @@ case class NativeDatabaseMutactionExecutor(
             where = toNodeSelector(m.where),
           ))
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
-        top_level_mutaction_interpreter(envelope, m)
+        top_level_mutaction_interpreter(database_file, envelope, m)
 
       case m: TopLevelDeleteNodes =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.DeleteNodes(
@@ -114,12 +116,12 @@ case class NativeDatabaseMutactionExecutor(
             filter = toProtocolFilter(m.whereFilter.getOrElse(AndFilter(Vector.empty))),
           ))
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
-        top_level_mutaction_interpreter(envelope, m)
+        top_level_mutaction_interpreter(database_file, envelope, m)
 
       case m: ResetData =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Reset(prisma.protocol.ResetData())
         val envelope       = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
-        top_level_mutaction_interpreter(envelope, m)
+        top_level_mutaction_interpreter(database_file, envelope, m)
 
       case m: ImportNodes       => ImportNodesInterpreter(m)
       case m: ImportRelations   => ImportRelationsInterpreter(m)
@@ -265,13 +267,14 @@ case class NativeDatabaseMutactionExecutor(
   }
 
   private def top_level_mutaction_interpreter(
+      database_file: Option[String],
       protoMutaction: prisma.protocol.DatabaseMutaction,
       mutaction: DatabaseMutaction,
   ): TopLevelDatabaseMutactionInterpreter = {
 
     new TopLevelDatabaseMutactionInterpreter {
       override protected def dbioAction(mutationBuilder: JdbcActionsBuilder): DBIO[DatabaseMutactionResult] = {
-        forwarding_dbio(protoMutaction, mutaction)
+        forwarding_dbio(database_file, protoMutaction, mutaction)
       }
 
       override val errorMapper: PartialFunction[Throwable, APIErrors.ClientApiError] = sharedErrorMapper
@@ -279,11 +282,12 @@ case class NativeDatabaseMutactionExecutor(
   }
 
   private def forwarding_dbio(
+      database_file: Option[String],
       protoMutaction: prisma.protocol.DatabaseMutaction,
       mutaction: DatabaseMutaction,
   ): DBIO[DatabaseMutactionResult] = {
     SimpleDBIO { _ =>
-      val executionResult = NativeBinding.execute_mutaction(protoMutaction)
+      val executionResult = NativeBinding.execute_mutaction(database_file, protoMutaction)
       executionResult.`type` match {
         case prisma.protocol.DatabaseMutactionResult.Type.Create(result) =>
           val m = mutaction match {

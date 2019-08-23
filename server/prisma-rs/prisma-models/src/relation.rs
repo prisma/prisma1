@@ -14,14 +14,14 @@ pub enum OnDelete {
 }
 
 impl OnDelete {
-    pub fn is_cascade(&self) -> bool {
+    pub fn is_cascade(self) -> bool {
         match self {
             OnDelete::Cascade => true,
             OnDelete::SetNull => false,
         }
     }
 
-    pub fn is_set_null(&self) -> bool {
+    pub fn is_set_null(self) -> bool {
         match self {
             OnDelete::Cascade => false,
             OnDelete::SetNull => true,
@@ -29,7 +29,7 @@ impl OnDelete {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct InlineRelation {
     #[serde(rename = "inTableOfModelId")]
@@ -38,15 +38,13 @@ pub struct InlineRelation {
 }
 
 impl InlineRelation {
-    fn referencing_column(&self, table: Table) -> Column {
-        let column_name: &str = self.referencing_column.as_ref();
-        let column = Column::from(column_name);
-
+    fn referencing_column(&self, table: Table<'static>) -> Column<'static> {
+        let column = Column::from(self.referencing_column.clone());
         column.table(table)
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationTable {
     pub table: String,
@@ -55,7 +53,7 @@ pub struct RelationTable {
     pub id_column: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 #[serde(rename_all = "snake_case", tag = "relationManifestationType")]
 pub enum RelationLinkManifestation {
     Inline(InlineRelation),
@@ -68,7 +66,7 @@ pub struct RelationTemplate {
     pub name: String,
     pub model_a_on_delete: OnDelete,
     pub model_b_on_delete: OnDelete,
-    pub manifestation: Option<RelationLinkManifestation>,
+    pub manifestation: Option<RelationLinkManifestation>, // TODO: remove the option after the switch to v2 is completed
 
     #[serde(rename = "modelAId")]
     pub model_a_name: String,
@@ -113,7 +111,7 @@ impl RelationTemplate {
             model_b: OnceCell::new(),
             field_a: OnceCell::new(),
             field_b: OnceCell::new(),
-            internal_data_model: internal_data_model,
+            internal_data_model,
         };
 
         Arc::new(relation)
@@ -151,9 +149,9 @@ impl Relation {
     /// A helper function to decide actions based on the `Relation` type. Inline
     /// relation will return a column for updates, a relation table gives back
     /// `None`.
-    pub fn inline_relation_column(&self) -> Option<Column> {
+    pub fn inline_relation_column(&self) -> Option<Column<'static>> {
         if let Some(mani) = self.inline_manifestation() {
-            Some(Column::from(mani.referencing_column.as_ref()).table(self.relation_table()))
+            Some(Column::from(mani.referencing_column.clone()).table(self.relation_table()))
         } else {
             None
         }
@@ -213,7 +211,8 @@ impl Relation {
             .expect("Field B deleted without deleting the relations in internal_data_model.")
     }
 
-    pub fn model_a_column(&self) -> Column {
+    #[allow(clippy::if_same_then_else)]
+    pub fn model_a_column(&self) -> Column<'static> {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
@@ -238,7 +237,8 @@ impl Relation {
         }
     }
 
-    pub fn model_b_column(&self) -> Column {
+    #[allow(clippy::if_same_then_else)]
+    pub fn model_b_column(&self) -> Column<'static> {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
@@ -246,9 +246,7 @@ impl Relation {
             Some(Inline(ref m)) => {
                 let model_b = self.model_b();
 
-                if self.is_self_relation() && self.field_a().is_hidden {
-                    m.referencing_column(self.relation_table())
-                } else if self.is_self_relation() && self.field_b().is_hidden {
+                if self.is_self_relation() && (self.field_a().is_hidden || self.field_b().is_hidden) {
                     m.referencing_column(self.relation_table())
                 } else if self.is_self_relation() {
                     model_b.fields().id().as_column()
@@ -268,7 +266,7 @@ impl Relation {
     /// - One of the model tables for one-to-many or one-to-one relations.
     /// - A separate relation table for all relations, if using the deprecated
     ///   data model syntax.
-    pub fn relation_table(&self) -> Table {
+    pub fn relation_table(&self) -> Table<'static> {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
@@ -292,13 +290,13 @@ impl Relation {
         self.field_a().is_list && self.field_b().is_list
     }
 
-    pub fn id_column(&self) -> Option<Column> {
+    pub fn id_column(&self) -> Option<Column<'static>> {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
             None => Some("id".into()),
             Some(RelationTable(ref m)) => m.id_column.as_ref().map(|s| {
-                let st: &str = s.as_ref();
+                let st: String = s.clone();
                 st.into()
             }),
             _ => None,
@@ -309,7 +307,7 @@ impl Relation {
         self.id_column().is_some()
     }
 
-    pub fn column_for_relation_side(&self, side: RelationSide) -> Column {
+    pub fn column_for_relation_side(&self, side: RelationSide) -> Column<'static> {
         match side {
             RelationSide::A => self.model_a_column(),
             RelationSide::B => self.model_b_column(),

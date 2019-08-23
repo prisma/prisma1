@@ -10,7 +10,6 @@ serde_json = "1.0"
 once_cell = "0.1"
 prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 prisma-models = { path = "../../../prisma-models" }
-prisma-common = { path = "../../../libs/prisma-common" }
 failure = "0.1"
 failure_derive = "0.1"
 uuid = "0.7"
