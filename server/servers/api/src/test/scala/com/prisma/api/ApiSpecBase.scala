@@ -39,12 +39,7 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
     testDependencies.destroy
   }
 
-  def loadTestServer(): ApiTestServer = {
-    prismaConfig.databases.head.connector match {
-      case "native-integration-tests" => ExternalApiTestServer()
-      case _                          => InternalApiTestServer()
-    }
-  }
+  def loadTestServer(): ApiTestServer = InternalApiTestServer()
 
   def escapeString(str: String) = JsString(str).toString()
 

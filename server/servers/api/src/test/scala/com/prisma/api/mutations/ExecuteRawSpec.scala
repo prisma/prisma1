@@ -1,16 +1,15 @@
 package com.prisma.api.mutations
 
-import com.prisma.{ConnectorTag, IgnoreMySql, IgnorePostgres, IgnoreSQLite}
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
-import com.prisma.api.connector.native.NativeDatabaseMutactionExecutor
+import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RawAccessCapability}
-import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
-import org.jooq.{Query, SQLDialect}
+import com.prisma.{ConnectorTag, IgnoreMySql, IgnorePostgres, IgnoreSQLite}
 import org.jooq.conf.{ParamType, Settings}
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.{field, name, table}
+import org.jooq.{Query, SQLDialect}
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.libs.json.{JsString, JsValue}
 import sangria.util.StringUtil
@@ -42,19 +41,18 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
   }
 
   lazy val slickDatabase = testDependencies.databaseMutactionExecutor match {
-    case m: JdbcDatabaseMutactionExecutor   => m.slickDatabase
-    case m: NativeDatabaseMutactionExecutor => m.slickDatabaseArg
+    case m: JdbcDatabaseMutactionExecutor => m.slickDatabase
   }
 
-  lazy val isMySQL     = connectorTag == ConnectorTag.MySqlConnectorTag
-  lazy val isPostgres  = connectorTag == ConnectorTag.PostgresConnectorTag
-  lazy val isSQLite    = connectorTag == ConnectorTag.SQLiteConnectorTag
+  lazy val isMySQL    = connectorTag == ConnectorTag.MySqlConnectorTag
+  lazy val isPostgres = connectorTag == ConnectorTag.PostgresConnectorTag
+  lazy val isSQLite   = connectorTag == ConnectorTag.SQLiteConnectorTag
 
   lazy val dialect = connectorTag match {
-    case ConnectorTag.MySqlConnectorTag => SQLDialect.MYSQL_5_7
+    case ConnectorTag.MySqlConnectorTag    => SQLDialect.MYSQL_5_7
     case ConnectorTag.PostgresConnectorTag => SQLDialect.POSTGRES
-    case ConnectorTag.SQLiteConnectorTag => SQLDialect.SQLITE
-    case ConnectorTag.MongoConnectorTag => sys.error("No raw queries for Mongo")
+    case ConnectorTag.SQLiteConnectorTag   => SQLDialect.SQLITE
+    case ConnectorTag.MongoConnectorTag    => sys.error("No raw queries for Mongo")
   }
 
   lazy val sql         = DSL.using(dialect, new Settings().withRenderFormatted(true))

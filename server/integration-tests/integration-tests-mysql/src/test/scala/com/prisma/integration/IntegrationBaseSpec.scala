@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
-import com.prisma.api.{ApiTestServer, ExternalApiTestServer, InternalApiTestServer, TestApiDependenciesImpl}
+import com.prisma.api.{ApiTestServer, InternalApiTestServer, TestApiDependenciesImpl}
 import com.prisma.config.PrismaConfig
 import com.prisma.deploy.specutils.{DeployTestServer, TestDeployDependencies}
 import com.prisma.shared.models.ConnectorCapability.EmbeddedScalarListsCapability
@@ -69,12 +69,7 @@ trait IntegrationBaseSpec
     internalDB.reset().await
   }
 
-  def loadTestServer(): ApiTestServer = {
-    prismaConfig.databases.head.connector match {
-      case "native-integration-tests" => ExternalApiTestServer()
-      case _                          => InternalApiTestServer()
-    }
-  }
+  def loadTestServer(): ApiTestServer = InternalApiTestServer()
 
   def setupProject(
       schema: String,
