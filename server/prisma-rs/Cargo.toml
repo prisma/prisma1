@@ -12,6 +12,7 @@ members = [
   "libs/datamodel",
   "libs/prisma-inflector",
   "libs/database-introspection",
+  "libs/introspection-command",
   "libs/logger",
 ]
 

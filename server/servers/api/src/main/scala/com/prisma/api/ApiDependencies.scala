@@ -8,10 +8,10 @@ import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.resolver.DeferredResolverImpl
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
 import com.prisma.api.server._
+import com.prisma.auth.Auth
 import com.prisma.cache.factory.CacheFactory
 import com.prisma.config.PrismaConfig
 import com.prisma.errors.{DummyErrorReporter, ErrorReporter}
-import com.prisma.jwt.Auth
 import com.prisma.messagebus.{PubSub, PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import com.prisma.metrics.MetricsRegistry
 import com.prisma.shared.messages.SchemaInvalidatedMessage

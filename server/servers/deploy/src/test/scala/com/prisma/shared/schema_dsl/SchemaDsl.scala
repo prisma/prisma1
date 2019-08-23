@@ -71,8 +71,8 @@ object SchemaDsl extends AwaitUtils {
     val schema                 = SchemaInferrer(capabilities).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl)
     val withBackRelationsAdded = MissingBackRelations.add(schema)
     val manifestation = ConfigLoader.load().databases.head.connector match {
-      case x if x == "postgres" || x == "postgres-native" => ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_S"), x)
-      case y                                              => ProjectManifestation(database = Some(id + "_DB"), schema = None, y)
+      case x if x == "postgres" => ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_S"), x)
+      case y                    => ProjectManifestation(database = Some(id + "_DB"), schema = None, y)
     }
     TestProject.emptyV11.copy(id = id, schema = withBackRelationsAdded, manifestation = manifestation)
   }

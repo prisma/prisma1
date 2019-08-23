@@ -11,8 +11,9 @@ import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
 import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionSchema, VariablesTransformer}
 import play.api.libs.json._
-import sangria.ast.Document
+import sangria.ast.{Document, Selection}
 import sangria.execution.Executor
+import sangria.marshalling.queryAst
 import sangria.parser.QueryParser
 import sangria.renderer.QueryRenderer
 
@@ -112,8 +113,22 @@ object SubscriptionExecutor {
           deferredResolver = new DeferredResolverImpl(dataResolver)
         )
         .map { result =>
-          val lookup = result.as[JsObject] \ "data" \ camelCase(model.name)
-          if (lookup.validate[JsValue].get != JsNull) Some(result) else None
+          val lookup = for {
+            subscriptionOperation <- transformedQuery.operations.find(x => x._2.operationType == sangria.ast.OperationType.Subscription)
+            fields                = subscriptionOperation._2.selections.collect { case x: sangria.ast.Field => x }
+            field                 <- fields.find(p => p.name == camelCase(model.name))
+          } yield {
+            field.alias match {
+              case Some(alias) => result.as[JsObject] \ "data" \ alias
+              case None        => result.as[JsObject] \ "data" \ camelCase(model.name)
+            }
+          }
+
+          lookup match {
+            case None       => None
+            case Some(look) => if (look.validate[JsValue].get != JsNull) Some(result) else None
+          }
+
         }
     } else {
       Future.successful(None)

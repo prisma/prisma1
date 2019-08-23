@@ -104,6 +104,48 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
     }
   }
 
+  "this" should "work when using aliases" in {
+    testInitializedWebsocket(project) { wsClient =>
+      wsClient.sendMessage(
+        startMessage(
+          id = "3",
+          query = """subscription {
+                    |  alias: todo{
+                    |    mutation
+                    |    previousValues {
+                    |      id
+                    |      text
+                    |      status
+                    |    }
+                    |  }
+                    |}""".stripMargin
+        )
+      )
+
+      sleep(8000)
+
+      val event = nodeEvent(
+        modelId = model.name,
+        changedFields = Seq("text"),
+        previousValues = s"""{"id":"$testNodeId", "text":"event1", "status": "Active", "tags":[]}"""
+      )
+
+      sssEventsTestKit.publish(Only(s"subscription:event:${project.id}:updateTodo"), event)
+
+      wsClient.expectMessage(
+        dataMessage(
+          id = "3",
+          payload = s"""{
+                       |  "alias":{
+                       |    "mutation":"UPDATED",
+                       |    "previousValues":{"id":"$testNodeId", "text":"event1", "status":"Active"}
+                       |  }
+                       |}""".stripMargin
+        )
+      )
+    }
+  }
+
   "this" should "support scalar lists in previous values" ignore {
     testInitializedWebsocket(project) { wsClient =>
       wsClient.sendMessage(

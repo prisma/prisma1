@@ -1,0 +1,50 @@
+import Warning from 'components/Markdown/Warning'
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: "Migrations (PostgreSQL)",
+  position: 240,
+  articleGroup: "Migrations",
+  technology: "postgres",
+  technologyOrder: 1,
+}
+
+## Overview
+
+There are two ways to migrate your database with Prisma:
+
+- Using the Prisma CLI
+- Performing a manual DB migration with plain SQL
+
+> Learn more about our upcoming migration system [here](https://github.com/prisma/rfcs/blob/migrations2/text/0000-migrations.md).
+
+## Migrations with the Prisma CLI
+
+When using Prisma with a PostgreSQL database, you can perform your database migrations using the [`prisma deploy`](xcv9) command of the Prisma CLI.
+
+There are two steps to every database migration:
+
+1. Adjust the [datamodel](knul) file to reflect the new desired schema
+1. Run `prisma deploy` to apply the changes and perform the migration of the underlying database
+
+## Manual migrations with SQL
+
+When migrating your database manually, you need to ensure that the Prisma datamodel matches the database schema after the migration. The easiest way to do so is by using the `prisma introspect` command to generate a datamodel file based on your migrated database schema and then use this new datamodel file as the new foundation for your Prisma project.
+
+## Adding required fields
+
+When adding a required field to a model for which the database already stores some records, Prisma automatically sets the value for the new field (as `NULL` values are not allowed). Here is the overview of the default values that Prisma inserts for these existing records:
+
+| Field type  | Migration Value |
+| ------------- | ------------- |
+| `String`  | `""` (empty string)  |
+| `Int`  | `0`  |
+| `Float`  | `0.0`  |
+| `Boolean`  | `false`  |
+| `DateTime`  | `1970-01-01T00:00:00Z`  |
+| `Json`  | `{}`  |
+| Enum  | The first value in the enum definition  |
+| required scalar list | `[]` |
+| required to-one relation field | no default, this will error |
+
+You can find more info around this feature in [this](https://github.com/prisma/prisma/issues/2323) GitHub issue.

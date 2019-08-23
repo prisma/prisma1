@@ -15,7 +15,7 @@ abstract class AbstractDeployApiError(val message: String, val code: Int) extend
 //case class InvalidName(name: String, entityType: String) extends AbstractDeployApiError(InvalidNames.default(name, entityType), 2008)
 
 // 30xx
-case class AuthFailure(reason: String) extends AbstractDeployApiError(reason, 3015)
+case class InvalidToken(reason: String) extends AbstractDeployApiError(s"Authentication token is invalid: $reason", 3015)
 
 object TokenExpired extends AbstractDeployApiError(s"Authentication token is expired", 3016)
 

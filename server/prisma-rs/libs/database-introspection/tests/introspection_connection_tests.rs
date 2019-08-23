@@ -18,7 +18,7 @@ fn setup() {
         return;
     }
 
-    let log_level = match std::env::var("RUST_LOG")
+    let log_level = match std::env::var("TEST_LOG")
         .unwrap_or("warn".to_string())
         .to_lowercase()
         .as_ref()
@@ -1145,6 +1145,7 @@ fn all_mysql_column_types_must_work() {
 }
 
 #[test]
+#[ignore]
 fn sqlite_column_types_must_work() {
     setup();
 
@@ -1219,6 +1220,7 @@ fn sqlite_column_types_must_work() {
 }
 
 #[test]
+#[ignore]
 fn is_required_must_work() {
     setup();
 
@@ -1260,6 +1262,7 @@ fn is_required_must_work() {
 }
 
 #[test]
+#[ignore]
 fn foreign_keys_must_work() {
     setup();
 
@@ -1317,6 +1320,7 @@ fn foreign_keys_must_work() {
 }
 
 #[test]
+#[ignore]
 fn multi_column_foreign_keys_must_work() {
     setup();
 
@@ -1396,6 +1400,7 @@ fn multi_column_foreign_keys_must_work() {
 }
 
 #[test]
+#[ignore]
 fn names_with_hyphens_must_work() {
     setup();
 
@@ -1430,7 +1435,7 @@ fn postgres_foreign_key_on_delete_must_be_handled() {
     let sql = format!(
         "CREATE TABLE \"{0}\".\"City\" (id INT PRIMARY KEY);
          CREATE TABLE \"{0}\".\"User\" (
-            id INT PRIMARY KEY, 
+            id INT PRIMARY KEY,
             city INT REFERENCES \"{0}\".\"City\" (id) ON DELETE NO ACTION,
             city_cascade INT REFERENCES \"{0}\".\"City\" (id) ON DELETE CASCADE,
             city_restrict INT REFERENCES \"{0}\".\"City\" (id) ON DELETE RESTRICT,
@@ -1666,6 +1671,7 @@ fn mysql_foreign_key_on_delete_must_be_handled() {
 }
 
 #[test]
+#[ignore]
 fn sqlite_foreign_key_on_delete_must_be_handled() {
     setup();
 
@@ -1838,6 +1844,7 @@ fn postgres_sequences_must_work() {
 }
 
 #[test]
+#[ignore]
 fn indices_must_work() {
     setup();
 

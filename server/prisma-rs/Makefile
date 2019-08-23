@@ -8,15 +8,19 @@ pedantic:
 release:
 	cargo build --release
 
-
 dev-sqlite:
 	cp dev-configs/sqlite.yml prisma.yml
 	echo 'sqlite' > current_connector
 
 dev-postgres:
-	docker-compose -f ../docker-compose/postgres/dev-postgres.yml up -d --remove-orphans
+	docker-compose -f docker-compose/dev-postgres.yml up -d --remove-orphans
 	cp dev-configs/postgres.yml prisma.yml
 	echo 'postgres' > current_connector
+
+dev-mysql:
+	docker-compose -f docker-compose/dev-mysql.yml up -d --remove-orphans
+	cp dev-configs/mysql.yml prisma.yml
+	echo 'mysql' > current_connector
 
 use-local-migration-engine:
 	cargo build --release
@@ -26,4 +30,3 @@ use-local-query-engine:
 	cargo build --release
 	cp target/release/prisma $(PRISMA2_BINARY_PATH)/runtime/
 	cp target/release/prisma $(PRISMA2_BINARY_PATH)/query-engine-darwin
-
