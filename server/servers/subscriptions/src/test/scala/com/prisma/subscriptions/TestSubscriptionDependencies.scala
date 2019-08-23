@@ -5,15 +5,13 @@ import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutac
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.SchemaBuilder
 import com.prisma.api.{ApiDependencies, TestApiDependencies}
+import com.prisma.auth.{Auth, AuthImpl}
 import com.prisma.cache.factory.{CacheFactory, CaffeineCacheFactory}
 import com.prisma.config.ConfigLoader
 import com.prisma.connectors.utils.{ConnectorLoader, SupportedDrivers}
-import com.prisma.jwt.jna.JnaAuth
-import com.prisma.jwt.{Algorithm, Auth}
 import com.prisma.messagebus.testkits.InMemoryPubSubTestKit
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber}
 import com.prisma.metrics.MetricsRegistry
-import com.prisma.native_jdbc.CustomJdbcDriver
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
@@ -24,22 +22,16 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
     with TestApiDependencies {
   override implicit def self: ApiDependencies = this
 
-  val config          = ConfigLoader.load()
-  val useNativeDriver = sys.env.getOrElse("USE_NATIVE_DRIVER", "0") == "1"
+  val config = ConfigLoader.load()
 
   implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
-    SupportedDrivers.MYSQL -> new org.mariadb.jdbc.Driver,
-    SupportedDrivers.POSTGRES -> (if (useNativeDriver) {
-                                    println("Using native driver for testing")
-                                    CustomJdbcDriver.jna
-                                  } else {
-                                    new org.postgresql.Driver
-                                  }),
-    SupportedDrivers.SQLITE -> new org.sqlite.JDBC
+    SupportedDrivers.MYSQL    -> new org.mariadb.jdbc.Driver,
+    SupportedDrivers.POSTGRES -> new org.postgresql.Driver,
+    SupportedDrivers.SQLITE   -> new org.sqlite.JDBC
   )
 
   override val cacheFactory: CacheFactory = new CaffeineCacheFactory()
-  override val auth: Auth                 = JnaAuth(Algorithm.HS256)
+  override val auth: Auth                 = AuthImpl
 
   lazy val deployConnector              = ConnectorLoader.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
   lazy val sssEventsTestKit             = InMemoryPubSubTestKit[String]()

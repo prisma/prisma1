@@ -261,7 +261,8 @@ trait NodeActions extends NodeSingleQueries {
                                                      parent: NodeAddress): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
     val actionsArrayFiltersAndResults = mutactions.collect {
       case deleteNodes @ NestedDeleteNodes(_, _, rf, whereFilter) if rf.relatedModel_!.isEmbedded =>
-        val deletes    = pull(parent.path.stringForField(rf.dbName), buildConditionForScalarFilter("", whereFilter))
+        val condition  = buildConditionForScalarFilter("", whereFilter)
+        val deletes    = pull(parent.path.stringForField(rf.dbName), condition)
         val thisResult = ManyNodesResult(deleteNodes, 0)
 
         (Vector(deletes), Vector.empty, Vector(thisResult))

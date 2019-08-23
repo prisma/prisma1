@@ -13,15 +13,15 @@ case class PostgresDatabaseInspector(db: SlickDatabase)(implicit val ec: Executi
   override protected def typeIdentifierForTypeName(typeName: String): Option[TypeIdentifier.ScalarTypeIdentifier] = {
     // https://www.postgresql.org/docs/9.5/datatype.html
     typeName match {
-      case "bool"                           => Some(TypeIdentifier.Boolean)
-      case _ if typeName.contains("char")   => Some(TypeIdentifier.String)
-      case _ if typeName.contains("text")   => Some(TypeIdentifier.String)
-      case _ if typeName.contains("int")    => Some(TypeIdentifier.Int)
-      case _ if typeName.contains("serial") => Some(TypeIdentifier.Int)
-      case "numeric" | "decimal" | "real"   => Some(TypeIdentifier.Float)
-      case "timestamp"                      => Some(TypeIdentifier.DateTime)
-      case "uuid"                           => Some(TypeIdentifier.UUID)
-      case _                                => None
+      case "bool"                                                                    => Some(TypeIdentifier.Boolean)
+      case _ if typeName.contains("char")                                            => Some(TypeIdentifier.String)
+      case _ if typeName.contains("text")                                            => Some(TypeIdentifier.String)
+      case _ if typeName.contains("int")                                             => Some(TypeIdentifier.Int)
+      case _ if typeName.contains("serial")                                          => Some(TypeIdentifier.Int)
+      case "numeric" | "decimal" | "real" | "float4" | "double precision" | "float8" => Some(TypeIdentifier.Float)
+      case "timestamp"                                                               => Some(TypeIdentifier.DateTime)
+      case "uuid"                                                                    => Some(TypeIdentifier.UUID)
+      case _                                                                         => None
     }
   }
 

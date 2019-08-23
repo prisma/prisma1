@@ -45,7 +45,10 @@ trait DatabaseInspectorBase extends DatabaseInspector {
       introspectedIndexes     <- indexes(schema, table)
       sequences               <- getSequences(schema, table)
     } yield {
-      val columns = introspectedColumns.map { col =>
+
+      val columnsPrismaCanHandle = introspectedColumns.filter { case column => typeIdentifierForTypeName(column.udtName).isDefined }
+
+      val columns = columnsPrismaCanHandle.map { col =>
         // this needs to be extended further in the future if we support arbitrary SQL types
         val typeIdentifier = typeIdentifierForTypeName(col.udtName).getOrElse {
           sys.error(s"Encountered unknown SQL type ${col.udtName} with column ${col.name}. $col")

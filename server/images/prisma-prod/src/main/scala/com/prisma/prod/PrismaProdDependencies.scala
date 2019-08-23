@@ -8,6 +8,7 @@ import com.prisma.api.connector.jdbc.JdbcApiMetrics
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
+import com.prisma.auth.AuthImpl
 import com.prisma.cache.factory.{CacheFactory, CaffeineCacheFactory}
 import com.prisma.config.{ConfigLoader, PrismaConfig}
 import com.prisma.connectors.utils.{ConnectorLoader, SupportedDrivers}
@@ -16,9 +17,8 @@ import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.TelemetryActor
+import com.prisma.deploy.server.auth.{DummyManagementAuth, SymmetricManagementAuth}
 import com.prisma.image.{FunctionValidatorImpl, SingleServerProjectFetcher}
-import com.prisma.jwt.jna.JnaAuth
-import com.prisma.jwt.{Algorithm, NoAuth}
 import com.prisma.messagebus._
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import com.prisma.messagebus.queue.rabbit.RabbitQueue
@@ -63,8 +63,12 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector, invalidationPublisher)
   override lazy val managementAuth = {
     config.managementApiSecret match {
-      case Some(jwtSecret) if jwtSecret.nonEmpty => JnaAuth(Algorithm.HS256)
-      case _                                     => println("[Warning] Management authentication is disabled. Enable it in your Prisma config to secure your server."); NoAuth
+      case Some(jwtSecret) if jwtSecret.nonEmpty =>
+        SymmetricManagementAuth(jwtSecret)
+
+      case _ =>
+        println("[Warning] Management authentication is disabled. Enable it in your Prisma config to secure your server.")
+        DummyManagementAuth()
     }
   }
 
@@ -92,7 +96,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller, system)
 
   override lazy val httpClient                           = SimpleHttpClient()
-  override lazy val auth                                 = JnaAuth(Algorithm.HS256)
+  override lazy val auth                                 = AuthImpl
   override lazy val deployConnector: DeployConnector     = ConnectorLoader.loadDeployConnector(config)
   override lazy val functionValidator: FunctionValidator = FunctionValidatorImpl()
 

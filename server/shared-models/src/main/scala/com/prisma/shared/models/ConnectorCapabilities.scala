@@ -1,5 +1,6 @@
 package com.prisma.shared.models
 
+import com.prisma.shared.models.ConnectorCapability.Prisma2Capability
 import com.prisma.utils.boolean.BooleanUtils
 import enumeratum.{EnumEntry, Enum => Enumeratum}
 
@@ -58,13 +59,6 @@ object ConnectorCapabilities extends BooleanUtils {
 
   val empty: ConnectorCapabilities                                     = ConnectorCapabilities(Set.empty[ConnectorCapability])
   def apply(capabilities: ConnectorCapability*): ConnectorCapabilities = ConnectorCapabilities(Set(capabilities: _*))
-
-  lazy val sqliteNative: ConnectorCapabilities = {
-    val filteredCapas = sqliteJdbcPrototype.capabilities
-      .filter(_ != TransactionalExecutionCapability)
-      .filter(_ != NodeQueryCapability)
-    ConnectorCapabilities(Set(Prisma2Capability) ++ filteredCapas)
-  }
 
   lazy val sqliteJdbcPrototype: ConnectorCapabilities = {
     val actualCapas = sqlPrototype.filter(_ != ImportExportCapability)

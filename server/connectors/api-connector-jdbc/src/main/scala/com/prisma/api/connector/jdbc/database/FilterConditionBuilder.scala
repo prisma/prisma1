@@ -133,6 +133,7 @@ trait FilterConditionBuilder extends BuilderBase {
         val select = sql
           .select(relationColumn(relationField))
           .from(relationTable(relation))
+          .where(relationColumn(relationField).isNotNull)
 
         modelIdColumn(alias, relationField.relatedModel_!).notIn(select)
     }
