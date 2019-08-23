@@ -2,6 +2,7 @@ package com.prisma.subscriptions.protocol
 
 import akka.actor.{Actor, ActorRef, Stash}
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
+import com.prisma.auth.AuthImpl
 import com.prisma.shared.models.Project
 import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.subscriptions.helpers.ProjectHelper
@@ -71,7 +72,7 @@ case class SubscriptionSessionActorV05(
 
         // Case 2: Project has secrets. Verify provided auth.
         case x @ Some(token) if project.secrets.nonEmpty =>
-          val authResult = auth.verifyToken(auth.normalizeToken(token), project.secrets)
+          val authResult = AuthImpl.verify(project.secrets, token)
           if (authResult.isSuccess) {
             sendToWebsocket(InitConnectionSuccess)
             context.become(readyReceive(x))

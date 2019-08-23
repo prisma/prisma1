@@ -9,7 +9,6 @@ import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.fields._
 import com.prisma.deploy.schema.mutations._
 import com.prisma.deploy.schema.types._
-import com.prisma.jwt.JwtGrant
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import com.prisma.utils.future.FutureUtils.FutureOpt
 import sangria.relay.Mutation
@@ -168,15 +167,7 @@ case class SchemaBuilderImpl(
         projectOpt <- projectPersistence.load(projectId)
         project    = projectOpt.getOrElse(throw InvalidProjectId(projectIdEncoder.fromEncodedString(projectId)))
       } yield {
-        project.secrets.headOption match {
-          case Some(secret) =>
-            dependencies.auth.createToken(secret, Some(projectTokenExpiration)) match {
-              case Success(token) => token
-              case Failure(err)   => throw AuthFailure(err.getMessage)
-            }
-
-          case None => ""
-        }
+        dependencies.auth.createToken(project.secrets)
       }
     }
   )
@@ -302,17 +293,7 @@ case class SchemaBuilderImpl(
     }
   }
 
-  private def verifyAuthOrThrow(name: String, stage: String, authHeader: Option[String]): Unit = {
-    Try {
-      val auth  = dependencies.managementAuth
-      val token = auth.extractToken(authHeader)
-      val grant = Some(JwtGrant(name, stage, "*"))
-
-      auth.verifyToken(token, Vector(managementSecret), expectedGrant = grant).get
-    } match {
-      case Success(_)                               =>
-      case Failure(com.prisma.jwt.AuthFailure(msg)) => throw AuthFailure(msg)
-      case Failure(e)                               => throw e
-    }
+  private def verifyAuthOrThrow(name: String, stage: String, authHeader: Option[String]) = {
+    dependencies.managementAuth.verify(name, stage, authHeader).get
   }
 }

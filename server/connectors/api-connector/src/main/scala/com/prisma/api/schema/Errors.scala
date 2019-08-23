@@ -56,7 +56,8 @@ object APIErrors {
         3014
       )
 
-  case class AuthFailure() extends ClientApiError(s"Your token is invalid. It might have expired or you might be using a token from a different project.", 3015)
+  case class InvalidToken()
+      extends ClientApiError(s"Your token is invalid. It might have expired or you might be using a token from a different project.", 3015)
 
   case class ProjectNotFound(projectId: String) extends ClientApiError(s"Project not found: '$projectId'", 3016)
 
