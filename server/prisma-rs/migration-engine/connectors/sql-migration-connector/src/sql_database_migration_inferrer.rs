@@ -51,7 +51,7 @@ fn infer(
 ) -> ConnectorResult<SqlMigration> {
     let steps = infer_database_migration_steps_and_fix(&current_database_schema, &expected_database_schema, &schema_name, sql_family)?;
     let rollback = infer_database_migration_steps_and_fix(&expected_database_schema, &current_database_schema, &schema_name, sql_family)?;
-    Ok(SqlMigration { steps, rollback })
+    Ok(SqlMigration { before: current_database_schema.clone(), after: expected_database_schema.clone(), steps, rollback })
 }
 
 fn infer_database_migration_steps_and_fix(

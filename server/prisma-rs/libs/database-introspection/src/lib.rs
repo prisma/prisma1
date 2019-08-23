@@ -34,7 +34,7 @@ pub trait IntrospectionConnector: Send + Sync + 'static {
 }
 
 /// The result of introspecting a database schema.
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct DatabaseSchema {
     /// The schema's tables.
@@ -307,7 +307,7 @@ pub struct ForeignKey {
 }
 
 /// A SQL enum.
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Enum {
     /// Enum name.
@@ -317,7 +317,7 @@ pub struct Enum {
 }
 
 /// A SQL sequence.
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sequence {
     /// Sequence name.
