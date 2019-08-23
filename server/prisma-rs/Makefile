@@ -8,13 +8,12 @@ pedantic:
 release:
 	cargo build --release
 
-
 dev-sqlite:
 	cp dev-configs/sqlite.yml prisma.yml
 	echo 'sqlite' > current_connector
 
 dev-postgres:
-	docker-compose -f ../docker-compose/postgres/dev-postgres.yml up -d --remove-orphans
+	docker-compose -f docker-compose/dev-postgres.yml up -d --remove-orphans
 	cp dev-configs/postgres.yml prisma.yml
 	echo 'postgres' > current_connector
 
