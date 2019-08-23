@@ -2,9 +2,9 @@
 #![allow(unused)]
 mod test_harness;
 use database_introspection::*;
+use pretty_assertions::{assert_eq, assert_ne};
 use sql_migration_connector::SqlFamily;
 use test_harness::*;
-use pretty_assertions::{assert_eq, assert_ne};
 
 #[test]
 fn adding_a_scalar_field_must_work() {
@@ -208,14 +208,12 @@ fn changing_the_type_of_an_id_field_must_work() {
         assert_eq!(column.tpe.family, ColumnTypeFamily::Int);
         assert_eq!(
             table.foreign_keys,
-            vec![
-                ForeignKey {
-                    columns: vec![column.name.clone()],
-                    referenced_table: "B".to_string(),
-                    referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull,
-                }
-            ]
+            vec![ForeignKey {
+                columns: vec![column.name.clone()],
+                referenced_table: "B".to_string(),
+                referenced_columns: vec!["id".to_string()],
+                on_delete_action: ForeignKeyAction::SetNull,
+            }]
         );
 
         let dm2 = r#"
@@ -233,14 +231,12 @@ fn changing_the_type_of_an_id_field_must_work() {
         assert_eq!(column.tpe.family, ColumnTypeFamily::String);
         assert_eq!(
             table.foreign_keys,
-            vec![
-                ForeignKey {
-                    columns: vec![column.name.clone()],
-                    referenced_table: "B".to_string(),
-                    referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull,
-                }
-            ]
+            vec![ForeignKey {
+                columns: vec![column.name.clone()],
+                referenced_table: "B".to_string(),
+                referenced_columns: vec!["id".to_string()],
+                on_delete_action: ForeignKeyAction::SetNull,
+            }]
         );
     });
 }
@@ -289,14 +285,12 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
         assert_eq!(column.tpe.family, ColumnTypeFamily::Int);
         assert_eq!(
             table.foreign_keys,
-            vec![
-                ForeignKey {
-                    columns: vec![column.name.clone()],
-                    referenced_table: "B".to_string(),
-                    referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull,
-                }
-            ]
+            vec![ForeignKey {
+                columns: vec![column.name.clone()],
+                referenced_table: "B".to_string(),
+                referenced_columns: vec!["id".to_string()],
+                on_delete_action: ForeignKeyAction::SetNull,
+            }]
         );
 
         let dm2 = r#"
@@ -312,10 +306,7 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
         let table = result.table_bang("A");
         let column = table.column_bang("b");
         assert_eq!(column.tpe.family, ColumnTypeFamily::String);
-        assert_eq!(
-            table.foreign_keys,
-            vec![]
-        );
+        assert_eq!(table.foreign_keys, vec![]);
     });
 }
 
@@ -335,10 +326,7 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
         let table = result.table_bang("A");
         let column = table.column_bang("b");
         assert_eq!(column.tpe.family, ColumnTypeFamily::String);
-        assert_eq!(
-            table.foreign_keys,
-            vec![]
-        );
+        assert_eq!(table.foreign_keys, vec![]);
 
         let dm2 = r#"
             model A {
@@ -356,14 +344,12 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
         assert_eq!(column.tpe.family, ColumnTypeFamily::Int);
         assert_eq!(
             table.foreign_keys,
-            vec![
-                ForeignKey {
-                    columns: vec![column.name.clone()],
-                    referenced_table: "B".to_string(),
-                    referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull,
-                }
-            ]
+            vec![ForeignKey {
+                columns: vec![column.name.clone()],
+                referenced_table: "B".to_string(),
+                referenced_columns: vec!["id".to_string()],
+                on_delete_action: ForeignKeyAction::SetNull,
+            }]
         );
     });
 }
@@ -409,7 +395,6 @@ fn adding_a_many_to_many_relation_must_result_in_a_prisma_style_relation_table()
                 },
             ]
         );
-
     });
 }
 
@@ -503,14 +488,12 @@ fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
         assert_eq!(column.tpe.family, ColumnTypeFamily::Int);
         assert_eq!(
             table.foreign_keys,
-            vec![
-                ForeignKey {
-                    columns: vec![column.name.clone()],
-                    referenced_table: "B".to_string(),
-                    referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull,
-                }
-            ]
+            vec![ForeignKey {
+                columns: vec![column.name.clone()],
+                referenced_table: "B".to_string(),
+                referenced_columns: vec!["id".to_string()],
+                on_delete_action: ForeignKeyAction::SetNull,
+            }]
         );
     });
 }
@@ -534,14 +517,12 @@ fn specifying_a_db_name_for_an_inline_relation_must_work() {
         assert_eq!(column.tpe.family, ColumnTypeFamily::Int);
         assert_eq!(
             table.foreign_keys,
-            vec![
-                ForeignKey {
-                    columns: vec![column.name.clone()],
-                    referenced_table: "B".to_string(),
-                    referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull,
-                }
-            ]
+            vec![ForeignKey {
+                columns: vec![column.name.clone()],
+                referenced_table: "B".to_string(),
+                referenced_columns: vec!["id".to_string()],
+                on_delete_action: ForeignKeyAction::SetNull,
+            }]
         );
     });
 }
@@ -565,14 +546,12 @@ fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
         assert_eq!(column.tpe.family, ColumnTypeFamily::String);
         assert_eq!(
             table.foreign_keys,
-            vec![
-                ForeignKey {
-                    columns: vec![column.name.clone()],
-                    referenced_table: "B".to_string(),
-                    referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull,
-                }
-            ]
+            vec![ForeignKey {
+                columns: vec![column.name.clone()],
+                referenced_table: "B".to_string(),
+                referenced_columns: vec!["id".to_string()],
+                on_delete_action: ForeignKeyAction::SetNull,
+            }]
         );
     });
 }
@@ -626,14 +605,12 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
         let table = result.table_bang("A");
         assert_eq!(
             table.foreign_keys,
-            vec![
-                ForeignKey {
-                    columns: vec!["b".to_string()],
-                    referenced_table: "B".to_string(),
-                    referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull,
-                }
-            ]
+            vec![ForeignKey {
+                columns: vec!["b".to_string()],
+                referenced_table: "B".to_string(),
+                referenced_columns: vec!["id".to_string()],
+                on_delete_action: ForeignKeyAction::SetNull,
+            }]
         );
 
         let dm2 = r#"
@@ -650,14 +627,12 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
         let table = result.table_bang("B");
         assert_eq!(
             table.foreign_keys,
-            vec![
-                ForeignKey {
-                    columns: vec!["a".to_string()],
-                    referenced_table: "A".to_string(),
-                    referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull,
-                }
-            ]
+            vec![ForeignKey {
+                columns: vec!["a".to_string()],
+                referenced_table: "A".to_string(),
+                referenced_columns: vec!["id".to_string()],
+                on_delete_action: ForeignKeyAction::SetNull,
+            }]
         );
     });
 }
@@ -842,7 +817,8 @@ fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
         let scalar_list_table_for_strings = result.table_bang("A_strings");
         let node_id_column = scalar_list_table_for_strings.column_bang("nodeId");
         assert_eq!(node_id_column.tpe.family, ColumnTypeFamily::Int);
-        if sql_family != SqlFamily::Mysql { // fixme: this does not work in intropsection
+        if sql_family != SqlFamily::Mysql {
+            // fixme: this does not work in intropsection
             assert_eq!(
                 scalar_list_table_for_strings.primary_key_columns(),
                 vec!["nodeId", "position"]
@@ -851,7 +827,8 @@ fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
         let scalar_list_table_for_enums = result.table_bang("A_enums");
         let node_id_column = scalar_list_table_for_enums.column_bang("nodeId");
         assert_eq!(node_id_column.tpe.family, ColumnTypeFamily::Int);
-        if sql_family != SqlFamily::Mysql { // fixme: this does not work in intropsection
+        if sql_family != SqlFamily::Mysql {
+            // fixme: this does not work in intropsection
             assert_eq!(
                 scalar_list_table_for_enums.primary_key_columns(),
                 vec!["nodeId", "position"]
@@ -902,14 +879,12 @@ fn reserved_sql_key_words_must_work() {
         let relation_column = table.column_bang("parent");
         assert_eq!(
             table.foreign_keys,
-            vec![
-                ForeignKey {
-                    columns: vec!["parent".to_string()],
-                    referenced_table: "Group".to_string(),
-                    referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull,
-                }
-            ]
+            vec![ForeignKey {
+                columns: vec!["parent".to_string()],
+                referenced_table: "Group".to_string(),
+                referenced_columns: vec!["id".to_string()],
+                on_delete_action: ForeignKeyAction::SetNull,
+            }]
         );
     });
 }

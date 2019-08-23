@@ -2,14 +2,13 @@
 #![allow(unused)]
 mod test_harness;
 use barrel::{types, Migration, SqlVariant};
+use database_introspection::*;
 use migration_core::api::GenericApi;
+use pretty_assertions::{assert_eq, assert_ne};
 use sql_migration_connector::SqlFamily;
 use sql_migration_connector::{migration_database::MigrationDatabase, SqlMigrationConnector};
-use database_introspection::*;
 use std::sync::Arc;
 use test_harness::*;
-use pretty_assertions::{assert_eq, assert_ne};
-
 
 #[test]
 fn adding_a_model_for_an_existing_table_must_work() {
@@ -108,10 +107,7 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
         let column = table.column_bang("title");
         assert_eq!(column.tpe.family, ColumnTypeFamily::String);
         assert_eq!(column.is_required(), true);
-        let index = table
-            .indices
-            .iter()
-            .find(|i| i.columns == vec!["title"]);
+        let index = table.indices.iter().find(|i| i.columns == vec!["title"]);
         assert_eq!(index.is_some(), true);
         assert_eq!(index.unwrap().tpe, IndexType::Unique);
     });
@@ -399,7 +395,10 @@ impl BarrelMigrationExecutor {
         migrationFn(&mut migration);
         let full_sql = dbg!(migration.make_from(self.sql_variant));
         run_full_sql(&self.database, &full_sql);
-        let mut result = self.inspector.introspect(&SCHEMA_NAME.to_string()).expect("Introspection failed");
+        let mut result = self
+            .inspector
+            .introspect(&SCHEMA_NAME.to_string())
+            .expect("Introspection failed");
         // the presence of the _Migration table makes assertions harder. Therefore remove it.
         result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
         result

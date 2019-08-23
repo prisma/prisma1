@@ -86,7 +86,7 @@ pub struct AlterColumn {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CreateIndex {
     pub table: String,
-    pub index: Index
+    pub index: Index,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]

@@ -1,3 +1,4 @@
+use database_introspection::{DatabaseSchema, IntrospectionConnection, IntrospectionConnector};
 use datamodel;
 use migration_connector::*;
 use migration_core::{
@@ -8,9 +9,8 @@ use migration_core::{
 use prisma_query::connector::{MysqlParams, PostgresParams};
 use sql_migration_connector::{migration_database::*, SqlFamily, SqlMigrationConnector};
 use std::convert::TryFrom;
-use url::Url;
-use database_introspection::{DatabaseSchema, IntrospectionConnection, IntrospectionConnector};
 use std::sync::Arc;
+use url::Url;
 
 pub const SCHEMA_NAME: &str = "migration-engine";
 
@@ -94,19 +94,21 @@ pub fn introspect_database(api: &dyn GenericApi) -> DatabaseSchema {
         "postgresql" => {
             let db = Arc::new(database_wrapper(SqlFamily::Postgres));
             Box::new(database_introspection::postgres::IntrospectionConnector::new(db))
-        },
+        }
         "sqlite" => {
             let db = Arc::new(database_wrapper(SqlFamily::Sqlite));
             Box::new(database_introspection::sqlite::IntrospectionConnector::new(db))
-        },
+        }
         "mysql" => {
             let db = Arc::new(database_wrapper(SqlFamily::Mysql));
             Box::new(database_introspection::mysql::IntrospectionConnector::new(db))
-        },
+        }
         _ => unimplemented!(),
     };
 
-    let mut result = inspector.introspect(&SCHEMA_NAME.to_string()).expect("Introspection failed");
+    let mut result = inspector
+        .introspect(&SCHEMA_NAME.to_string())
+        .expect("Introspection failed");
 
     // the presence of the _Migration table makes assertions harder. Therefore remove it from the result.
     result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();

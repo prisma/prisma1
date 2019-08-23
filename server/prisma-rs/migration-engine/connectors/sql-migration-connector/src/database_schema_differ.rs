@@ -21,9 +21,7 @@ pub struct DatabaseSchemaDiff {
 impl DatabaseSchemaDiff {
     pub fn into_steps(self) -> Vec<SqlMigrationStep> {
         let mut steps = Vec::new();
-        steps.append(&mut wrap_as_step(self.drop_indexes, |x| {
-            SqlMigrationStep::DropIndex(x)
-        }));
+        steps.append(&mut wrap_as_step(self.drop_indexes, |x| SqlMigrationStep::DropIndex(x)));
         steps.append(&mut wrap_as_step(self.drop_tables, |x| SqlMigrationStep::DropTable(x)));
         steps.append(&mut wrap_as_step(self.create_tables, |x| {
             SqlMigrationStep::CreateTable(x)
@@ -151,7 +149,11 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         for next_table in &self.next.tables {
             for index in &next_table.indices {
                 // TODO: must diff index settings
-                let previous_index_opt = self.previous.table(&next_table.name).ok().and_then(|t|t.indices.iter().find(|i|i.name == index.name));
+                let previous_index_opt = self
+                    .previous
+                    .table(&next_table.name)
+                    .ok()
+                    .and_then(|t| t.indices.iter().find(|i| i.name == index.name));
                 if let None = previous_index_opt {
                     let create = CreateIndex {
                         table: next_table.name.clone(),
@@ -169,7 +171,11 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         for previous_table in &self.previous.tables {
             for index in &previous_table.indices {
                 // TODO: must diff index settings
-                let next_index_opt = self.next.table(&previous_table.name).ok().and_then(|t|t.indices.iter().find(|i|i.name == index.name));
+                let next_index_opt = self
+                    .next
+                    .table(&previous_table.name)
+                    .ok()
+                    .and_then(|t| t.indices.iter().find(|i| i.name == index.name));
                 if let None = next_index_opt {
                     let drop = DropIndex {
                         table: previous_table.name.clone(),

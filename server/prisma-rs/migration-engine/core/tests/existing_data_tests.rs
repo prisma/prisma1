@@ -1,10 +1,10 @@
 #![allow(non_snake_case)]
 #![allow(unused)]
 mod test_harness;
+use pretty_assertions::{assert_eq, assert_ne};
 use prisma_query::ast::*;
 use sql_migration_connector::SqlFamily;
 use test_harness::*;
-use pretty_assertions::{assert_eq, assert_ne};
 
 #[test]
 fn adding_a_required_field_if_there_is_data() {

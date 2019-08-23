@@ -43,9 +43,24 @@ fn infer(
     schema_name: &str,
     sql_family: SqlFamily,
 ) -> ConnectorResult<SqlMigration> {
-    let steps = infer_database_migration_steps_and_fix(&current_database_schema, &expected_database_schema, &schema_name, sql_family)?;
-    let rollback = infer_database_migration_steps_and_fix(&expected_database_schema, &current_database_schema, &schema_name, sql_family)?;
-    Ok(SqlMigration { before: current_database_schema.clone(), after: expected_database_schema.clone(), steps, rollback })
+    let steps = infer_database_migration_steps_and_fix(
+        &current_database_schema,
+        &expected_database_schema,
+        &schema_name,
+        sql_family,
+    )?;
+    let rollback = infer_database_migration_steps_and_fix(
+        &expected_database_schema,
+        &current_database_schema,
+        &schema_name,
+        sql_family,
+    )?;
+    Ok(SqlMigration {
+        before: current_database_schema.clone(),
+        after: expected_database_schema.clone(),
+        steps,
+        rollback,
+    })
 }
 
 fn infer_database_migration_steps_and_fix(
@@ -221,28 +236,30 @@ fn fix(_alter_table: &AlterTable, current: &Table, next: &Table, schema_name: &s
     });
     // todo: start transaction now. Unclear if we really want to do that.
     result.push(SqlMigrationStep::CreateTable(CreateTable { table: temporary_table }));
-    result.push(// copy table contents; Here we have to handle escpaing ourselves.
-                {
-                    let current_columns: Vec<String> = current.columns.iter().map(|c| c.name.clone()).collect();
-                    let next_columns: Vec<String> = next.columns.iter().map(|c| c.name.clone()).collect();
-                    let intersection_columns: Vec<String> = current_columns
-                        .into_iter()
-                        .filter(|c| next_columns.contains(&c))
-                        .collect();
-                    let columns_string = intersection_columns
-                        .iter()
-                        .map(|c| format!("\"{}\"", c))
-                        .collect::<Vec<String>>()
-                        .join(",");
-                    let sql = format!(
-                        "INSERT INTO \"{}\" ({}) SELECT {} from \"{}\"",
-                        name_of_temporary_table,
-                        columns_string,
-                        columns_string,
-                        next.name.clone()
-                    );
-                    SqlMigrationStep::RawSql { raw: sql.to_string() }
-                });
+    result.push(
+        // copy table contents; Here we have to handle escpaing ourselves.
+        {
+            let current_columns: Vec<String> = current.columns.iter().map(|c| c.name.clone()).collect();
+            let next_columns: Vec<String> = next.columns.iter().map(|c| c.name.clone()).collect();
+            let intersection_columns: Vec<String> = current_columns
+                .into_iter()
+                .filter(|c| next_columns.contains(&c))
+                .collect();
+            let columns_string = intersection_columns
+                .iter()
+                .map(|c| format!("\"{}\"", c))
+                .collect::<Vec<String>>()
+                .join(",");
+            let sql = format!(
+                "INSERT INTO \"{}\" ({}) SELECT {} from \"{}\"",
+                name_of_temporary_table,
+                columns_string,
+                columns_string,
+                next.name.clone()
+            );
+            SqlMigrationStep::RawSql { raw: sql.to_string() }
+        },
+    );
     result.push(SqlMigrationStep::DropTable(DropTable {
         name: current.name.clone(),
     }));
@@ -250,12 +267,18 @@ fn fix(_alter_table: &AlterTable, current: &Table, next: &Table, schema_name: &s
         name: name_of_temporary_table,
         new_name: next.name.clone(),
     });
-    result.append(&mut next.indices.iter().map(|index|{
-        SqlMigrationStep::CreateIndex(CreateIndex {
-            table: next.name.clone(),
-            index: index.clone(),
-        })
-    }).collect());
+    result.append(
+        &mut next
+            .indices
+            .iter()
+            .map(|index| {
+                SqlMigrationStep::CreateIndex(CreateIndex {
+                    table: next.name.clone(),
+                    index: index.clone(),
+                })
+            })
+            .collect(),
+    );
     // todo: recreate triggers
     result.push(SqlMigrationStep::RawSql {
         raw: format!(r#"PRAGMA "{}".foreign_key_check;"#, schema_name),

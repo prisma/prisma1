@@ -3,9 +3,9 @@
 mod test_harness;
 
 use migration_connector::*;
+use pretty_assertions::{assert_eq, assert_ne};
 use sql_migration_connector::SqlFamily;
 use test_harness::*;
-use pretty_assertions::{assert_eq, assert_ne};
 
 #[test]
 fn last_should_return_none_if_there_is_no_migration() {

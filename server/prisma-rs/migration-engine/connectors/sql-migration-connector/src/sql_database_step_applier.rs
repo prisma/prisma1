@@ -151,10 +151,7 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
                 lines.join(",")
             )
         }
-        SqlMigrationStep::CreateIndex(CreateIndex {
-            table,
-            index,
-        }) => {
+        SqlMigrationStep::CreateIndex(CreateIndex { table, index }) => {
             let Index { name, columns, tpe } = index;
             let index_type = match tpe {
                 IndexType::Unique => "UNIQUE",
