@@ -2,7 +2,7 @@ package util
 
 object EnvVars {
   val serverRoot = sys.env
-    .get("CARGO_ROOT")
+    .get("SERVER_ROOT")
     .orElse(sys.env.get("BUILDKITE_BUILD_CHECKOUT_PATH").map(path => s"$path/server")) // todo change as soon as the split is done
     .getOrElse(sys.error("Unable to resolve cargo root path"))
 

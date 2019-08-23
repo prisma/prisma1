@@ -154,8 +154,8 @@ pub fn sqlite_test_config() -> String {
 }
 
 pub fn sqlite_test_file() -> String {
-    let cargo_root = std::env::var("CARGO_ROOT").expect("Env var CARGO_ROOT required but not found.");
-    let database_folder_path = format!("{}/db", cargo_root);
+    let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
+    let database_folder_path = format!("{}/db", server_root);
     let file_path = format!("{}/{}.db", database_folder_path, SCHEMA_NAME);
     file_path
 }

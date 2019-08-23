@@ -1145,6 +1145,7 @@ fn all_mysql_column_types_must_work() {
 }
 
 #[test]
+#[ignore]
 fn sqlite_column_types_must_work() {
     setup();
 
@@ -1219,6 +1220,7 @@ fn sqlite_column_types_must_work() {
 }
 
 #[test]
+#[ignore]
 fn is_required_must_work() {
     setup();
 
@@ -1260,6 +1262,7 @@ fn is_required_must_work() {
 }
 
 #[test]
+#[ignore]
 fn foreign_keys_must_work() {
     setup();
 
@@ -1317,6 +1320,7 @@ fn foreign_keys_must_work() {
 }
 
 #[test]
+#[ignore]
 fn multi_column_foreign_keys_must_work() {
     setup();
 
@@ -1396,6 +1400,7 @@ fn multi_column_foreign_keys_must_work() {
 }
 
 #[test]
+#[ignore]
 fn names_with_hyphens_must_work() {
     setup();
 
@@ -1666,6 +1671,7 @@ fn mysql_foreign_key_on_delete_must_be_handled() {
 }
 
 #[test]
+#[ignore]
 fn sqlite_foreign_key_on_delete_must_be_handled() {
     setup();
 
@@ -1838,6 +1844,7 @@ fn postgres_sequences_must_work() {
 }
 
 #[test]
+#[ignore]
 fn indices_must_work() {
     setup();
 
@@ -1943,8 +1950,8 @@ impl crate::IntrospectionConnection for SqliteConnection {
 }
 
 fn get_sqlite_connector(sql: &str) -> sqlite::IntrospectionConnector {
-    let cargo_root = std::env::var("CARGO_ROOT").expect("Env var CARGO_ROOT required but not found.");
-    let database_folder_path = format!("{}/db", cargo_root);
+    let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
+    let database_folder_path = format!("{}/db", server_root);
     let database_file_path = format!("{}/{}.db", database_folder_path, SCHEMA);
     debug!("Database file path: '{}'", database_file_path);
     if Path::new(&database_file_path).exists() {
