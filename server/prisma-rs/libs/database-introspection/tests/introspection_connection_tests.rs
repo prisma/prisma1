@@ -1430,7 +1430,7 @@ fn postgres_foreign_key_on_delete_must_be_handled() {
     let sql = format!(
         "CREATE TABLE \"{0}\".\"City\" (id INT PRIMARY KEY);
          CREATE TABLE \"{0}\".\"User\" (
-            id INT PRIMARY KEY, 
+            id INT PRIMARY KEY,
             city INT REFERENCES \"{0}\".\"City\" (id) ON DELETE NO ACTION,
             city_cascade INT REFERENCES \"{0}\".\"City\" (id) ON DELETE CASCADE,
             city_restrict INT REFERENCES \"{0}\".\"City\" (id) ON DELETE RESTRICT,
@@ -1943,8 +1943,8 @@ impl crate::IntrospectionConnection for SqliteConnection {
 }
 
 fn get_sqlite_connector(sql: &str) -> sqlite::IntrospectionConnector {
-    let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-    let database_folder_path = format!("{}/db", server_root);
+    let cargo_root = std::env::var("CARGO_ROOT").expect("Env var CARGO_ROOT required but not found.");
+    let database_folder_path = format!("{}/db", cargo_root);
     let database_file_path = format!("{}/{}.db", database_folder_path, SCHEMA);
     debug!("Database file path: '{}'", database_file_path);
     if Path::new(&database_file_path).exists() {
