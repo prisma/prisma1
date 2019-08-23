@@ -8,6 +8,7 @@ use sql_migration_connector::*;
 use test_harness::*;
 
 #[test]
+#[ignore]
 fn must_be_true_when_the_user_has_the_rights() {
     let url = postgres_url();
     test_it(SqlMigrationConnector::postgres(&url).unwrap(), true);

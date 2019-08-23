@@ -8,6 +8,7 @@ use sql_migration_connector::*;
 use test_harness::*;
 
 #[test]
+#[ignore]
 fn must_be_true_when_it_can_connect() {
     test_it(SqlMigrationConnector::postgres(&postgres_url()).unwrap(), true);
     test_it(SqlMigrationConnector::mysql(&mysql_url()).unwrap(), true);

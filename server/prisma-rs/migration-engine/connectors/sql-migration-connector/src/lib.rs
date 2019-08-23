@@ -62,8 +62,8 @@ impl SqlFamily {
 }
 
 impl SqlMigrationConnector {
-    pub fn postgres(url: &str) -> crate::Result<Self> {
-        let url = Url::parse(url)?;
+    pub fn postgres(url_str: &str) -> crate::Result<Self> {
+        let url = Url::parse(url_str)?;
 
         let params = PostgresParams::try_from(url.clone())?;
 
@@ -72,7 +72,7 @@ impl SqlMigrationConnector {
 
         match PostgreSql::new(params) {
             Ok(conn) => Ok(Self::create_connector(
-                url,
+                url_str,
                 Arc::new(conn),
                 SqlFamily::Postgres,
                 schema,
@@ -96,7 +96,7 @@ impl SqlMigrationConnector {
                 let conn = PostgreSql::new(params)?;
 
                 Ok(Self::create_connector(
-                    url,
+                    url_str,
                     Arc::new(conn),
                     SqlFamily::Postgres,
                     schema,
@@ -107,8 +107,8 @@ impl SqlMigrationConnector {
         }
     }
 
-    pub fn mysql(url: &str) -> crate::Result<Self> {
-        let mut url = Url::parse(url)?;
+    pub fn mysql(url_str: &str) -> crate::Result<Self> {
+        let mut url = Url::parse(url_str)?;
 
         let schema = {
             let params = MysqlParams::try_from(url.clone())?;
@@ -121,7 +121,7 @@ impl SqlMigrationConnector {
         let conn = Mysql::new(params)?;
 
         Ok(Self::create_connector(
-            url,
+            url_str,
             Arc::new(conn),
             SqlFamily::Mysql,
             schema,
