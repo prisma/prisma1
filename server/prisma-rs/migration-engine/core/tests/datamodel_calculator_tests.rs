@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![allow(unused)]
 mod test_harness;
 use datamodel::dml::*;
 use migration_connector::steps::*;

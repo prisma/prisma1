@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-
+#![allow(unused)]
 mod test_harness;
 
 use migration_connector::*;
