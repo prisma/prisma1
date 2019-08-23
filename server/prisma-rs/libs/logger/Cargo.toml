@@ -1,0 +1,15 @@
+[package]
+name = "logger"
+version = "0.0.0"
+authors = ["Dominic Petrick <petrick@prisma.io>", "Julius de Bruijn <bruijn@prisma.io>", "Marcus Böhm <boehm@prisma.io>" ]
+edition = "2018"
+
+[dependencies]
+slog = "2.5"
+slog-async = "2.3"
+slog-json = "2.3"
+slog-scope = "4.1"
+slog-stdlog = "3.0"
+slog-term = "2.4"
+slog-envlogger = "2.1"
+log = "0.4"

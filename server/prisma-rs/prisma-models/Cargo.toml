@@ -1,7 +1,7 @@
 [package]
 name = "prisma-models"
 version = "0.0.0"
-authors = ["Dominic Petrick <petrick@prisma.io>", "Julius de Bruijn <bruijn@prisma.io>", "Marcus Böhm <boehm@prisma.io>" ]
+authors = ["Dominic Petrick <petrick@prisma.io>", "Julius de Bruijn <bruijn@prisma.io>", "Marcus Böhm <boehm@prisma.io>", "Katharina Fey <kookie@spacekookie.de>" ]
 edition = "2018"
 
 [features]
@@ -21,5 +21,6 @@ chrono = { version = "0.4", features = ["serde"] }
 failure = "0.1"
 failure_derive = "0.1"
 rand = "0.6"
-graphql-parser = "0.2.2"
 prisma-query = { git = "https://github.com/prisma/prisma-query.git", optional = true }
+datamodel = { path = "../libs/datamodel" }
+itertools = "0.8"

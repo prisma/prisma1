@@ -23,6 +23,11 @@ import {
   IdStrategy,
   LegacyRelationalReservedFields,
 } from 'prisma-datamodel'
+import { aggregateFlatBy, Map } from '../../common/aggregate'
+
+import * as debug from 'debug'
+
+let log = debug('RelationalIntrospectionResult')
 
 export abstract class RelationalIntrospectionResult extends IntrospectionResult {
   protected model: ITable[]
@@ -50,12 +55,23 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
    * @deprecated This returns an unnormalized datamodel and might get removed in the near future.
    */
   public getDatamodel(): ISDL {
-    return this.infer(this.model, this.enums, this.relations, this.sequences)
+    const dml = this.infer(
+      this.model,
+      this.enums,
+      this.relations,
+      this.sequences,
+    )
+
+    log('Inferring done.')
+
+    return dml
   }
 
   protected resolveRelations(types: IGQLType[], relations: ITableRelation[]) {
+    const modelsByDbName = aggregateFlatBy(types, t => this.getDatabaseName(t))
+
     for (const relation of relations) {
-      this.resolveRelation(types, relation)
+      this.resolveRelation(modelsByDbName, relation)
     }
     return types
   }
@@ -103,64 +119,59 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     sequences: ISequenceInfo[],
   ): IGQLType[]
 
-  protected resolveRelation(types: IGQLType[], relation: ITableRelation) {
+  protected resolveRelation(types: Map<IGQLType>, relation: ITableRelation) {
     // Correctly sets field types according to given FK constraints.
-    for (const typeA of types) {
-      for (const typeB of types) {
-        for (const fieldA of typeA.fields) {
-          for (const fieldB of typeB.fields) {
-            if (
-              relation.sourceColumn === this.getDatabaseName(fieldA) &&
-              relation.sourceTable === this.getDatabaseName(typeA) &&
-              relation.targetColumn === this.getDatabaseName(fieldB) &&
-              relation.targetTable === this.getDatabaseName(typeB)
-            ) {
-              if (!fieldB.isId) {
-                fieldA.comments.push({
-                  text: `Relation ${typeA.name}.${fieldA.name} -> ${
-                    typeB.name
-                  }.${fieldB.name} does not target the id field of ${
-                    typeB.name
-                  }`,
-                  isError: true,
-                })
-              }
+    const typeA = types[relation.sourceTable]
+    const typeB = types[relation.targetTable]
 
-              fieldA.type = typeB
-
-              // Add back connecting
-              // TODO: We could look at the data to see if this is 1:1 or 1:n. For now, we use a unique constraint.
-              const connectorFieldAtB: IGQLField = {
-                // This needs to generate a fully normalized name.
-                // Otherwise, the normalization pipeline will attempt to normalize,
-                // which will lead to a @db(name: ...) directive for a collumn that does nfot exist.
-                // Caution: This has to work with the name handling in hideScalarListTypes().
-                // TODO: This should be referring the class NameNormalizer or similar.
-                name: lowerCase(camelCase(typeA.name)),
-                databaseName: null,
-                defaultValue: null,
-                isList: !fieldA.isUnique,
-                isCreatedAt: false,
-                isUpdatedAt: false,
-                isId: false,
-                idStrategy: null,
-                associatedSequence: null,
-                isReadOnly: false,
-                isRequired: fieldA.isRequired, // TODO: Not sure if that makes sense
-                isUnique: false,
-                relatedField: fieldA,
-                type: typeA,
-                relationName: null,
-                comments: [],
-                directives: [],
-              }
-
-              // Hook up connector fields
-              fieldA.relatedField = connectorFieldAtB
-              typeB.fields.push(connectorFieldAtB)
-              return
-            }
+    for (const fieldA of typeA.fields) {
+      for (const fieldB of typeB.fields) {
+        if (
+          relation.sourceColumn === this.getDatabaseName(fieldA) &&
+          relation.targetColumn === this.getDatabaseName(fieldB)
+        ) {
+          if (!fieldB.isId) {
+            fieldA.comments.push({
+              text: `Relation ${typeA.name}.${fieldA.name} -> ${typeB.name}.${
+                fieldB.name
+              } does not target the id field of ${typeB.name}`,
+              isError: true,
+            })
           }
+
+          fieldA.type = typeB
+
+          // Add back connecting
+          // TODO: We could look at the data to see if this is 1:1 or 1:n. For now, we use a unique constraint.
+          const connectorFieldAtB: IGQLField = {
+            // This needs to generate a fully normalized name.
+            // Otherwise, the normalization pipeline will attempt to normalize,
+            // which will lead to a @db(name: ...) directive for a collumn that does nfot exist.
+            // Caution: This has to work with the name handling in hideScalarListTypes().
+            // TODO: This should be referring the class NameNormalizer or similar.
+            name: lowerCase(camelCase(typeA.name)),
+            databaseName: null,
+            defaultValue: null,
+            isList: !fieldA.isUnique,
+            isCreatedAt: false,
+            isUpdatedAt: false,
+            isId: false,
+            idStrategy: null,
+            associatedSequence: null,
+            isReadOnly: false,
+            isRequired: fieldA.isRequired, // TODO: Not sure if that makes sense
+            isUnique: false,
+            relatedField: fieldA,
+            type: typeA,
+            relationName: null,
+            comments: [],
+            directives: [],
+          }
+
+          // Hook up connector fields
+          fieldA.relatedField = connectorFieldAtB
+          typeB.fields.push(connectorFieldAtB)
+          return
         }
       }
     }
@@ -488,6 +499,8 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     relations: ITableRelation[],
     sequences: ISequenceInfo[],
   ): ISDL {
+    log(`Datamodel inferrence started.`)
+
     // TODO: Maybe we want to have a concept of hidden, which just skips rendering?
     // Ask tim, this is an important descision for the SDK
     let types = [
@@ -495,19 +508,29 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       ...enums.map(x => this.inferEnumType(x)),
     ]
 
+    log(`Basic types inferred.`)
+
     types = this.hideUniqueIndices(types)
     types = this.resolveSequences(types, sequences)
     types = this.resolveFallbackIdField(types) // unique flags and index types are required for this step.
+    log(`Id fields resolved.`)
     types = this.inferDefaultValues(types)
+    log(`Default values inferred.`)
     types = this.resolveRelations(types, relations)
+    log(`Relations resolved.`)
     types = this.resolveEnumTypes(types)
+    log(`Relations enums resolved.`)
     types = this.hideJoinTypes(types)
     types = this.hideReservedTypes(types)
     types = this.hideScalarListTypes(types)
     types = this.hideIndicesOnRelatedFields(types)
     types = this.hideJoinTypes(types)
+    log(`Extra artifacts hidden.`)
     types = this.markNonIdFieldsWithSequencesAsErrored(types)
     types = this.markMultiIdFieldsForJoinTabesAsErrors(types)
+    log(`Validation done.`)
+
+    log(`Normalization done.`)
 
     return {
       comments: [],

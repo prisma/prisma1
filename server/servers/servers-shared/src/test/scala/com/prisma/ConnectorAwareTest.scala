@@ -47,7 +47,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   lazy val connector = prismaConfig.databases.head
   lazy val connectorTag = connector.connector match {
     case "mongo"                                                 => ConnectorTag.MongoConnectorTag
-    case "mysql"                                                 => ConnectorTag.MySqlConnectorTag
+    case "mysql" | "mysql-native"                                => ConnectorTag.MySqlConnectorTag
     case "postgres" | "postgres-native"                          => ConnectorTag.PostgresConnectorTag
     case "sqlite" | "sqlite-native" | "native-integration-tests" => ConnectorTag.SQLiteConnectorTag
   }
@@ -117,6 +117,12 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   def ifConnectorIsActive[T](assertion: => T): Unit = {
     // FIXME: check if we need can bring this back, discuss with do4gr
 //    if (connector.active && connectorTag != ConnectorTag.MongoConnectorTag) assertion
+  }
+
+  def ifIsNotPrisma2[T](assertion: => T): Unit = {
+    if (connector.connector != "native-integration-tests") {
+      assertion
+    }
   }
 
   private def ignoredTestsBasedOnIndividualTagging(connector: DatabaseConfig) = {

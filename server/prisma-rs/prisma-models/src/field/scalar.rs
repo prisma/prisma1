@@ -2,6 +2,7 @@ use prisma_query::ast::*;
 
 use super::FieldManifestation;
 use crate::prelude::*;
+// use serde::Deserializer;
 use std::sync::{Arc, Weak};
 
 static ID_FIELD: &str = "id";
@@ -24,6 +25,10 @@ pub struct ScalarFieldTemplate {
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
     pub behaviour: Option<FieldBehaviour>,
+    pub default_value: Option<PrismaValue>,
+
+    #[serde(rename = "enum")]
+    pub internal_enum: Option<InternalEnum>,
 }
 
 #[derive(DebugStub)]
@@ -32,13 +37,16 @@ pub struct ScalarField {
     pub type_identifier: TypeIdentifier,
     pub is_required: bool,
     pub is_list: bool,
-    pub is_unique: bool,
     pub is_hidden: bool,
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
+    pub internal_enum: Option<InternalEnum>,
     pub behaviour: Option<FieldBehaviour>,
     #[debug_stub = "#ModelWeakRef#"]
     pub model: ModelWeakRef,
+    pub default_value: Option<PrismaValue>,
+
+    pub(crate) is_unique: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Eq, PartialEq)]
@@ -48,7 +56,7 @@ pub enum FieldBehaviour {
     UpdatedAt,
     Id {
         strategy: IdStrategy,
-        sequence: Option<Sequence>,
+        sequence: Option<Sequence>, // TODO: this can be removed when we have switched fully to datamodel v2. This is not of interested for the query engine.
     },
     ScalarList {
         strategy: ScalarListStrategy,
@@ -122,8 +130,8 @@ impl ScalarField {
         }
     }
 
-    pub fn is_writable(&self) -> bool {
-        !self.is_id() && !self.is_created_at() && !self.is_updated_at()
+    pub fn is_unique(&self) -> bool {
+        self.is_unique || self.is_id()
     }
 
     pub fn db_name(&self) -> &str {
@@ -134,8 +142,15 @@ impl ScalarField {
         self.manifestation.as_ref().map(|mf| mf.db_name.as_ref())
     }
 
-    pub fn as_column(&self) -> Column {
-        ((self.internal_data_model().db_name.as_str(), self.model().db_name()), self.db_name()).into()
+    pub fn as_column(&self) -> Column<'static> {
+        (
+            (
+                self.internal_data_model().db_name.clone(),
+                self.model().db_name().to_string(),
+            ),
+            self.db_name().to_string(),
+        )
+            .into()
     }
 
     pub fn id_behaviour_clone(&self) -> Option<FieldBehaviour> {
@@ -156,7 +171,7 @@ impl ScalarField {
         }
     }
 
-    pub fn scalar_list_table<'a>(&'a self) -> ScalarListTable<'a> {
+    pub fn scalar_list_table(&self) -> ScalarListTable {
         ScalarListTable::new(self)
     }
 }

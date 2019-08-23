@@ -87,7 +87,6 @@ message ValueContainer {
     string          enum       = 5;
     string          json       = 6;
     int32           int        = 7;
-    int64           relation   = 8;
     bool            null       = 9;
     string          uuid       = 10;
     GraphqlId       graphql_id = 11;

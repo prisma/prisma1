@@ -17,16 +17,16 @@ pub struct OneRelationIsNullFilter {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum RelationCondition {
-    EveryRelatedNode,
-    AtLeastOneRelatedNode,
-    NoRelatedNode,
-    ToOneRelatedNode, // TODO: This is needed for Mongo and should be discussed with Matthias
+    EveryRelatedRecord,
+    AtLeastOneRelatedRecord,
+    NoRelatedRecord,
+    ToOneRelatedRecord, // TODO: This is needed for Mongo and should be discussed with Matthias
 }
 
 impl RelationCondition {
-    pub fn invert_of_subselect(&self) -> bool {
+    pub fn invert_of_subselect(self) -> bool {
         match self {
-            RelationCondition::EveryRelatedNode => true,
+            RelationCondition::EveryRelatedRecord => true,
             _ => false,
         }
     }
@@ -57,7 +57,7 @@ impl RelationCompare for Arc<RelationField> {
     ///         condition: condition,
     ///     }) => {
     ///         assert_eq!(String::from("sites"), relation_field.name);
-    ///         assert_eq!(RelationCondition::EveryRelatedNode, condition);
+    ///         assert_eq!(RelationCondition::EveryRelatedRecord, condition);
     ///
     ///         match *nested {
     ///             Filter::Scalar(ScalarFilter {
@@ -80,7 +80,7 @@ impl RelationCompare for Arc<RelationField> {
         Filter::from(RelationFilter {
             field: Arc::clone(self),
             nested_filter: Box::new(filter.into()),
-            condition: RelationCondition::EveryRelatedNode,
+            condition: RelationCondition::EveryRelatedRecord,
         })
     }
 
@@ -108,7 +108,7 @@ impl RelationCompare for Arc<RelationField> {
     ///         condition: condition,
     ///     }) => {
     ///         assert_eq!(String::from("sites"), relation_field.name);
-    ///         assert_eq!(RelationCondition::AtLeastOneRelatedNode, condition);
+    ///         assert_eq!(RelationCondition::AtLeastOneRelatedRecord, condition);
     ///
     ///         match *nested {
     ///             Filter::Scalar(ScalarFilter {
@@ -131,11 +131,11 @@ impl RelationCompare for Arc<RelationField> {
         Filter::from(RelationFilter {
             field: Arc::clone(self),
             nested_filter: Box::new(filter.into()),
-            condition: RelationCondition::AtLeastOneRelatedNode,
+            condition: RelationCondition::AtLeastOneRelatedRecord,
         })
     }
 
-    /// To one related node. FIXME
+    /// To one related record. FIXME
     /// ```rust
     /// # use connector::{*, filter::*};
     /// # use prisma_models::*;
@@ -159,7 +159,7 @@ impl RelationCompare for Arc<RelationField> {
     ///         condition: condition,
     ///     }) => {
     ///         assert_eq!(String::from("sites"), relation_field.name);
-    ///         assert_eq!(RelationCondition::ToOneRelatedNode, condition);
+    ///         assert_eq!(RelationCondition::ToOneRelatedRecord, condition);
     ///
     ///         match *nested {
     ///             Filter::Scalar(ScalarFilter {
@@ -182,7 +182,7 @@ impl RelationCompare for Arc<RelationField> {
         Filter::from(RelationFilter {
             field: Arc::clone(self),
             nested_filter: Box::new(filter.into()),
-            condition: RelationCondition::ToOneRelatedNode,
+            condition: RelationCondition::ToOneRelatedRecord,
         })
     }
 
@@ -210,7 +210,7 @@ impl RelationCompare for Arc<RelationField> {
     ///         condition: condition,
     ///     }) => {
     ///         assert_eq!(String::from("sites"), relation_field.name);
-    ///         assert_eq!(RelationCondition::NoRelatedNode, condition);
+    ///         assert_eq!(RelationCondition::NoRelatedRecord, condition);
     ///
     ///         match *nested {
     ///             Filter::Scalar(ScalarFilter {
@@ -233,7 +233,7 @@ impl RelationCompare for Arc<RelationField> {
         Filter::from(RelationFilter {
             field: Arc::clone(self),
             nested_filter: Box::new(filter.into()),
-            condition: RelationCondition::NoRelatedNode,
+            condition: RelationCondition::NoRelatedRecord,
         })
     }
 

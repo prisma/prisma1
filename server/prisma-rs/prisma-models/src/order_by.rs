@@ -11,6 +11,16 @@ pub enum SortOrder {
     Descending,
 }
 
+impl SortOrder {
+    /// "ASC" / "DESC"
+    pub fn abbreviated(self) -> &'static str {
+        match self {
+            SortOrder::Ascending => "ASC",
+            SortOrder::Descending => "DESC",
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct OrderBy {
     pub field: Arc<ScalarField>,

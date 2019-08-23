@@ -16,6 +16,11 @@ import {
   UnsupportedTypeError,
 } from './documentConnector'
 
+import * as debug from 'debug'
+import { DatabaseMetadata } from '../../common/introspectionResult'
+
+let log = debug('DocumentConnector')
+
 /**
  * Sets how many items are queried when the `Random` sampling strategy is used.
  */
@@ -33,6 +38,7 @@ const relationThreshold = 0.3
 export abstract class DocumentConnector<InternalCollectionType>
   implements IDocumentConnector<InternalCollectionType> {
   abstract getDatabaseType(): DatabaseType
+  abstract getMetadata(schemaName: string): Promise<DatabaseMetadata>
   abstract listSchemas(): Promise<string[]>
   public abstract getInternalCollections(
     schema: string,
@@ -100,6 +106,8 @@ export abstract class DocumentConnector<InternalCollectionType>
   ): Promise<ISDL> {
     // First, we sample our collections to create a flat type schema.
     // Then, we attempt to find relations using sampling and a ratio test.
+
+    log('Listing models.')
 
     const sampler = new ModelSampler<InternalCollectionType>(
       modelSamplingStrategy,

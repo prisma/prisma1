@@ -4,35 +4,27 @@ version = "0.1.0"
 authors = []
 edition = "2018"
 
-[features]
-default = ["sqlite", "postgresql"]
-sqlite = ["rusqlite", "libsqlite3-sys", "r2d2_sqlite"]
-postgresql = ["postgres", "r2d2_postgres", "tokio-postgres-native-tls", "tokio-postgres", "native-tls", "rust_decimal"]
-
 [dependencies]
-connector = { path = "../connector" }
+connector-interface = { path = "../connector", package = "connector" }
 prisma-models = { path = "../../../prisma-models" }
 itertools = "0.8"
 chrono = { version = "0.4", features = ["serde"] }
 prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
-prisma-common = { path = "../../../libs/prisma-common" }
+datamodel = { path = "../../../libs/datamodel" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 parking_lot = "0.7"
 uuid = "0.7"
 failure = "0.1"
+url = "1.7"
 failure_derive = "0.1"
 r2d2 = "0.8"
 cuid = { git = "https://github.com/prisma/cuid-rust" }
 rand = "0.6"
-rust_decimal = { git = "https://github.com/pimeys/rust-decimal.git", optional = true, features = ["postgres"] }
+log = "0.4"
 
-r2d2_sqlite = { version = "0.8", optional = true }
-libsqlite3-sys = {  version = "0.11", optional = true }
-rusqlite = { version = "0.16", features = ["chrono", "bundled"], optional = true }
+postgres = { version = "0.16.0-rc.1", features = ["with-serde_json-1", "with-chrono-0_4", "with-uuid-0_7"] }
+tokio-postgres = { version = "0.4.0-rc.2" }
+native-tls = { version = "0.2" }
 
-postgres = { version = "0.16.0-rc.1", features = ["with-serde_json-1", "with-chrono-0_4", "with-uuid-0_7"], optional = true}
-r2d2_postgres = { version = "0.15.0-rc.1", optional = true }
-tokio-postgres-native-tls = { version = "0.1.0-rc.1", optional = true }
-tokio-postgres = { version = "0.4.0-rc.2", optional = true }
-native-tls = { version = "0.2", optional = true }
+mysql_client = { version = "*", package = "mysql", features = ["ssl"] }

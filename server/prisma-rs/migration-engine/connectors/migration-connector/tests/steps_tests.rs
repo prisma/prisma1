@@ -2,7 +2,6 @@
 
 use datamodel::*;
 use migration_connector::steps::*;
-use nullable::Nullable::*;
 
 #[test]
 fn minimal_CreateModel_must_work() {
@@ -44,7 +43,7 @@ fn full_UpdateModel_must_work() {
     let expected_struct = MigrationStep::UpdateModel(UpdateModel {
         name: "Blog".to_string(),
         new_name: Some("MyBlog".to_string()),
-        db_name: Some(NotNull("blog".to_string())),
+        db_name: Some(Some("blog".to_string())),
         embedded: Some(true),
     });
     assert_symmetric_serde(json, expected_struct);
@@ -62,7 +61,7 @@ fn DeleteModel_must_work() {
 #[test]
 fn minimal_CreateField_must_work() {
     let json =
-        r#"{"stepType":"CreateField","model":"Blog","name":"title","type":{"Base":"String"},"arity":"required"}"#;
+        r#"{"stepType":"CreateField","model":"Blog","name":"title","type":{"Base":"String"},"arity":"required","isUnique":false}"#;
     let expected_struct = MigrationStep::CreateField(CreateField {
         model: "Blog".to_string(),
         name: "title".to_string(),
@@ -71,6 +70,7 @@ fn minimal_CreateField_must_work() {
         db_name: None,
         is_created_at: None,
         is_updated_at: None,
+        is_unique: false,
         id: None,
         default: None,
         scalar_list: None,
@@ -90,6 +90,7 @@ fn full_CreateField_must_work() {
             "dbName":"blog",
             "isCreatedAt":true,
             "isUpdatedAt":true,
+            "isUnique": true,
             "default":{"String":"default"},
             "scalarList": "Embedded"
         }"#;
@@ -101,6 +102,7 @@ fn full_CreateField_must_work() {
         db_name: Some("blog".to_string()),
         is_created_at: Some(true),
         is_updated_at: Some(true),
+        is_unique: true,
         id: None, // TODO: adapt once added to CreateField
         default: Some(Value::String("default".to_string())),
         scalar_list: Some(ScalarListStrategy::Embedded),
@@ -121,7 +123,8 @@ fn minimal_UpdateField_must_work() {
         db_name: None,
         is_created_at: None,
         is_updated_at: None,
-        id: None,
+        is_unique: None,
+        id_info: None,
         default: None,
         scalar_list: None,
     });
@@ -130,19 +133,20 @@ fn minimal_UpdateField_must_work() {
 
 #[test]
 fn full_UpdateField_must_work() {
-    let json = r#"{"stepType":"UpdateField","model":"Blog","name":"title","newName":"MyBlog","type":{"Base":"String"},"arity":"optional","dbName":"blog","isCreatedAt":true,"isUpdatedAt":true,"default":{"String":"default"},"scalarList":"Embedded"}"#;
+    let json = r#"{"stepType":"UpdateField","model":"Blog","name":"title","newName":"MyBlog","type":{"Base":"String"},"arity":"optional","dbName":"blog","isCreatedAt":true,"isUpdatedAt":true,"isUnique":true,"default":{"String":"default"},"scalarList":"Embedded"}"#;
     let expected_struct = MigrationStep::UpdateField(UpdateField {
         model: "Blog".to_string(),
         name: "title".to_string(),
         new_name: Some("MyBlog".to_string()),
         tpe: Some(FieldType::Base(ScalarType::String)),
         arity: Some(FieldArity::Optional),
-        db_name: Some(NotNull("blog".to_string())),
+        db_name: Some(Some("blog".to_string())),
         is_created_at: Some(true),
         is_updated_at: Some(true),
-        id: None,
-        default: Some(NotNull(Value::String("default".to_string()))),
-        scalar_list: Some(NotNull(ScalarListStrategy::Embedded)),
+        is_unique: Some(true),
+        id_info: None,
+        default: Some(Some(Value::String("default".to_string()))),
+        scalar_list: Some(Some(ScalarListStrategy::Embedded)),
     });
     assert_symmetric_serde(json, expected_struct);
 }

@@ -1,95 +1,95 @@
-mod data_resolver;
-mod mutaction_executor;
+mod managed_database_reader;
+mod unmanaged_database_writer;
 
-pub use data_resolver::*;
-pub use mutaction_executor::*;
+pub use managed_database_reader::*;
+pub use unmanaged_database_writer::*;
 
-use crate::{error::*, query_builder::QueryBuilder, AliasedCondition, RawQuery, SqlResult, SqlRow};
-use connector::{
-    error::NodeSelectorInfo,
-    filter::{Filter, NodeSelector},
+use crate::{error::*, query_builder::ReadQueryBuilder, AliasedCondition, RawQuery, SqlRow, ToSqlRow};
+use connector_interface::{
+    error::RecordFinderInfo,
+    filter::{Filter, RecordFinder},
 };
 use prisma_models::*;
-use prisma_query::ast::*;
-use serde_json::Value;
+use prisma_query::{
+    ast::*,
+    connector::{self, Queryable},
+};
+use serde_json::{Map, Number, Value};
 use std::{convert::TryFrom, sync::Arc};
 
-/// A `Transactional` presents a database able to spawn transactions, execute
-/// queries in the transaction and commit the results to the database or do a
-/// rollback in case of an error.
 pub trait Transactional {
-    /// Wrap a closure into a transaction. All actions done through the
-    /// `Transaction` are commited automatically, or rolled back in case of any
-    /// error.
-    fn with_transaction<F, T>(&self, db: &str, f: F) -> SqlResult<T>
+    fn with_transaction<F, T>(&self, db: &str, f: F) -> crate::Result<T>
     where
-        F: FnOnce(&mut Transaction) -> SqlResult<T>;
+        F: FnOnce(&mut dyn Transaction) -> crate::Result<T>;
 }
 
-/// Abstraction of a database transaction. Start, commit and rollback should be
-/// handled per-database basis, `Transaction` providing a minimal interface over
-/// different databases.
-pub trait Transaction {
-    /// Burn them. BURN THEM ALL!
-    fn truncate(&mut self, project: ProjectRef) -> SqlResult<()>;
+impl<'t> Transaction for connector::Transaction<'t> {}
 
-    /// Write to the database, returning the change count and last id inserted.
-    fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>>;
+pub trait Transaction: Queryable {
+    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> crate::Result<Vec<SqlRow>> {
+        let result_set = self.query(q)?;
+        let mut sql_rows = Vec::new();
 
-    /// Select multiple rows from the database.
-    fn filter(&mut self, q: Select, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>>;
+        for row in result_set {
+            sql_rows.push(row.to_sql_row(idents)?);
+        }
 
-    /// Executes a raw query string with no parameterization or safety,
-    /// resulting a Json value. Do not use internally anywhere in the code.
-    /// Provides user an escape hatch for using the database directly.
-    fn raw(&mut self, q: RawQuery) -> SqlResult<Value>;
-
-    /// Insert to the database. On success returns the last insert row id.
-    fn insert(&mut self, q: Insert) -> SqlResult<Option<GraphqlId>> {
-        Ok(self.write(q.into())?)
+        Ok(sql_rows)
     }
 
-    /// Update the database. On success returns the number of rows updated.
-    fn update(&mut self, q: Update) -> SqlResult<()> {
-        self.write(q.into())?;
-        Ok(())
-    }
+    fn raw_json(&mut self, q: RawQuery) -> crate::Result<Value> {
+        if q.is_select() {
+            let result_set = self.query_raw(q.0.as_str(), &[])?;
+            let columns: Vec<String> = result_set.columns().map(ToString::to_string).collect();
+            let mut result = Vec::new();
 
-    /// Delete from the database. On success returns the number of rows deleted.
-    fn delete(&mut self, q: Delete) -> SqlResult<()> {
-        self.write(q.into())?;
-        Ok(())
+            for row in result_set.into_iter() {
+                let mut object = Map::new();
+
+                for (idx, p_value) in row.into_iter().enumerate() {
+                    let column_name: String = columns[idx].clone();
+                    object.insert(column_name, Value::from(p_value));
+                }
+
+                result.push(Value::Object(object));
+            }
+
+            Ok(Value::Array(result))
+        } else {
+            let changes = self.execute_raw(q.0.as_str(), &[])?;
+            Ok(Value::Number(Number::from(changes)))
+        }
     }
 
     /// Find one full record selecting all scalar fields.
-    fn find_record(&mut self, node_selector: &NodeSelector) -> SqlResult<SingleNode> {
+    fn find_record(&mut self, record_finder: &RecordFinder) -> crate::Result<SingleRecord> {
         use SqlError::*;
 
-        let model = node_selector.field.model();
+        let model = record_finder.field.model();
         let selected_fields = SelectedFields::from(Arc::clone(&model));
-        let select = QueryBuilder::get_nodes(model, &selected_fields, node_selector);
+        let select = ReadQueryBuilder::get_records(model, &selected_fields, record_finder);
         let idents = selected_fields.type_identifiers();
 
         let row = self.find(select, idents.as_slice()).map_err(|e| match e {
-            NodeDoesNotExist => NodeNotFoundForWhere(NodeSelectorInfo::from(node_selector)),
+            RecordDoesNotExist => RecordNotFoundForWhere(RecordFinderInfo::from(record_finder)),
             e => e,
         })?;
 
-        let node = Node::from(row);
+        let record = Record::from(row);
 
-        Ok(SingleNode::new(node, selected_fields.names()))
+        Ok(SingleRecord::new(record, selected_fields.names()))
     }
 
     /// Select one row from the database.
-    fn find(&mut self, q: Select, idents: &[TypeIdentifier]) -> SqlResult<SqlRow> {
-        self.filter(q.limit(1), idents)?
+    fn find(&mut self, q: Select, idents: &[TypeIdentifier]) -> crate::Result<SqlRow> {
+        self.filter(q.limit(1).into(), idents)?
             .into_iter()
             .next()
-            .ok_or(SqlError::NodeDoesNotExist)
+            .ok_or(SqlError::RecordDoesNotExist)
     }
 
     /// Read the first column from the first row as an integer.
-    fn find_int(&mut self, q: Select) -> SqlResult<i64> {
+    fn find_int(&mut self, q: Select) -> crate::Result<i64> {
         // UNWRAP: A dataset will always have at least one column, even if it contains no data.
         let id = self.find(q, &[TypeIdentifier::Int])?.values.into_iter().next().unwrap();
 
@@ -97,21 +97,21 @@ pub trait Transaction {
     }
 
     /// Read the first column from the first row as an `GraphqlId`.
-    fn find_id(&mut self, node_selector: &NodeSelector) -> SqlResult<GraphqlId> {
-        let model = node_selector.field.model();
-        let filter = Filter::from(node_selector.clone());
+    fn find_id(&mut self, record_finder: &RecordFinder) -> crate::Result<GraphqlId> {
+        let model = record_finder.field.model();
+        let filter = Filter::from(record_finder.clone());
 
         let id = self
             .filter_ids(model, filter)?
             .into_iter()
             .next()
-            .ok_or_else(|| SqlError::NodeNotFoundForWhere(NodeSelectorInfo::from(node_selector)))?;
+            .ok_or_else(|| SqlError::RecordNotFoundForWhere(RecordFinderInfo::from(record_finder)))?;
 
         Ok(id)
     }
 
     /// Read the all columns as an `GraphqlId`
-    fn filter_ids(&mut self, model: ModelRef, filter: Filter) -> SqlResult<Vec<GraphqlId>> {
+    fn filter_ids(&mut self, model: ModelRef, filter: Filter) -> crate::Result<Vec<GraphqlId>> {
         let select = Select::from_table(model.table())
             .column(model.fields().id().as_column())
             .so_that(filter.aliased_cond(None));
@@ -119,8 +119,8 @@ pub trait Transaction {
         self.select_ids(select)
     }
 
-    fn select_ids(&mut self, select: Select) -> SqlResult<Vec<GraphqlId>> {
-        let mut rows = self.filter(select, &[TypeIdentifier::GraphQLID])?;
+    fn select_ids(&mut self, select: Select) -> crate::Result<Vec<GraphqlId>> {
+        let mut rows = self.filter(select.into(), &[TypeIdentifier::GraphQLID])?;
         let mut result = Vec::new();
 
         for mut row in rows.drain(0..) {
@@ -138,33 +138,33 @@ pub trait Transaction {
         &mut self,
         parent_field: RelationFieldRef,
         parent_id: &GraphqlId,
-        selector: &Option<NodeSelector>,
-    ) -> SqlResult<GraphqlId> {
+        selector: &Option<RecordFinder>,
+    ) -> crate::Result<GraphqlId> {
         let ids = self.filter_ids_by_parents(
             Arc::clone(&parent_field),
             vec![parent_id],
             selector.clone().map(Filter::from),
         )?;
 
-        let id = ids.into_iter().next().ok_or_else(|| SqlError::NodesNotConnected {
+        let id = ids.into_iter().next().ok_or_else(|| SqlError::RecordsNotConnected {
             relation_name: parent_field.relation().name.clone(),
             parent_name: parent_field.model().name.clone(),
             parent_where: None,
             child_name: parent_field.related_model().name.clone(),
-            child_where: selector.as_ref().map(NodeSelectorInfo::from),
+            child_where: selector.as_ref().map(RecordFinderInfo::from).map(Box::new),
         })?;
 
         Ok(id)
     }
 
-    /// Find all children node id's with the given parent id's, optionally given
+    /// Find all children record id's with the given parent id's, optionally given
     /// a `Filter` for extra filtering.
     fn filter_ids_by_parents(
         &mut self,
         parent_field: RelationFieldRef,
         parent_ids: Vec<&GraphqlId>,
         selector: Option<Filter>,
-    ) -> SqlResult<Vec<GraphqlId>> {
+    ) -> crate::Result<Vec<GraphqlId>> {
         let related_model = parent_field.related_model();
         let relation = parent_field.relation();
         let child_id_field = relation.column_for_relation_side(parent_field.relation_side.opposite());
@@ -174,7 +174,12 @@ pub trait Transaction {
             .column(child_id_field)
             .so_that(parent_id_field.in_selection(parent_ids));
 
-        let conditions = related_model.fields().id().db_name().in_selection(subselect);
+        let conditions = related_model
+            .fields()
+            .id()
+            .db_name()
+            .to_string()
+            .in_selection(subselect);
 
         let conditions = match selector {
             Some(into_cond) => {

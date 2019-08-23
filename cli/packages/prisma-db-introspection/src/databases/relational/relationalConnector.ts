@@ -1,8 +1,12 @@
 import { IConnector } from '../../common/connector'
-import { TypeIdentifier, DatabaseType } from 'prisma-datamodel'
+import { DatabaseMetadata } from '../../common/introspectionResult'
+import { DatabaseType, GQLAssert } from 'prisma-datamodel'
 import { RelationalIntrospectionResult } from './relationalIntrospectionResult'
 import IDatabaseClient from '../IDatabaseClient'
-import GQLAssert from '../../../../prisma-datamodel/dist/util/gqlAssert'
+import * as debug from 'debug'
+import { aggregateBy } from '../../common/aggregate'
+
+let log = debug('RelationalIntrospection')
 
 export interface IInternalIndexInfo {
   tableName: string
@@ -17,6 +21,12 @@ export interface IInternalEnumInfo {
   values: string[]
 }
 
+export interface IInternalColumnCommentInfo {
+  tableName: string
+  columnName: string
+  text: string
+}
+
 export abstract class RelationalConnector implements IConnector {
   protected client: IDatabaseClient
 
@@ -24,6 +34,7 @@ export abstract class RelationalConnector implements IConnector {
     this.client = client
   }
 
+  abstract getMetadata(schemaName: string): Promise<DatabaseMetadata>
   abstract getDatabaseType(): DatabaseType
   protected abstract createIntrospectionResult(
     models: ITable[],
@@ -33,24 +44,26 @@ export abstract class RelationalConnector implements IConnector {
   ): RelationalIntrospectionResult
 
   protected async query(query: string, params: any[] = []): Promise<any[]> {
-    return await this.client.query(query, params)
+    const result: any = await this.client.query(query, params)
+    if (result.rows) {
+      return result.rows
+    }
+
+    return result
   }
 
   /**
    * Column comments are DB specific
    */
-  protected abstract async queryColumnComment(
+  protected abstract async queryColumnComments(
     schemaName: string,
-    tableName: string,
-    columnName: string,
-  ): Promise<string | null>
+  ): Promise<IInternalColumnCommentInfo[]>
 
   /**
    * Indices are DB specific
    */
   protected abstract async queryIndices(
     schemaName: string,
-    tableName: string,
   ): Promise<IInternalIndexInfo[]>
 
   protected abstract async queryEnums(schemaName: string): Promise<IEnum[]>
@@ -62,12 +75,14 @@ export abstract class RelationalConnector implements IConnector {
   public async introspect(
     schema: string,
   ): Promise<RelationalIntrospectionResult> {
-    return this.createIntrospectionResult(
-      await this.listModels(schema),
-      await this.listRelations(schema),
-      await this.listEnums(schema),
-      await this.listSequences(schema),
-    )
+    const [models, relations, enums, sequences] = await Promise.all([
+      this.listModels(schema),
+      this.listRelations(schema),
+      this.listEnums(schema),
+      this.listSequences(schema),
+    ])
+
+    return this.createIntrospectionResult(models, relations, enums, sequences)
   }
 
   public async listEnums(schemaName: string): Promise<IEnum[]> {
@@ -78,6 +93,7 @@ export abstract class RelationalConnector implements IConnector {
    * All queries below use the standardized information_schema table.
    */
   public async listSchemas(): Promise<string[]> {
+    log('Querying schemas.')
     const res = await this.query(
       `SELECT 
          schema_name
@@ -90,23 +106,55 @@ export abstract class RelationalConnector implements IConnector {
   }
 
   protected async listModels(schemaName: string): Promise<ITable[]> {
+    log(`Introspecting models in schema ${schemaName}.`)
     const tables: ITable[] = []
-    const allTables = await this.queryTables(schemaName)
 
-    for (const tableName of allTables) {
-      const columns = await this.queryColumns(schemaName, tableName)
+    const [allTables, allComments, allColumns, allIndices] = await Promise.all([
+      this.queryTables(schemaName),
+      this.queryColumnComments(schemaName),
+      this.queryColumns(schemaName),
+      this.queryIndices(schemaName),
+    ])
 
-      for (const column of columns) {
-        column.comment = await this.queryColumnComment(
-          schemaName,
-          tableName,
-          column.name,
-        )
+    // Aggregate for fast lookup
+    const columnsByTable = aggregateBy(allColumns, c => c.tableName)
+    const indexByTable = aggregateBy(allIndices, c => c.tableName)
+
+    // Columns have double aggregation.
+    const commentsByColumnByTable = {}
+
+    for (const comment of allComments) {
+      let commentsByColumn = commentsByColumnByTable[comment.tableName]
+      if (!commentsByColumn) {
+        commentsByColumn = {}
+        commentsByColumnByTable[comment.tableName] = commentsByColumn
       }
 
-      const allIndices = await this.queryIndices(schemaName, tableName)
-      const secondaryIndices = allIndices.filter(x => !x.isPrimaryKey)
-      const [primaryKey] = allIndices.filter(x => x.isPrimaryKey)
+      // There can be only one comment per column.
+      commentsByColumn[comment.columnName] = comment
+    }
+
+    // Actual aggregation
+
+    for (const tableName of allTables) {
+      const columns = columnsByTable[tableName] as IColumn[]
+      const tableColumnComments = commentsByColumnByTable[tableName]
+
+      if (tableColumnComments !== undefined) {
+        for (const column of columns) {
+          const comment = tableColumnComments[
+            column.name
+          ] as IInternalColumnCommentInfo
+
+          if (comment !== undefined) {
+            column.comment = comment.text
+          }
+        }
+      }
+
+      const indices = (indexByTable[tableName] || []) as IInternalIndexInfo[]
+      const secondaryIndices = indices.filter(x => !x.isPrimaryKey)
+      const [primaryKey] = indices.filter(x => x.isPrimaryKey)
 
       tables.push({
         name: tableName,
@@ -119,7 +167,25 @@ export abstract class RelationalConnector implements IConnector {
     return tables
   }
 
+  protected async countTables(schemaName: string) {
+    log('Counting tables.')
+    const countTableQueries = `
+      SELECT 
+        count(*) as ct
+      FROM 
+        information_schema.tables
+      WHERE 
+        table_schema = ${this.parameter(1, 'text')}
+        -- Views are not supported yet
+        AND table_type = 'BASE TABLE'`
+
+    const [{ ct }] = await this.query(countTableQueries, [schemaName])
+
+    return ct
+  }
+
   protected async queryTables(schemaName: string) {
+    log('Querying tables.')
     const allTablesQuery = `
       SELECT 
         table_name as table_name
@@ -161,7 +227,8 @@ export abstract class RelationalConnector implements IConnector {
    */
   protected abstract parameter(count: number, type: string)
 
-  protected async queryColumns(schemaName: string, tableName: string) {
+  protected async queryColumns(schemaName: string) {
+    log(`Querying columns for schema ${schemaName}.`)
     const allColumnsQuery = `
       SELECT
         ordinal_position as ordinal_postition,
@@ -169,12 +236,12 @@ export abstract class RelationalConnector implements IConnector {
         ${this.getTypeColumnName()} as udt_name,
         column_default as column_default,
         is_nullable = 'YES' as is_nullable,
+        table_name as table_name, 
         ${this.getAutoIncrementCondition()} as is_auto_increment
       FROM
         information_schema.columns
       WHERE
         table_schema = '${schemaName}'
-        AND table_name  = '${tableName}'
       ORDER BY column_name`
 
     /**
@@ -200,11 +267,13 @@ export abstract class RelationalConnector implements IConnector {
         defaultValue: row.column_default as string,
         isNullable: row.is_nullable as boolean,
         comment: null as string | null,
+        tableName: row.table_name as string,
       }
     })
   }
 
   protected async listRelations(schemaName: string): Promise<ITableRelation[]> {
+    log(`Querying relations in schema ${schemaName}.`)
     const fkQuery = `  
       SELECT 
         keyColumn1.constraint_name AS "fkConstraintName",
@@ -262,6 +331,7 @@ export interface IColumn {
   comment: string | null
   isNullable: boolean
   isList: boolean
+  tableName: string
   /**
    * Indicates an auto_increment column. Only use this if the
    * database DOES NOT support sequences.

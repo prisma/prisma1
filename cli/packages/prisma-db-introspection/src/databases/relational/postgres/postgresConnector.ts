@@ -12,6 +12,10 @@ import { PostgresIntrospectionResult } from './postgresIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
 import IDatabaseClient from '../../IDatabaseClient'
 import PostgresDatabaseClient from './postgresDatabaseClient'
+import { DatabaseMetadata } from '../../../common/introspectionResult'
+import * as debug from 'debug'
+
+let log = debug('PostgresIntrospection')
 
 // Documentation: https://www.prisma.io/docs/data-model-and-migrations/introspection-mapping-to-existing-db-soi1/
 
@@ -34,10 +38,12 @@ export class PostgresConnector extends RelationalConnector {
     enums: IEnum[],
     sequences: ISequenceInfo[],
   ): RelationalIntrospectionResult {
+    log('Creating postgres specific introspection result.')
     return new PostgresIntrospectionResult(models, relations, enums, sequences)
   }
 
   public async listSchemas(): Promise<string[]> {
+    log('Listing schemas.')
     const schemas = await super.listSchemas()
     return schemas.filter(schema => !schema.startsWith('pg_'))
   }
@@ -55,11 +61,8 @@ export class PostgresConnector extends RelationalConnector {
   }
 
   // TODO: Unit test for column comments
-  protected async queryColumnComment(
-    schemaName: string,
-    tableName: string,
-    columnName: string,
-  ) {
+  protected async queryColumnComments(schemaName: string) {
+    log(`Querying column comments for ${schemaName}`)
     const commentQuery = `
       SELECT
       (
@@ -69,28 +72,25 @@ export class PostgresConnector extends RelationalConnector {
         WHERE
           c.oid     = (SELECT ('"' || cols.table_schema || '"."' || cols.table_name || '"')::regclass::oid) AND
           c.relname = cols.table_name
-      ) as column_comment   
+      ) as column_comment, cols.column_name as column_name, cols.table_name as table_name
       FROM
         information_schema.columns cols
       WHERE
-        cols.table_schema  = $1::text AND
-        cols.table_name    = $2::text AND
-        cols.column_name   = $3::text;
+        cols.table_schema  = $1::text
     `
-    const [comment] = (await this.query(commentQuery, [
-      schemaName,
-      tableName,
-      columnName,
-    ])).map(row => row.column_comment as string)
+    const comments = (await this.query(commentQuery, [schemaName]))
+      .filter(row => row.column_comment != undefined)
+      .map(row => ({
+        text: row.column_comment as string,
+        columnName: row.column_name as string,
+        tableName: row.table_name as string,
+      }))
 
-    if (comment === undefined) {
-      return null
-    } else {
-      return comment
-    }
+    return comments
   }
 
-  protected async queryIndices(schemaName: string, tableName: string) {
+  protected async queryIndices(schemaName: string) {
+    log(`Querying indices for table ${schemaName}.`)
     const indexQuery = `
       SELECT
           tableInfos.relname as table_name,
@@ -121,14 +121,13 @@ export class PostgresConnector extends RelationalConnector {
           -- we only consider stuff out of one specific schema
           AND tableInfos.relnamespace = schemaInfo.oid
           AND schemaInfo.nspname = $1::text
-          AND tableInfos.relname = $2::text
       GROUP BY
           tableInfos.relname,
           indexInfos.relname,
           rawIndex.indisunique,
           rawIndex.indisprimary
     `
-    return (await this.query(indexQuery, [schemaName, tableName])).map(row => {
+    return (await this.query(indexQuery, [schemaName])).map(row => {
       return {
         tableName: row.table_name as string,
         name: row.index_name as string,
@@ -147,6 +146,7 @@ export class PostgresConnector extends RelationalConnector {
   }
 
   protected async queryEnums(schemaName: string): Promise<IInternalEnumInfo[]> {
+    log(`Querying enums for schema ${schemaName}.`)
     const enumQuery = `
       SELECT
         t.typname AS "enumName",  
@@ -167,6 +167,7 @@ export class PostgresConnector extends RelationalConnector {
   }
 
   protected async listSequences(schemaName: string): Promise<ISequenceInfo[]> {
+    log('Querying sqeuences.')
     const sequenceQuery = `
     SELECT
       sequence_name, start_value
@@ -182,5 +183,20 @@ export class PostgresConnector extends RelationalConnector {
         allocationSize: 1,
       }
     })
+  }
+
+  public async getMetadata(schemaName: string): Promise<DatabaseMetadata> {
+    const schemaSizeQuery = `
+      SELECT 
+        SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)))::BIGINT as size
+        FROM pg_tables WHERE schemaname = $1::text`
+
+    const [{ size }] = await this.query(schemaSizeQuery, [schemaName])
+    const count = await super.countTables(schemaName)
+
+    return {
+      countOfTables: count,
+      sizeInBytes: size,
+    }
   }
 }
