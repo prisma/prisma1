@@ -23,7 +23,7 @@ fn setup() {
         return;
     }
 
-    let log_level = match std::env::var("RUST_LOG")
+    let log_level = match std::env::var("TEST_LOG")
         .unwrap_or("warn".to_string())
         .to_lowercase()
         .as_ref()
