@@ -1,4 +1,3 @@
-#![warn(missing_docs)]
 //! Database introspection.
 use failure::Fail;
 use serde::{Deserialize, Serialize};

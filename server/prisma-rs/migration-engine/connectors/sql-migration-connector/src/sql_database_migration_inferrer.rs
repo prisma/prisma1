@@ -1,4 +1,4 @@
-use crate::database_schema_calculator::{DatabaseSchemaCalculator, FieldExtensions, ModelExtensions};
+use crate::database_schema_calculator::DatabaseSchemaCalculator;
 use crate::database_schema_differ::{DatabaseSchemaDiff, DatabaseSchemaDiffer};
 use crate::*;
 use database_introspection::*;
@@ -16,9 +16,9 @@ pub struct SqlDatabaseMigrationInferrer {
 impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
     fn infer(
         &self,
-        previous: &Datamodel,
+        _previous: &Datamodel,
         next: &Datamodel,
-        steps: &Vec<MigrationStep>,
+        _steps: &Vec<MigrationStep>,
     ) -> ConnectorResult<SqlMigration> {
         let current_database_schema: DatabaseSchema = self.introspect(&self.schema_name)?;
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
@@ -27,9 +27,6 @@ impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
             &expected_database_schema,
             &self.schema_name,
             self.sql_family,
-            previous,
-            next,
-            steps,
         )
     }
 }
@@ -45,9 +42,6 @@ fn infer(
     expected_database_schema: &DatabaseSchema,
     schema_name: &str,
     sql_family: SqlFamily,
-    previous: &Datamodel,
-    next: &Datamodel,
-    model_steps: &Vec<MigrationStep>,
 ) -> ConnectorResult<SqlMigration> {
     let steps = infer_database_migration_steps_and_fix(&current_database_schema, &expected_database_schema, &schema_name, sql_family)?;
     let rollback = infer_database_migration_steps_and_fix(&expected_database_schema, &current_database_schema, &schema_name, sql_family)?;

@@ -4,7 +4,6 @@ use database_introspection::*;
 use datamodel::common::*;
 use datamodel::*;
 use prisma_models::{DatamodelConverter, TempManifestationHolder, TempRelationHolder};
-use prisma_query::error::Error::ColumnNotFound;
 
 pub struct DatabaseSchemaCalculator<'a> {
     data_model: &'a Datamodel,
@@ -28,7 +27,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
         tables.append(&mut relation_tables);
 
         // guarantee same sorting as in the database-introspection
-        for mut table in &mut tables {
+        for table in &mut tables {
             table.columns.sort_unstable_by_key(|col| col.name.clone());
         }
 
