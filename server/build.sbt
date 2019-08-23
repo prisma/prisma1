@@ -39,24 +39,10 @@ def commonDockerImageSettings(imageName: String, baseImage: String, tag: String)
   dockerfile in docker := {
     val appDir    = stage.value
     val targetDir = "/app"
-    val systemLibs = "/lib"
-    // Collect libraries that have to be part of the docker container
-    val libraries = (
-        MappingsHelper.contentOf(file(absolute("libs/jdbc-native/src/main/resources"))) ++
-        MappingsHelper.contentOf(file(absolute("libs/jwt-native/src/main/resources"))) ++
-        MappingsHelper.contentOf(file(absolute("prisma-rs/build")))
-      ).foldLeft(Vector.empty[(File, String)]) { (prev, next) =>
-      if (prev.exists(_._2 == next._2)) {
-        prev
-      } else {
-        prev :+ next
-      }
-    }
 
     new Dockerfile {
-      from(s"${baseImage}:${tag}")
+      from(s"$baseImage:$tag")
       copy(appDir, targetDir)
-      libraries.foreach(f => copy(f._1, systemLibs))
       copy(prerunHookFile , s"$targetDir/prerun_hook.sh")
       runShell(s"touch", s"$targetDir/start.sh")
       runShell("echo", "'#!/bin/bash'", ">>", s"$targetDir/start.sh")

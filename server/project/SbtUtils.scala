@@ -1,4 +1,4 @@
-import sbt.{Project}
+import sbt.Project
 
 object SbtUtils {
   implicit class SyntaxExtensions(proj: Project) {
