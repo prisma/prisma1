@@ -213,7 +213,7 @@ fn changing_the_type_of_an_id_field_must_work() {
                     columns: vec![column.name.clone()],
                     referenced_table: "B".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::SetNull,
                 }
             ]
         );
@@ -238,7 +238,7 @@ fn changing_the_type_of_an_id_field_must_work() {
                     columns: vec![column.name.clone()],
                     referenced_table: "B".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::SetNull,
                 }
             ]
         );
@@ -294,7 +294,7 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
                     columns: vec![column.name.clone()],
                     referenced_table: "B".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::SetNull,
                 }
             ]
         );
@@ -361,7 +361,7 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
                     columns: vec![column.name.clone()],
                     referenced_table: "B".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::SetNull,
                 }
             ]
         );
@@ -399,13 +399,13 @@ fn adding_a_many_to_many_relation_must_result_in_a_prisma_style_relation_table()
                     columns: vec![aColumn.name.clone()],
                     referenced_table: "A".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::Cascade.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::Cascade,
                 },
                 ForeignKey {
                     columns: vec![bColumn.name.clone()],
                     referenced_table: "B".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::Cascade.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::Cascade,
                 },
             ]
         );
@@ -443,13 +443,13 @@ fn adding_a_many_to_many_relation_with_custom_name_must_work() {
                     columns: vec![aColumn.name.clone()],
                     referenced_table: "A".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::Cascade.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::Cascade,
                 },
                 ForeignKey {
                     columns: vec![bColumn.name.clone()],
                     referenced_table: "B".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::Cascade.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::Cascade,
                 }
             ]
         );
@@ -509,7 +509,7 @@ fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
                     columns: vec![column.name.clone()],
                     referenced_table: "B".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::SetNull,
                 }
             ]
         );
@@ -541,7 +541,7 @@ fn specifying_a_db_name_for_an_inline_relation_must_work() {
                     columns: vec![column.name.clone()],
                     referenced_table: "B".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::SetNull,
                 }
             ]
         );
@@ -573,7 +573,7 @@ fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
                     columns: vec![column.name.clone()],
                     referenced_table: "B".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::SetNull,
                 }
             ]
         );
@@ -636,7 +636,7 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
                     columns: vec!["b".to_string()],
                     referenced_table: "B".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::SetNull,
                 }
             ]
         );
@@ -661,7 +661,7 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
                     columns: vec!["a".to_string()],
                     referenced_table: "A".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::SetNull,
                 }
             ]
         );
@@ -882,22 +882,9 @@ fn reserved_sql_key_words_must_work() {
                     columns: vec!["parent".to_string()],
                     referenced_table: "Group".to_string(),
                     referenced_columns: vec!["id".to_string()],
-                    on_delete_action: ForeignKeyAction::SetNull.hack(sql_family),
+                    on_delete_action: ForeignKeyAction::SetNull,
                 }
             ]
         );
     });
-}
-
-trait ForeignKeyHack {
-    fn hack(&self, sql_family: SqlFamily) -> ForeignKeyAction;
-}
-
-impl ForeignKeyHack for ForeignKeyAction {
-    fn hack(&self, sql_family: SqlFamily) -> ForeignKeyAction {
-        match sql_family {
-            SqlFamily::Postgres => self.clone(),
-            _ => ForeignKeyAction::NoAction,
-        }
-    }
 }
