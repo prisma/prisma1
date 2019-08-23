@@ -781,7 +781,7 @@ fn all_mysql_column_types_must_work() {
             name: "tinyint_col".to_string(),
             tpe: ColumnType {
                 raw: "tinyint".to_string(),
-                family: ColumnTypeFamily::Int,
+                family: ColumnTypeFamily::Boolean,
             },
             arity: ColumnArity::Required,
             default: None,

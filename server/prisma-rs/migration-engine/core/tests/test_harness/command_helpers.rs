@@ -1,7 +1,7 @@
 use super::introspect_database;
+use database_introspection::*;
 use migration_connector::*;
 use migration_core::{api::GenericApi, commands::*};
-use sql_migration_connector::database_inspector::*;
 
 pub fn infer_and_apply(api: &dyn GenericApi, datamodel: &str) -> DatabaseSchema {
     infer_and_apply_with_migration_id(api, &datamodel, "the-migration-id")

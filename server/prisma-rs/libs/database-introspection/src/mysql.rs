@@ -226,7 +226,7 @@ impl IntrospectionConnector {
             };
         }
 
-        let fks: Vec<ForeignKey> = intermediate_fks
+        let mut fks: Vec<ForeignKey> = intermediate_fks
             .values()
             .map(|intermediate_fk| intermediate_fk.to_owned())
             .collect();
@@ -236,6 +236,8 @@ impl IntrospectionConnector {
                 fk.columns, fk.referenced_table, fk.referenced_columns
             );
         }
+
+        fks.sort_unstable_by_key(|fk| fk.columns.clone());
 
         fks
     }
@@ -292,7 +294,7 @@ fn get_column_type(data_type: &str) -> ColumnType {
     let family = match data_type {
         "int" => ColumnTypeFamily::Int,
         "smallint" => ColumnTypeFamily::Int,
-        "tinyint" => ColumnTypeFamily::Int,
+        "tinyint" => ColumnTypeFamily::Boolean,
         "mediumint" => ColumnTypeFamily::Int,
         "bigint" => ColumnTypeFamily::Int,
         "decimal" => ColumnTypeFamily::Float,

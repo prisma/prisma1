@@ -3,6 +3,7 @@ use prisma_query::{
     connector::{MysqlParams, PostgresParams, Queryable, ResultSet, SqliteParams},
     pool::{mysql::*, postgres::*, sqlite::*, PrismaConnectionManager},
 };
+use std::sync::Arc;
 use std::{convert::TryFrom, ops::DerefMut, time::Duration};
 
 pub trait MigrationDatabase: Send + Sync + 'static {
@@ -10,6 +11,16 @@ pub trait MigrationDatabase: Send + Sync + 'static {
     fn query(&self, db: &str, q: Query) -> prisma_query::Result<ResultSet>;
     fn query_raw(&self, db: &str, sql: &str, params: &[ParameterizedValue]) -> prisma_query::Result<ResultSet>;
     fn execute_raw(&self, db: &str, sql: &str, params: &[ParameterizedValue]) -> prisma_query::Result<u64>;
+}
+
+pub struct MigrationDatabaseWrapper {
+    pub database: Arc<dyn MigrationDatabase + Send + Sync + 'static>,
+}
+
+impl database_introspection::IntrospectionConnection for MigrationDatabaseWrapper {
+    fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet> {
+        self.database.query_raw(schema, sql, &[])
+    }
 }
 
 type SqlitePool = r2d2::Pool<PrismaConnectionManager<SqliteConnectionManager>>;

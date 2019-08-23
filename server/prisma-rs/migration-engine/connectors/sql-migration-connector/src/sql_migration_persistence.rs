@@ -76,7 +76,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
     }
 
     fn load_all(&self) -> Vec<Migration> {
-        let query = Select::from_table(self.table());
+        let query = Select::from_table(self.table()).order_by(REVISION_COLUMN.ascend());
 
         let result_set = self.connection.query(&self.schema_name, query.into()).unwrap();
         parse_rows_new(result_set)
@@ -113,10 +113,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
 
         match self.sql_family {
             SqlFamily::Sqlite | SqlFamily::Mysql => {
-                let id = self
-                    .connection
-                    .execute(&self.schema_name, insert.into())
-                    .unwrap();
+                let id = self.connection.execute(&self.schema_name, insert.into()).unwrap();
                 match id {
                     Some(prisma_query::ast::Id::Int(id)) => cloned.revision = id,
                     _ => panic!("This insert must return an int"),
@@ -132,7 +129,6 @@ impl MigrationPersistence for SqlMigrationPersistence {
                     cloned.revision = row["revision"].as_i64().unwrap() as usize;
                 });
             }
-            // SqlFamily::Mysql => unimplemented!(),
         }
         cloned
     }

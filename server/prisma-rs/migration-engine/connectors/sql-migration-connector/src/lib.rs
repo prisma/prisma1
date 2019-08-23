@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate log;
 
-pub mod database_inspector;
 pub mod migration_database;
 
 mod database_schema_calculator;
@@ -16,7 +15,7 @@ mod sql_migration_persistence;
 pub use error::*;
 pub use sql_migration::*;
 
-use database_inspector::{DatabaseInspector, sqlite_with_database, postgres_with_database, mysql_with_database};
+use database_introspection::IntrospectionConnector;
 use migration_connector::*;
 use migration_database::*;
 use prisma_query::connector::{MysqlParams, PostgresParams};
@@ -40,7 +39,7 @@ pub struct SqlMigrationConnector {
     pub database_migration_inferrer: Arc<dyn DatabaseMigrationInferrer<SqlMigration>>,
     pub database_migration_step_applier: Arc<dyn DatabaseMigrationStepApplier<SqlMigration>>,
     pub destructive_changes_checker: Arc<dyn DestructiveChangesChecker<SqlMigration>>,
-    pub database_inspector: Arc<dyn DatabaseInspector + Send + Sync + 'static>,
+    pub database_introspector: Arc<dyn IntrospectionConnector + Send + Sync + 'static>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -139,10 +138,19 @@ impl SqlMigrationConnector {
         schema_name: String,
         file_path: Option<String>,
     ) -> Self {
-        let inspector: Arc<dyn DatabaseInspector + Send + Sync + 'static> = match sql_family {
-            SqlFamily::Sqlite => Arc::new(sqlite_with_database(Arc::clone(&conn))),
-            SqlFamily::Postgres => Arc::new(postgres_with_database(Arc::clone(&conn))),
-            SqlFamily::Mysql => Arc::new(mysql_with_database(Arc::clone(&conn))),
+        let introspection_connection = Arc::new(MigrationDatabaseWrapper {
+            database: Arc::clone(&conn),
+        });
+        let inspector: Arc<dyn IntrospectionConnector + Send + Sync + 'static> = match sql_family {
+            SqlFamily::Sqlite => Arc::new(database_introspection::sqlite::IntrospectionConnector::new(
+                introspection_connection,
+            )),
+            SqlFamily::Postgres => Arc::new(database_introspection::postgres::IntrospectionConnector::new(
+                introspection_connection,
+            )),
+            SqlFamily::Mysql => Arc::new(database_introspection::mysql::IntrospectionConnector::new(
+                introspection_connection,
+            )),
         };
 
         let migration_persistence = Arc::new(SqlMigrationPersistence {
@@ -154,7 +162,7 @@ impl SqlMigrationConnector {
 
         let database_migration_inferrer = Arc::new(SqlDatabaseMigrationInferrer {
             sql_family,
-            inspector: Arc::clone(&inspector),
+            introspector: Arc::clone(&inspector),
             schema_name: schema_name.to_string(),
         });
 
@@ -175,7 +183,7 @@ impl SqlMigrationConnector {
             database_migration_inferrer,
             database_migration_step_applier,
             destructive_changes_checker,
-            database_inspector: Arc::clone(&inspector),
+            database_introspector: Arc::clone(&inspector),
         }
     }
 }

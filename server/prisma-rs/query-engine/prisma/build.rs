@@ -1,10 +1,5 @@
-use std::env;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
-
 extern crate rustc_version;
-use rustc_version::{version, version_meta, Channel, Version};
+use rustc_version::version;
 
 fn main() {
     let rust_version = version().expect("Could not get rustc version");

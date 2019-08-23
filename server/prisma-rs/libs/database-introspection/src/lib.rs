@@ -1,4 +1,3 @@
-#![warn(missing_docs)]
 //! Database introspection.
 use failure::Fail;
 use serde::{Deserialize, Serialize};
@@ -20,13 +19,13 @@ pub enum IntrospectionError {
 pub type IntrospectionResult<T> = core::result::Result<T, IntrospectionError>;
 
 /// Connection abstraction for the introspection connectors.
-pub trait IntrospectionConnection {
+pub trait IntrospectionConnection: Send + Sync + 'static {
     /// Make raw SQL query.
     fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet>;
 }
 
 /// A database introspection connector.
-pub trait IntrospectionConnector {
+pub trait IntrospectionConnector: Send + Sync + 'static {
     /// List the database's schemas.
     fn list_schemas(&self) -> IntrospectionResult<Vec<String>>;
     /// Introspect a database schema.
@@ -34,7 +33,7 @@ pub trait IntrospectionConnector {
 }
 
 /// The result of introspecting a database schema.
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct DatabaseSchema {
     /// The schema's tables.
@@ -46,6 +45,10 @@ pub struct DatabaseSchema {
 }
 
 impl DatabaseSchema {
+    pub fn has_table(&self, name: &str) -> bool {
+        self.get_table(name).is_some()
+    }
+
     /// Get a table.
     pub fn get_table(&self, name: &str) -> Option<&Table> {
         self.tables.iter().find(|x| x.name == name)
@@ -56,9 +59,28 @@ impl DatabaseSchema {
         self.enums.iter().find(|x| x.name == name)
     }
 
+    pub fn table(&self, name: &str) -> core::result::Result<&Table, String> {
+        match self.tables.iter().find(|t| t.name == name) {
+            Some(t) => Ok(t),
+            None => Err(format!("Table {} not found", name)),
+        }
+    }
+
+    pub fn table_bang(&self, name: &str) -> &Table {
+        self.table(&name).unwrap()
+    }
+
     /// Get a sequence.
     pub fn get_sequence(&self, name: &str) -> Option<&Sequence> {
         self.sequences.iter().find(|x| x.name == name)
+    }
+
+    pub fn empty() -> DatabaseSchema {
+        DatabaseSchema {
+            tables: Vec::new(),
+            enums: Vec::new(),
+            sequences: Vec::new(),
+        }
     }
 }
 
@@ -78,6 +100,44 @@ pub struct Table {
     pub foreign_keys: Vec<ForeignKey>,
 }
 
+impl Table {
+    pub fn column_bang(&self, name: &str) -> &Column {
+        self.column(name)
+            .expect(&format!("Column {} not found in Table {}", name, self.name))
+    }
+
+    pub fn column(&self, name: &str) -> Option<&Column> {
+        self.columns.iter().find(|c| c.name == name)
+    }
+
+    pub fn has_column(&self, name: &str) -> bool {
+        self.column(name).is_some()
+    }
+
+    pub fn is_part_of_foreign_key(&self, column: &str) -> bool {
+        self.foreign_key_for_column(column).is_some()
+    }
+
+    pub fn foreign_key_for_column(&self, column: &str) -> Option<&ForeignKey> {
+        self.foreign_keys.iter().find(|fk|{
+            fk.columns.contains(&column.to_string())
+        })
+    }
+
+    pub fn is_part_of_primary_key(&self, column: &str) -> bool {
+        match &self.primary_key {
+            Some(pk) => pk.columns.contains(&column.to_string()),
+            None => false,
+        }
+    }
+
+    pub fn primary_key_columns(&self) -> Vec<String> {
+        match &self.primary_key {
+            Some(pk) => pk.columns.clone(),
+            None => Vec::new(),
+        }
+    }
+}
 /// The type of an index.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -106,6 +166,12 @@ pub struct PrimaryKey {
     pub columns: Vec<String>,
 }
 
+impl PrimaryKey {
+    pub fn contains_column(&self, column: &String) -> bool {
+        self.columns.contains(column)
+    }
+}
+
 /// A column of a table.
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -123,6 +189,24 @@ pub struct Column {
     pub auto_increment: bool,
 }
 
+impl Column {
+    pub fn is_required(&self) -> bool {
+        self.arity == ColumnArity::Required
+    }
+
+    pub fn differs_in_something_except_default(&self, other: &Column) -> bool {
+        let result = self.name != other.name
+            || self.tpe.family != other.tpe.family // TODO: must respect full type
+            || self.arity != other.arity;
+            //|| self.auto_increment != other.auto_increment;
+
+//        if result {
+//            println!("differs_in_something_except_default \n {:?} \n {:?}", &self, &other);
+//        }
+        result
+    }
+}
+
 /// The type of a column.
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -131,6 +215,15 @@ pub struct ColumnType {
     pub raw: String,
     /// The family of the raw type.
     pub family: ColumnTypeFamily,
+}
+
+impl ColumnType {
+    pub fn pure(family: ColumnTypeFamily) -> ColumnType {
+        ColumnType {
+            raw: "".to_string(),
+            family,
+        }
+    }
 }
 
 /// Enumeration of column type families.
@@ -213,7 +306,7 @@ pub struct ForeignKey {
 }
 
 /// A SQL enum.
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Enum {
     /// Enum name.
@@ -223,7 +316,7 @@ pub struct Enum {
 }
 
 /// A SQL sequence.
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sequence {
     /// Sequence name.

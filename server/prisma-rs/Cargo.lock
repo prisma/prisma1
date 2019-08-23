@@ -1329,6 +1329,7 @@ dependencies = [
  "boolinator 2.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "database-introspection 0.1.0",
  "datamodel 0.1.0",
  "env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1338,6 +1339,7 @@ dependencies = [
  "jsonrpc-stdio-server 13.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "migration-connector 0.1.0",
+ "pretty_assertions 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "prisma-models 0.0.0",
  "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)",
  "serde 1.0.98 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2720,6 +2722,7 @@ version = "0.1.0"
 dependencies = [
  "barrel 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "database-introspection 0.1.0",
  "datamodel 0.1.0",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",

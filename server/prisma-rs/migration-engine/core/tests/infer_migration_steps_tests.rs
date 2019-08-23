@@ -1,7 +1,9 @@
 #![allow(non_snake_case)]
+#![allow(unused)]
 mod test_harness;
 use datamodel::dml::*;
 use migration_core::commands::*;
+use pretty_assertions::{assert_eq, assert_ne};
 use test_harness::*;
 
 #[test]

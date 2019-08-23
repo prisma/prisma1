@@ -1,6 +1,6 @@
 use clap::{App, Arg};
 use migration_core::{api::RpcApi, Error};
-use std::{fs, io::Read, env, io};
+use std::{env, fs, io, io::Read};
 
 fn main() {
     env_logger::init();
