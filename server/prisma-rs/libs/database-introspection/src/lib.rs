@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+//! Database introspection.
 use failure::Fail;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -19,6 +21,7 @@ pub type IntrospectionResult<T> = core::result::Result<T, IntrospectionError>;
 
 /// Connection abstraction for the introspection connectors.
 pub trait IntrospectionConnection: Send + Sync + 'static {
+    /// Make raw SQL query.
     fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet>;
 }
 
@@ -68,6 +71,7 @@ impl DatabaseSchema {
         self.table(&name).unwrap()
     }
 
+    /// Get a sequence.
     pub fn get_sequence(&self, name: &str) -> Option<&Sequence> {
         self.sequences.iter().find(|x| x.name == name)
     }
@@ -135,6 +139,13 @@ impl Table {
         }
     }
 }
+/// The type of an index.
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum IndexType {
+    Unique,
+    Normal,
+}
 
 /// An index of a table.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -144,8 +155,8 @@ pub struct Index {
     pub name: String,
     /// Index columns.
     pub columns: Vec<String>,
-    /// Is index unique?
-    pub unique: bool,
+    /// Type of index.
+    pub tpe: IndexType,
 }
 
 /// The primary key of a table.
@@ -291,6 +302,7 @@ pub struct ForeignKey {
     pub referenced_table: String,
     /// Referenced columns.
     pub referenced_columns: Vec<String>,
+    /// Action on deletion.
     pub on_delete_action: ForeignKeyAction,
 }
 

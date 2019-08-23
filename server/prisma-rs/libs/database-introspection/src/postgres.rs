@@ -1,8 +1,10 @@
+//! Postgres introspection.
 use super::*;
 use log::debug;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
+/// IntrospectionConnector implementation.
 pub struct IntrospectionConnector {
     conn: Arc<dyn IntrospectionConnection>,
 }
@@ -30,6 +32,7 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 }
 
 impl IntrospectionConnector {
+    /// Constructor.
     pub fn new(conn: Arc<dyn IntrospectionConnection>) -> IntrospectionConnector {
         IntrospectionConnector { conn }
     }
@@ -304,10 +307,14 @@ impl IntrospectionConnector {
                     pk = Some(PrimaryKey { columns });
                     None
                 } else {
+                    let is_unique = index.get("is_unique").and_then(|x| x.as_bool()).expect("is_unique");
                     Some(Index {
                         name: index.get("name").and_then(|x| x.to_string()).expect("name"),
                         columns,
-                        unique: index.get("is_unique").and_then(|x| x.as_bool()).expect("is_unique"),
+                        tpe: match is_unique {
+                            true => IndexType::Unique,
+                            false => IndexType::Normal,
+                        },
                     })
                 }
             })

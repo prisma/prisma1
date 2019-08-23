@@ -1,8 +1,10 @@
+//! MySQL introspection.
 use super::*;
 use log::debug;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// IntrospectionConnector implementation.
 pub struct IntrospectionConnector {
     conn: Arc<dyn IntrospectionConnection>,
 }
@@ -28,6 +30,7 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 }
 
 impl IntrospectionConnector {
+    /// Constructor.
     pub fn new(conn: Arc<dyn IntrospectionConnection>) -> IntrospectionConnector {
         IntrospectionConnector { conn }
     }
@@ -273,7 +276,10 @@ impl IntrospectionConnector {
                     Some(Index {
                         name: index_name,
                         columns: vec![column_name],
-                        unique: is_unique,
+                        tpe: match is_unique {
+                            true => IndexType::Unique,
+                            false => IndexType::Normal,
+                        },
                     })
                 }
             })

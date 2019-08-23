@@ -1408,18 +1408,16 @@ fn names_with_hyphens_must_work() {
         |db_type, inspector| {
             let result = inspector.introspect(SCHEMA).expect("introspecting");
             let user_table = result.get_table("User-table").expect("getting User table");
-            let expected_columns = vec![
-                Column {
-                    name: "column-1".to_string(),
-                    tpe: ColumnType {
-                        raw: int_type(db_type),
-                        family: ColumnTypeFamily::Int,
-                    },
-                    arity: ColumnArity::Required,
-                    default: None,
-                    auto_increment: false,
+            let expected_columns = vec![Column {
+                name: "column-1".to_string(),
+                tpe: ColumnType {
+                    raw: int_type(db_type),
+                    family: ColumnTypeFamily::Int,
                 },
-            ];
+                arity: ColumnArity::Required,
+                default: None,
+                auto_increment: false,
+            }];
             assert_eq!(user_table.columns, expected_columns);
         },
     );
@@ -1888,7 +1886,7 @@ fn indices_must_work() {
                     indices: vec![Index {
                         name: "count".to_string(),
                         columns: vec!["count".to_string()],
-                        unique: false,
+                        tpe: IndexType::Normal,
                     },],
                     primary_key: Some(PrimaryKey {
                         columns: vec!["id".to_string()],
