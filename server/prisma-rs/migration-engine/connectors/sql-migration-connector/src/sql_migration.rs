@@ -83,20 +83,11 @@ pub struct AlterColumn {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CreateIndex {
     pub table: String,
-    pub name: String,
-    pub tpe: IndexType,
-    pub columns: Vec<String>,
+    pub index: Index
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct DropIndex {
     pub table: String,
     pub name: String,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub enum IndexType {
-    // can later add fulltext or custom ones
-    Unique,
-    Normal,
 }

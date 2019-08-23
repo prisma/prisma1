@@ -155,9 +155,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
                 if let None = previous_index_opt {
                     let create = CreateIndex {
                         table: next_table.name.clone(),
-                        name: index.name.clone(),
-                        tpe: IndexType::Unique,
-                        columns: index.columns.clone(),
+                        index: index.clone(),
                     };
                     result.push(create);
                 }

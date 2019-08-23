@@ -678,7 +678,7 @@ fn adding_a_new_unique_field_must_work() {
             .iter()
             .find(|i| i.columns == vec!["field"]);
         assert_eq!(index.is_some(), true);
-        assert_eq!(index.unwrap().unique, true);
+        assert_eq!(index.unwrap().tpe, IndexType::Unique);
     });
 }
 
@@ -700,7 +700,7 @@ fn sqlite_must_recreate_indexes() {
             .iter()
             .find(|i| i.columns == vec!["field"]);
         assert_eq!(index.is_some(), true);
-        assert_eq!(index.unwrap().unique, true);
+        assert_eq!(index.unwrap().tpe, IndexType::Unique);
 
         let dm2 = r#"
             model A {
@@ -716,7 +716,7 @@ fn sqlite_must_recreate_indexes() {
             .iter()
             .find(|i| i.columns == vec!["field"]);
         assert_eq!(index.is_some(), true);
-        assert_eq!(index.unwrap().unique, true);
+        assert_eq!(index.unwrap().tpe, IndexType::Unique);
     });
 }
 
@@ -737,7 +737,7 @@ fn removing_an_existing_unique_field_must_work() {
             .iter()
             .find(|i| i.columns == vec!["field"]);
         assert_eq!(index.is_some(), true);
-        assert_eq!(index.unwrap().unique, true);
+        assert_eq!(index.unwrap().tpe, IndexType::Unique);
 
         let dm2 = r#"
             model A {
@@ -784,7 +784,7 @@ fn adding_unique_to_an_existing_field_must_work() {
             .iter()
             .find(|i| i.columns == vec!["field"]);
         assert_eq!(index.is_some(), true);
-        assert_eq!(index.unwrap().unique, true);
+        assert_eq!(index.unwrap().tpe, IndexType::Unique);
     });
 }
 
@@ -805,7 +805,7 @@ fn removing_unique_from_an_existing_field_must_work() {
             .iter()
             .find(|i| i.columns == vec!["field"]);
         assert_eq!(index.is_some(), true);
-        assert_eq!(index.unwrap().unique, true);
+        assert_eq!(index.unwrap().tpe, IndexType::Unique);
 
         let dm2 = r#"
             model A {

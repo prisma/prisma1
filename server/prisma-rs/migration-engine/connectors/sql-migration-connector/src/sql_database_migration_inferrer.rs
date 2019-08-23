@@ -259,9 +259,7 @@ fn fix(_alter_table: &AlterTable, current: &Table, next: &Table, schema_name: &s
     result.append(&mut next.indices.iter().map(|index|{
         SqlMigrationStep::CreateIndex(CreateIndex {
             table: next.name.clone(),
-            name: index.name.clone(),
-            columns: index.columns.clone(),
-            tpe: if index.unique { IndexType::Unique } else { IndexType::Normal }
+            index: index.clone(),
         })
     }).collect());
     // todo: recreate triggers

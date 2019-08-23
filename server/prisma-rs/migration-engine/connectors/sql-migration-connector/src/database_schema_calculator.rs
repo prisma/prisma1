@@ -72,7 +72,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             Index {
                                name: format!("{}.{}", &model.db_name(), &f.db_name()),
                                 columns: vec![f.name.clone()],
-                                unique: true,
+                                tpe: IndexType::Unique,
                             }
                         )
                     } else {
@@ -229,7 +229,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         indices: vec![Index {
                             name: format!("{}_AB_unique", relation.table_name()),
                             columns: vec![relation.model_a_column(), relation.model_b_column()],
-                            unique: true,
+                            tpe: IndexType::Unique,
                         }],
                         primary_key: None,
                         foreign_keys,

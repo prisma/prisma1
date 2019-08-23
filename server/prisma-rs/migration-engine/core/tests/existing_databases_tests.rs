@@ -113,7 +113,7 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
             .iter()
             .find(|i| i.columns == vec!["title"]);
         assert_eq!(index.is_some(), true);
-        assert_eq!(index.unwrap().unique, true);
+        assert_eq!(index.unwrap().tpe, IndexType::Unique);
     });
 }
 
@@ -267,7 +267,7 @@ fn updating_a_field_for_a_non_existent_column() {
             .iter()
             .find(|i| i.columns == vec!["title"]);
         assert_eq!(index.is_some(), true);
-        assert_eq!(index.unwrap().unique, true);
+        assert_eq!(index.unwrap().tpe, IndexType::Unique);
     });
 }
 
