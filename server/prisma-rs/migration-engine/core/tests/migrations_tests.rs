@@ -683,6 +683,44 @@ fn adding_a_new_unique_field_must_work() {
 }
 
 #[test]
+fn sqlite_must_recreate_indexes() {
+    // SQLite must go through a complicated migration procedure which requires dropping and recreating indexes. This test checks that.
+    // We run them still against each connector.
+    test_each_connector(|_, api| {
+        let dm1 = r#"
+            model A {
+                id Int @id
+                field String @unique
+            }
+        "#;
+        let result = infer_and_apply(api, &dm1);
+        let index = result
+            .table_bang("A")
+            .indices
+            .iter()
+            .find(|i| i.columns == vec!["field"]);
+        assert_eq!(index.is_some(), true);
+        assert_eq!(index.unwrap().unique, true);
+
+        let dm2 = r#"
+            model A {
+                id    Int    @id
+                field String @unique
+                other String
+            }
+        "#;
+        let result = infer_and_apply(api, &dm2);
+        let index = result
+            .table_bang("A")
+            .indices
+            .iter()
+            .find(|i| i.columns == vec!["field"]);
+        assert_eq!(index.is_some(), true);
+        assert_eq!(index.unwrap().unique, true);
+    });
+}
+
+#[test]
 fn removing_an_existing_unique_field_must_work() {
     //    test_only_connector(SqlFamily::Postgres, |_, api| {
     test_each_connector(|_, api| {
