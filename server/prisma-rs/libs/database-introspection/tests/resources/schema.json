@@ -40,7 +40,7 @@
           "columns": [
             "column2"
           ],
-          "unique": false
+          "tpe": "normal"
         }
       ],
       "primaryKey": {

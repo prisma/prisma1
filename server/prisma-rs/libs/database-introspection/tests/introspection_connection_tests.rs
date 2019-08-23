@@ -1886,7 +1886,7 @@ fn indices_must_work() {
                     indices: vec![Index {
                         name: "count".to_string(),
                         columns: vec!["count".to_string()],
-                        unique: false,
+                        tpe: IndexType::Normal,
                     },],
                     primary_key: Some(PrimaryKey {
                         columns: vec!["id".to_string()],

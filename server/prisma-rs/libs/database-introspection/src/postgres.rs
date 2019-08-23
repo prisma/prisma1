@@ -305,10 +305,14 @@ impl IntrospectionConnector {
                     pk = Some(PrimaryKey { columns });
                     None
                 } else {
+                    let is_unique = index.get("is_unique").and_then(|x| x.as_bool()).expect("is_unique");
                     Some(Index {
                         name: index.get("name").and_then(|x| x.to_string()).expect("name"),
                         columns,
-                        unique: index.get("is_unique").and_then(|x| x.as_bool()).expect("is_unique"),
+                        tpe: match is_unique {
+                            true => IndexType::Unique,
+                            false => IndexType::Normal,
+                        },
                     })
                 }
             })
