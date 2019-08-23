@@ -1,23 +1,23 @@
 import sbt._
 
-val buildNativeLib = TaskKey[Unit]("buildNativeLib", "builds the Prisma native lib")
-buildNativeLib := {
-  if(!sys.env.get("SKIP_RUST_BUILD").contains("1")){
-    import sys.process._
-    println("Building Prisma native lib.")
+//val buildNativeLib = TaskKey[Unit]("buildNativeLib", "builds the Prisma native lib")
+//buildNativeLib := {
+//  if(!sys.env.get("SKIP_RUST_BUILD").contains("1")){
+//    import sys.process._
+//    println("Building Prisma native lib.")
+//
+//    val logger = ProcessLogger(println, println)
+//    val nativePath = new java.io.File("prisma-rs")
+//    val cargoFlags = sys.env.get("RUST_BACKTRACE").map(_ => "").getOrElse("--release")
+//
+//
+//    if ((Process(Seq("bash", "build.sh"), nativePath, "CARGO_FLAGS"-> cargoFlags) ! logger) != 0) {
+//      sys.error("Prisma library build failed.")
+//    }
+//  }
+//}
 
-    val logger = ProcessLogger(println, println)
-    val nativePath = new java.io.File("prisma-rs")
-    val cargoFlags = sys.env.get("RUST_BACKTRACE").map(_ => "").getOrElse("--release")
-
-
-    if ((Process(Seq("bash", "build.sh"), nativePath, "CARGO_FLAGS"-> cargoFlags) ! logger) != 0) {
-      sys.error("Prisma library build failed.")
-    }
-  }
-}
-
-(Compile / compile) := ((Compile / compile) dependsOn buildNativeLib).value
+//(Compile / compile) := ((Compile / compile) dependsOn buildNativeLib).value
 
 val nativeClasspath = taskKey[String]("The classpath.")
 nativeClasspath := {
