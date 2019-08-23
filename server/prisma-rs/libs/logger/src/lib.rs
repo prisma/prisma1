@@ -7,4 +7,4 @@ extern crate slog_scope;
 
 mod logger;
 
-pub use logger::*;
+pub use self::logger::*;
