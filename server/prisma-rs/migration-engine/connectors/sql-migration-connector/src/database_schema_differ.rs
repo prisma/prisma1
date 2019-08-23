@@ -21,6 +21,9 @@ pub struct DatabaseSchemaDiff {
 impl DatabaseSchemaDiff {
     pub fn into_steps(self) -> Vec<SqlMigrationStep> {
         let mut steps = Vec::new();
+        steps.append(&mut wrap_as_step(self.drop_indexes, |x| {
+            SqlMigrationStep::DropIndex(x)
+        }));
         steps.append(&mut wrap_as_step(self.drop_tables, |x| SqlMigrationStep::DropTable(x)));
         steps.append(&mut wrap_as_step(self.create_tables, |x| {
             SqlMigrationStep::CreateTable(x)
@@ -30,9 +33,6 @@ impl DatabaseSchemaDiff {
         }));
         steps.append(&mut wrap_as_step(self.create_indexes, |x| {
             SqlMigrationStep::CreateIndex(x)
-        }));
-        steps.append(&mut wrap_as_step(self.drop_indexes, |x| {
-            SqlMigrationStep::DropIndex(x)
         }));
         steps
     }
@@ -147,10 +147,40 @@ impl<'a> DatabaseSchemaDiffer<'a> {
     }
 
     fn create_indexes(&self) -> Vec<CreateIndex> {
-        Vec::new()
+        let mut result = Vec::new();
+        for next_table in &self.next.tables {
+            for index in &next_table.indices {
+                // TODO: must diff index settings
+                let previous_index_opt = self.previous.table(&next_table.name).ok().and_then(|t|t.indices.iter().find(|i|i.name == index.name));
+                if let None = previous_index_opt {
+                    let create = CreateIndex {
+                        table: next_table.name.clone(),
+                        name: index.name.clone(),
+                        tpe: IndexType::Unique,
+                        columns: index.columns.clone(),
+                    };
+                    result.push(create);
+                }
+            }
+        }
+        result
     }
 
     fn drop_indexes(&self) -> Vec<DropIndex> {
-        Vec::new()
+        let mut result = Vec::new();
+        for previous_table in &self.previous.tables {
+            for index in &previous_table.indices {
+                // TODO: must diff index settings
+                let next_index_opt = self.next.table(&previous_table.name).ok().and_then(|t|t.indices.iter().find(|i|i.name == index.name));
+                if let None = next_index_opt {
+                    let drop = DropIndex {
+                        table: previous_table.name.clone(),
+                        name: index.name.clone(),
+                    };
+                    result.push(drop);
+                }
+            }
+        }
+        result
     }
 }

@@ -65,10 +65,24 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                 let primary_key = PrimaryKey {
                     columns: vec![model.id_field()?.db_name()],
                 };
+
+                let indexes = model.fields().filter_map(|f|{
+                    if f.is_unique {
+                        Some(
+                            Index {
+                               name: format!("{}.{}", &model.db_name(), &f.db_name()),
+                                columns: vec![f.name.clone()],
+                                unique: true,
+                            }
+                        )
+                    } else {
+                        None
+                    }
+                }).collect();
                 let table = Table {
                     name: model.db_name(),
                     columns,
-                    indices: Vec::new(),
+                    indices: indexes,
                     primary_key: Some(primary_key),
                     foreign_keys: Vec::new(),
                 };

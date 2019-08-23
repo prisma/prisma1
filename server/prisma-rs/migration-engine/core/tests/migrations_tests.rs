@@ -671,7 +671,7 @@ fn adding_a_new_unique_field_must_work() {
                 field String @unique
             }
         "#;
-        let result = dbg!(infer_and_apply(api, &dm1));
+        let result = infer_and_apply(api, &dm1);
         let index = result
             .table_bang("A")
             .indices
