@@ -1,73 +1,98 @@
-use core::{Executor, ReadQueryExecutor, WriteQueryExecutor};
-use prisma_common::config::{ConnectionLimit, FileConfig, PrismaConfig, PrismaDatabase};
-use std::convert::TryFrom;
-use std::sync::Arc;
+use crate::{PrismaError, PrismaResult};
+use core::executor::{QueryExecutor, ReadQueryExecutor, WriteQueryExecutor};
+use datamodel::{
+    configuration::{MYSQL_SOURCE_NAME, POSTGRES_SOURCE_NAME, SQLITE_SOURCE_NAME},
+    Source,
+};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use url::Url;
 
 #[cfg(feature = "sql")]
-use sql_connector::{Mysql, PostgreSql, SqlDatabase, Sqlite, Transactional};
+use sql_connector::*;
 
-pub fn load(config: &PrismaConfig) -> Executor {
-    match config.databases.get("default") {
+pub fn load(source: &dyn Source) -> PrismaResult<QueryExecutor> {
+    match source.connector_type() {
         #[cfg(feature = "sql")]
-        Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite-native" => sqlite(config),
-
-        #[cfg(feature = "sql")]
-        Some(config) if config.connector() == "postgres-native" => postgres(config),
+        SQLITE_SOURCE_NAME => sqlite(source),
 
         #[cfg(feature = "sql")]
-        Some(config) if config.connector() == "mysql-native" => mysql(config),
+        MYSQL_SOURCE_NAME => mysql(source),
 
-        Some(config) => panic!("Database connector for {} is not supported.", config.connector()),
+        #[cfg(feature = "sql")]
+        POSTGRES_SOURCE_NAME => postgres(source),
 
-        None => panic!("Default database not set."),
+        x => Err(PrismaError::ConfigurationError(format!(
+            "Unsupported connector type: {}",
+            x
+        ))),
     }
 }
 
 #[cfg(feature = "sql")]
-fn sqlite(config: &FileConfig) -> Executor {
-    let db_name = config.db_name();
-    let db_folder = config
-        .database_file
-        .trim_end_matches(&format!("{}.db", db_name))
-        .trim_end_matches("/");
+fn sqlite(source: &dyn Source) -> PrismaResult<QueryExecutor> {
+    trace!("Loading SQLite connector...");
 
-    let sqlite = Sqlite::new(db_folder.to_owned(), config.limit(), false).unwrap();
-    // let arc = Arc::new(SqlDatabase::new(sqlite));
-    let wat = SqlDatabase::new(sqlite);
+    let sqlite = Sqlite::from_source(source)?;
+    let path = PathBuf::from(sqlite.file_path());
+    let db = SqlDatabase::new(sqlite);
+    let db_name = path.file_stem().unwrap(); // Safe due to previous validations.
 
-    // sql_executor(db_name.clone(), Arc::clone(&arc), arc)
-    sql_executor(db_name.clone(), wat)
+    trace!("Loaded SQLite connector.");
+    Ok(sql_executor(db_name.to_os_string().into_string().unwrap(), db))
 }
 
 #[cfg(feature = "sql")]
-fn postgres(config: &PrismaDatabase) -> Executor {
-    let postgres = PostgreSql::try_from(config).unwrap();
-    let connector = SqlDatabase::new(postgres);
+fn postgres(source: &dyn Source) -> PrismaResult<QueryExecutor> {
+    trace!("Loading Postgres connector...");
 
-    sql_executor("".into(), connector)
+    let url = Url::parse(&source.url().value)?;
+    let params: HashMap<String, String> = url.query_pairs().into_owned().collect();
+
+    let db_name = params
+        .get("schema")
+        .map(ToString::to_string)
+        .unwrap_or_else(|| String::from("public"));
+
+    let psql = PostgreSql::from_source(source)?;
+    let db = SqlDatabase::new(psql);
+
+    trace!("Loaded Postgres connector.");
+    Ok(sql_executor(db_name, db))
 }
 
 #[cfg(feature = "sql")]
-fn mysql(config: &PrismaDatabase) -> Executor {
-    let postgres = Mysql::try_from(config).unwrap();
-    let connector = SqlDatabase::new(postgres);
+fn mysql(source: &dyn Source) -> PrismaResult<QueryExecutor> {
+    trace!("Loading MySQL connector...");
 
-    sql_executor("".into(), connector)
+    let psql = Mysql::from_source(source)?;
+    let db = SqlDatabase::new(psql);
+    let url = Url::parse(&source.url().value)?;
+    let err_str = "No database found in connection string";
+
+    let mut db_name = url
+        .path_segments()
+        .ok_or_else(|| PrismaError::ConfigurationError(err_str.into()))?;
+
+    let db_name = db_name.next().expect(err_str);
+
+    trace!("Loaded MySQL connector.");
+    Ok(sql_executor(db_name.into(), db))
 }
 
 #[cfg(feature = "sql")]
-fn sql_executor<T>(db_name: String, connector: SqlDatabase<T>) -> Executor
+fn sql_executor<T>(db_name: String, connector: SqlDatabase<T>) -> QueryExecutor
 where
-    T: Transactional + Send + Sync + 'static,
+    T: Transactional + SqlCapabilities + Send + Sync + 'static,
 {
     let arc = Arc::new(connector);
     let read_exec: ReadQueryExecutor = ReadQueryExecutor {
         data_resolver: arc.clone(),
     };
+
     let write_exec: WriteQueryExecutor = WriteQueryExecutor {
-        db_name: db_name,
+        db_name,
         write_executor: arc,
     };
 
-    Executor { read_exec, write_exec }
+    QueryExecutor::new(read_exec, write_exec)
 }

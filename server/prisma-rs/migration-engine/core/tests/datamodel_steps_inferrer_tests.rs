@@ -1,18 +1,18 @@
 #![allow(non_snake_case)]
 mod test_harness;
 
-use datamodel::{dml::*};
-use test_harness::parse;
+use datamodel::dml::*;
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
+use test_harness::parse;
 
 #[test]
 fn infer_CreateModel_if_it_does_not_exist_yet() {
-    let dm1 = Schema::empty();
+    let dm1 = Datamodel::empty();
     let dm2 = parse(
         r#"
         model Test {
-            id: String @primary
+            id Int @id
         }
     "#,
     );
@@ -27,7 +27,7 @@ fn infer_CreateModel_if_it_does_not_exist_yet() {
         MigrationStep::CreateField(CreateField {
             model: "Test".to_string(),
             name: "id".to_string(),
-            tpe: FieldType::Base(ScalarType::String),
+            tpe: FieldType::Base(ScalarType::Int),
             arity: FieldArity::Required,
             db_name: None,
             is_created_at: None,
@@ -49,11 +49,11 @@ fn infer_DeleteModel() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id String @id @default(cuid())
         }
     "#,
     );
-    let dm2 = Schema::empty();
+    let dm2 = Datamodel::empty();
 
     let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::DeleteModel(DeleteModel {
@@ -68,16 +68,17 @@ fn infer_UpdateModel() {
     let dm1 = parse(
         r#"
         model Post {
-            id: String
+            id String @id @default(cuid())
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Post{
-            id: String
+            id String @id @default(cuid())
+            
+            @@embedded
         }
-        @embedded 
     "#,
     );
 
@@ -96,15 +97,15 @@ fn infer_CreateField_if_it_does_not_exist_yet() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id String @id @default(cuid())
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Test {
-            id: String
-            field: Int?
+            id String @id @default(cuid())
+            field Int?
         }
     "#,
     );
@@ -131,22 +132,22 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
     let dm1 = parse(
         r#"
         model Blog {
-            id: String
+            id String @id @default(cuid())
         }
         model Post {
-            id: String
+            id String @id @default(cuid())
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Blog {
-            id: String
-            posts: Post[]
+            id String @id @default(cuid())
+            posts Post[]
         }
         model Post {
-            id: String
-            blog: Blog?
+            id String @id @default(cuid())
+            blog Blog?
         }
     "#,
     );
@@ -158,8 +159,8 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
             name: "posts".to_string(),
             tpe: FieldType::Relation(RelationInfo {
                 to: "Post".to_string(),
-                to_field: None,
-                name: None,
+                to_fields: vec![],
+                name: String::from("BlogToPost"),
                 on_delete: OnDeleteStrategy::None,
             }),
             arity: FieldArity::List,
@@ -176,8 +177,8 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
             name: "blog".to_string(),
             tpe: FieldType::Relation(RelationInfo {
                 to: "Blog".to_string(),
-                to_field: None,
-                name: None,
+                to_fields: vec![String::from("id")],
+                name: String::from("BlogToPost"),
                 on_delete: OnDeleteStrategy::None,
             }),
             arity: FieldArity::Optional,
@@ -198,15 +199,15 @@ fn infer_DeleteField() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
-            field: Int?
+            id String @id @default(cuid())
+            field Int?
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Test {
-            id: String
+            id String @id @default(cuid())
         }
     "#,
     );
@@ -224,16 +225,16 @@ fn infer_UpdateField_simple() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
-            field: Int?
+            id String @id @default(cuid())
+            field Int?
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Test {
-            id: String
-            field: Boolean @default(false)
+            id String @id @default(cuid())
+            field Boolean @default(false) @unique
         }
     "#,
     );
@@ -248,6 +249,7 @@ fn infer_UpdateField_simple() {
         db_name: None,
         is_created_at: None,
         is_updated_at: None,
+        is_unique: Some(true),
         id_info: None,
         default: Some(Some(Value::Boolean(false))),
         scalar_list: None,
@@ -257,7 +259,7 @@ fn infer_UpdateField_simple() {
 
 #[test]
 fn infer_CreateEnum() {
-    let dm1 = Schema::empty();
+    let dm1 = Datamodel::empty();
     let dm2 = parse(
         r#"
         enum Test {
@@ -286,7 +288,7 @@ fn infer_DeleteEnum() {
         }
     "#,
     );
-    let dm2 = Schema::empty();
+    let dm2 = Datamodel::empty();
 
     let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::DeleteEnum(DeleteEnum {
@@ -295,7 +297,7 @@ fn infer_DeleteEnum() {
     assert_eq!(steps, expected);
 }
 
-fn infer(dm1: &Schema, dm2: &Schema) -> Vec<MigrationStep> {
+fn infer(dm1: &Datamodel, dm2: &Datamodel) -> Vec<MigrationStep> {
     let inferrer = DataModelMigrationStepsInferrerImplWrapper {};
     inferrer.infer(&dm1, &dm2)
 }

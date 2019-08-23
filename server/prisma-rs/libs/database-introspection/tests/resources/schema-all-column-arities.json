@@ -1,0 +1,44 @@
+{
+  "tables": [
+    {
+      "name": "table1",
+      "columns": [
+        {
+          "name": "column1",
+          "tpe": {
+            "raw": "int",
+            "family": "int"
+          },
+          "arity": "required",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column2",
+          "tpe": {
+            "raw": "int",
+            "family": "int"
+          },
+          "arity": "nullable",
+          "default": null,
+          "autoIncrement": false
+        },
+        {
+          "name": "column3",
+          "tpe": {
+            "raw": "int",
+            "family": "int"
+          },
+          "arity": "list",
+          "default": null,
+          "autoIncrement": false
+        }
+      ],
+      "indices": [],
+      "primaryKey": null,
+      "foreignKeys": []
+    }
+  ],
+  "enums": [],
+  "sequences": []
+}

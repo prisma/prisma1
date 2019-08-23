@@ -1,14 +1,14 @@
 use datamodel::*;
 use migration_connector::steps::*;
 
-pub trait DataModelMigrationStepsInferrer: std::panic::RefUnwindSafe {
-    fn infer(&self, previous: &Schema, next: &Schema) -> Vec<MigrationStep>;
+pub trait DataModelMigrationStepsInferrer: Send + Sync + 'static {
+    fn infer(&self, previous: &Datamodel, next: &Datamodel) -> Vec<MigrationStep>;
 }
 
 pub struct DataModelMigrationStepsInferrerImplWrapper {}
 
 impl DataModelMigrationStepsInferrer for DataModelMigrationStepsInferrerImplWrapper {
-    fn infer(&self, previous: &Schema, next: &Schema) -> Vec<MigrationStep> {
+    fn infer(&self, previous: &Datamodel, next: &Datamodel) -> Vec<MigrationStep> {
         let inferrer = DataModelMigrationStepsInferrerImpl { previous, next };
         inferrer.infer_internal()
     }
@@ -16,8 +16,8 @@ impl DataModelMigrationStepsInferrer for DataModelMigrationStepsInferrerImplWrap
 
 #[allow(dead_code)]
 pub struct DataModelMigrationStepsInferrerImpl<'a> {
-    previous: &'a Schema,
-    next: &'a Schema,
+    previous: &'a Datamodel,
+    next: &'a Datamodel,
 }
 
 // TODO: this does not deal with renames yet
@@ -168,6 +168,7 @@ impl<'a> DataModelMigrationStepsInferrerImpl<'a> {
                         db_name: Self::diff(&p.database_name, &n.database_name),
                         is_created_at: None,
                         is_updated_at: None,
+                        is_unique: Self::diff(&p.is_unique, &n.is_unique),
                         id_info: None,
                         default: Self::diff(&p.default_value, &n.default_value),
                         scalar_list: Self::diff(&p.scalar_list_strategy, &n.scalar_list_strategy),

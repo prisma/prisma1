@@ -3,7 +3,7 @@ use crate::ast;
 use crate::errors::ValidationError;
 use serde::{Deserialize, Serialize};
 
-use super::FromStrAndSpan;
+use crate::common::FromStrAndSpan;
 
 /// Represents a strategy for generating IDs.
 #[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
@@ -13,11 +13,20 @@ pub enum IdStrategy {
 }
 
 impl FromStrAndSpan for IdStrategy {
-    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, ValidationError> {
+    fn from_str_and_span(s: &str, span: ast::Span) -> Result<Self, ValidationError> {
         match s {
             "AUTO" => Ok(IdStrategy::Auto),
             "NONE" => Ok(IdStrategy::None),
             _ => Err(ValidationError::new_literal_parser_error("id strategy", s, span)),
+        }
+    }
+}
+
+impl ToString for IdStrategy {
+    fn to_string(&self) -> String {
+        match self {
+            IdStrategy::Auto => String::from("AUTO"),
+            IdStrategy::None => String::from("NONE"),
         }
     }
 }

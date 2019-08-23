@@ -43,22 +43,20 @@ impl PrismaArgs {
     }
 
     pub fn add_datetimes(&mut self, model: ModelRef) {
-        if !self.args.is_empty() {
-            let now = PrismaValue::DateTime(Utc::now());
+        let now = PrismaValue::DateTime(Utc::now());
 
-            match (model.fields().created_at(), model.fields().updated_at()) {
-                (Some(created_at), Some(updated_at)) => {
-                    self.args.insert(created_at.name.clone(), now.clone());
-                    self.args.insert(updated_at.name.clone(), now);
-                }
-                (Some(created_at), None) => {
-                    self.args.insert(created_at.name.clone(), now);
-                }
-                (None, Some(updated_at)) => {
-                    self.args.insert(updated_at.name.clone(), now);
-                }
-                (None, None) => (),
+        match (model.fields().created_at(), model.fields().updated_at()) {
+            (Some(created_at), Some(updated_at)) => {
+                self.args.insert(created_at.name.clone(), now.clone());
+                self.args.insert(updated_at.name.clone(), now);
             }
+            (Some(created_at), None) => {
+                self.args.insert(created_at.name.clone(), now);
+            }
+            (None, Some(updated_at)) => {
+                self.args.insert(updated_at.name.clone(), now);
+            }
+            (None, None) => (),
         }
     }
 

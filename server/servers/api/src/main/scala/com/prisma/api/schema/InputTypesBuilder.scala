@@ -336,7 +336,6 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       if (fieldIsOppositeRelationField) {
         None
       } else {
-
         val inputObjectType = InputObjectType[Any](
           name = inputObjectTypeName,
           fieldsFn = () =>

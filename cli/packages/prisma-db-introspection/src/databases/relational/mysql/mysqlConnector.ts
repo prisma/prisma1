@@ -10,6 +10,7 @@ import { Connection } from 'mysql'
 import { DatabaseType, capitalize } from 'prisma-datamodel'
 import { MysqlIntrospectionResult } from './mysqlIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
+import { DatabaseMetadata } from '../../../common/introspectionResult'
 import IDatabaseClient from '../../IDatabaseClient'
 import MysqlDatabaseClient from './mysqlDatabaseClient'
 
@@ -54,47 +55,41 @@ export class MysqlConnector extends RelationalConnector {
   }
 
   // TODO: Unit test for column comments
-  protected async queryColumnComment(
-    schemaName: string,
-    tableName: string,
-    columnName: string,
-  ) {
+  protected async queryColumnComments(schemaName: string) {
     const commentQuery = `
       SELECT
-        column_comment
+        column_comment,
+        column_name,
+        table_name
       FROM
         information_schema.columns
       WHERE
         table_schema = ?
-        AND table_name = ?
-        AND column_name = ?
+        AND column_comment != ''
     `
-    const [comment] = (await this.query(commentQuery, [
-      schemaName,
-      tableName,
-      columnName,
-    ])).map(row => row.column_comment as string)
+    const comments = (await this.query(commentQuery, [schemaName])).map(
+      row => ({
+        text: row.column_comment as string,
+        columnName: row.column_name as string,
+        tableName: row.table_name as string,
+      }),
+    )
 
-    if (comment === undefined || comment === '') {
-      return null
-    } else {
-      return comment
-    }
+    return comments
   }
 
-  protected async queryIndices(schemaName: string, tableName: string) {
+  protected async queryIndices(schemaName: string) {
     const indexQuery = `
       SELECT 
         table_name, 
         index_name, 
         GROUP_CONCAT(DISTINCT column_name SEPARATOR ', ') AS column_names, 
         NOT non_unique AS is_unique, 
-        index_name = 'PRIMARY' AS is_primary_key 
+        index_name = 'PRIMARY' AS is_primary_key
       FROM 
         information_schema.statistics
       WHERE
         table_schema = '${schemaName}'
-        AND table_name = '${tableName}'
       GROUP BY
         table_name, index_name, non_unique
     `
@@ -188,5 +183,21 @@ export class MysqlConnector extends RelationalConnector {
 
   protected async listSequences(schemaName: string): Promise<ISequenceInfo[]> {
     return []
+  }
+
+  public async getMetadata(schemaName: string): Promise<DatabaseMetadata> {
+    const schemaSizeQuery = `
+    SELECT 
+      SUM(data_length + index_length) as size 
+      FROM information_schema.TABLES 
+      WHERE table_schema = ?`
+
+    const [{ size }] = await this.query(schemaSizeQuery, [schemaName])
+    const count = await super.countTables(schemaName)
+
+    return {
+      countOfTables: count,
+      sizeInBytes: size,
+    }
   }
 }

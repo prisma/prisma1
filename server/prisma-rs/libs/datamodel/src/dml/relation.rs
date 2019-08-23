@@ -1,8 +1,8 @@
 use crate::errors::ValidationError;
 use serde::{Deserialize, Serialize};
 
-use super::FromStrAndSpan;
 use crate::ast;
+use crate::common::FromStrAndSpan;
 
 /// Holds information about a relation field.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -10,9 +10,9 @@ pub struct RelationInfo {
     /// The target model of the relation.
     pub to: String,
     /// The target field of the relation.
-    pub to_field: Option<String>,
-    /// The name of the relation.
-    pub name: Option<String>,
+    pub to_fields: Vec<String>,
+    /// The name of the relation. Internally, an empty string signals no name.
+    pub name: String,
     /// A strategy indicating what happens when
     /// a related node is deleted.
     pub on_delete: OnDeleteStrategy,
@@ -24,8 +24,25 @@ impl RelationInfo {
     pub fn new(to: &str) -> RelationInfo {
         RelationInfo {
             to: String::from(to),
-            to_field: None,
-            name: None,
+            to_fields: Vec::new(),
+            name: String::new(),
+            on_delete: OnDeleteStrategy::None,
+        }
+    }
+    pub fn new_with_field(to: &str, to_field: &str) -> RelationInfo {
+        RelationInfo {
+            to: String::from(to),
+            to_fields: vec![String::from(to_field)],
+            name: String::new(),
+            on_delete: OnDeleteStrategy::None,
+        }
+    }
+
+    pub fn new_with_fields(to: &str, to_fields: Vec<String>) -> RelationInfo {
+        RelationInfo {
+            to: String::from(to),
+            to_fields,
+            name: String::new(),
             on_delete: OnDeleteStrategy::None,
         }
     }
@@ -40,11 +57,20 @@ pub enum OnDeleteStrategy {
 }
 
 impl FromStrAndSpan for OnDeleteStrategy {
-    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, ValidationError> {
+    fn from_str_and_span(s: &str, span: ast::Span) -> Result<Self, ValidationError> {
         match s {
             "CASCADE" => Ok(OnDeleteStrategy::Cascade),
             "NONE" => Ok(OnDeleteStrategy::None),
             _ => Err(ValidationError::new_literal_parser_error("onDelete strategy", s, span)),
+        }
+    }
+}
+
+impl ToString for OnDeleteStrategy {
+    fn to_string(&self) -> String {
+        match self {
+            OnDeleteStrategy::Cascade => String::from("CASCADE"),
+            OnDeleteStrategy::None => String::from("NONE"),
         }
     }
 }

@@ -10,6 +10,7 @@ import { MongoClient, Collection, Cursor, AggregationCursor } from 'mongodb'
 import * as BSON from 'bson'
 import { Data } from '../data'
 import { TypeIdentifiers } from 'prisma-datamodel'
+import { DatabaseMetadata } from '../../../common/introspectionResult'
 
 const reservedSchemas = ['admin', 'local']
 
@@ -130,5 +131,15 @@ export class MongoConnector extends DocumentConnector<Collection<Data>> {
     }
 
     return suggestion
+  }
+
+  public async getMetadata(schemaName: string): Promise<DatabaseMetadata> {
+    const cols = await this.client.db(schemaName).collections()
+    const stats = await this.client.db(schemaName).stats()
+
+    return {
+      countOfTables: cols.length,
+      sizeInBytes: stats.dataSize,
+    }
   }
 }

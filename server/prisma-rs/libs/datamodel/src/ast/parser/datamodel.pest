@@ -1,43 +1,65 @@
 // ######################################
+// Readme
+// ######################################
+// You will notice the pattern ( X ~ Y | X )
+// instead of X ~ Y?. This is because we do not
+// want the concat operator ~ between X and Y
+// to consume any whitespace after X, if Y is not present.
+
+// ######################################
 // Global (builtin) expressions
 // ######################################
 
-// Treat every whitespace the same
-WHITESPACE = _{ SPACE_SEPARATOR | NEWLINE }
+// Treat every whitespace the same for now.
+WHITESPACE = @{ SPACE_SEPARATOR | "\t" | NEWLINE }
 // Comment ignores everything until end of line.
-// TODO: As soon as we include the comments in the AST, we need to move from silent (_) to atomic (@)
-COMMENT = _{ "#" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+COMMENT = @{ (!"///") ~ "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE? }
+BLOCK_OPEN = @{ "{" }
+BLOCK_CLOSE = @{ "}" }
+MODEL_KEYWORD = @{ "model" }
+TYPE_KEYWORD = @{ "type" }
+ENUM_KEYWORD = @{ "enum" }
+GENERATOR_KEYWORD = @{ "generator" }
+DATASOURCE_KEYWORD = @{ "datasource" }
+
+INTERPOLATION_START = { "${" }
+INTERPOLATION_END = { "}" }
+
+LEGACY_COLON = { ":" }
+
+doc_content = @{ (!NEWLINE ~ ANY)* ~ NEWLINE }
+doc_comment = { "///" ~ doc_content }
 
 // ######################################
 // Base building blocks
 // ######################################
 // TODO: Ask for proper format.
-identifier = @{ ASCII_ALPHA ~ ( "_" | ASCII_ALPHANUMERIC)* } 
+identifier = @{ ASCII_ALPHA ~ ( "_" | ASCII_ALPHANUMERIC)* }
 
 // Literals
 numeric_literal = @{ ("-")? ~ ASCII_DIGIT+ ~("." ~ ASCII_DIGIT+)? }
 
 // String, with support for escaped stuff and interpolations.
-string_escaped_predefined = { "n" | "r" | "t" | "\\" | "0" | "\"" | "'" | "${" }
+string_escaped_predefined = { "n" | "r" | "t" | "\\" | "0" | "\"" | "'" | INTERPOLATION_START }
 string_escape     = { "\\" ~ string_escaped_predefined }
 // This is only used to escape the parser. The string above is still treated as atomic.
-string_interpolate_escape = !{ ("${" ~ expression ~ "}") }
-string_raw = { (!("\\" | "\"" | NEWLINE | "${") ~ (ANY))+ }
+string_interpolate_escape = !{ (INTERPOLATION_START ~ expression ~ INTERPOLATION_END) }
+string_raw = { (!("\\" | "\"" | NEWLINE | INTERPOLATION_START ) ~ (ANY))+ }
 string_content = @{ (string_raw | string_escape | string_interpolate_escape)* }
 string_literal = { "\"" ~ string_content ~ "\"" }
 
 boolean_true  = { "true" }
 boolean_false = { "false" }
 boolean_literal =  @{ boolean_true | boolean_false }
-
-constant_Literal = @{ ASCII_ALPHA+ }
+constant_literal = @{ identifier }
 
 // ######################################
 // Expression support
 // ######################################
 
 function = { identifier ~ "(" ~ (argument_value ~ ("," ~ argument_value)*)? ~ ")" }
-expression = { function | numeric_literal | string_literal | boolean_literal | constant_Literal }
+array_expression = { "[" ~ expression ~ ( "," ~ expression )* ~ "]" }
+expression = { array_expression | function | numeric_literal | string_literal | boolean_literal | constant_literal }
 
 // ######################################
 // Arguments
@@ -49,71 +71,77 @@ argument = { (argument_name ~ ":" ~ argument_value) }
 // ######################################
 // Directives
 // ######################################
-directive_arguments = { "(" ~ ((argument ~ ("," ~ argument)*)?) ~ ")" }
-directive_single_argument = { "(" ~ argument_value ~ ")" }
+directive_arguments = { "(" ~ (((argument | argument_value) ~ ("," ~ argument)*)?) ~ ")" }
 // This is a poor-mans version of namespacing
 directive_name = @{ (identifier ~ ".")? ~ identifier }
 // A directive either has one unnamed argument or any number of named arguments or no argument.
-directive = { "@" ~ directive_name ~ (directive_arguments | directive_single_argument ) ? }
+directive = { (directive_name ~ directive_arguments | directive_name) }
 
 // ######################################
 // Field declarations
 // ######################################
-optional_type = { identifier ~ ("?") }
+optional_type = { identifier ~ "?" }
 base_type = { identifier } // Called base type to not conflict with type rust keyword
 list_type = { identifier ~ "[]" }
+legacy_list_type = { "[" ~ identifier ~ "]" }
+legacy_required_type = { identifier ~ "!" }
 
 // Pest is greedy, order is very important here.
-field_type = { list_type | optional_type | base_type }
-// This is a field link identifier which comes in braces after the type.
-field_link = @{ identifier }
+field_type = { list_type | optional_type | legacy_required_type | legacy_list_type | base_type }
 
 // Field
-default_value = { "=" ~ expression }
 // TODO: We want to force a line break after a field declaration.
 // For this, we have to rely on pests new '-' operator.
 // Progress tracked here: https://github.com/pest-parser/pest/issues/271
-field_declaration = { identifier ~ (":")? ~ field_type ~ ("(" ~ field_link ~ ")")? ~ default_value? ~ directive* }
+field_declaration = { doc_comment* ~ identifier ~ LEGACY_COLON? ~ (field_type ~ ( "@" ~ directive )+ | field_type) }
+
+// ######################################
+// Custom type declarations
+// ######################################
+type_declaration = { doc_comment* ~ TYPE_KEYWORD ~ identifier ~ "=" ~ (base_type ~ ( "@" ~ directive )+ | base_type)  }
 
 // ######################################
 // Model declarations
 // ######################################
-model_declaration = { "model" ~ identifier ~ "{" ~ field_declaration+ ~ "}" ~ directive* }
+model_declaration = { doc_comment* ~ (MODEL_KEYWORD | TYPE_KEYWORD) ~ identifier ~ BLOCK_OPEN ~ ( field_declaration | ( "@@" ~ directive )  )* ~ BLOCK_CLOSE }
 
 // ######################################
 // Enum declarations
 // ######################################
-enum_field_declaration = @{ ASCII_ALPHA_UPPER+ }
-enum_declaration = { "enum" ~ identifier ~ "{" ~ enum_field_declaration+ ~ "}" ~ directive* }
+enum_field_declaration = @{ identifier }
+enum_declaration = { doc_comment* ~ ENUM_KEYWORD ~ identifier ~ BLOCK_OPEN ~ (enum_field_declaration | ( "@@" ~ directive )  )* ~ BLOCK_CLOSE }
 
 // ######################################
 // Source block
 // ######################################
-source_key_value = { identifier ~ "=" ~ expression }
-source_properties = { "properties" ~ "{" ~ source_key_value* ~ "}" }
-// Only allows ONE properties block.
-source_block = { "source" ~ identifier ~ "{" ~ source_key_value* ~ source_properties? ~ source_key_value* ~ "}" }
+key_value = { identifier ~ "=" ~ expression }
+source_block = { doc_comment* ~ DATASOURCE_KEYWORD ~ identifier ~ BLOCK_OPEN ~ key_value* ~ BLOCK_CLOSE }
+
+// ######################################
+// Generator block
+// ######################################
+generator_block = { doc_comment* ~ GENERATOR_KEYWORD ~ identifier ~ BLOCK_OPEN ~ key_value* ~ BLOCK_CLOSE }
 
 // ######################################
 // Datamodel
 // ######################################
-datamodel = { SOI ~ (model_declaration | enum_declaration | source_block )* ~ EOI }
-
+datamodel = { SOI ~ (model_declaration | enum_declaration | source_block | generator_block | type_declaration )* ~ EOI }
 
 // ######################################
 // String Interpolation
-// Called seperatedly, but falls back 
+// Called seperatedly, but falls back
 // to expression.
 // ######################################
-// We can safely assume that our strings are stripped of their "s and 
+// We can safely assume that our strings are stripped of their "s and
 // that strings do not contain new lines.
 
 // Greedy match escaped interpolation or any char. Do not match interpolation.
 string_any = @{ ANY }
-string_escaped_interpolation = @{ "\\${" }
-string_interpolated = { SOI ~ (
+string_escaped_interpolation = @{ "\\"  ~ INTERPOLATION_START }
+// String is marked as compount atomic. We do not allow whitespace or similar.
+string_interpolated = ${ SOI ~ (
                             // This is basically everything except an expression, using the escape trick from above.
-                            (!("${") ~ ( string_escaped_interpolation | string_any))+ | 
-                            // This is an expression.
-                            ("${" ~ expression ~ "}")
+                            (!(INTERPOLATION_START) ~ ( string_escaped_interpolation | string_any))+ |
+                            // This is an expression. It's no more atomic.
+                            string_interpolate_escape
                         )* ~ EOI }

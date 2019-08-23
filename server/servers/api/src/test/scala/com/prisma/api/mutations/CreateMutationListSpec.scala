@@ -55,13 +55,14 @@ class CreateMutationListSpec extends FlatSpec with Matchers with ApiSpecBase {
       project = project
     )
 
-    res.toString should be(
-      s"""{"data":{"createScalarModel":{"optEnums":["A","A"],"optBooleans":[true,false],"optDateTimes":["2016-07-31T23:59:01.000Z","2017-07-31T23:59:01.000Z"],"optStrings":["lala${TroubleCharacters.value}"],"optInts":[1337,12],"optJsons":[[1,2,3]],"optFloats":[1.234,1.45]}}}""")
+    res should be(
+      s"""{"data":{"createScalarModel":{"optEnums":["A","A"],"optBooleans":[true,false],"optDateTimes":["2016-07-31T23:59:01.000Z","2017-07-31T23:59:01.000Z"],"optStrings":["lala${TroubleCharacters.value}"],"optInts":[1337,12],"optJsons":[[1,2,3]],"optFloats":[1.234,1.45]}}}""".parseJson)
 
-    val queryRes: JsValue = server.query("""{ scalarModels{optStrings, optInts, optFloats, optBooleans, optEnums, optDateTimes, optJsons}}""", project = project)
+    val queryRes: JsValue =
+      server.query("""{ scalarModels{optStrings, optInts, optFloats, optBooleans, optEnums, optDateTimes, optJsons}}""", project = project)
 
     queryRes should be(
-      Json.parse(s"""{"data":{"scalarModels":[{"optEnums":["A","A"],"optBooleans":[true,false],"optDateTimes":["2016-07-31T23:59:01.000Z","2017-07-31T23:59:01.000Z"],"optStrings":["lala${TroubleCharacters.value}"],"optInts":[1337,12],"optJsons":[[1,2,3]],"optFloats":[1.234,1.45]}]}}"""))
+      s"""{"data":{"scalarModels":[{"optEnums":["A","A"],"optBooleans":[true,false],"optDateTimes":["2016-07-31T23:59:01.000Z","2017-07-31T23:59:01.000Z"],"optStrings":["lala${TroubleCharacters.value}"],"optInts":[1337,12],"optJsons":[[1,2,3]],"optFloats":[1.234,1.45]}]}}""".parseJson)
   }
 
   "A Create Mutation" should "create and return items with empty listvalues" in {
@@ -81,8 +82,8 @@ class CreateMutationListSpec extends FlatSpec with Matchers with ApiSpecBase {
       project = project
     )
 
-    res.toString should be(
-      s"""{"data":{"createScalarModel":{"optEnums":[],"optBooleans":[],"optDateTimes":[],"optStrings":[],"optInts":[],"optJsons":[],"optFloats":[]}}}""")
+    res should be(
+      s"""{"data":{"createScalarModel":{"optEnums":[],"optBooleans":[],"optDateTimes":[],"optStrings":[],"optInts":[],"optJsons":[],"optFloats":[]}}}""".parseJson)
   }
 
   "An empty json as jsonlistvalue" should "work" in {

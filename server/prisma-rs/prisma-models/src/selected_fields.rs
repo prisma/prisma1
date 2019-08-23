@@ -14,7 +14,7 @@ pub struct SelectedFields {
 
     /// FIXME: naming
     pub from_field: Option<Arc<RelationField>>,
-    columns: OnceCell<Vec<Column>>,
+    columns: OnceCell<Vec<Column<'static>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -26,10 +26,6 @@ pub enum SelectedField {
 #[derive(Debug, Clone)]
 pub struct SelectedScalarField {
     pub field: Arc<ScalarField>,
-
-    /// Denotes whether or not a field was selected implicitly,
-    /// meaning it needs to be selected from the database, but not shown in the actual result set.
-    pub implicit: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -40,10 +36,7 @@ pub struct SelectedRelationField {
 
 impl From<Arc<ScalarField>> for SelectedField {
     fn from(sf: Arc<ScalarField>) -> SelectedField {
-        SelectedField::Scalar(SelectedScalarField {
-            field: sf,
-            implicit: false,
-        })
+        SelectedField::Scalar(SelectedScalarField { field: sf })
     }
 }
 
@@ -102,20 +95,15 @@ impl SelectedFields {
         Self::from(model.fields().id())
     }
 
-    #[deprecated]
-    pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
-        self.scalar.iter().filter(|sf| sf.implicit).collect()
-    }
-
-    pub fn add_scalar(&mut self, field: Arc<ScalarField>, implicit: bool) {
+    pub fn add_scalar(&mut self, field: Arc<ScalarField>) {
         self.columns = OnceCell::new();
-        self.scalar.push(SelectedScalarField { field, implicit });
+        self.scalar.push(SelectedScalarField { field });
     }
 
-    pub fn columns(&self) -> &[Column] {
+    pub fn columns(&self) -> &[Column<'static>] {
         self.columns
             .get_or_init(|| {
-                let mut result: Vec<Column> = self.scalar_non_list().iter().map(|f| f.as_column()).collect();
+                let mut result: Vec<Column<'static>> = self.scalar_non_list().iter().map(|f| f.as_column()).collect();
 
                 for rf in self.relation_inlined().iter() {
                     result.push(rf.as_column());

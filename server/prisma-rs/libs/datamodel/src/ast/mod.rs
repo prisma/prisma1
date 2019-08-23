@@ -1,4 +1,8 @@
 pub mod parser;
+pub mod reformat;
+pub mod renderer;
+pub mod string_builder;
+pub mod table;
 
 /// AST representation of a prisma datamodel
 ///
@@ -10,7 +14,7 @@ pub mod parser;
 /// Basically, the AST is an object oriented representation of the datamodel's text.
 
 /// Represents a location in a datamodel's text representation.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Span {
     pub start: usize,
     pub end: usize,
@@ -26,7 +30,7 @@ impl Span {
         Span { start: 0, end: 0 }
     }
     /// Creates a new ast::Span from a pest::Span.
-    pub fn from_pest(s: &pest::Span) -> Span {
+    pub fn from_pest(s: pest::Span) -> Span {
         Span {
             start: s.start(),
             end: s.end(),
@@ -40,6 +44,52 @@ impl std::fmt::Display for Span {
     }
 }
 
+pub trait WithSpan {
+    fn span(&self) -> &Span;
+}
+
+trait WithKeyValueConfig {
+    fn properties(&self) -> &Vec<Argument>;
+}
+
+#[derive(Debug, Clone)]
+pub struct Identifier {
+    pub name: String,
+    pub span: Span,
+}
+
+impl Identifier {
+    pub fn new(name: &str) -> Identifier {
+        Identifier {
+            name: String::from(name),
+            span: Span::empty(),
+        }
+    }
+}
+
+impl WithSpan for Identifier {
+    fn span(&self) -> &Span {
+        &self.span
+    }
+}
+
+pub trait WithIdentifier {
+    fn identifier(&self) -> &Identifier;
+}
+
+pub trait WithName {
+    fn name(&self) -> &str;
+}
+
+impl<T> WithName for T
+where
+    T: WithIdentifier,
+{
+    fn name(&self) -> &str {
+        &self.identifier().name
+    }
+}
+
 /// The arity of a field.
 #[derive(Debug)]
 pub enum FieldArity {
@@ -49,23 +99,69 @@ pub enum FieldArity {
 }
 
 /// A comment. Currently unimplemented.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Comment {
     /// The comment text
     pub text: String,
-    /// Unused.
-    pub is_error: bool,
 }
 
 /// An argument, either for directives, or for keys in source blocks.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Argument {
     /// Name of the argument.
-    pub name: String,
+    pub name: Identifier,
     /// Argument value.
     pub value: Value,
     /// Location of the argument in the text representation.
     pub span: Span,
+}
+
+impl WithIdentifier for Argument {
+    fn identifier(&self) -> &Identifier {
+        &self.name
+    }
+}
+
+impl Argument {
+    pub fn new_string(name: &str, value: &str) -> Argument {
+        Argument {
+            name: Identifier::new(name),
+            value: Value::StringValue(String::from(value), Span::empty()),
+            span: Span::empty(),
+        }
+    }
+
+    pub fn new_constant(name: &str, value: &str) -> Argument {
+        Argument {
+            name: Identifier::new(name),
+            value: Value::ConstantValue(String::from(value), Span::empty()),
+            span: Span::empty(),
+        }
+    }
+
+    pub fn new_array(name: &str, value: Vec<Value>) -> Argument {
+        Argument {
+            name: Identifier::new(name),
+            value: Value::Array(value, Span::empty()),
+            span: Span::empty(),
+        }
+    }
+
+    pub fn new_function(name: &str, fn_name: &str, value: Vec<Value>) -> Argument {
+        Argument {
+            name: Identifier::new(name),
+            value: Value::Function(fn_name.to_string(), value, Span::empty()),
+            span: Span::empty(),
+        }
+    }
+
+    pub fn new(name: &str, value: Value) -> Argument {
+        Argument {
+            name: Identifier::new(name),
+            value,
+            span: Span::empty(),
+        }
+    }
 }
 
 // TODO: Rename to expression.
@@ -78,30 +174,102 @@ pub enum Value {
     BooleanValue(String, Span),
     /// Any string value.
     StringValue(String, Span),
+    /// A ducktyped string value, used as function return values which can be ducktyped.
+    /// Canbe any scalar type, array or function is not possible.
+    Any(String, Span),
     /// Any literal constant, basically a string which was not inside "...".
     /// This is used for representing builtin enums.
     ConstantValue(String, Span),
-    /// A function with a name and arguments.
+    /// A function with a name and arguments, which is evaluated at client side.
     Function(String, Vec<Value>, Span),
+    /// An array of other values.
+    Array(Vec<Value>, Span),
+}
+
+impl Value {
+    pub fn with_lifted_span(&self, offset: usize) -> Value {
+        match self {
+            Value::NumericValue(v, s) => Value::NumericValue(v.clone(), lift_span(&s, offset)),
+            Value::BooleanValue(v, s) => Value::BooleanValue(v.clone(), lift_span(&s, offset)),
+            Value::StringValue(v, s) => Value::StringValue(v.clone(), lift_span(&s, offset)),
+            Value::ConstantValue(v, s) => Value::ConstantValue(v.clone(), lift_span(&s, offset)),
+            Value::Function(v, a, s) => Value::Function(
+                v.clone(),
+                a.iter().map(|elem| elem.with_lifted_span(offset)).collect(),
+                lift_span(&s, offset),
+            ),
+            Value::Array(v, s) => Value::Array(
+                v.iter().map(|elem| elem.with_lifted_span(offset)).collect(),
+                lift_span(&s, offset),
+            ),
+            Value::Any(v, s) => Value::Any(v.clone(), lift_span(&s, offset)),
+        }
+    }
+}
+
+/// Adds an offset to a span.
+pub fn lift_span(span: &Span, offset: usize) -> Span {
+    Span {
+        start: offset + span.start,
+        end: offset + span.end,
+    }
 }
 
 /// Creates a friendly readable representation for a value's type.
 pub fn describe_value_type(val: &Value) -> &'static str {
     match val {
-        Value::NumericValue(_, _) => "Numeric",
-        Value::BooleanValue(_, _) => "Boolean",
-        Value::StringValue(_, _) => "String",
-        Value::ConstantValue(_, _) => "Literal",
-        Value::Function(_, _, _) => "Functional",
+        Value::NumericValue(_, _) => "numeric",
+        Value::BooleanValue(_, _) => "boolean",
+        Value::StringValue(_, _) => "string",
+        Value::ConstantValue(_, _) => "literal",
+        Value::Function(_, _, _) => "functional",
+        Value::Array(_, _) => "array",
+        Value::Any(_, _) => "any",
+    }
+}
+
+impl ToString for Value {
+    fn to_string(&self) -> String {
+        match self {
+            Value::StringValue(x, _) => x.clone(),
+            Value::NumericValue(x, _) => x.clone(),
+            Value::BooleanValue(x, _) => x.clone(),
+            Value::ConstantValue(x, _) => x.clone(),
+            Value::Function(x, _, _) => x.clone(),
+            Value::Array(_, _) => String::from("(array)"),
+            Value::Any(x, _) => x.clone(),
+        }
     }
 }
 
 /// A directive.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Directive {
-    pub name: String,
+    pub name: Identifier,
     pub arguments: Vec<Argument>,
     pub span: Span,
+}
+
+impl Directive {
+    pub fn new(name: &str, arguments: Vec<Argument>) -> Directive {
+        Directive {
+            name: Identifier::new(name),
+            arguments,
+            span: Span::empty(),
+        }
+    }
+}
+
+impl WithIdentifier for Directive {
+    fn identifier(&self) -> &Identifier {
+        &self.name
+    }
+}
+
+impl WithSpan for Directive {
+    fn span(&self) -> &Span {
+        &self.span
+    }
 }
 
 /// Trait for an AST node which can have directives.
@@ -110,21 +278,17 @@ pub trait WithDirectives {
 }
 
 /// Trait for an AST node which can have comments.
-pub trait WithComments {
-    fn comments(&self) -> &Vec<Comment>;
+pub trait WithDocumentation {
+    fn documentation(&self) -> &Option<Comment>;
 }
 
 /// A field declaration.
 #[derive(Debug)]
 pub struct Field {
     /// The field's type.
-    pub field_type: String,
-    /// The location of the field's type in the text representation.
-    pub field_type_span: Span,
-    /// The linked field, in case this is a relation.
-    pub field_link: Option<String>,
+    pub field_type: Identifier,
     /// The name of the field.
-    pub name: String,
+    pub name: Identifier,
     /// The aritiy of the field.
     pub arity: FieldArity,
     /// The default value of the field.
@@ -132,9 +296,21 @@ pub struct Field {
     /// The directives of this field.
     pub directives: Vec<Directive>,
     /// The comments for this field.
-    pub comments: Vec<Comment>,
+    pub documentation: Option<Comment>,
     /// The location of this field in the text representation.
     pub span: Span,
+}
+
+impl WithIdentifier for Field {
+    fn identifier(&self) -> &Identifier {
+        &self.name
+    }
+}
+
+impl WithSpan for Field {
+    fn span(&self) -> &Span {
+        &self.span
+    }
 }
 
 impl WithDirectives for Field {
@@ -143,9 +319,9 @@ impl WithDirectives for Field {
     }
 }
 
-impl WithComments for Field {
-    fn comments(&self) -> &Vec<Comment> {
-        &self.comments
+impl WithDocumentation for Field {
+    fn documentation(&self) -> &Option<Comment> {
+        &self.documentation
     }
 }
 
@@ -153,13 +329,27 @@ impl WithComments for Field {
 #[derive(Debug)]
 pub struct Enum {
     /// The name of the enum.
-    pub name: String,
+    pub name: Identifier,
     /// The values of the enum.
-    pub values: Vec<String>,
+    pub values: Vec<EnumValue>,
     /// The directives of this enum.
     pub directives: Vec<Directive>,
     /// The comments for this enum.
-    pub comments: Vec<Comment>,
+    pub documentation: Option<Comment>,
+    /// The location of this enum in the text representation.
+    pub span: Span,
+}
+
+impl WithIdentifier for Enum {
+    fn identifier(&self) -> &Identifier {
+        &self.name
+    }
+}
+
+impl WithSpan for Enum {
+    fn span(&self) -> &Span {
+        &self.span
+    }
 }
 
 impl WithDirectives for Enum {
@@ -168,9 +358,30 @@ impl WithDirectives for Enum {
     }
 }
 
-impl WithComments for Enum {
-    fn comments(&self) -> &Vec<Comment> {
-        &self.comments
+impl WithDocumentation for Enum {
+    fn documentation(&self) -> &Option<Comment> {
+        &self.documentation
+    }
+}
+
+/// An enum value definition.
+#[derive(Debug)]
+pub struct EnumValue {
+    /// The name of the enum value.
+    pub name: String,
+    /// The location of this enum value in the text representation.
+    pub span: Span,
+}
+
+impl WithName for EnumValue {
+    fn name(&self) -> &str {
+        &self.name
+    }
+}
+
+impl WithSpan for EnumValue {
+    fn span(&self) -> &Span {
+        &self.span
     }
 }
 
@@ -178,13 +389,27 @@ impl WithComments for Enum {
 #[derive(Debug)]
 pub struct Model {
     /// The name of the model.
-    pub name: String,
+    pub name: Identifier,
     /// The fields of the model.
     pub fields: Vec<Field>,
     /// The directives of this model.
     pub directives: Vec<Directive>,
-    /// The comments for this model.
-    pub comments: Vec<Comment>,
+    /// The documentation for this model.
+    pub documentation: Option<Comment>,
+    /// The location of this model in the text representation.
+    pub span: Span,
+}
+
+impl WithIdentifier for Model {
+    fn identifier(&self) -> &Identifier {
+        &self.name
+    }
+}
+
+impl WithSpan for Model {
+    fn span(&self) -> &Span {
+        &self.span
+    }
 }
 
 impl WithDirectives for Model {
@@ -193,9 +418,9 @@ impl WithDirectives for Model {
     }
 }
 
-impl WithComments for Model {
-    fn comments(&self) -> &Vec<Comment> {
-        &self.comments
+impl WithDocumentation for Model {
+    fn documentation(&self) -> &Option<Comment> {
+        &self.documentation
     }
 }
 
@@ -203,21 +428,73 @@ impl WithComments for Model {
 #[derive(Debug)]
 pub struct SourceConfig {
     /// Name of this source.
-    pub name: String,
+    pub name: Identifier,
     /// Top-level configuration properties for this source.
     pub properties: Vec<Argument>,
-    /// Detail configuration for this source, found inside the
-    /// `properties` block.
-    pub detail_configuration: Vec<Argument>,
-    /// The comments for this source bloc.
-    pub comments: Vec<Comment>,
-    /// The location of this source bloc in the text representation.
+    /// The comments for this source block.
+    pub documentation: Option<Comment>,
+    /// The location of this source block in the text representation.
     pub span: Span,
 }
 
-impl WithComments for SourceConfig {
-    fn comments(&self) -> &Vec<Comment> {
-        &self.comments
+impl WithIdentifier for SourceConfig {
+    fn identifier(&self) -> &Identifier {
+        &self.name
+    }
+}
+
+impl WithKeyValueConfig for SourceConfig {
+    fn properties(&self) -> &Vec<Argument> {
+        &self.properties
+    }
+}
+
+impl WithSpan for SourceConfig {
+    fn span(&self) -> &Span {
+        &self.span
+    }
+}
+
+impl WithDocumentation for SourceConfig {
+    fn documentation(&self) -> &Option<Comment> {
+        &self.documentation
+    }
+}
+
+/// A Generator block declaration.
+#[derive(Debug)]
+pub struct GeneratorConfig {
+    /// Name of this generator.
+    pub name: Identifier,
+    /// Top-level configuration properties for this generator.
+    pub properties: Vec<Argument>,
+    /// The comments for this generator block.
+    pub documentation: Option<Comment>,
+    /// The location of this generator block in the text representation.
+    pub span: Span,
+}
+
+impl WithIdentifier for GeneratorConfig {
+    fn identifier(&self) -> &Identifier {
+        &self.name
+    }
+}
+
+impl WithKeyValueConfig for GeneratorConfig {
+    fn properties(&self) -> &Vec<Argument> {
+        &self.properties
+    }
+}
+
+impl WithSpan for GeneratorConfig {
+    fn span(&self) -> &Span {
+        &self.span
+    }
+}
+
+impl WithDocumentation for GeneratorConfig {
+    fn documentation(&self) -> &Option<Comment> {
+        &self.documentation
     }
 }
 
@@ -228,13 +505,59 @@ pub enum Top {
     Enum(Enum),
     Model(Model),
     Source(SourceConfig),
+    Generator(GeneratorConfig),
+    Type(Field),
+}
+
+impl WithIdentifier for Top {
+    fn identifier(&self) -> &Identifier {
+        match self {
+            Top::Enum(x) => x.identifier(),
+            Top::Model(x) => x.identifier(),
+            Top::Source(x) => x.identifier(),
+            Top::Generator(x) => x.identifier(),
+            Top::Type(x) => x.identifier(),
+        }
+    }
+}
+
+impl WithSpan for Top {
+    fn span(&self) -> &Span {
+        match self {
+            Top::Enum(x) => x.span(),
+            Top::Model(x) => x.span(),
+            Top::Source(x) => x.span(),
+            Top::Generator(x) => x.span(),
+            Top::Type(x) => x.span(),
+        }
+    }
+}
+
+impl Top {
+    pub fn get_type(&self) -> &str {
+        match self {
+            Top::Enum(_) => "enum",
+            Top::Model(_) => "model",
+            Top::Source(_) => "source",
+            Top::Generator(_) => "generator",
+            Top::Type(_) => "type",
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        match self {
+            Top::Enum(x) => &x.name.name,
+            Top::Model(x) => &x.name.name,
+            Top::Source(x) => &x.name.name,
+            Top::Generator(x) => &x.name.name,
+            Top::Type(x) => &x.name.name,
+        }
+    }
 }
 
 /// A prisma datamodel.
 #[derive(Debug)]
-pub struct Schema {
+pub struct Datamodel {
     /// All models, enums, or source config blocks.
     pub models: Vec<Top>,
-    /// Top level comments.
-    pub comments: Vec<Comment>,
 }

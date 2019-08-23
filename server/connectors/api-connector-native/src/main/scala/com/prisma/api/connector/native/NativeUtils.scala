@@ -42,7 +42,6 @@ object NativeUtils {
       case PrismaValue.Int(i: Int)          => IntGCValue(i)
       case PrismaValue.Json(j: String)      => JsonGCValue(Json.parse(j))
       case PrismaValue.Null(_)              => NullGCValue
-      case PrismaValue.Relation(r: Long)    => ??? // What are we supposed to do here?
       case PrismaValue.String(s: String)    => StringGCValue(s)
       case PrismaValue.Uuid(uuid: String)   => UuidGCValue.parse(uuid).get
       case PrismaValue.List(values) =>

@@ -1,4 +1,3 @@
-use super::comment::*;
 use super::traits::*;
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +9,7 @@ pub struct Enum {
     /// Values of the enum.
     pub values: Vec<String>,
     /// Comments for this enum.
-    pub comments: Vec<Comment>,
+    pub documentation: Option<String>,
     /// Database internal name of this enum.
     pub database_name: Option<String>,
 }
@@ -20,8 +19,8 @@ impl Enum {
     pub fn new(name: &str, values: Vec<String>) -> Enum {
         Enum {
             name: String::from(name),
-            values: values,
-            comments: vec![],
+            values,
+            documentation: None,
             database_name: None,
         }
     }

@@ -1,8 +1,8 @@
-use super::comment::*;
 use super::id::*;
 use super::relation::*;
 use super::scalar::*;
 use super::traits::*;
+use crate::common::{PrismaType, PrismaValue};
 use serde::{Deserialize, Serialize};
 
 /// Datamodel field arity.
@@ -23,11 +23,11 @@ pub enum FieldType {
     Relation(RelationInfo),
     /// Connector specific field type.
     ConnectorSpecific {
-        base_type: ScalarType,
+        base_type: PrismaType,
         connector_type: Option<String>,
     },
     /// Base (built-in scalar) type.
-    Base(ScalarType),
+    Base(PrismaType),
 }
 
 /// Holds information about an id, or priamry key.
@@ -51,7 +51,7 @@ pub struct Field {
     /// The database internal name.
     pub database_name: Option<String>,
     /// The default value.
-    pub default_value: Option<Value>,
+    pub default_value: Option<PrismaValue>,
     /// Indicates if the field is unique.
     pub is_unique: bool,
     /// If set, signals that this field is an id field, or
@@ -61,7 +61,13 @@ pub struct Field {
     /// the field arity is list and the type is scalar.
     pub scalar_list_strategy: Option<ScalarListStrategy>,
     /// Comments associated with this field.
-    pub comments: Vec<Comment>,
+    pub documentation: Option<String>,
+    /// If set, signals that this field was internally generated
+    /// and should never be displayed to the user.
+    pub is_generated: bool,
+    /// If set, signals that this field is updated_at and will be updated to now()
+    /// automatically.
+    pub is_updated_at: bool,
 }
 
 impl WithName for Field {
@@ -88,13 +94,31 @@ impl Field {
         Field {
             name: String::from(name),
             arity: FieldArity::Required,
-            field_type: field_type,
+            field_type,
             database_name: None,
             default_value: None,
             is_unique: false,
             id_info: None,
             scalar_list_strategy: None,
-            comments: vec![],
+            documentation: None,
+            is_generated: false,
+            is_updated_at: false,
+        }
+    }
+    /// Creates a new field with the given name and type, marked as generated and optional.
+    pub fn new_generated(name: &str, field_type: FieldType) -> Field {
+        Field {
+            name: String::from(name),
+            arity: FieldArity::Optional,
+            field_type,
+            database_name: None,
+            default_value: None,
+            is_unique: false,
+            id_info: None,
+            scalar_list_strategy: None,
+            documentation: None,
+            is_generated: true,
+            is_updated_at: false,
         }
     }
 }

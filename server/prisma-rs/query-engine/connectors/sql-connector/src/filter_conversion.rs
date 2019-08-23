@@ -1,4 +1,4 @@
-use connector::filter::*;
+use connector_interface::filter::*;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
@@ -70,7 +70,7 @@ pub trait AliasedCondition {
     ///
     /// Alias should be used only when nesting, making the top level queries
     /// more explicit.
-    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree;
+    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree<'static>;
 }
 
 trait AliasedSelect {
@@ -79,20 +79,20 @@ trait AliasedSelect {
     ///
     /// Alias should be used only when nesting, making the top level queries
     /// more explicit.
-    fn aliased_sel(self, alias: Option<Alias>) -> Select;
+    fn aliased_sel(self, alias: Option<Alias>) -> Select<'static>;
 }
 
 impl AliasedCondition for Filter {
     /// Conversion from a `Filter` to a query condition tree. Aliased when in a nested `SELECT`.
-    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
+    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree<'static> {
         match self {
             Filter::And(mut filters) => match filters.pop() {
                 None => ConditionTree::NoCondition,
                 Some(filter) => {
-                    let right = (*filter).aliased_cond(alias);
+                    let right = filter.aliased_cond(alias);
 
                     filters.into_iter().rev().fold(right, |acc, filter| {
-                        let left = (*filter).aliased_cond(alias);
+                        let left = filter.aliased_cond(alias);
                         ConditionTree::and(left, acc)
                     })
                 }
@@ -100,10 +100,10 @@ impl AliasedCondition for Filter {
             Filter::Or(mut filters) => match filters.pop() {
                 None => ConditionTree::NegativeCondition,
                 Some(filter) => {
-                    let right = (*filter).aliased_cond(alias);
+                    let right = filter.aliased_cond(alias);
 
                     filters.into_iter().rev().fold(right, |acc, filter| {
-                        let left = (*filter).aliased_cond(alias);
+                        let left = filter.aliased_cond(alias);
                         ConditionTree::or(left, acc)
                     })
                 }
@@ -111,10 +111,10 @@ impl AliasedCondition for Filter {
             Filter::Not(mut filters) => match filters.pop() {
                 None => ConditionTree::NoCondition,
                 Some(filter) => {
-                    let right = (*filter).aliased_cond(alias).not();
+                    let right = filter.aliased_cond(alias).not();
 
                     filters.into_iter().rev().fold(right, |acc, filter| {
-                        let left = (*filter).aliased_cond(alias).not();
+                        let left = filter.aliased_cond(alias).not();
                         ConditionTree::and(left, acc)
                     })
                 }
@@ -136,7 +136,7 @@ impl AliasedCondition for Filter {
 
 impl AliasedCondition for ScalarFilter {
     /// Conversion from a `ScalarFilter` to a query condition tree. Aliased when in a nested `SELECT`.
-    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
+    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree<'static> {
         let column = match alias {
             Some(ref alias) => self.field.as_column().table(alias.to_string(None)),
             None => self.field.as_column(),
@@ -177,7 +177,7 @@ impl AliasedCondition for ScalarFilter {
 
 impl AliasedCondition for RelationFilter {
     /// Conversion from a `RelationFilter` to a query condition tree. Aliased when in a nested `SELECT`.
-    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
+    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree<'static> {
         let id = self.field.model().id_column();
 
         let column = match alias {
@@ -189,10 +189,10 @@ impl AliasedCondition for RelationFilter {
         let sub_select = self.aliased_sel(alias.map(|a| a.inc(AliasMode::Table)));
 
         let comparison = match condition {
-            RelationCondition::EveryRelatedNode => column.not_in_selection(sub_select),
-            RelationCondition::NoRelatedNode => column.not_in_selection(sub_select),
-            RelationCondition::AtLeastOneRelatedNode => column.in_selection(sub_select),
-            RelationCondition::ToOneRelatedNode => column.in_selection(sub_select),
+            RelationCondition::EveryRelatedRecord => column.not_in_selection(sub_select),
+            RelationCondition::NoRelatedRecord => column.not_in_selection(sub_select),
+            RelationCondition::AtLeastOneRelatedRecord => column.in_selection(sub_select),
+            RelationCondition::ToOneRelatedRecord => column.in_selection(sub_select),
         };
 
         comparison.into()
@@ -201,7 +201,7 @@ impl AliasedCondition for RelationFilter {
 
 impl AliasedSelect for RelationFilter {
     /// The subselect part of the `RelationFilter` `ConditionTree`.
-    fn aliased_sel(self, alias: Option<Alias>) -> Select {
+    fn aliased_sel(self, alias: Option<Alias>) -> Select<'static> {
         let alias = alias.unwrap_or(Alias::default());
         let condition = self.condition.clone();
         let relation = self.field.relation();
@@ -213,14 +213,14 @@ impl AliasedSelect for RelationFilter {
         let compacted = match *self.nested_filter {
             Filter::And(mut filters) => {
                 if filters.len() == 1 {
-                    *filters.pop().unwrap()
+                    filters.pop().unwrap()
                 } else {
                     Filter::And(filters)
                 }
             }
             Filter::Or(mut filters) => {
                 if filters.len() == 1 {
-                    *filters.pop().unwrap()
+                    filters.pop().unwrap()
                 } else {
                     Filter::Or(filters)
                 }
@@ -233,11 +233,11 @@ impl AliasedSelect for RelationFilter {
                 let sub_condition = filter.condition.clone();
                 let sub_select = filter.aliased_sel(Some(alias.inc(AliasMode::Table)));
 
-                let tree: ConditionTree = match sub_condition {
-                    RelationCondition::EveryRelatedNode => other_column.not_in_selection(sub_select),
-                    RelationCondition::NoRelatedNode => other_column.not_in_selection(sub_select),
-                    RelationCondition::AtLeastOneRelatedNode => other_column.in_selection(sub_select),
-                    RelationCondition::ToOneRelatedNode => other_column.in_selection(sub_select),
+                let tree: ConditionTree<'static> = match sub_condition {
+                    RelationCondition::EveryRelatedRecord => other_column.not_in_selection(sub_select),
+                    RelationCondition::NoRelatedRecord => other_column.not_in_selection(sub_select),
+                    RelationCondition::AtLeastOneRelatedRecord => other_column.in_selection(sub_select),
+                    RelationCondition::ToOneRelatedRecord => other_column.in_selection(sub_select),
                 }
                 .into();
 
@@ -276,7 +276,7 @@ impl AliasedSelect for RelationFilter {
 
 impl AliasedCondition for OneRelationIsNullFilter {
     /// Conversion from a `OneRelationIsNullFilter` to a query condition tree. Aliased when in a nested `SELECT`.
-    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
+    fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree<'static> {
         let alias = alias.map(|a| a.to_string(None));
 
         let condition = if self.field.relation_is_inlined_in_parent() {
@@ -294,7 +294,9 @@ impl AliasedCondition for OneRelationIsNullFilter {
                 None => table,
             };
 
-            let select = Select::from_table(relation_table).column(column);
+            let select = Select::from_table(relation_table)
+                .column(column.clone())
+                .so_that(column.is_not_null());
             let id_column = self.field.model().id_column().opt_table(alias.clone());
 
             id_column.not_in_selection(select)

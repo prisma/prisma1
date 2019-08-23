@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Reserved Tables ignore relation table 1`] = `
+"type Test {
+  id: ID @pgColumn(name: \\"a\\") @unique
+  pk: String!
+}"
+`;
+
+exports[`Reserved Tables ignore relation table 2`] = `
+"type Test {
+  a: ID @id
+  pk: String!
+}"
+`;

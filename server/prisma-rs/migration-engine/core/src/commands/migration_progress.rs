@@ -1,25 +1,38 @@
-use crate::commands::command::MigrationCommand;
+use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
 use chrono::*;
 use migration_connector::*;
 
-pub struct MigrationProgressCommand {
-    input: MigrationProgressInput,
+pub struct MigrationProgressCommand<'a> {
+    input: &'a MigrationProgressInput,
 }
 
 #[allow(unused)]
-impl MigrationCommand for MigrationProgressCommand {
+impl<'a> MigrationCommand<'a> for MigrationProgressCommand<'a> {
     type Input = MigrationProgressInput;
     type Output = MigrationProgressOutput;
 
-    fn new(input: Self::Input) -> Box<Self> {
+    fn new(input: &'a Self::Input) -> Box<Self> {
         Box::new(MigrationProgressCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute<C, D>(&self, engine: &MigrationEngine<C, D>) -> CommandResult<Self::Output>
+    where
+        C: MigrationConnector<DatabaseMigration = D>,
+        D: DatabaseMigrationMarker + 'static,
+    {
         let migration_persistence = engine.connector().migration_persistence();
-        let migration = migration_persistence.by_name(&self.input.migration_id).unwrap();
-        MigrationProgressOutput {
+
+        let migration = migration_persistence.by_name(&self.input.migration_id).ok_or_else(|| {
+            let error = format!(
+                "Could not load migration from database. Migration name was: {}",
+                &self.input.migration_id
+            );
+
+            CommandError::Input { code: 1002, error }
+        })?;
+
+        Ok(MigrationProgressOutput {
             status: migration.status,
             steps: migration.datamodel_steps.len(),
             applied: migration.applied,
@@ -27,14 +40,13 @@ impl MigrationCommand for MigrationProgressCommand {
             errors: migration.errors,
             started_at: migration.started_at,
             finished_at: migration.finished_at,
-        }
+        })
     }
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct MigrationProgressInput {
-    pub project_info: String,
     pub migration_id: String,
 }
 

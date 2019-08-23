@@ -1,124 +1,252 @@
+#[macro_use]
+extern crate log;
+
+pub mod database_inspector;
+pub mod migration_database;
+
 mod database_schema_calculator;
 mod database_schema_differ;
-mod sql_database_migration_steps_inferrer;
+mod error;
+mod sql_database_migration_inferrer;
 mod sql_database_step_applier;
 mod sql_destructive_changes_checker;
+mod sql_migration;
 mod sql_migration_persistence;
-mod sql_migration_step;
 
-use barrel;
-use barrel::backend::Sqlite;
-use barrel::types;
-use database_inspector::DatabaseInspector;
-use database_inspector::DatabaseInspectorImpl;
+pub use error::*;
+pub use sql_migration::*;
+
+use database_inspector::{DatabaseInspector, sqlite_with_database, postgres_with_database, mysql_with_database};
 use migration_connector::*;
-use rusqlite::{Connection, NO_PARAMS};
-use sql_database_migration_steps_inferrer::*;
+use migration_database::*;
+use prisma_query::connector::{MysqlParams, PostgresParams};
+use serde_json;
+use sql_database_migration_inferrer::*;
 use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
 use sql_migration_persistence::*;
-pub use sql_migration_step::*;
-use std::sync::Arc;
+use std::{convert::TryFrom, fs, path::PathBuf, sync::Arc};
+use url::Url;
+
+pub type Result<T> = std::result::Result<T, SqlError>;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
-    schema_name: String,
-    migration_persistence: Arc<MigrationPersistence>,
-    sql_database_migration_steps_inferrer: Arc<DatabaseMigrationStepsInferrer<SqlMigrationStep>>,
-    database_step_applier: Arc<DatabaseMigrationStepApplier<SqlMigrationStep>>,
-    destructive_changes_checker: Arc<DestructiveChangesChecker<SqlMigrationStep>>,
+    pub file_path: Option<String>,
+    pub sql_family: SqlFamily,
+    pub schema_name: String,
+    pub database: Arc<dyn MigrationDatabase + Send + Sync + 'static>,
+    pub migration_persistence: Arc<dyn MigrationPersistence>,
+    pub database_migration_inferrer: Arc<dyn DatabaseMigrationInferrer<SqlMigration>>,
+    pub database_migration_step_applier: Arc<dyn DatabaseMigrationStepApplier<SqlMigration>>,
+    pub destructive_changes_checker: Arc<dyn DestructiveChangesChecker<SqlMigration>>,
+    pub database_inspector: Arc<dyn DatabaseInspector + Send + Sync + 'static>,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum SqlFamily {
+    Sqlite,
+    Postgres,
+    Mysql,
+}
+
+impl SqlFamily {
+    fn connector_type_string(&self) -> &'static str {
+        match self {
+            SqlFamily::Postgres => "postgresql",
+            SqlFamily::Mysql => "mysql",
+            SqlFamily::Sqlite => "sqlite",
+        }
+    }
 }
 
 impl SqlMigrationConnector {
-    // FIXME: this must take the config as a param at some point
-    pub fn new(schema_name: String) -> SqlMigrationConnector {
-        let migration_persistence = Arc::new(SqlMigrationPersistence::new(Self::new_conn(&schema_name)));
-        let sql_database_migration_steps_inferrer = Arc::new(SqlDatabaseMigrationStepsInferrer {
-            inspector: Box::new(DatabaseInspectorImpl::new(Self::new_conn(&schema_name))),
-            schema_name: schema_name.to_string(),
-        });
-        let database_step_applier = Arc::new(SqlDatabaseStepApplier::new(
-            Self::new_conn(&schema_name),
-            schema_name.clone(),
-        ));
-        let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
-        SqlMigrationConnector {
-            schema_name,
-            migration_persistence,
-            sql_database_migration_steps_inferrer,
-            database_step_applier,
-            destructive_changes_checker,
+    pub fn postgres(url: &str) -> crate::Result<Self> {
+        let url = Url::parse(url)?;
+
+        let params = PostgresParams::try_from(url.clone())?;
+
+        let dbname = params.dbname.clone();
+        let schema = params.schema.clone();
+
+        match PostgreSql::new(params) {
+            Ok(conn) => Ok(Self::create_connector(
+                Arc::new(conn),
+                SqlFamily::Postgres,
+                schema,
+                None,
+            )),
+            Err(prisma_query::error::Error::ConnectionError(_)) => {
+                let _ = {
+                    let mut url = url.clone();
+                    url.set_path("postgres");
+
+                    let params = PostgresParams::try_from(url)?;
+                    let connection = PostgreSql::new(params)?;
+
+                    let db_sql = format!("CREATE DATABASE \"{}\";", dbname);
+
+                    connection.query_raw("", &db_sql, &[]) // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
+                };
+
+                let params = PostgresParams::try_from(url)?;
+                let schema = params.schema.clone();
+                let conn = PostgreSql::new(params)?;
+
+                Ok(Self::create_connector(
+                    Arc::new(conn),
+                    SqlFamily::Postgres,
+                    schema,
+                    None,
+                ))
+            }
+            Err(err) => Err(err.into()),
         }
     }
 
-    fn new_conn(name: &str) -> Connection {
-        let conn = Connection::open_in_memory().unwrap();
-        let database_file_path = Self::database_file_path(&name);
-        conn.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), name])
-            .unwrap();
-        conn
+    pub fn mysql(url: &str) -> crate::Result<Self> {
+        let mut url = Url::parse(url)?;
+
+        let schema = {
+            let params = MysqlParams::try_from(url.clone())?;
+            params.dbname.clone()
+        };
+
+        url.set_path("");
+
+        let params = MysqlParams::try_from(url)?;
+        let conn = Mysql::new(params)?;
+
+        Ok(Self::create_connector(Arc::new(conn), SqlFamily::Mysql, schema, None))
     }
 
-    fn database_file_path(name: &str) -> String {
-        let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-        let path = format!("{}/db", server_root);
-        let database_file_path = format!("{}/{}.db", path, name);
-        database_file_path
+    pub fn sqlite(url: &str) -> crate::Result<Self> {
+        let conn = Sqlite::new(url)?;
+        let file_path = conn.file_path.clone();
+        let schema = String::from("lift");
+
+        Ok(Self::create_connector(
+            Arc::new(conn),
+            SqlFamily::Sqlite,
+            schema,
+            Some(file_path),
+        ))
+    }
+
+    fn create_connector(
+        conn: Arc<dyn MigrationDatabase + Send + Sync + 'static>,
+        sql_family: SqlFamily,
+        schema_name: String,
+        file_path: Option<String>,
+    ) -> Self {
+        let inspector: Arc<dyn DatabaseInspector + Send + Sync + 'static> = match sql_family {
+            SqlFamily::Sqlite => Arc::new(sqlite_with_database(Arc::clone(&conn))),
+            SqlFamily::Postgres => Arc::new(postgres_with_database(Arc::clone(&conn))),
+            SqlFamily::Mysql => Arc::new(mysql_with_database(Arc::clone(&conn))),
+        };
+
+        let migration_persistence = Arc::new(SqlMigrationPersistence {
+            sql_family,
+            connection: Arc::clone(&conn),
+            schema_name: schema_name.clone(),
+            file_path: file_path.clone(),
+        });
+
+        let database_migration_inferrer = Arc::new(SqlDatabaseMigrationInferrer {
+            sql_family,
+            inspector: Arc::clone(&inspector),
+            schema_name: schema_name.to_string(),
+        });
+
+        let database_migration_step_applier = Arc::new(SqlDatabaseStepApplier {
+            sql_family,
+            schema_name: schema_name.clone(),
+            conn: Arc::clone(&conn),
+        });
+
+        let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
+
+        Self {
+            file_path,
+            sql_family,
+            schema_name,
+            database: Arc::clone(&conn),
+            migration_persistence,
+            database_migration_inferrer,
+            database_migration_step_applier,
+            destructive_changes_checker,
+            database_inspector: Arc::clone(&inspector),
+        }
     }
 }
 
 impl MigrationConnector for SqlMigrationConnector {
-    type DatabaseMigrationStep = SqlMigrationStep;
+    type DatabaseMigration = SqlMigration;
 
-    fn initialize(&self) {
-        let conn = Self::new_conn(&self.schema_name);
-        let mut m = barrel::Migration::new().schema(self.schema_name.clone());
-        m.create_table_if_not_exists("_Migration", |t| {
-            t.add_column("revision", types::primary());
-            t.add_column("name", types::text());
-            t.add_column("datamodel", types::text());
-            t.add_column("status", types::text());
-            t.add_column("applied", types::integer());
-            t.add_column("rolled_back", types::integer());
-            t.add_column("datamodel_steps", types::text());
-            t.add_column("database_steps", types::text());
-            t.add_column("errors", types::text());
-            t.add_column("started_at", types::date());
-            t.add_column("finished_at", types::date().nullable(true));
-        });
-
-        let sql_str = dbg!(m.make::<Sqlite>());
-
-        dbg!(conn.execute(&sql_str, NO_PARAMS).unwrap());
+    fn connector_type(&self) -> &'static str {
+        self.sql_family.connector_type_string()
     }
 
-    fn reset(&self) {
-        let conn = Self::new_conn(&self.schema_name);
-        let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name);
+    fn initialize(&self) -> ConnectorResult<()> {
+        // TODO: this code probably does not ever do anything. The schema/db creation happens already in the helper functions above.
+        match self.sql_family {
+            SqlFamily::Sqlite => {
+                if let Some(file_path) = &self.file_path {
+                    let path_buf = PathBuf::from(&file_path);
+                    match path_buf.parent() {
+                        Some(parent_directory) => {
+                            fs::create_dir_all(parent_directory).expect("creating the database folders failed")
+                        }
+                        None => {}
+                    }
+                }
+            }
+            SqlFamily::Postgres => {
+                let schema_sql = format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &self.schema_name);
 
-        dbg!(conn.execute(&sql_str, NO_PARAMS).unwrap());
-        let _ = std::fs::remove_file(Self::database_file_path(&self.schema_name)); // ignore potential errors
+                debug!("{}", schema_sql);
+
+                self.database.query_raw("", &schema_sql, &[])?;
+            }
+            SqlFamily::Mysql => {
+                let schema_sql = format!(
+                    "CREATE SCHEMA IF NOT EXISTS `{}` DEFAULT CHARACTER SET latin1;",
+                    &self.schema_name
+                );
+
+                debug!("{}", schema_sql);
+
+                self.database.query_raw("", &schema_sql, &[])?;
+            }
+        }
+
+        self.migration_persistence.init();
+
+        Ok(())
     }
 
-    fn migration_persistence(&self) -> Arc<MigrationPersistence> {
+    fn reset(&self) -> ConnectorResult<()> {
+        self.migration_persistence.reset();
+        Ok(())
+    }
+
+    fn migration_persistence(&self) -> Arc<dyn MigrationPersistence> {
         Arc::clone(&self.migration_persistence)
     }
 
-    fn database_steps_inferrer(&self) -> Arc<DatabaseMigrationStepsInferrer<SqlMigrationStep>> {
-        Arc::clone(&self.sql_database_migration_steps_inferrer)
+    fn database_migration_inferrer(&self) -> Arc<dyn DatabaseMigrationInferrer<SqlMigration>> {
+        Arc::clone(&self.database_migration_inferrer)
     }
 
-    fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<SqlMigrationStep>> {
-        Arc::clone(&self.database_step_applier)
+    fn database_migration_step_applier(&self) -> Arc<dyn DatabaseMigrationStepApplier<SqlMigration>> {
+        Arc::clone(&self.database_migration_step_applier)
     }
 
-    fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<SqlMigrationStep>> {
+    fn destructive_changes_checker(&self) -> Arc<dyn DestructiveChangesChecker<SqlMigration>> {
         Arc::clone(&self.destructive_changes_checker)
     }
 
-    fn database_inspector(&self) -> Box<DatabaseInspector> {
-        Box::new(DatabaseInspectorImpl::new(SqlMigrationConnector::new_conn(
-            &self.schema_name,
-        )))
+    fn deserialize_database_migration(&self, json: serde_json::Value) -> SqlMigration {
+        serde_json::from_value(json).expect("Deserializing the database migration failed.")
     }
 }

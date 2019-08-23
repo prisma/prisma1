@@ -178,7 +178,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
     todoCountShouldBe(3)
   }
 
-  "DeleteMany" should "work" in {
+  "nested DeleteMany" should "work" in {
 
     val project = SchemaDsl.fromStringV11() {
       """

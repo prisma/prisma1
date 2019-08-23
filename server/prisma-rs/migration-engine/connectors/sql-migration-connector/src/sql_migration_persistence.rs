@@ -1,103 +1,150 @@
-#[allow(unused, dead_code)]
+use super::MigrationDatabase;
+use super::SqlFamily;
+use barrel::types;
 use chrono::*;
-use datamodel::Schema;
 use migration_connector::*;
-use prisma_query::{ast::*, visitor::*};
-use rusqlite::{Connection, Row};
+use prisma_query::ast::*;
+use prisma_query::connector::ResultSet;
 use serde_json;
+use std::sync::Arc;
 
 pub struct SqlMigrationPersistence {
-    connection: Connection,
-}
-
-impl SqlMigrationPersistence {
-    pub fn new(conn: Connection) -> SqlMigrationPersistence {
-        SqlMigrationPersistence { connection: conn }
-    }
+    pub sql_family: SqlFamily,
+    pub connection: Arc<dyn MigrationDatabase + Send + Sync + 'static>,
+    pub schema_name: String,
+    pub file_path: Option<String>,
 }
 
 #[allow(unused, dead_code)]
 impl MigrationPersistence for SqlMigrationPersistence {
+    fn init(&self) {
+        let sql_str = match self.sql_family {
+            SqlFamily::Sqlite => {
+                let mut m = barrel::Migration::new().schema(self.schema_name.clone());
+                m.create_table_if_not_exists(TABLE_NAME, migration_table_setup_sqlite);
+                m.make_from(barrel::SqlVariant::Sqlite)
+            }
+            SqlFamily::Postgres => {
+                let mut m = barrel::Migration::new().schema(self.schema_name.clone());
+                m.create_table(TABLE_NAME, migration_table_setup_postgres);
+                m.make_from(barrel::SqlVariant::Pg)
+            }
+            SqlFamily::Mysql => {
+                // work around barrels missing quoting
+                let mut m = barrel::Migration::new().schema(format!("`{}`", self.schema_name.clone()));
+                m.create_table(format!("`{}`", TABLE_NAME), migration_table_setup_mysql);
+                m.make_from(barrel::SqlVariant::Mysql)
+            }
+        };
+
+        let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
+    }
+
+    fn reset(&self) {
+        let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name); // TODO: this is not vendor agnostic yet
+        let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
+
+        // TODO: this is the wrong place to do that
+        match self.sql_family {
+            SqlFamily::Postgres => {
+                let sql_str = format!(r#"DROP SCHEMA "{}" CASCADE;"#, self.schema_name);
+                debug!("{}", sql_str);
+
+                let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
+            }
+            SqlFamily::Sqlite => {
+                if let Some(ref file_path) = self.file_path {
+                    let _ = std::fs::remove_file(file_path); // ignore potential errors
+                }
+            }
+            SqlFamily::Mysql => {
+                let sql_str = format!(r#"DROP SCHEMA `{}`;"#, self.schema_name);
+                debug!("{}", sql_str);
+                let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
+            }
+        }
+    }
+
     fn last(&self) -> Option<Migration> {
-        let conditions = STATUS_COLUMN.equals("Success");
-        let query = Select::from_table(TABLE_NAME)
+        let conditions = STATUS_COLUMN.equals(MigrationStatus::MigrationSuccess.code());
+        let query = Select::from_table(self.table())
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
-        let (sql_str, params) = Sqlite::build(query);
 
-        self.connection
-            .query_row(&sql_str, params, |row| Ok(parse_row(row)))
-            .ok()
+        let result_set = self.connection.query(&self.schema_name, query.into()).unwrap();
+        parse_rows_new(result_set).into_iter().next()
     }
 
     fn load_all(&self) -> Vec<Migration> {
-        let query = Select::from_table(TABLE_NAME);
-        let (sql_str, params) = dbg!(Sqlite::build(query));
+        let query = Select::from_table(self.table());
 
-        let mut stmt = self.connection.prepare_cached(&sql_str).unwrap();
-        let mut rows = stmt.query(params).unwrap();
-        let mut result = Vec::new();
-
-        while let Some(row) = rows.next().unwrap() {
-            result.push(parse_row(&row));
-        }
-
-        result
+        let result_set = self.connection.query(&self.schema_name, query.into()).unwrap();
+        parse_rows_new(result_set)
     }
 
     fn by_name(&self, name: &str) -> Option<Migration> {
         let conditions = NAME_COLUMN.equals(name);
-        let query = Select::from_table(TABLE_NAME)
+        let query = Select::from_table(self.table())
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
-        let (sql_str, params) = Sqlite::build(query);
 
-        self.connection
-            .query_row(&sql_str, params, |row| Ok(parse_row(row)))
-            .ok()
+        let result_set = self.connection.query(&self.schema_name, query.into()).unwrap();
+        parse_rows_new(result_set).into_iter().next()
     }
 
     fn create(&self, migration: Migration) -> Migration {
-        let finished_at_value = match migration.finished_at {
-            Some(x) => x.timestamp_millis().into(),
-            None => ParameterizedValue::Null,
-        };
         let mut cloned = migration.clone();
-        // let status_value = serde_json::to_string(&migration.status).unwrap();
         let model_steps_json = serde_json::to_string(&migration.datamodel_steps).unwrap();
-        let database_steps_json = migration.database_steps;
+        let database_migration_json = serde_json::to_string(&migration.database_migration).unwrap();
         let errors_json = serde_json::to_string(&migration.errors).unwrap();
+        let serialized_datamodel = datamodel::render(&migration.datamodel).unwrap();
 
-        let query = Insert::single_into(TABLE_NAME)
+        let insert = Insert::single_into(self.table())
             .value(NAME_COLUMN, migration.name)
-            .value(DATAMODEL_COLUMN, "".to_string()) // todo: serialize datamodel
+            .value(DATAMODEL_COLUMN, serialized_datamodel)
             .value(STATUS_COLUMN, migration.status.code())
             .value(APPLIED_COLUMN, migration.applied)
             .value(ROLLED_BACK_COLUMN, migration.rolled_back)
             .value(DATAMODEL_STEPS_COLUMN, model_steps_json)
-            .value(DATABASE_STEPS_COLUMN, database_steps_json)
+            .value(DATABASE_MIGRATION_COLUMN, database_migration_json)
             .value(ERRORS_COLUMN, errors_json)
-            .value(
-                STARTED_AT_COLUMN,
-                ParameterizedValue::Integer(migration.started_at.timestamp_millis()),
-            )
-            .value(FINISHED_AT_COLUMN, finished_at_value);
+            .value(STARTED_AT_COLUMN, self.convert_datetime(migration.started_at))
+            .value(FINISHED_AT_COLUMN, ParameterizedValue::Null);
 
-        let (sql_str, params) = dbg!(Sqlite::build(query));
-
-        let result = dbg!(self.connection.execute(&sql_str, params));
-
-        cloned.revision = self.connection.last_insert_rowid() as usize;
+        match self.sql_family {
+            SqlFamily::Sqlite | SqlFamily::Mysql => {
+                let id = self
+                    .connection
+                    .execute(&self.schema_name, insert.into())
+                    .unwrap();
+                match id {
+                    Some(prisma_query::ast::Id::Int(id)) => cloned.revision = id,
+                    _ => panic!("This insert must return an int"),
+                };
+            }
+            SqlFamily::Postgres => {
+                let returning_insert = Insert::from(insert).returning(vec!["revision"]);
+                let result_set = self
+                    .connection
+                    .query(&self.schema_name, returning_insert.into())
+                    .unwrap();
+                result_set.into_iter().next().map(|row| {
+                    cloned.revision = row["revision"].as_i64().unwrap() as usize;
+                });
+            }
+            // SqlFamily::Mysql => unimplemented!(),
+        }
         cloned
     }
 
     fn update(&self, params: &MigrationUpdateParams) {
         let finished_at_value = match params.finished_at {
-            Some(x) => x.timestamp_millis().into(),
+            Some(x) => self.convert_datetime(x),
             None => ParameterizedValue::Null,
         };
         let errors_json = serde_json::to_string(&params.errors).unwrap();
-        let query = Update::table(TABLE_NAME)
+        let query = Update::table(self.table())
+            .set(NAME_COLUMN, params.new_name.clone())
             .set(STATUS_COLUMN, params.status.code())
             .set(APPLIED_COLUMN, params.applied)
             .set(ROLLED_BACK_COLUMN, params.rolled_back)
@@ -109,9 +156,60 @@ impl MigrationPersistence for SqlMigrationPersistence {
                     .and(REVISION_COLUMN.equals(params.revision)),
             );
 
-        let (sql_str, params) = dbg!(Sqlite::build(query));
+        let _ = self.connection.query(&self.schema_name, query.into()).unwrap();
+    }
+}
 
-        let result = dbg!(self.connection.execute(&sql_str, params));
+fn migration_table_setup_sqlite(t: &mut barrel::Table) {
+    migration_table_setup(t, types::date());
+}
+
+fn migration_table_setup_postgres(t: &mut barrel::Table) {
+    migration_table_setup(t, types::custom("timestamp(3)"));
+}
+
+fn migration_table_setup_mysql(t: &mut barrel::Table) {
+    migration_table_setup(t, types::custom("datetime(3)"));
+}
+
+fn migration_table_setup(t: &mut barrel::Table, datetime_type: barrel::types::Type) {
+    t.add_column(REVISION_COLUMN, types::primary());
+    t.add_column(NAME_COLUMN, types::text());
+    t.add_column(DATAMODEL_COLUMN, types::text());
+    t.add_column(STATUS_COLUMN, types::text());
+    t.add_column(APPLIED_COLUMN, types::integer());
+    t.add_column(ROLLED_BACK_COLUMN, types::integer());
+    t.add_column(DATAMODEL_STEPS_COLUMN, types::text());
+    t.add_column(DATABASE_MIGRATION_COLUMN, types::text());
+    t.add_column(ERRORS_COLUMN, types::text());
+    t.add_column(STARTED_AT_COLUMN, datetime_type.clone());
+    t.add_column(FINISHED_AT_COLUMN, datetime_type.clone().nullable(true));
+}
+
+impl SqlMigrationPersistence {
+    fn table(&self) -> Table {
+        match self.sql_family {
+            SqlFamily::Sqlite => {
+                // sqlite case. Otherwise prisma-query produces invalid SQL
+                TABLE_NAME.to_string().into()
+            }
+            _ => (self.schema_name.to_string(), TABLE_NAME.to_string()).into(),
+        }
+    }
+
+    fn convert_datetime(&self, datetime: DateTime<Utc>) -> ParameterizedValue {
+        match self.sql_family {
+            SqlFamily::Sqlite => ParameterizedValue::Integer(datetime.timestamp_millis()),
+            SqlFamily::Postgres => ParameterizedValue::DateTime(datetime),
+            SqlFamily::Mysql => ParameterizedValue::DateTime(datetime),
+        }
+    }
+}
+fn convert_parameterized_date_value(db_value: &ParameterizedValue) -> DateTime<Utc> {
+    match db_value {
+        ParameterizedValue::Integer(x) => timestamp_to_datetime(*x),
+        ParameterizedValue::DateTime(x) => x.clone(),
+        x => unimplemented!("Got unsupported value {:?} in date conversion", x),
     }
 }
 
@@ -124,27 +222,42 @@ fn timestamp_to_datetime(timestamp: i64) -> DateTime<Utc> {
     datetime
 }
 
-fn parse_row(row: &Row) -> Migration {
-    let revision: u32 = row.get(REVISION_COLUMN).unwrap();
-    let applied: u32 = row.get(APPLIED_COLUMN).unwrap();
-    let rolled_back: u32 = row.get(ROLLED_BACK_COLUMN).unwrap();
-    let errors_json: String = row.get(ERRORS_COLUMN).unwrap();
-    let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
-    let finished_at: Option<i64> = row.get(FINISHED_AT_COLUMN).unwrap();
-    let database_steps_json: String = row.get(DATABASE_STEPS_COLUMN).unwrap();
-    Migration {
-        name: row.get(NAME_COLUMN).unwrap(),
-        revision: revision as usize,
-        datamodel: Schema::empty(),
-        status: MigrationStatus::from_str(row.get(STATUS_COLUMN).unwrap()),
-        applied: applied as usize,
-        rolled_back: rolled_back as usize,
-        datamodel_steps: Vec::new(),
-        database_steps: database_steps_json,
-        errors: errors,
-        started_at: timestamp_to_datetime(row.get(STARTED_AT_COLUMN).unwrap()),
-        finished_at: finished_at.map(timestamp_to_datetime),
-    }
+fn parse_rows_new(result_set: ResultSet) -> Vec<Migration> {
+    result_set
+        .into_iter()
+        .map(|row| {
+            let datamodel_string: String = row[DATAMODEL_COLUMN].to_string().unwrap();
+            let datamodel_steps_json: String = row[DATAMODEL_STEPS_COLUMN].to_string().unwrap();
+
+            let database_migration_string: String = row[DATABASE_MIGRATION_COLUMN].to_string().unwrap();
+            let errors_json: String = row[ERRORS_COLUMN].to_string().unwrap();
+
+            let finished_at = match &row[FINISHED_AT_COLUMN] {
+                ParameterizedValue::Null => None,
+                x => Some(convert_parameterized_date_value(x)),
+            };
+
+            let datamodel_steps = serde_json::from_str(&datamodel_steps_json).unwrap();
+            let datamodel = datamodel::parse(&datamodel_string).unwrap();
+
+            let database_migration_json = serde_json::from_str(&database_migration_string).unwrap();
+            let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
+
+            Migration {
+                name: row[NAME_COLUMN].to_string().unwrap(),
+                revision: row[REVISION_COLUMN].as_i64().unwrap() as usize,
+                datamodel,
+                status: MigrationStatus::from_str(row[STATUS_COLUMN].to_string().unwrap()),
+                applied: row[APPLIED_COLUMN].as_i64().unwrap() as usize,
+                rolled_back: row[ROLLED_BACK_COLUMN].as_i64().unwrap() as usize,
+                datamodel_steps,
+                database_migration: database_migration_json,
+                errors,
+                started_at: convert_parameterized_date_value(&row[STARTED_AT_COLUMN]),
+                finished_at,
+            }
+        })
+        .collect()
 }
 
 static TABLE_NAME: &str = "_Migration";
@@ -155,7 +268,7 @@ static STATUS_COLUMN: &str = "status";
 static APPLIED_COLUMN: &str = "applied";
 static ROLLED_BACK_COLUMN: &str = "rolled_back";
 static DATAMODEL_STEPS_COLUMN: &str = "datamodel_steps";
-static DATABASE_STEPS_COLUMN: &str = "database_steps";
+static DATABASE_MIGRATION_COLUMN: &str = "database_migration";
 static ERRORS_COLUMN: &str = "errors";
 static STARTED_AT_COLUMN: &str = "started_at";
 static FINISHED_AT_COLUMN: &str = "finished_at";

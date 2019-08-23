@@ -29,7 +29,8 @@ case class NativeDataResolver(project: Project)(implicit ec: ExecutionContext) e
       toPrismaSelectedFields(selectedFields)
     )
 
-    val nodeResult: Option[(protocol.Node, Vector[String])] = NativeBinding.get_node_by_where(input)
+    val database_file                                       = Some(s"${project.id}_DB")
+    val nodeResult: Option[(protocol.Node, Vector[String])] = NativeBinding.get_node_by_where(database_file, input)
     nodeResult.map(x => transformNode(x, where.model))
   }
 
@@ -43,7 +44,8 @@ case class NativeDataResolver(project: Project)(implicit ec: ExecutionContext) e
       toPrismaSelectedFields(selectedFields)
     )
 
-    val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_nodes(input)
+    val database_file                              = Some(s"${project.id}_DB")
+    val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_nodes(database_file, input)
     ResolverResult(queryArguments, nodeResult._1.map(x => transformNode((x, nodeResult._2), model)))
   }
 
@@ -62,7 +64,8 @@ case class NativeDataResolver(project: Project)(implicit ec: ExecutionContext) e
       selectedFields = toPrismaSelectedFields(selectedFields)
     )
 
-    val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_related_nodes(input)
+    val database_file                              = Some(s"${project.id}_DB")
+    val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_related_nodes(database_file, input)
     val nodes                                      = nodeResult._1
     val columnNames                                = nodeResult._2
     val mappedNodes: Vector[PrismaNodeWithParent] = nodes.map { pbNode =>
@@ -97,7 +100,8 @@ case class NativeDataResolver(project: Project)(implicit ec: ExecutionContext) e
       nodeIds = nodeIds.map(f => toPrismaValue(f).asInstanceOf[GraphqlId].value)
     )
 
-    val result = NativeBinding.get_scalar_list_values_by_node_ids(input)
+    val database_file = Some(s"${project.id}_DB")
+    val result        = NativeBinding.get_scalar_list_values_by_node_ids(database_file, input)
     result.map { protoValue =>
       ScalarListValues(
         nodeId = toIdGcValue(protoValue.nodeId),
@@ -119,7 +123,8 @@ case class NativeDataResolver(project: Project)(implicit ec: ExecutionContext) e
       table
     )
 
-    NativeBinding.count_by_table(input)
+    val database_file = Some(s"${project.id}_DB")
+    NativeBinding.count_by_table(database_file, input)
   }
 
   override def countByModel(model: Model, queryArguments: QueryArguments): Future[Int] = Future {
@@ -132,7 +137,8 @@ case class NativeDataResolver(project: Project)(implicit ec: ExecutionContext) e
       toPrismaArguments(queryArguments)
     )
 
-    val count                  = NativeBinding.count_by_model(input)
+    val database_file          = Some(s"${project.id}_DB")
+    val count                  = NativeBinding.count_by_model(database_file, input)
     val SkipAndLimit(_, limit) = skipAndLimitValues(queryArguments)
 
     val result = limit match {
