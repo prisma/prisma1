@@ -147,19 +147,6 @@ lazy val prismaNative = imageProject("prisma-native", "prisma-native")
     excludeJars := Seq("org/latencyutils", "io/prometheus", "org\\latencyutils", "io\\prometheus")
   )
 
-lazy val schemaInferrerBin = imageProject("schema-inferrer-bin", "schema-inferrer-bin")
-  .dependsOn(deploy)
-  .enablePlugins(PrismaGraalPlugin)
-  .settings(
-    nativeImageOptions ++= Seq(
-      "--verbose",
-      "--no-server",
-      "-H:+AllowVMInspection",
-      s"-H:CLibraryPath=${absolute("libs/jwt-native/src/main/resources")}",
-    ),
-    unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/svm/builder/svm.jar")
-  )
-
 def absolute(relativePathToProjectRoot: String) = {
   s"${System.getProperty("user.dir")}/${relativePathToProjectRoot.stripPrefix("/")}"
 }
@@ -297,13 +284,6 @@ lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
       val oldOptions = scalacOptions.value
       oldOptions.filterNot(_ == "-Xfatal-warnings")
     })
-
-lazy val apiConnectorNative = connectorProject("api-connector-native")
-  .dependsOn(apiConnector)
-  .dependsOn(prismaRsBinding)
-  .dependsOn(apiConnectorSQLite)
-  .dependsOn(apiConnectorPostgres)
-  .dependsOn(apiConnectorMySql)
 
 
 // ##################
@@ -457,21 +437,6 @@ lazy val cache = libProject("cache")
       jsr305
     ))
 
-lazy val prismaRsBinding = libProject("prisma-rs-binding")
-  .dependsOn(sharedModels)
-  .enablePlugins(ProtocPlugin)
-  .settings(
-    ProtocPlugin.protobufGlobalSettings,
-    PB.protocVersion := "-v261",
-    PB.protoSources in Compile := Seq(new File("protobuf")),
-    PB.targets in Compile := Seq(
-      scalapb.gen() -> (sourceManaged in Compile).value
-    ),
-    libraryDependencies ++= Seq(jna),
-    unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar")
-  )
-
-
 // #######################
 //       AGGREGATORS
 // #######################
@@ -493,7 +458,6 @@ val allDockerImageProjects = List(
   prismaLocalGraalVM,
   prismaProd,
   prismaProdGraalVM,
-  schemaInferrerBin
 )
 
 val allServerProjects = List(
@@ -521,7 +485,6 @@ lazy val apiConnectorProjects = List(
   apiConnectorPostgres,
   apiConnectorMongo,
   apiConnectorSQLite,
-  apiConnectorNative
 )
 
 lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils, connectorShared)
@@ -543,7 +506,6 @@ val allLibProjects = List(
   jdbcNative,
   jwtNative,
   logging,
-  prismaRsBinding
 )
 
 val allIntegrationTestProjects = List(

@@ -1,8 +1,8 @@
 package com.prisma.connectors.utils
+
 import com.prisma.api.connector.ApiConnector
 import com.prisma.api.connector.mongo.MongoApiConnector
 import com.prisma.api.connector.mysql.MySqlApiConnector
-import com.prisma.api.connector.native.{ApiConnectorNative, MysqlBackup, PostgresBackup, SqliteBackup}
 import com.prisma.api.connector.postgres.PostgresApiConnector
 import com.prisma.api.connector.sqlite.SQLiteApiConnector
 import com.prisma.config.PrismaConfig
@@ -18,15 +18,11 @@ object ConnectorLoader {
   def loadApiConnector(config: PrismaConfig)(implicit ec: ExecutionContext, drivers: SupportedDrivers): ApiConnector = {
     val databaseConfig = config.databases.head
     databaseConfig.connector match {
-      case "mysql"                    => MySqlApiConnector(databaseConfig, drivers(SupportedDrivers.MYSQL))
-      case "postgres"                 => PostgresApiConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES))
-      case "mysql-native"             => ApiConnectorNative(databaseConfig, SqliteBackup(drivers(SupportedDrivers.SQLITE)))
-      case "sqlite-native"            => ApiConnectorNative(databaseConfig, SqliteBackup(drivers(SupportedDrivers.SQLITE)))
-      case "postgres-native"          => ApiConnectorNative(databaseConfig, SqliteBackup(drivers(SupportedDrivers.SQLITE)))
-      case "native-integration-tests" => ApiConnectorNative(databaseConfig, SqliteBackup(drivers(SupportedDrivers.SQLITE)))
-      case "sqlite"                   => SQLiteApiConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
-      case "mongo"                    => MongoApiConnector(databaseConfig)
-      case conn                       => sys.error(s"Unknown connector $conn")
+      case "mysql"    => MySqlApiConnector(databaseConfig, drivers(SupportedDrivers.MYSQL))
+      case "postgres" => PostgresApiConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES))
+      case "sqlite"   => SQLiteApiConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
+      case "mongo"    => MongoApiConnector(databaseConfig)
+      case conn       => sys.error(s"Unknown connector $conn")
     }
   }
 
