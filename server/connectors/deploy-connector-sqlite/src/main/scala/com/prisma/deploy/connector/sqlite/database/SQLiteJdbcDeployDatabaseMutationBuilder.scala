@@ -110,7 +110,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
                             #$bColSql,
                             PRIMARY KEY ("id"),
                             FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
-                            FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
+                            FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(modelB.dbName)} (#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE
                         );"""
 
     val modernTableCreate = sqlu"""
@@ -118,7 +118,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
                             #$aColSql,
                             #$bColSql,
                             FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
-                            FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
+                            FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(modelB.dbName)} (#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE
                         );"""
 
     val tableCreate = relation.manifestation match {

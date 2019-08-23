@@ -257,7 +257,7 @@ export class GoGenerator extends Generator {
                   `
                   func (instance *${goCase(type.name)}Exec) ${goCase(
                     field.name,
-                  )}(ctx context.Context) (Aggregate, error) {
+                  )}(ctx context.Context) (*Aggregate, error) {
                     ret := instance.exec.Client.GetOne(
                       instance.exec,
                       nil,
@@ -267,7 +267,37 @@ export class GoGenerator extends Generator {
 
                     var v Aggregate
                     _, err := ret.Exec(ctx, &v)
-                    return v, err
+                    return &v, err
+                  }`
+                )
+              }
+              if (
+                type.name.endsWith('Connection') &&
+                field.name === 'edges'
+              ) {
+                // edges is a special case where a field `node` has nested fields
+                const objectName = type.name.replace('Connection', '')
+                return (
+                  sTyp +
+                  `
+                  func (instance *${goCase(type.name)}Exec) ${goCase(
+                    field.name,
+                  )}() *${objectName}EdgeExecArray {
+                    edges := instance.exec.Client.GetMany(
+                      instance.exec,
+                      nil,
+                      [3]string{"${objectName}WhereInput", "${objectName}OrderByInput", "${objectName}Edge"},
+                      "edges",
+                      []string{"cursor"})
+
+                    nodes := edges.Client.GetMany(
+                      edges,
+                      nil,
+                      [3]string{"", "", "${objectName}"},
+                      "node",
+                      []string{"id", "createdAt", "updatedAt", "name", "desc"})
+
+                    return &${objectName}EdgeExecArray{nodes}
                   }`
                 )
               }
@@ -329,9 +359,13 @@ export class GoGenerator extends Generator {
           ${Object.keys(fieldMap)
             .filter(key => {
               const field = fieldMap[key]
-              const { isScalar, isEnum } = this.extractFieldLikeType(
+              const { name, isScalar, isEnum } = this.extractFieldLikeType(
                 field as GraphQLField<any, any>,
               )
+              // include specific connection-related fields
+              if (['pageInfo', 'edges', 'node'].includes(name)) {
+                return true
+              }
               return isScalar || isEnum
             })
             .map(key => {
@@ -589,16 +623,36 @@ export class GoGenerator extends Generator {
   }
 
   opGetConnection(field) {
-    // TODO(dh): Connections are not yet implemented
     const { typeName } = this.extractFieldLikeType(field)
     const param = this.paramsType(field)
+    const objectName = goCase(field.name).replace('s' + 'Connection', '')
     return (
       param.code +
       `
       func (client *Client) ${goCase(field.name)} (params *${
         param.type
-      }) (${goCase(typeName)}Exec) {
-        panic("not implemented")
+      }) (*${goCase(typeName)}Exec) {
+        var wparams *prisma.WhereParams
+        if params != nil {
+          wparams = &prisma.WhereParams{
+            Where:   params.Where,
+            OrderBy: (*string)(params.OrderBy),
+            Skip:    params.Skip,
+            After:   params.After,
+            Before:  params.Before,
+            First:   params.First,
+            Last:    params.Last,
+          }
+        }
+
+        ret := client.Client.GetMany(
+          nil,
+          wparams,
+          [3]string{"${objectName}WhereInput", "${objectName}OrderByInput", "${objectName}"},
+          "${field.name}",
+          []string{"edges", "pageInfo"})
+
+        return &${goCase(typeName)}Exec{ret}
       }`
     )
   }

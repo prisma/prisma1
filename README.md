@@ -1,6 +1,6 @@
 <p align="center"><a href="https://www.prisma.io"><img src="https://i.imgur.com/QgwDieO.png" alt="Prisma" height="230px"></a></p>
 
-[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Examples](https://github.com/prisma/prisma-examples/) • [Blog](https://www.prisma.io/blog) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prisma) • [Prisma Day](https://www.prisma.io/day)
+[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Examples](https://github.com/prisma/prisma-examples/) • [Blog](https://www.prisma.io/blog) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prisma) • [Prisma 2 (Preview)](https://www.prisma.io/blog/announcing-prisma-2-zq1s745db8i5)
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma.svg?style=shield)](https://circleci.com/gh/prisma/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/prisma)
 
@@ -23,6 +23,7 @@ Try a Prisma example online with CodeSandbox:
 - [Database Connectors](#database-connectors)
 - [Community](#community)
 - [Contributing](#contributing)
+- [Prisma 2 Preview](#prisma-2-preview)
 
 ## Quickstart
 
@@ -310,3 +311,14 @@ Please refer [to the contribution guide](https://github.com/prisma/prisma/blob/m
 Releases are separated into three _channels_: **alpha**, **beta** and **stable**. You can learn more about these three channels and Prisma's release process [here](https://www.prisma.io/blog/improving-prismas-release-process-yaey8deiwaex/).
 
 <p align="center"><a href="https://oss.prisma.io"><img src="https://imgur.com/IMU2ERq.png" alt="Prisma" height="170px"></a></p>
+
+## Prisma 2 Preview
+
+Prisma 2 splits up Prisma's core functionality into 2 standalone tools:
+
+- [Photon](https://photonjs.prisma.io/): Type-safe database access
+- [Lift](https://lift.prisma.io/): Declarative data modeling and migrations
+
+Photon and Lift are currently in Preview! [Limitations](https://github.com/prisma/prisma2-docs/blob/master/limitations.md) include missing features, limited performance and stability issues. You can learn more about Prisma 2 in the [announcement](https://www.prisma.io/blog/announcing-prisma-2-zq1s745db8i5) or the [docs](https://github.com/prisma/prisma2/tree/master/docs). 
+
+You can track the progress of Prisma 2 on [**isprisma2ready.com**](https://www.isprisma2ready.com).
