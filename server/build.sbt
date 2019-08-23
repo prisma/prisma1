@@ -102,19 +102,6 @@ lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod")
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
 
-lazy val schemaInferrerBin = imageProject("schema-inferrer-bin", "schema-inferrer-bin")
-  .dependsOn(deploy)
-  .enablePlugins(PrismaGraalPlugin)
-  .settings(
-    nativeImageOptions ++= Seq(
-      "--verbose",
-      "--no-server",
-      "-H:+AllowVMInspection",
-      s"-H:CLibraryPath=${absolute("libs/jwt-native/src/main/resources")}",
-    ),
-    unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/svm/builder/svm.jar")
-  )
-
 def absolute(relativePathToProjectRoot: String) = {
   s"${System.getProperty("user.dir")}/${relativePathToProjectRoot.stripPrefix("/")}"
 }
@@ -252,13 +239,6 @@ lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
       oldOptions.filterNot(_ == "-Xfatal-warnings")
     })
 
-lazy val apiConnectorNative = connectorProject("api-connector-native")
-  .dependsOn(apiConnector)
-  .dependsOn(prismaRsBinding)
-  .dependsOn(apiConnectorSQLite)
-  .dependsOn(apiConnectorPostgres)
-  .dependsOn(apiConnectorMySql)
-
 
 // ##################
 //       SHARED
@@ -394,21 +374,6 @@ lazy val cache = libProject("cache")
       jsr305
     ))
 
-lazy val prismaRsBinding = libProject("prisma-rs-binding")
-  .dependsOn(sharedModels)
-  .enablePlugins(ProtocPlugin)
-  .settings(
-    ProtocPlugin.protobufGlobalSettings,
-    PB.protocVersion := "-v261",
-    PB.protoSources in Compile := Seq(new File("protobuf")),
-    PB.targets in Compile := Seq(
-      scalapb.gen() -> (sourceManaged in Compile).value
-    ),
-    libraryDependencies ++= Seq(jna),
-    unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar")
-  )
-
-
 // #######################
 //       AGGREGATORS
 // #######################
@@ -427,7 +392,6 @@ lazy val sangriaServer = libProject("sangria-server")
 val allDockerImageProjects = List(
   prismaLocal,
   prismaProd,
-  schemaInferrerBin
 )
 
 val allServerProjects = List(
@@ -455,7 +419,6 @@ lazy val apiConnectorProjects = List(
   apiConnectorPostgres,
   apiConnectorMongo,
   apiConnectorSQLite,
-  apiConnectorNative
 )
 
 lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils, connectorShared)
@@ -475,7 +438,6 @@ val allLibProjects = List(
   prismaConfig,
   mongoUtils,
   logging,
-  prismaRsBinding
 )
 
 val allIntegrationTestProjects = List(
