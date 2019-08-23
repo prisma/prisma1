@@ -74,6 +74,14 @@ pub struct Table {
     pub foreign_keys: Vec<ForeignKey>,
 }
 
+/// The type of an index.
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum IndexType {
+    Unique,
+    Normal,
+}
+
 /// An index of a table.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -82,8 +90,8 @@ pub struct Index {
     pub name: String,
     /// Index columns.
     pub columns: Vec<String>,
-    /// Is index unique?
-    pub unique: bool,
+    /// Type of index.
+    pub tpe: IndexType,
 }
 
 /// The primary key of a table.

@@ -254,7 +254,10 @@ impl IntrospectionConnector {
             .map(|index_repr| {
                 let mut index = Index {
                     name: index_repr.name.clone(),
-                    unique: index_repr.is_unique,
+                    tpe: match index_repr.is_unique {
+                        true => IndexType::Unique,
+                        false => IndexType::Normal,
+                    },
                     columns: vec![],
                 };
 

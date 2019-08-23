@@ -93,7 +93,7 @@ fn database_schema_is_serializable() {
                 indices: vec![Index {
                     name: "column2".to_string(),
                     columns: vec!["column2".to_string()],
-                    unique: false,
+                    tpe: IndexType::Normal,
                 }],
                 primary_key: Some(PrimaryKey {
                     columns: vec!["column1".to_string()],
