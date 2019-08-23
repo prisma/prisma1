@@ -2,13 +2,13 @@ use barrel::{types, Migration};
 use database_introspection::*;
 use log::{debug, LevelFilter};
 use pretty_assertions::assert_eq;
-use prisma_query::connector::{Queryable};
+use prisma_query::connector::Queryable;
 use std::collections::HashSet;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-const SCHEMA: &str = "DatabaseInspectorTest";
+const SCHEMA: &str = "DatabaseInspector-Test";
 
 static IS_SETUP: AtomicBool = AtomicBool::new(false);
 
@@ -1293,6 +1293,10 @@ fn foreign_keys_must_work() {
                 auto_increment: false,
             }];
 
+            let on_delete_action = match db_type {
+                DbType::MySql => ForeignKeyAction::Restrict,
+                _ => ForeignKeyAction::NoAction,
+            };
             assert_eq!(
                 user_table,
                 &Table {
@@ -1304,7 +1308,7 @@ fn foreign_keys_must_work() {
                         columns: vec!["city".to_string()],
                         referenced_columns: vec!["id".to_string()],
                         referenced_table: "City".to_string(),
-                        on_delete_action: ForeignKeyAction::NoAction,
+                        on_delete_action,
                     }],
                 }
             );
@@ -1368,6 +1372,10 @@ fn multi_column_foreign_keys_must_work() {
                 },
             ];
 
+            let on_delete_action = match db_type {
+                DbType::MySql => ForeignKeyAction::Restrict,
+                _ => ForeignKeyAction::NoAction,
+            };
             assert_eq!(
                 user_table,
                 &Table {
@@ -1379,10 +1387,40 @@ fn multi_column_foreign_keys_must_work() {
                         columns: vec!["city".to_string(), "city_name".to_string()],
                         referenced_columns: vec!["id".to_string(), "name".to_string()],
                         referenced_table: "City".to_string(),
-                        on_delete_action: ForeignKeyAction::NoAction,
+                        on_delete_action,
                     },],
                 }
             );
+        },
+    );
+}
+
+#[test]
+fn names_with_hyphens_must_work() {
+    setup();
+
+    test_each_backend(
+        |_, migration| {
+            migration.create_table("User-table", |t| {
+                t.add_column("column-1", types::integer().nullable(false));
+            });
+        },
+        |db_type, inspector| {
+            let result = inspector.introspect(SCHEMA).expect("introspecting");
+            let user_table = result.get_table("User-table").expect("getting User table");
+            let expected_columns = vec![
+                Column {
+                    name: "column-1".to_string(),
+                    tpe: ColumnType {
+                        raw: int_type(db_type),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: false,
+                },
+            ];
+            assert_eq!(user_table.columns, expected_columns);
         },
     );
 }
@@ -1474,6 +1512,247 @@ fn postgres_foreign_key_on_delete_must_be_handled() {
                     arity: ColumnArity::Required,
                     default: None,
                     auto_increment: false,
+                },
+            ],
+            indices: vec![],
+            primary_key: Some(PrimaryKey {
+                columns: vec!["id".to_string()],
+            }),
+            foreign_keys: vec![
+                ForeignKey {
+                    columns: vec!["city".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::NoAction,
+                },
+                ForeignKey {
+                    columns: vec!["city_cascade".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::Cascade,
+                },
+                ForeignKey {
+                    columns: vec!["city_restrict".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::Restrict,
+                },
+                ForeignKey {
+                    columns: vec!["city_set_default".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::SetDefault,
+                },
+                ForeignKey {
+                    columns: vec!["city_set_null".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::SetNull,
+                },
+            ],
+        }
+    );
+}
+
+#[test]
+fn mysql_foreign_key_on_delete_must_be_handled() {
+    setup();
+
+    // NB: We don't test the SET DEFAULT variety since it isn't supported on InnoDB and will
+    // just cause an error
+    let sql = format!(
+        "CREATE TABLE `{0}`.City (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY);
+         CREATE TABLE `{0}`.User (
+            id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            city INTEGER, FOREIGN KEY(city) REFERENCES City (id) ON DELETE NO ACTION,
+            city_cascade INTEGER, FOREIGN KEY(city_cascade) REFERENCES City (id) ON DELETE CASCADE,
+            city_restrict INTEGER, FOREIGN KEY(city_restrict) REFERENCES City (id) ON DELETE RESTRICT,
+            city_set_null INTEGER, FOREIGN KEY(city_set_null) REFERENCES City (id) ON DELETE SET NULL
+        )",
+        SCHEMA
+    );
+    let inspector = get_mysql_connector(&sql);
+
+    let schema = inspector.introspect(SCHEMA).expect("introspection");
+    let mut table = schema.get_table("User").expect("get User table").to_owned();
+    table.foreign_keys.sort_unstable_by_key(|fk| fk.columns.clone());
+
+    assert_eq!(
+        table,
+        Table {
+            name: "User".to_string(),
+            columns: vec![
+                Column {
+                    name: "city".to_string(),
+                    tpe: ColumnType {
+                        raw: "int".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: false,
+                },
+                Column {
+                    name: "city_cascade".to_string(),
+                    tpe: ColumnType {
+                        raw: "int".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: false,
+                },
+                Column {
+                    name: "city_restrict".to_string(),
+                    tpe: ColumnType {
+                        raw: "int".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: false,
+                },
+                Column {
+                    name: "city_set_null".to_string(),
+                    tpe: ColumnType {
+                        raw: "int".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: false,
+                },
+                Column {
+                    name: "id".to_string(),
+                    tpe: ColumnType {
+                        raw: "int".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: true,
+                },
+            ],
+            indices: vec![],
+            primary_key: Some(PrimaryKey {
+                columns: vec!["id".to_string()],
+            }),
+            foreign_keys: vec![
+                ForeignKey {
+                    columns: vec!["city".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::NoAction,
+                },
+                ForeignKey {
+                    columns: vec!["city_cascade".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::Cascade,
+                },
+                ForeignKey {
+                    columns: vec!["city_restrict".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::Restrict,
+                },
+                ForeignKey {
+                    columns: vec!["city_set_null".to_string()],
+                    referenced_columns: vec!["id".to_string()],
+                    referenced_table: "City".to_string(),
+                    on_delete_action: ForeignKeyAction::SetNull,
+                },
+            ],
+        }
+    );
+}
+
+#[test]
+fn sqlite_foreign_key_on_delete_must_be_handled() {
+    setup();
+
+    let sql = format!(
+        "CREATE TABLE \"{0}\".City (id INTEGER NOT NULL PRIMARY KEY);
+         CREATE TABLE \"{0}\".User (
+            id INTEGER NOT NULL PRIMARY KEY,
+            city INTEGER REFERENCES City(id) ON DELETE NO ACTION,
+            city_cascade INTEGER REFERENCES City(id) ON DELETE CASCADE,
+            city_restrict INTEGER REFERENCES City (id) ON DELETE RESTRICT,
+            city_set_default INTEGER REFERENCES City(id) ON DELETE SET DEFAULT,
+            city_set_null INTEGER REFERENCES City(id) ON DELETE SET NULL
+        )",
+        SCHEMA
+    );
+    let inspector = get_sqlite_connector(&sql);
+
+    let schema = inspector.introspect(SCHEMA).expect("introspection");
+    let mut table = schema.get_table("User").expect("get User table").to_owned();
+    table.foreign_keys.sort_unstable_by_key(|fk| fk.columns.clone());
+
+    assert_eq!(
+        table,
+        Table {
+            name: "User".to_string(),
+            columns: vec![
+                Column {
+                    name: "city".to_string(),
+                    tpe: ColumnType {
+                        raw: "INTEGER".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: false,
+                },
+                Column {
+                    name: "city_cascade".to_string(),
+                    tpe: ColumnType {
+                        raw: "INTEGER".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: false,
+                },
+                Column {
+                    name: "city_restrict".to_string(),
+                    tpe: ColumnType {
+                        raw: "INTEGER".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: false,
+                },
+                Column {
+                    name: "city_set_default".to_string(),
+                    tpe: ColumnType {
+                        raw: "INTEGER".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: false,
+                },
+                Column {
+                    name: "city_set_null".to_string(),
+                    tpe: ColumnType {
+                        raw: "INTEGER".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Nullable,
+                    default: None,
+                    auto_increment: false,
+                },
+                Column {
+                    name: "id".to_string(),
+                    tpe: ColumnType {
+                        raw: "INTEGER".to_string(),
+                        family: ColumnTypeFamily::Int,
+                    },
+                    arity: ColumnArity::Required,
+                    default: None,
+                    auto_increment: true,
                 },
             ],
             indices: vec![],
@@ -1767,9 +2046,9 @@ fn get_mysql_connector(sql: &str) -> mysql::IntrospectionConnector {
         .pass(Some(password));
     let mut conn = prisma_query::connector::Mysql::new(opts_builder).expect("connect to MySQL");
 
-    conn.execute_raw(&format!("DROP SCHEMA IF EXISTS {}", SCHEMA), &[])
+    conn.execute_raw(&format!("DROP SCHEMA IF EXISTS `{}`", SCHEMA), &[])
         .expect("dropping schema");
-    conn.execute_raw(&format!("CREATE SCHEMA {}", SCHEMA), &[])
+    conn.execute_raw(&format!("CREATE SCHEMA `{}`", SCHEMA), &[])
         .expect("creating schema");
 
     debug!("Executing MySQL migrations: {}", sql);

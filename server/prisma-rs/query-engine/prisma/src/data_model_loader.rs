@@ -104,7 +104,7 @@ fn load_datamodel_v2() -> PrismaResult<Option<DatamodelV2Components>> {
     })
 }
 
-fn load_configuration(dml_string: &str) -> PrismaResult<datamodel::Configuration> {
+pub fn load_configuration(dml_string: &str) -> PrismaResult<datamodel::Configuration> {
     let datasource_overwrites_string =
         load_string_from_env("OVERWRITE_DATASOURCES")?.unwrap_or_else(|| r#"[]"#.to_string());
     let datasource_overwrites: Vec<SourceOverride> = serde_json::from_str(&datasource_overwrites_string)?;

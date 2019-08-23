@@ -185,6 +185,20 @@ impl IntrospectionConnector {
                 .get("ordinal_position")
                 .and_then(|x| x.as_i64())
                 .expect("get ordinal_position");
+            let on_delete_action = match row
+                .get("delete_rule")
+                .and_then(|x| x.to_string())
+                .expect("get delete_rule")
+                .to_lowercase()
+                .as_str()
+            {
+                "cascade" => ForeignKeyAction::Cascade,
+                "set null" => ForeignKeyAction::SetNull,
+                "set default" => ForeignKeyAction::SetDefault,
+                "restrict" => ForeignKeyAction::Restrict,
+                "no action" => ForeignKeyAction::NoAction,
+                s @ _ => panic!(format!("Unrecognized on delete action '{}'", s)),
+            };
             match intermediate_fks.get_mut(&constraint_name) {
                 Some(fk) => {
                     let pos = ord_pos as usize - 1;
@@ -202,7 +216,7 @@ impl IntrospectionConnector {
                         columns: vec![column],
                         referenced_table,
                         referenced_columns: vec![referenced_column],
-                        on_delete_action: ForeignKeyAction::NoAction,
+                        on_delete_action,
                     };
                     intermediate_fks.insert(constraint_name, fk);
                 }
