@@ -120,9 +120,9 @@ impl Table {
     }
 
     pub fn foreign_key_for_column(&self, column: &str) -> Option<&ForeignKey> {
-        self.foreign_keys.iter().find(|fk|{
-            fk.columns.contains(&column.to_string())
-        })
+        self.foreign_keys
+            .iter()
+            .find(|fk| fk.columns.contains(&column.to_string()))
     }
 
     pub fn is_part_of_primary_key(&self, column: &str) -> bool {
@@ -201,11 +201,11 @@ impl Column {
         let result = self.name != other.name
             || self.tpe.family != other.tpe.family // TODO: must respect full type
             || self.arity != other.arity;
-            //|| self.auto_increment != other.auto_increment;
+        //|| self.auto_increment != other.auto_increment;
 
-//        if result {
-//            println!("differs_in_something_except_default \n {:?} \n {:?}", &self, &other);
-//        }
+        //        if result {
+        //            println!("differs_in_something_except_default \n {:?} \n {:?}", &self, &other);
+        //        }
         result
     }
 }

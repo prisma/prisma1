@@ -1,6 +1,4 @@
-#![warn(missing_docs)]
 //! Logic for generating Prisma data models from database introspection.
-
 use database_introspection::{ColumnArity, ColumnTypeFamily, DatabaseSchema};
 use datamodel::{common::PrismaType, Datamodel, Field, FieldArity, FieldType, Model};
 use failure::Error;
