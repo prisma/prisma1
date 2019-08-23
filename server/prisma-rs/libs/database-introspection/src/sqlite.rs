@@ -1,3 +1,4 @@
+//! SQLite introspection.
 use super::*;
 use crate::IntrospectionConnection;
 use log::debug;
@@ -6,8 +7,9 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// IntrospectionConnector implementation.
 pub struct IntrospectionConnector {
-    pub conn: Arc<dyn IntrospectionConnection>,
+    conn: Arc<dyn IntrospectionConnection>,
 }
 
 impl super::IntrospectionConnector for IntrospectionConnector {
@@ -33,6 +35,7 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 }
 
 impl IntrospectionConnector {
+    /// Constructor.
     pub fn new(conn: Arc<dyn IntrospectionConnection>) -> IntrospectionConnector {
         IntrospectionConnector { conn }
     }
@@ -275,25 +278,6 @@ impl IntrospectionConnector {
             })
             .collect()
     }
-}
-
-#[derive(Debug)]
-pub struct IntrospectedForeignKey {
-    pub name: String,
-    pub table: String,
-    pub column: String,
-    pub referenced_table: String,
-    pub referenced_column: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct IntrospectedColumn {
-    pub name: String,
-    pub table: String,
-    pub tpe: String,
-    pub default: Option<String>,
-    pub is_required: bool,
-    pub pk: i64,
 }
 
 fn get_column_type(tpe: &str) -> ColumnType {

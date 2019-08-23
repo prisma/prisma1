@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+//! Database introspection.
 use failure::Fail;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -19,6 +21,7 @@ pub type IntrospectionResult<T> = core::result::Result<T, IntrospectionError>;
 
 /// Connection abstraction for the introspection connectors.
 pub trait IntrospectionConnection {
+    /// Make raw SQL query.
     fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet>;
 }
 
@@ -53,6 +56,7 @@ impl DatabaseSchema {
         self.enums.iter().find(|x| x.name == name)
     }
 
+    /// Get a sequence.
     pub fn get_sequence(&self, name: &str) -> Option<&Sequence> {
         self.sequences.iter().find(|x| x.name == name)
     }
@@ -196,6 +200,7 @@ pub struct ForeignKey {
     pub referenced_table: String,
     /// Referenced columns.
     pub referenced_columns: Vec<String>,
+    /// Action on deletion.
     pub on_delete_action: ForeignKeyAction,
 }
 
