@@ -1,9 +1,0 @@
-{
-    "id": 1,
-    "jsonrpc": "2.0",
-    "method": "migrationProgress",
-    "params": {
-        "projectInfo": "the-project-id",
-        "migrationId": "the-migration-id"
-    }
-}

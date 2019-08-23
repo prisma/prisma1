@@ -1,5 +1,0 @@
-db/*
-!.placeholder
-build/
-prisma.yml
-connector_to_test
