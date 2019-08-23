@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![allow(unused)]
 mod test_harness;
 use barrel::{types, Migration, SqlVariant};
 use migration_core::api::GenericApi;
@@ -103,10 +104,16 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
             }
         "#;
         let result = infer_and_apply(api, &dm);
-        let column = result.table_bang("Blog").column_bang("title");
+        let table = result.table_bang("Blog");
+        let column = table.column_bang("title");
         assert_eq!(column.tpe.family, ColumnTypeFamily::String);
         assert_eq!(column.is_required(), true);
-        // TODO: assert uniqueness
+        let index = table
+            .indices
+            .iter()
+            .find(|i| i.columns == vec!["title"]);
+        assert_eq!(index.is_some(), true);
+        assert_eq!(index.unwrap().unique, true);
     });
 }
 
@@ -160,9 +167,8 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
                 tags String[]
             }
         "#;
-        let _final_result = infer_and_apply(api, &dm2);
-        // TODO: this assertion fails because of an odering problem within the tables :shrug:
-        //assert_eq!(result, final_result);
+        let final_result = infer_and_apply(api, &dm2);
+        assert_eq!(result, final_result);
     });
 }
 
@@ -255,7 +261,13 @@ fn updating_a_field_for_a_non_existent_column() {
         let final_result = infer_and_apply(api, &dm2);
         let final_column = final_result.table_bang("Blog").column_bang("title");
         assert_eq!(final_column.tpe.family, ColumnTypeFamily::Int);
-        // TODO: assert uniqueness
+        let index = final_result
+            .table_bang("Blog")
+            .indices
+            .iter()
+            .find(|i| i.columns == vec!["title"]);
+        assert_eq!(index.is_some(), true);
+        assert_eq!(index.unwrap().unique, true);
     });
 }
 
@@ -294,7 +306,6 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
 
         assert_eq!(final_column.tpe.family, ColumnTypeFamily::Float);
         assert_eq!(final_result.table_bang("Blog").column("title").is_some(), false);
-        // TODO: assert uniqueness
     })
 }
 

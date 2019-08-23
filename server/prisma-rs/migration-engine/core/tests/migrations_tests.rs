@@ -495,7 +495,6 @@ fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
 
             model B {
                 id Int @id
-                a A // todo: remove when implicit back relation field is implemented
             }
         "#;
         let result = dbg!(infer_and_apply(api, &dm1));
@@ -527,7 +526,6 @@ fn specifying_a_db_name_for_an_inline_relation_must_work() {
 
             model B {
                 id Int @id
-                a A // todo: remove when implicit back relation field is implemented
             }
         "#;
         let result = infer_and_apply(api, &dm1);
@@ -559,7 +557,6 @@ fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
 
             model B {
                 id String @id @default(cuid())
-                a A // todo: remove when implicit back relation field is implemented
             }
         "#;
         let result = dbg!(infer_and_apply(api, &dm1));
@@ -591,7 +588,6 @@ fn removing_an_inline_relation_must_work() {
 
             model B {
                 id Int @id
-                a A // todo: remove when implicit back relation field is implemented
             }
         "#;
         let result = dbg!(infer_and_apply(api, &dm1));
@@ -624,7 +620,6 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
 
             model B {
                 id Int @id
-                a A // todo: remove when implicit back relation field is implemented
             }
         "#;
         let result = infer_and_apply(api, &dm1);
@@ -644,7 +639,6 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
         let dm2 = r#"
             model A {
                 id Int @id
-                b B // todo: remove when implicit back relation field is implemented
             }
 
             model B {
@@ -683,9 +677,8 @@ fn adding_a_new_unique_field_must_work() {
             .indices
             .iter()
             .find(|i| i.columns == vec!["field"]);
-        // FIXME: bring assertion back once introspection can handle indexes
-        //        assert_eq!(index.is_some(), true);
-        //        assert_eq!(index.unwrap().tpe.family, IndexType::Unique);
+        assert_eq!(index.is_some(), true);
+        assert_eq!(index.unwrap().unique, true);
     });
 }
 
@@ -700,14 +693,13 @@ fn removing_an_existing_unique_field_must_work() {
             }
         "#;
         let result = infer_and_apply(api, &dm1);
-        // FIXME: bring assertion back once introspection can handle indexes
-        //        let index = result
-        //            .table_bang("A")
-        //            .indexes
-        //            .iter()
-        //            .find(|i| i.columns == vec!["field"]);
-        //        assert_eq!(index.is_some(), true);
-        //        assert_eq!(index.unwrap().tpe.family, IndexType::Unique);
+        let index = result
+            .table_bang("A")
+            .indices
+            .iter()
+            .find(|i| i.columns == vec!["field"]);
+        assert_eq!(index.is_some(), true);
+        assert_eq!(index.unwrap().unique, true);
 
         let dm2 = r#"
             model A {
@@ -715,13 +707,12 @@ fn removing_an_existing_unique_field_must_work() {
             }
         "#;
         let result = dbg!(infer_and_apply(api, &dm2));
-        // FIXME: bring assertion back once introspection can handle indexes
-        //        let index = result
-        //            .table_bang("A")
-        //            .indexes
-        //            .iter()
-        //            .find(|i| i.columns == vec!["field"]);
-        //        assert_eq!(index.is_some(), false);
+        let index = result
+            .table_bang("A")
+            .indices
+            .iter()
+            .find(|i| i.columns == vec!["field"]);
+        assert_eq!(index.is_some(), false);
     });
 }
 
@@ -735,14 +726,12 @@ fn adding_unique_to_an_existing_field_must_work() {
             }
         "#;
         let result = infer_and_apply(api, &dm1);
-        // FIXME: bring assertion back once introspection can handle indexes
-        //        let index = result
-        //            .table_bang("A")
-        //            .indexes
-        //            .iter()
-        //            .find(|i| i.columns == vec!["field"]);
-        //        assert_eq!(index.is_some(), true);
-        //        assert_eq!(index.unwrap().tpe.family, IndexType::Unique);
+        let index = result
+            .table_bang("A")
+            .indices
+            .iter()
+            .find(|i| i.columns == vec!["field"]);
+        assert_eq!(index.is_some(), false);
 
         let dm2 = r#"
             model A {
@@ -750,14 +739,14 @@ fn adding_unique_to_an_existing_field_must_work() {
                 field String @unique
             }
         "#;
-        let result = dbg!(infer_and_apply(api, &dm2));
-        // FIXME: bring assertion back once introspection can handle indexes
-        //        let index = result
-        //            .table_bang("A")
-        //            .indexes
-        //            .iter()
-        //            .find(|i| i.columns == vec!["field"]);
-        //        assert_eq!(index.is_some(), false);
+        let result = infer_and_apply(api, &dm2);
+        let index = result
+            .table_bang("A")
+            .indices
+            .iter()
+            .find(|i| i.columns == vec!["field"]);
+        assert_eq!(index.is_some(), true);
+        assert_eq!(index.unwrap().unique, true);
     });
 }
 
@@ -772,14 +761,13 @@ fn removing_unique_from_an_existing_field_must_work() {
             }
         "#;
         let result = infer_and_apply(api, &dm1);
-        // FIXME: bring assertion back once introspection can handle indexes
-        //        let index = result
-        //            .table_bang("A")
-        //            .indexes
-        //            .iter()
-        //            .find(|i| i.columns == vec!["field"]);
-        //        assert_eq!(index.is_some(), true);
-        //        assert_eq!(index.unwrap().tpe.family, IndexType::Unique);
+        let index = result
+            .table_bang("A")
+            .indices
+            .iter()
+            .find(|i| i.columns == vec!["field"]);
+        assert_eq!(index.is_some(), true);
+        assert_eq!(index.unwrap().unique, true);
 
         let dm2 = r#"
             model A {
@@ -788,13 +776,12 @@ fn removing_unique_from_an_existing_field_must_work() {
             }
         "#;
         let result = dbg!(infer_and_apply(api, &dm2));
-        // FIXME: bring assertion back once introspection can handle indexes
-        //        let index = result
-        //            .table_bang("A")
-        //            .indexes
-        //            .iter()
-        //            .find(|i| i.columns == vec!["field"]);
-        //        assert_eq!(index.is_some(), false);
+        let index = result
+            .table_bang("A")
+            .indices
+            .iter()
+            .find(|i| i.columns == vec!["field"]);
+        assert_eq!(index.is_some(), false);
     });
 }
 
