@@ -1,9 +1,11 @@
-use datamodel::Value;
+use database_introspection::*;
 use migration_connector::DatabaseMigrationMarker;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SqlMigration {
+    pub before: DatabaseSchema,
+    pub after: DatabaseSchema,
     pub steps: Vec<SqlMigrationStep>,
     pub rollback: Vec<SqlMigrationStep>,
 }
@@ -11,6 +13,8 @@ pub struct SqlMigration {
 impl SqlMigration {
     pub fn empty() -> SqlMigration {
         SqlMigration {
+            before: DatabaseSchema::empty(),
+            after: DatabaseSchema::empty(),
             steps: Vec::new(),
             rollback: Vec::new(),
         }
@@ -37,9 +41,7 @@ pub enum SqlMigrationStep {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateTable {
-    pub name: String,
-    pub columns: Vec<ColumnDescription>,
-    pub primary_columns: Vec<String>,
+    pub table: Table,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -54,7 +56,7 @@ pub struct DropTables {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AlterTable {
-    pub table: String,
+    pub table: Table,
     pub changes: Vec<TableChange>,
 }
 
@@ -67,7 +69,7 @@ pub enum TableChange {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AddColumn {
-    pub column: ColumnDescription,
+    pub column: Column,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -78,58 +80,17 @@ pub struct DropColumn {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AlterColumn {
     pub name: String,
-    pub column: ColumnDescription,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct ColumnDescription {
-    pub name: String,
-    pub tpe: ColumnType,
-    pub required: bool,
-    pub foreign_key: Option<ForeignKey>,
-    pub default: Option<Value>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct ForeignKey {
-    pub table: String,
-    pub column: String,
-    pub on_delete: OnDelete,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub enum OnDelete {
-    NoAction,
-    SetNull,
-    Cascade,
-}
-
-#[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub enum ColumnType {
-    Int,
-    Float,
-    Boolean,
-    String,
-    DateTime,
+    pub column: Column,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CreateIndex {
     pub table: String,
-    pub name: String,
-    pub tpe: IndexType,
-    pub columns: Vec<String>,
+    pub index: Index,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct DropIndex {
     pub table: String,
     pub name: String,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub enum IndexType {
-    // can later add fulltext or custom ones
-    Unique,
-    Normal,
 }

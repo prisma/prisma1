@@ -1,5 +1,7 @@
 #![allow(non_snake_case)]
+#![allow(unused)]
 mod test_harness;
+use pretty_assertions::{assert_eq, assert_ne};
 use prisma_query::ast::*;
 use sql_migration_connector::SqlFamily;
 use test_harness::*;
@@ -94,7 +96,7 @@ fn adding_a_required_field_must_use_the_default_value_for_migrations() {
             };
             let query = Select::from_table(table_for_select).so_that(conditions);
             let result_set = conn.query(SCHEMA_NAME, query.into()).unwrap();
-            let row = result_set.into_iter().next().unwrap();
+            let row = result_set.into_iter().next().expect("query returned no results");
             assert_eq!(row["myint"].as_i64().unwrap(), 1);
             assert_eq!(row["string"].as_str().unwrap(), "test_string");
         }
