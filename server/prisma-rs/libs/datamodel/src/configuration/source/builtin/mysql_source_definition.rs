@@ -21,7 +21,7 @@ impl SourceDefinition for MySqlSourceDefinition {
         url: StringFromEnvVar,
         _arguments: &mut Arguments,
         documentation: &Option<String>,
-    ) -> Result<Box<Source>, ValidationError> {
+    ) -> Result<Box<dyn Source>, ValidationError> {
         Ok(Box::new(MySqlSource {
             name: String::from(name),
             url: url,

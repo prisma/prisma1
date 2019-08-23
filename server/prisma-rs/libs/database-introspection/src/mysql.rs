@@ -1,20 +1,21 @@
+//! MySQL introspection.
 use super::*;
 use log::debug;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// IntrospectionConnector implementation.
 pub struct IntrospectionConnector {
-    conn: Arc<IntrospectionConnection>,
+    conn: Arc<dyn IntrospectionConnection>,
 }
 
 impl super::IntrospectionConnector for IntrospectionConnector {
-    fn list_schemas(&self) -> Result<Vec<String>> {
+    fn list_schemas(&self) -> IntrospectionResult<Vec<String>> {
         Ok(vec![])
     }
 
-    fn introspect(&self, schema: &str) -> Result<DatabaseSchema> {
+    fn introspect(&self, schema: &str) -> IntrospectionResult<DatabaseSchema> {
         debug!("Introspecting schema '{}'", schema);
-        println!("Introspecting schema '{}'", schema);
         let tables = self
             .get_table_names(schema)
             .into_iter()
@@ -29,6 +30,7 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 }
 
 impl IntrospectionConnector {
+    /// Constructor.
     pub fn new(conn: Arc<dyn IntrospectionConnection>) -> IntrospectionConnector {
         IntrospectionConnector { conn }
     }
@@ -186,6 +188,20 @@ impl IntrospectionConnector {
                 .get("ordinal_position")
                 .and_then(|x| x.as_i64())
                 .expect("get ordinal_position");
+            let on_delete_action = match row
+                .get("delete_rule")
+                .and_then(|x| x.to_string())
+                .expect("get delete_rule")
+                .to_lowercase()
+                .as_str()
+            {
+                "cascade" => ForeignKeyAction::Cascade,
+                "set null" => ForeignKeyAction::SetNull,
+                "set default" => ForeignKeyAction::SetDefault,
+                "restrict" => ForeignKeyAction::Restrict,
+                "no action" => ForeignKeyAction::NoAction,
+                s @ _ => panic!(format!("Unrecognized on delete action '{}'", s)),
+            };
             match intermediate_fks.get_mut(&constraint_name) {
                 Some(fk) => {
                     let pos = ord_pos as usize - 1;
@@ -203,14 +219,14 @@ impl IntrospectionConnector {
                         columns: vec![column],
                         referenced_table,
                         referenced_columns: vec![referenced_column],
-                        on_delete_action: ForeignKeyAction::NoAction,
+                        on_delete_action,
                     };
                     intermediate_fks.insert(constraint_name, fk);
                 }
             };
         }
 
-        let fks: Vec<ForeignKey> = intermediate_fks
+        let mut fks: Vec<ForeignKey> = intermediate_fks
             .values()
             .map(|intermediate_fk| intermediate_fk.to_owned())
             .collect();
@@ -220,6 +236,8 @@ impl IntrospectionConnector {
                 fk.columns, fk.referenced_table, fk.referenced_columns
             );
         }
+
+        fks.sort_unstable_by_key(|fk| fk.columns.clone());
 
         fks
     }
@@ -258,7 +276,10 @@ impl IntrospectionConnector {
                     Some(Index {
                         name: index_name,
                         columns: vec![column_name],
-                        unique: is_unique,
+                        tpe: match is_unique {
+                            true => IndexType::Unique,
+                            false => IndexType::Normal,
+                        },
                     })
                 }
             })
@@ -273,7 +294,7 @@ fn get_column_type(data_type: &str) -> ColumnType {
     let family = match data_type {
         "int" => ColumnTypeFamily::Int,
         "smallint" => ColumnTypeFamily::Int,
-        "tinyint" => ColumnTypeFamily::Int,
+        "tinyint" => ColumnTypeFamily::Boolean,
         "mediumint" => ColumnTypeFamily::Int,
         "bigint" => ColumnTypeFamily::Int,
         "decimal" => ColumnTypeFamily::Float,

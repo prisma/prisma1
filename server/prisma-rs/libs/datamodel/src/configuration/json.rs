@@ -26,7 +26,7 @@ pub fn config_from_mcf_json_value(json: serde_json::Value) -> Configuration {
 
 pub fn config_from_mcf_json_value_with_plugins(
     json: serde_json::Value,
-    plugins: Vec<Box<source::SourceDefinition>>,
+    plugins: Vec<Box<dyn source::SourceDefinition>>,
 ) -> Configuration {
     let mcf: SerializeableMcf = serde_json::from_value(json).expect("Failed to parse JSON.");
 

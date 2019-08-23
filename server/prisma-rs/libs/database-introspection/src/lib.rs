@@ -1,4 +1,6 @@
-use failure::{Error, Fail};
+//! Database introspection.
+use failure::Fail;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
 pub mod mysql;
@@ -14,22 +16,25 @@ pub enum IntrospectionError {
 }
 
 /// The result type.
-pub type Result<T> = core::result::Result<T, Error>;
+pub type IntrospectionResult<T> = core::result::Result<T, IntrospectionError>;
 
 /// Connection abstraction for the introspection connectors.
-pub trait IntrospectionConnection {
+pub trait IntrospectionConnection: Send + Sync + 'static {
+    /// Make raw SQL query.
     fn query_raw(&self, sql: &str, schema: &str) -> prisma_query::Result<prisma_query::connector::ResultSet>;
 }
 
 /// A database introspection connector.
-pub trait IntrospectionConnector {
+pub trait IntrospectionConnector: Send + Sync + 'static {
     /// List the database's schemas.
-    fn list_schemas(&self) -> Result<Vec<String>>;
+    fn list_schemas(&self) -> IntrospectionResult<Vec<String>>;
     /// Introspect a database schema.
-    fn introspect(&self, schema: &str) -> Result<DatabaseSchema>;
+    fn introspect(&self, schema: &str) -> IntrospectionResult<DatabaseSchema>;
 }
 
 /// The result of introspecting a database schema.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct DatabaseSchema {
     /// The schema's tables.
     pub tables: Vec<Table>,
@@ -40,6 +45,10 @@ pub struct DatabaseSchema {
 }
 
 impl DatabaseSchema {
+    pub fn has_table(&self, name: &str) -> bool {
+        self.get_table(name).is_some()
+    }
+
     /// Get a table.
     pub fn get_table(&self, name: &str) -> Option<&Table> {
         self.tables.iter().find(|x| x.name == name)
@@ -50,13 +59,34 @@ impl DatabaseSchema {
         self.enums.iter().find(|x| x.name == name)
     }
 
+    pub fn table(&self, name: &str) -> core::result::Result<&Table, String> {
+        match self.tables.iter().find(|t| t.name == name) {
+            Some(t) => Ok(t),
+            None => Err(format!("Table {} not found", name)),
+        }
+    }
+
+    pub fn table_bang(&self, name: &str) -> &Table {
+        self.table(&name).unwrap()
+    }
+
+    /// Get a sequence.
     pub fn get_sequence(&self, name: &str) -> Option<&Sequence> {
         self.sequences.iter().find(|x| x.name == name)
+    }
+
+    pub fn empty() -> DatabaseSchema {
+        DatabaseSchema {
+            tables: Vec::new(),
+            enums: Vec::new(),
+            sequences: Vec::new(),
+        }
     }
 }
 
 /// A table found in a schema.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Table {
     /// The table's name.
     pub name: String,
@@ -70,26 +100,81 @@ pub struct Table {
     pub foreign_keys: Vec<ForeignKey>,
 }
 
+impl Table {
+    pub fn column_bang(&self, name: &str) -> &Column {
+        self.column(name)
+            .expect(&format!("Column {} not found in Table {}", name, self.name))
+    }
+
+    pub fn column(&self, name: &str) -> Option<&Column> {
+        self.columns.iter().find(|c| c.name == name)
+    }
+
+    pub fn has_column(&self, name: &str) -> bool {
+        self.column(name).is_some()
+    }
+
+    pub fn is_part_of_foreign_key(&self, column: &str) -> bool {
+        self.foreign_key_for_column(column).is_some()
+    }
+
+    pub fn foreign_key_for_column(&self, column: &str) -> Option<&ForeignKey> {
+        self.foreign_keys.iter().find(|fk|{
+            fk.columns.contains(&column.to_string())
+        })
+    }
+
+    pub fn is_part_of_primary_key(&self, column: &str) -> bool {
+        match &self.primary_key {
+            Some(pk) => pk.columns.contains(&column.to_string()),
+            None => false,
+        }
+    }
+
+    pub fn primary_key_columns(&self) -> Vec<String> {
+        match &self.primary_key {
+            Some(pk) => pk.columns.clone(),
+            None => Vec::new(),
+        }
+    }
+}
+/// The type of an index.
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum IndexType {
+    Unique,
+    Normal,
+}
+
 /// An index of a table.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Index {
     /// Index name.
     pub name: String,
     /// Index columns.
     pub columns: Vec<String>,
-    /// Is index unique?
-    pub unique: bool,
+    /// Type of index.
+    pub tpe: IndexType,
 }
 
 /// The primary key of a table.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PrimaryKey {
     /// Columns.
     pub columns: Vec<String>,
 }
 
+impl PrimaryKey {
+    pub fn contains_column(&self, column: &String) -> bool {
+        self.columns.contains(column)
+    }
+}
+
 /// A column of a table.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Column {
     /// Column name.
     pub name: String,
@@ -104,8 +189,27 @@ pub struct Column {
     pub auto_increment: bool,
 }
 
+impl Column {
+    pub fn is_required(&self) -> bool {
+        self.arity == ColumnArity::Required
+    }
+
+    pub fn differs_in_something_except_default(&self, other: &Column) -> bool {
+        let result = self.name != other.name
+            || self.tpe.family != other.tpe.family // TODO: must respect full type
+            || self.arity != other.arity;
+            //|| self.auto_increment != other.auto_increment;
+
+//        if result {
+//            println!("differs_in_something_except_default \n {:?} \n {:?}", &self, &other);
+//        }
+        result
+    }
+}
+
 /// The type of a column.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ColumnType {
     /// The raw SQL type.
     pub raw: String,
@@ -113,8 +217,18 @@ pub struct ColumnType {
     pub family: ColumnTypeFamily,
 }
 
+impl ColumnType {
+    pub fn pure(family: ColumnTypeFamily) -> ColumnType {
+        ColumnType {
+            raw: "".to_string(),
+            family,
+        }
+    }
+}
+
 /// Enumeration of column type families.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 // TODO: this name feels weird.
 pub enum ColumnTypeFamily {
     /// Integer types.
@@ -144,7 +258,8 @@ pub enum ColumnTypeFamily {
 }
 
 /// A column's arity.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum ColumnArity {
     /// Required column.
     Required,
@@ -155,7 +270,8 @@ pub enum ColumnArity {
 }
 
 /// Foreign key action types (for ON DELETE|ON UPDATE) constraints.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum ForeignKeyAction {
     /// Produce an error indicating that the deletion or update would create a foreign key
     /// constraint violation. If the constraint is deferred, this error will be produced at
@@ -176,7 +292,8 @@ pub enum ForeignKeyAction {
 }
 
 /// A foreign key.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ForeignKey {
     /// Column names.
     pub columns: Vec<String>,
@@ -184,11 +301,13 @@ pub struct ForeignKey {
     pub referenced_table: String,
     /// Referenced columns.
     pub referenced_columns: Vec<String>,
+    /// Action on deletion.
     pub on_delete_action: ForeignKeyAction,
 }
 
 /// A SQL enum.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Enum {
     /// Enum name.
     pub name: String,
@@ -197,7 +316,8 @@ pub struct Enum {
 }
 
 /// A SQL sequence.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Sequence {
     /// Sequence name.
     pub name: String,

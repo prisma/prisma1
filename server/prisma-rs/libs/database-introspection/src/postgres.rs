@@ -1,20 +1,21 @@
+//! Postgres introspection.
 use super::*;
 use log::debug;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
+/// IntrospectionConnector implementation.
 pub struct IntrospectionConnector {
-    conn: Arc<IntrospectionConnection>,
+    conn: Arc<dyn IntrospectionConnection>,
 }
 
 impl super::IntrospectionConnector for IntrospectionConnector {
-    fn list_schemas(&self) -> Result<Vec<String>> {
+    fn list_schemas(&self) -> IntrospectionResult<Vec<String>> {
         Ok(vec![])
     }
 
-    fn introspect(&self, schema: &str) -> Result<DatabaseSchema> {
+    fn introspect(&self, schema: &str) -> IntrospectionResult<DatabaseSchema> {
         debug!("Introspecting schema '{}'", schema);
-        println!("Introspecting schema '{}'", schema);
         let tables = self
             .get_table_names(schema)
             .into_iter()
@@ -31,6 +32,7 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 }
 
 impl IntrospectionConnector {
+    /// Constructor.
     pub fn new(conn: Arc<dyn IntrospectionConnection>) -> IntrospectionConnector {
         IntrospectionConnector { conn }
     }
@@ -169,7 +171,7 @@ impl IntrospectionConnector {
                     con1.conrelid,
                     con1.conname,
                     con1.confdeltype
-                FROM 
+                FROM
                     pg_class cl
                     join pg_namespace ns on cl.relnamespace = ns.oid
                     join pg_constraint con1 on con1.conrelid = cl.oid
@@ -239,7 +241,7 @@ impl IntrospectionConnector {
             };
         }
 
-        let fks: Vec<ForeignKey> = intermediate_fks
+        let mut fks: Vec<ForeignKey> = intermediate_fks
             .values()
             .map(|intermediate_fk| intermediate_fk.to_owned())
             .collect();
@@ -249,6 +251,8 @@ impl IntrospectionConnector {
                 fk.columns, fk.referenced_table, fk.referenced_columns
             );
         }
+
+        fks.sort_unstable_by_key(|fk| fk.columns.clone());
 
         fks
     }
@@ -303,10 +307,14 @@ impl IntrospectionConnector {
                     pk = Some(PrimaryKey { columns });
                     None
                 } else {
+                    let is_unique = index.get("is_unique").and_then(|x| x.as_bool()).expect("is_unique");
                     Some(Index {
                         name: index.get("name").and_then(|x| x.to_string()).expect("name"),
                         columns,
-                        unique: index.get("is_unique").and_then(|x| x.as_bool()).expect("is_unique"),
+                        tpe: match is_unique {
+                            true => IndexType::Unique,
+                            false => IndexType::Normal,
+                        },
                     })
                 }
             })
@@ -316,7 +324,7 @@ impl IntrospectionConnector {
         (indices, pk)
     }
 
-    fn get_sequences(&self, schema: &str) -> Result<Vec<Sequence>> {
+    fn get_sequences(&self, schema: &str) -> IntrospectionResult<Vec<Sequence>> {
         debug!("Getting sequences");
         let sql = format!(
             "SELECT start_value, sequence_name
@@ -352,7 +360,7 @@ impl IntrospectionConnector {
         Ok(sequences)
     }
 
-    fn get_enums(&self, schema: &str) -> Result<Vec<Enum>> {
+    fn get_enums(&self, schema: &str) -> IntrospectionResult<Vec<Enum>> {
         debug!("Getting enums");
         let sql = format!(
             "SELECT t.typname as name, e.enumlabel as value

@@ -1,3 +1,4 @@
+//! SQLite introspection.
 use super::*;
 use crate::IntrospectionConnection;
 use log::debug;
@@ -6,16 +7,17 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// IntrospectionConnector implementation.
 pub struct IntrospectionConnector {
-    pub conn: Arc<IntrospectionConnection>,
+    conn: Arc<dyn IntrospectionConnection>,
 }
 
 impl super::IntrospectionConnector for IntrospectionConnector {
-    fn list_schemas(&self) -> Result<Vec<String>> {
+    fn list_schemas(&self) -> IntrospectionResult<Vec<String>> {
         Ok(vec![])
     }
 
-    fn introspect(&self, schema: &str) -> Result<DatabaseSchema> {
+    fn introspect(&self, schema: &str) -> IntrospectionResult<DatabaseSchema> {
         debug!("Introspecting schema '{}'", schema);
         let tables = self
             .get_table_names(schema)
@@ -33,12 +35,13 @@ impl super::IntrospectionConnector for IntrospectionConnector {
 }
 
 impl IntrospectionConnector {
+    /// Constructor.
     pub fn new(conn: Arc<dyn IntrospectionConnection>) -> IntrospectionConnector {
         IntrospectionConnector { conn }
     }
 
     fn get_table_names(&self, schema: &str) -> Vec<String> {
-        let sql = format!("SELECT name FROM {}.sqlite_master WHERE type='table'", schema);
+        let sql = format!("SELECT name FROM \"{}\".sqlite_master WHERE type='table'", schema);
         debug!("Introspecting table names with query: '{}'", sql);
         let result_set = self.conn.query_raw(&sql, schema).expect("get table names");
         let names = result_set
@@ -139,6 +142,7 @@ impl IntrospectionConnector {
             pub columns: HashMap<i64, String>,
             pub referenced_table: String,
             pub referenced_columns: HashMap<i64, String>,
+            pub on_delete_action: ForeignKeyAction,
         }
 
         let sql = format!(r#"Pragma "{}".foreign_key_list("{}");"#, schema, table);
@@ -166,17 +170,32 @@ impl IntrospectionConnector {
                     columns.insert(seq, column);
                     let mut referenced_columns: HashMap<i64, String> = HashMap::new();
                     referenced_columns.insert(seq, referenced_column);
+                    let on_delete_action = match row
+                        .get("on_delete")
+                        .and_then(|x| x.to_string())
+                        .expect("on_delete")
+                        .to_lowercase()
+                        .as_str()
+                    {
+                        "no action" => ForeignKeyAction::NoAction,
+                        "restrict" => ForeignKeyAction::Restrict,
+                        "set null" => ForeignKeyAction::SetNull,
+                        "set default" => ForeignKeyAction::SetDefault,
+                        "cascade" => ForeignKeyAction::Cascade,
+                        s @ _ => panic!(format!("Unrecognized on delete action '{}'", s)),
+                    };
                     let fk = IntermediateForeignKey {
                         columns,
                         referenced_table,
                         referenced_columns,
+                        on_delete_action,
                     };
                     intermediate_fks.insert(id, fk);
                 }
             };
         }
 
-        intermediate_fks
+        let mut fks: Vec<ForeignKey> = intermediate_fks
             .values()
             .into_iter()
             .map(|intermediate_fk| {
@@ -200,12 +219,16 @@ impl IntrospectionConnector {
                     columns,
                     referenced_table: intermediate_fk.referenced_table.to_owned(),
                     referenced_columns,
-                    on_delete_action: ForeignKeyAction::NoAction,
+                    on_delete_action: intermediate_fk.on_delete_action.to_owned(),
                 };
                 debug!("Detected foreign key {:?}", fk);
                 fk
             })
-            .collect()
+            .collect();
+
+        fks.sort_unstable_by_key(|fk| fk.columns.clone());
+
+        fks
     }
 
     fn get_indices(&self, schema: &str, table: &str) -> Vec<Index> {
@@ -238,7 +261,10 @@ impl IntrospectionConnector {
             .map(|index_repr| {
                 let mut index = Index {
                     name: index_repr.name.clone(),
-                    unique: index_repr.is_unique,
+                    tpe: match index_repr.is_unique {
+                        true => IndexType::Unique,
+                        false => IndexType::Normal,
+                    },
                     columns: vec![],
                 };
 
@@ -259,25 +285,6 @@ impl IntrospectionConnector {
             })
             .collect()
     }
-}
-
-#[derive(Debug)]
-pub struct IntrospectedForeignKey {
-    pub name: String,
-    pub table: String,
-    pub column: String,
-    pub referenced_table: String,
-    pub referenced_column: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct IntrospectedColumn {
-    pub name: String,
-    pub table: String,
-    pub tpe: String,
-    pub default: Option<String>,
-    pub is_required: bool,
-    pub pk: i64,
 }
 
 fn get_column_type(tpe: &str) -> ColumnType {

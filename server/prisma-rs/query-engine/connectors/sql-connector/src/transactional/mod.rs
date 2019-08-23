@@ -20,7 +20,7 @@ use std::{convert::TryFrom, sync::Arc};
 pub trait Transactional {
     fn with_transaction<F, T>(&self, db: &str, f: F) -> crate::Result<T>
     where
-        F: FnOnce(&mut Transaction) -> crate::Result<T>;
+        F: FnOnce(&mut dyn Transaction) -> crate::Result<T>;
 }
 
 impl<'t> Transaction for connector::Transaction<'t> {}

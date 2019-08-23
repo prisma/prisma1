@@ -1,9 +1,11 @@
 #![allow(non_snake_case)]
+#![allow(unused)]
 mod test_harness;
 use datamodel::dml::*;
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_calculator::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
+use pretty_assertions::{assert_eq, assert_ne};
 use test_harness::parse;
 
 // TODO: We could unify the tests for inferrer and calculator.

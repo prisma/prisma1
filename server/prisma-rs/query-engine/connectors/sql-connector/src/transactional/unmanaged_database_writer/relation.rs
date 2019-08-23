@@ -26,9 +26,9 @@ use std::sync::Arc;
 /// If none of the checks fail, the record will be disconnected to the
 /// previous relation before connecting to the given parent.
 pub fn connect(
-    conn: &mut Transaction,
+    conn: &mut dyn Transaction,
     parent_id: &GraphqlId,
-    actions: &NestedActions,
+    actions: &dyn NestedActions,
     record_finder: &RecordFinder,
     relation_field: RelationFieldRef,
 ) -> crate::Result<()> {
@@ -65,9 +65,9 @@ pub fn connect(
 /// | true        | false         | false     | true          |
 /// | false       | true          | true      | false         |
 pub fn disconnect(
-    conn: &mut Transaction,
+    conn: &mut dyn Transaction,
     parent_id: &GraphqlId,
-    actions: &NestedActions,
+    actions: &dyn NestedActions,
     record_finder: &Option<RecordFinder>,
 ) -> crate::Result<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
@@ -101,9 +101,9 @@ pub fn disconnect(
 /// Connects multiple records into the parent. Rules from `execute_connect`
 /// apply.
 pub fn set(
-    conn: &mut Transaction,
+    conn: &mut dyn Transaction,
     parent_id: &GraphqlId,
-    actions: &NestedActions,
+    actions: &dyn NestedActions,
     record_finders: &Vec<RecordFinder>,
     relation_field: RelationFieldRef,
 ) -> crate::Result<()> {

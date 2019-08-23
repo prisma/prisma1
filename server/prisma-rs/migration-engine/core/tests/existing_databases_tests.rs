@@ -1,9 +1,12 @@
 #![allow(non_snake_case)]
+#![allow(unused)]
 mod test_harness;
 use barrel::{types, Migration, SqlVariant};
+use database_introspection::*;
 use migration_core::api::GenericApi;
+use pretty_assertions::{assert_eq, assert_ne};
 use sql_migration_connector::SqlFamily;
-use sql_migration_connector::{database_inspector::*, migration_database::MigrationDatabase, SqlMigrationConnector};
+use sql_migration_connector::{migration_database::MigrationDatabase, SqlMigrationConnector};
 use std::sync::Arc;
 use test_harness::*;
 
@@ -90,8 +93,8 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
             });
         });
         let initial_column = initial_result.table_bang("Blog").column_bang("title");
-        assert_eq!(initial_column.tpe, ColumnType::Int);
-        assert_eq!(initial_column.is_required, false);
+        assert_eq!(initial_column.tpe.family, ColumnTypeFamily::Int);
+        assert_eq!(initial_column.is_required(), false);
 
         let dm = r#"
             model Blog {
@@ -100,10 +103,13 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
             }
         "#;
         let result = infer_and_apply(api, &dm);
-        let column = result.table_bang("Blog").column_bang("title");
-        assert_eq!(column.tpe, ColumnType::String);
-        assert_eq!(column.is_required, true);
-        // TODO: assert uniqueness
+        let table = result.table_bang("Blog");
+        let column = table.column_bang("title");
+        assert_eq!(column.tpe.family, ColumnTypeFamily::String);
+        assert_eq!(column.is_required(), true);
+        let index = table.indices.iter().find(|i| i.columns == vec!["title"]);
+        assert_eq!(index.is_some(), true);
+        assert_eq!(index.unwrap().tpe, IndexType::Unique);
     });
 }
 
@@ -117,7 +123,7 @@ fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional
             });
         });
         let initial_column = initial_result.table_bang("Blog").column_bang("title");
-        assert_eq!(initial_column.is_required, true);
+        assert_eq!(initial_column.is_required(), true);
 
         let dm = r#"
             model Blog {
@@ -127,7 +133,7 @@ fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional
         "#;
         let result = infer_and_apply(api, &dm);
         let column = result.table_bang("Blog").column_bang("title");
-        assert_eq!(column.is_required, false);
+        assert_eq!(column.is_required(), false);
     });
 }
 
@@ -158,8 +164,7 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
             }
         "#;
         let final_result = infer_and_apply(api, &dm2);
-        // TODO: this assertion fails because of an odering problem within the tables :shrug:
-        //assert_eq!(result, final_result);
+        assert_eq!(result, final_result);
     });
 }
 
@@ -232,7 +237,7 @@ fn updating_a_field_for_a_non_existent_column() {
         "#;
         let initial_result = infer_and_apply(api, &dm1);
         let initial_column = initial_result.table_bang("Blog").column_bang("title");
-        assert_eq!(initial_column.tpe, ColumnType::String);
+        assert_eq!(initial_column.tpe.family, ColumnTypeFamily::String);
 
         let result = barrel.execute(|migration| {
             // sqlite does not support dropping columns. So we are emulating it..
@@ -251,8 +256,14 @@ fn updating_a_field_for_a_non_existent_column() {
         "#;
         let final_result = infer_and_apply(api, &dm2);
         let final_column = final_result.table_bang("Blog").column_bang("title");
-        assert_eq!(final_column.tpe, ColumnType::Int);
-        // TODO: assert uniqueness
+        assert_eq!(final_column.tpe.family, ColumnTypeFamily::Int);
+        let index = final_result
+            .table_bang("Blog")
+            .indices
+            .iter()
+            .find(|i| i.columns == vec!["title"]);
+        assert_eq!(index.is_some(), true);
+        assert_eq!(index.unwrap().tpe, IndexType::Unique);
     });
 }
 
@@ -267,7 +278,7 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
         "#;
         let initial_result = infer_and_apply(api, &dm1);
         let initial_column = initial_result.table_bang("Blog").column_bang("title");
-        assert_eq!(initial_column.tpe, ColumnType::String);
+        assert_eq!(initial_column.tpe.family, ColumnTypeFamily::String);
 
         let result = barrel.execute(|migration| {
             // sqlite does not support renaming columns. So we are emulating it..
@@ -289,9 +300,8 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
         let final_result = infer_and_apply(api, &dm2);
         let final_column = final_result.table_bang("Blog").column_bang("new_title");
 
-        assert_eq!(final_column.tpe, ColumnType::Float);
+        assert_eq!(final_column.tpe.family, ColumnTypeFamily::Float);
         assert_eq!(final_result.table_bang("Blog").column("title").is_some(), false);
-        // TODO: assert uniqueness
     })
 }
 
@@ -309,7 +319,7 @@ where
     // SQLite
     if !ignores.contains(&SqlFamily::Sqlite) {
         println!("Testing with SQLite now");
-        let (inspector, database) = sqlite();
+        let (inspector, database) = get_sqlite();
 
         println!("Running the test function now");
         let connector = SqlMigrationConnector::sqlite(&sqlite_test_file()).unwrap();
@@ -328,7 +338,7 @@ where
     // POSTGRES
     if !ignores.contains(&SqlFamily::Postgres) {
         println!("Testing with Postgres now");
-        let (inspector, database) = postgres();
+        let (inspector, database) = get_postgres();
 
         println!("Running the test function now");
         let connector = SqlMigrationConnector::postgres(&postgres_url()).unwrap();
@@ -346,31 +356,33 @@ where
     }
 }
 
-fn sqlite() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
+fn get_sqlite() -> (Arc<dyn IntrospectionConnector>, Arc<dyn MigrationDatabase>) {
+    let wrapper = database_wrapper(SqlFamily::Sqlite);
+    let database = Arc::clone(&wrapper.database);
+
     let database_file_path = sqlite_test_file();
     let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
 
-    let inspector = DatabaseInspector::sqlite(database_file_path);
-    let database = Arc::clone(&inspector.database);
+    let inspector = database_introspection::sqlite::IntrospectionConnector::new(Arc::new(wrapper));
 
     (Arc::new(inspector), database)
 }
 
-fn postgres() -> (Arc<DatabaseInspector>, Arc<MigrationDatabase>) {
-    let url = postgres_url();
-    let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA_NAME));
-    let setup_database = DatabaseInspector::postgres(url.to_string()).database;
-    let _ = setup_database.query_raw(SCHEMA_NAME, &drop_schema, &[]);
+fn get_postgres() -> (Arc<dyn IntrospectionConnector>, Arc<dyn MigrationDatabase>) {
+    let wrapper = database_wrapper(SqlFamily::Postgres);
+    let database = Arc::clone(&wrapper.database);
 
-    let inspector = DatabaseInspector::postgres(url.to_string());
-    let database = Arc::clone(&inspector.database);
+    let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA_NAME));
+    let _ = database.query_raw(SCHEMA_NAME, &drop_schema, &[]);
+
+    let inspector = database_introspection::postgres::IntrospectionConnector::new(Arc::new(wrapper));
 
     (Arc::new(inspector), database)
 }
 
 struct BarrelMigrationExecutor {
-    inspector: Arc<DatabaseInspector>,
-    database: Arc<MigrationDatabase>,
+    inspector: Arc<dyn IntrospectionConnector>,
+    database: Arc<dyn MigrationDatabase>,
     sql_variant: barrel::backend::SqlVariant,
 }
 
@@ -383,14 +395,17 @@ impl BarrelMigrationExecutor {
         migrationFn(&mut migration);
         let full_sql = dbg!(migration.make_from(self.sql_variant));
         run_full_sql(&self.database, &full_sql);
-        let mut result = self.inspector.introspect(&SCHEMA_NAME.to_string());
+        let mut result = self
+            .inspector
+            .introspect(&SCHEMA_NAME.to_string())
+            .expect("Introspection failed");
         // the presence of the _Migration table makes assertions harder. Therefore remove it.
         result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
         result
     }
 }
 
-fn run_full_sql(database: &Arc<MigrationDatabase>, full_sql: &str) {
+fn run_full_sql(database: &Arc<dyn MigrationDatabase>, full_sql: &str) {
     for sql in full_sql.split(";") {
         if sql != "" {
             database.query_raw(SCHEMA_NAME, &sql, &[]).unwrap();

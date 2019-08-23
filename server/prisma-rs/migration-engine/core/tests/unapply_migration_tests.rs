@@ -1,5 +1,7 @@
 #![allow(non_snake_case)]
+#![allow(unused)]
 mod test_harness;
+use pretty_assertions::{assert_eq, assert_ne};
 use test_harness::*;
 
 #[test]

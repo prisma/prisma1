@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 pub struct SqlMigrationPersistence {
     pub sql_family: SqlFamily,
-    pub connection: Arc<MigrationDatabase + Send + Sync + 'static>,
+    pub connection: Arc<dyn MigrationDatabase + Send + Sync + 'static>,
     pub schema_name: String,
     pub file_path: Option<String>,
 }
@@ -18,23 +18,24 @@ pub struct SqlMigrationPersistence {
 #[allow(unused, dead_code)]
 impl MigrationPersistence for SqlMigrationPersistence {
     fn init(&self) {
-        let mut m = barrel::Migration::new().schema(self.schema_name.clone());
-
-        let barrel_variant = match self.sql_family {
+        let sql_str = match self.sql_family {
             SqlFamily::Sqlite => {
+                let mut m = barrel::Migration::new().schema(self.schema_name.clone());
                 m.create_table_if_not_exists(TABLE_NAME, migration_table_setup_sqlite);
-                barrel::SqlVariant::Sqlite
+                m.make_from(barrel::SqlVariant::Sqlite)
             }
             SqlFamily::Postgres => {
+                let mut m = barrel::Migration::new().schema(self.schema_name.clone());
                 m.create_table(TABLE_NAME, migration_table_setup_postgres);
-                barrel::SqlVariant::Pg
+                m.make_from(barrel::SqlVariant::Pg)
             }
             SqlFamily::Mysql => {
-                m.create_table(TABLE_NAME, migration_table_setup_mysql);
-                barrel::SqlVariant::Mysql
+                // work around barrels missing quoting
+                let mut m = barrel::Migration::new().schema(format!("`{}`", self.schema_name.clone()));
+                m.create_table(format!("`{}`", TABLE_NAME), migration_table_setup_mysql);
+                m.make_from(barrel::SqlVariant::Mysql)
             }
         };
-        let sql_str = m.make_from(barrel_variant);
 
         let _ = self.connection.query_raw(&self.schema_name, &sql_str, &[]);
     }
@@ -75,7 +76,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
     }
 
     fn load_all(&self) -> Vec<Migration> {
-        let query = Select::from_table(self.table());
+        let query = Select::from_table(self.table()).order_by(REVISION_COLUMN.ascend());
 
         let result_set = self.connection.query(&self.schema_name, query.into()).unwrap();
         parse_rows_new(result_set)
@@ -112,10 +113,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
 
         match self.sql_family {
             SqlFamily::Sqlite | SqlFamily::Mysql => {
-                let id = self
-                    .connection
-                    .execute(&self.schema_name, insert.into())
-                    .unwrap();
+                let id = self.connection.execute(&self.schema_name, insert.into()).unwrap();
                 match id {
                     Some(prisma_query::ast::Id::Int(id)) => cloned.revision = id,
                     _ => panic!("This insert must return an int"),
@@ -131,7 +129,6 @@ impl MigrationPersistence for SqlMigrationPersistence {
                     cloned.revision = row["revision"].as_i64().unwrap() as usize;
                 });
             }
-            // SqlFamily::Mysql => unimplemented!(),
         }
         cloned
     }

@@ -11,7 +11,7 @@ use std::sync::Arc;
 /// non-existing record will cause an error.
 ///
 /// Will return the deleted record if the delete was successful.
-pub fn execute(conn: &mut Transaction, record_finder: &RecordFinder) -> crate::Result<SingleRecord> {
+pub fn execute(conn: &mut dyn Transaction, record_finder: &RecordFinder) -> crate::Result<SingleRecord> {
     let model = record_finder.field.model();
     let record = conn.find_record(record_finder)?;
     let id = record.collect_id(&model.fields().id().name).unwrap();
@@ -38,9 +38,9 @@ pub fn execute(conn: &mut Transaction, record_finder: &RecordFinder) -> crate::R
 /// - If the deleted record is not connected to the parent
 /// - The record does not exist
 pub fn execute_nested(
-    conn: &mut Transaction,
+    conn: &mut dyn Transaction,
     parent_id: &GraphqlId,
-    actions: &NestedActions,
+    actions: &dyn NestedActions,
     record_finder: &Option<RecordFinder>,
     relation_field: RelationFieldRef,
 ) -> crate::Result<()> {
