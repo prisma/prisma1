@@ -36,6 +36,10 @@ where
 // This is here only to get rid of the generic type parameters due to neon not
 // liking them in the exported class.
 pub trait GenericApi: Send + Sync + 'static {
+    fn can_connect_to_database(&self, input: &CanConnectToDatabaseInput) -> crate::Result<CanConnectToDatabaseOutput>;
+    fn can_create_database(&self, input: &CanCreateDatabaseInput) -> crate::Result<CanCreateDatabaseOutput>;
+    fn create_database(&self, input: &CreateDatabaseInput) -> crate::Result<CreateDatabaseOutput>;
+
     fn apply_migration(&self, input: &ApplyMigrationInput) -> crate::Result<MigrationStepsResultOutput>;
     fn calculate_database_steps(
         &self,
@@ -56,6 +60,18 @@ where
     C: MigrationConnector<DatabaseMigration = D>,
     D: DatabaseMigrationMarker + Send + Sync + 'static,
 {
+    fn can_connect_to_database(&self, input: &CanConnectToDatabaseInput) -> crate::Result<CanConnectToDatabaseOutput> {
+        self.handle_command::<CanConnectToDatabaseCommand>(input)
+    }
+
+    fn can_create_database(&self, input: &CanCreateDatabaseInput) -> crate::Result<CanCreateDatabaseOutput> {
+        self.handle_command::<CanCreateDatabaseCommand>(input)
+    }
+
+    fn create_database(&self, input: &CreateDatabaseInput) -> crate::Result<CreateDatabaseOutput> {
+        self.handle_command::<CreateDatabaseCommand>(input)
+    }
+
     fn apply_migration(&self, input: &ApplyMigrationInput) -> crate::Result<MigrationStepsResultOutput> {
         self.handle_command::<ApplyMigrationCommand>(input)
     }
