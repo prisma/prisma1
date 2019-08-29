@@ -103,7 +103,7 @@ case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
   private def verifyAuth[T](projectId: String, rawRequest: RawRequest)(fn: Project => Future[T]): Future[T] = {
     for {
       project    <- apiDependencies.projectFetcher.fetch_!(projectId)
-      authResult = apiDependencies.auth.verify(project.secrets, rawRequest.headers.get("Authorization"))
+      authResult = apiDependencies.auth.verify(project.secrets, rawRequest.headers.get("authorization"))
       result     <- if (authResult.isSuccess) fn(project) else Future.failed(InvalidToken())
     } yield result
   }
