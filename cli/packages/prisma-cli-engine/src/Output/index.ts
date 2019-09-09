@@ -188,7 +188,7 @@ export class Output {
             ? '$ set -x DEBUG "*"'
             : '$ export DEBUG="*"'
         this.stderr.log(
-          `\nGet in touch if you need help: https://spectrum.chat/prisma
+          `\nGet in touch if you need help: https://slack.prisma.io
 To get more detailed output, run ${chalk.dim(instruction)}`,
         )
       }
