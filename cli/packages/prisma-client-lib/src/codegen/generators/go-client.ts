@@ -153,6 +153,8 @@ export class GoGenerator extends Generator {
         return ``
       }
 
+      const objectName = type.name.replace('Connection', '')
+
       return `
         type ${goCase(type.name)}Exec struct {
           exec *prisma.Exec
@@ -276,7 +278,7 @@ export class GoGenerator extends Generator {
                 field.name === 'edges'
               ) {
                 // edges is a special case where a field `node` has nested fields
-                const objectName = type.name.replace('Connection', '')
+
                 return (
                   sTyp +
                   `
@@ -288,14 +290,14 @@ export class GoGenerator extends Generator {
                       nil,
                       [3]string{"${objectName}WhereInput", "${objectName}OrderByInput", "${objectName}Edge"},
                       "edges",
-                      []string{"cursor"})
+                      []string{${typeFields.join(',')}})
 
-                    nodes := edges.Client.GetMany(
+                    nodes := edges.Client.GetOne(
                       edges,
                       nil,
-                      [3]string{"", "", "${objectName}"},
+                      [2]string{"", "${objectName}"},
                       "node",
-                      []string{"id", "createdAt", "updatedAt", "name", "desc"})
+                      ${objectName}Fields)
 
                     return &${objectName}EdgeExecArray{nodes}
                   }`
@@ -321,18 +323,42 @@ export class GoGenerator extends Generator {
           })
           .join('\n')}
 
-          func (instance ${goCase(
-            type.name,
-          )}Exec) Exec(ctx context.Context) (*${goCase(type.name)}, error) {
-            var v ${goCase(type.name)}
-            ok, err := instance.exec.Exec(ctx, &v)
-            if err != nil {
-              return nil, err
-            }
-            if !ok {
-              return nil, ErrNoResult
-            }
-            return &v, nil
+          ${
+            // Connection.Exec gets a special method, because it's the only time it fetches multiple things
+            // currently, there is no easy way to fetch multiple things, so we just get Edges() and PageInfo()
+            // separately, which is not super efficient but sufficient for the v1 client
+            type.name.endsWith('Connection') 
+              ? `
+                func (instance ${goCase(type.name)}Exec) Exec(ctx context.Context) (*${goCase(type.name)}, error) {
+                  edges, err := instance.Edges().Exec(ctx)
+                  if err != nil {
+                    return nil, err
+                  }
+
+                  pageInfo, err := instance.PageInfo().Exec(ctx)
+                  if err != nil {
+                    return nil, err
+                  }
+
+                  return &${goCase(type.name)}{
+                    Edges:    edges,
+                    PageInfo: *pageInfo,
+                  }, nil
+                }
+              `
+              : `
+                func (instance ${goCase(type.name)}Exec) Exec(ctx context.Context) (*${goCase(type.name)}, error) {
+                  var v ${goCase(type.name)}
+                  ok, err := instance.exec.Exec(ctx, &v)
+                  if err != nil {
+                    return nil, err
+                  }
+                  if !ok {
+                    return nil, ErrNoResult
+                  }
+                  return &v, nil
+                }
+              `
           }
 
           func (instance ${goCase(
@@ -354,6 +380,19 @@ export class GoGenerator extends Generator {
             err := instance.exec.ExecArray(ctx, &v)
             return v, err
           }
+
+        var ${type.name}Fields = []string{${
+          // saves all node fields
+          // this type is required to make it available in connection queries (connection->edge->node)
+          Object
+            .keys(fieldMap)
+            .filter(key => {
+              const field = fieldMap[key]
+              const { isScalar, isEnum } = this.extractFieldLikeType(field as GraphQLField<any, any>)
+              return isScalar || isEnum
+            })
+            .map((i) => `"${i}"`)
+            .join(', ')}}
 
         type ${goCase(type.name)} struct {
           ${Object.keys(fieldMap)
@@ -625,10 +664,29 @@ export class GoGenerator extends Generator {
   opGetConnection(field) {
     const { typeName } = this.extractFieldLikeType(field)
     const param = this.paramsType(field)
-    const objectName = goCase(field.name).replace('s' + 'Connection', '')
+    const objectName = goCase(typeName).replace('Connection', '')
     return (
       param.code +
       `
+      // Nodes return just nodes without cursors. It uses the already fetched edges.
+      func (s *${goCase(typeName)}) Nodes() []${objectName} {
+        var nodes []${objectName}
+        for _, edge := range s.Edges {
+          nodes = append(nodes, edge.Node)
+        }
+        return nodes
+      }
+
+      // Nodes return just nodes without cursors, but as a slice of pointers. It uses the already fetched edges.
+      func (s *${goCase(typeName)}) NodesPtr() []*${objectName} {
+        var nodes []*${objectName}
+        for _, edge := range s.Edges {
+          item := edge
+          nodes = append(nodes, &item.Node)
+        }
+        return nodes
+      }
+
       func (client *Client) ${goCase(field.name)} (params *${
         param.type
       }) (*${goCase(typeName)}Exec) {
