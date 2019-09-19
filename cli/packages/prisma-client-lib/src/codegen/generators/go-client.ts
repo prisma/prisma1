@@ -298,7 +298,7 @@ export class GoGenerator extends Generator {
                       [2]string{"", "${objectName}"},
                       "node",
                       ${objectName}Fields)
-                      
+
                     return &${objectName}EdgeExecArray{nodes}
                   }`
                 )
@@ -668,6 +668,25 @@ export class GoGenerator extends Generator {
     return (
       param.code +
       `
+      // Nodes return just nodes without cursors. It uses the already fetched edges.
+      func (s *${goCase(typeName)}) Nodes() []${objectName} {
+        var nodes []${objectName}
+        for _, edge := range s.Edges {
+          nodes = append(nodes, edge.Node)
+        }
+        return nodes
+      }
+
+      // Nodes return just nodes without cursors, but as a slice of pointers. It uses the already fetched edges.
+      func (s *${goCase(typeName)}) NodesPtr() []*${objectName} {
+        var nodes []*${objectName}
+        for _, edge := range s.Edges {
+          item := edge
+          nodes = append(nodes, &item.Node)
+        }
+        return nodes
+      }
+
       func (client *Client) ${goCase(field.name)} (params *${
         param.type
       }) (*${goCase(typeName)}Exec) {
