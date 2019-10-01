@@ -12,10 +12,6 @@ Prisma replaces traditional ORMs and simplifies database workflows:
 
 It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma [currently supports](#database-connectors) MySQL, PostgreSQL, MongoDB.
 
-Try a Prisma example online with CodeSandbox:
-
-[![Prisma Client Demo](https://svgshare.com/i/AVY.svg)](https://codesandbox.io/s/github/prisma-csb/prisma-client-demo-ts) [![GraphQL API](https://svgshare.com/i/AVX.svg)](https://codesandbox.io/s/github/prisma-csb/graphql-example-ts) [![REST API](https://svgshare.com/i/AY0.svg)](https://codesandbox.io/s/github/prisma-csb/rest-example-ts?initialpath=/feed)
-
 ## Contents
 
 - [Quickstart](#quickstart)
