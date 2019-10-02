@@ -21,7 +21,7 @@ It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma [currently sup
 - [Database Connectors](#database-connectors)
 - [Community](#community)
 - [Contributing](#contributing)
-- [Prisma 2 Preview](#prisma-2-preview)
+- [Prisma Framework Preview](#prisma-framework-preview)
 
 ## Quickstart
 
@@ -299,7 +299,7 @@ Prisma has a [community](https://www.prisma.io/community) of thousands of amazin
 - [Chinese translation of the Prisma docs](https://prisma.1wire.com/) (Thanks to [Victor Kang](https://github.com/Victorkangsh))
 - [Awesome Prisma](https://github.com/catalinmiron/awesome-prisma) (Thanks to [Catalin Miron](https://github.com/catalinmiron))
 
-## Prisma 2 Preview
+## Prisma Framework Preview
 
 Prisma 2 splits up Prisma's core functionality into 2 standalone tools:
 
