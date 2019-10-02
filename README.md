@@ -12,7 +12,9 @@ Prisma replaces traditional ORMs and simplifies database workflows:
 
 It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma [currently supports](#database-connectors) MySQL, PostgreSQL, MongoDB.
 
-> **Note**: A new version of Prisma, the [**Prisma Framework**](https://github.com/prisma/prisma2) (initially called _Prisma 2_), is currently in Preview. It doesn't require a database proxy server and features a more modular architecture based on three tools: [Photon.js](https://github.com/prisma/photonjs), [Lift](https://github.com/prisma/lift) and [Studio](https://github.com/prisma/studio). Follow the development of the Prisma Framework on: [**isprisma2ready.com**](https://isprisma2ready.com).
+> A new version of Prisma, the [**Prisma Framework**](https://github.com/prisma/prisma2) (initially called _Prisma 2_), is currently in Preview. It doesn't require a database proxy server and features a more modular architecture based on three tools: [Photon.js](https://github.com/prisma/photonjs), [Lift](https://github.com/prisma/lift) and [Studio](https://github.com/prisma/studio). Follow the development of the Prisma Framework on: [**isprisma2ready.com**](https://isprisma2ready.com).
+>
+> Get started with the [tutorial](https://github.com/prisma/prisma2/blob/master/docs/tutorial.md) or some ready-to-run [examples](https://github.com/prisma/prisma-examples/tree/prisma2).
 
 ## Contents
 
@@ -42,6 +44,7 @@ npm install -g prisma
 # or
 yarn global add prisma
 ```
+
 </Details>
 
 #### 2. Connect Prisma to a database
@@ -51,6 +54,8 @@ To setup Prisma, you need to have [Docker](https://www.docker.com) installed. Ru
 ```
 prisma init hello-world
 ```
+
+> If you don't want to use Docker to host The Prisma server as a database proxy, be sure to check out the new [Prisma Framework](https://github.com/prisma/prisma2) which removes the need for the Prisma server.
 
 The interactive CLI wizard now helps you with the required setup:
 
@@ -196,7 +201,9 @@ Here is what you can do next:
 - [Check out some examples](#examples)
 - [Read more about how Prisma works](https://www.prisma.io/docs/-j9ff/)
 
-## Examples
+## Examples (Prisma 1)
+
+> You can find the examples for the **Prisma Framework** (originally called _Prisma 2_) [here](https://github.com/prisma/prisma-examples/tree/prisma2). These example are based on the [new](https://www.prisma.io/blog/announcing-prisma-2-zq1s745db8i5/) Prisma tools: [Photon.js](https://github.com/prisma/photonjs) and [Lift](https://github.com/prisma/lift).
 
 #### TypeScript
 
@@ -259,6 +266,8 @@ You can connect the following databases to Prisma already:
 
 ### Upcoming Connectors
 
+> Prisma 1 is currently in maintenance mode in favor of the development of the [Prisma Framework](https://github.com/prisma/prisma2). The data source connectors listed below will be implemented in the scope of the Prisma Framework instead of Prisma 1.
+
 If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.prisma.io).
 
 - [Elastic Search](https://github.com/prisma/prisma/issues/1665)
@@ -285,14 +294,17 @@ Prisma has a [community](https://www.prisma.io/community) of thousands of amazin
 
 ### Channels
 
-- [Forum](https://www.prisma.io/forum)
-- [Spectrum](https://spectrum.chat/prisma)
 - [Slack](https://slack.prisma.io/)
 - [Twitter](https://twitter.com/prisma)
 - [Facebook](https://www.facebook.com/prisma.io)
-- [Meetup](https://www.meetup.com/graphql-berlin)
-- [GraphQL Conf](https://www.graphqlconf.org/)
 - [Email](mailto:hello@prisma.io)
+
+### Events
+
+- [Prisma Day](https://www.prisma.io/day/)
+- [GraphQL Conf](https://www.graphqlconf.org/)
+- [TypeScript Berlin Meetup](https://www.meetup.com/TypeScript-Berlin/)
+- [GraphQL Berlin Meetup](https://www.meetup.com/graphql-berlin)
 
 ### Resources
 
@@ -306,6 +318,6 @@ Prisma 2 splits up Prisma's core functionality into 2 standalone tools:
 - [Photon](https://photonjs.prisma.io/): Type-safe database access
 - [Lift](https://lift.prisma.io/): Declarative data modeling and migrations
 
-Photon and Lift are currently in Preview! [Limitations](https://github.com/prisma/prisma2-docs/blob/master/limitations.md) include missing features, limited performance and stability issues. You can learn more about Prisma 2 in the [announcement](https://www.prisma.io/blog/announcing-prisma-2-zq1s745db8i5) or the [docs](https://github.com/prisma/prisma2/tree/master/docs). 
+Photon and Lift are currently in Preview! Get started with the [tutorial](https://github.com/prisma/prisma2/blob/master/docs/tutorial.md) or some ready-to-run [examples](https://github.com/prisma/prisma-examples/tree/prisma2).
 
-You can track the progress of Prisma 2 on [**isprisma2ready.com**](https://www.isprisma2ready.com).
+You can track the progress of Prisma 2 on [**isprisma2ready.com**](https://www.isprisma2ready.com) or follow the development of the [technical specification](https://github.com/prisma/specs).
