@@ -55,7 +55,7 @@ To setup Prisma, you need to have [Docker](https://www.docker.com) installed. Ru
 prisma init hello-world
 ```
 
-> If you don't want to use Docker to host The Prisma server as a database proxy, be sure to check out the new [Prisma Framework](https://github.com/prisma/prisma2) which removes the need for the Prisma server.
+> If you don't want to use Docker to host the Prisma server as a database proxy, be sure to check out the new [Prisma Framework](https://github.com/prisma/prisma2) which removes the need for the Prisma server.
 
 The interactive CLI wizard now helps you with the required setup:
 
