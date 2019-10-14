@@ -105,7 +105,7 @@
     "opn": "^5.1.0",
     "prisma-client-lib": "1.23.0-test.3",
     "prisma-datamodel": "1.23.0-alpha.1",
-    "prisma-db-introspection": "0.0.7",
+    "prisma-db-introspection": "1.36.0-test.2",
     "prisma-generate-schema": "1.20.4",
     "prisma-yml": "1.0.95",
     "scuid": "^1.0.2",
