@@ -1,4 +1,4 @@
-<p align="center"><a href="https://www.prisma.io"><img src="https://i.imgur.com/QgwDieO.png" alt="Prisma" height="230px"></a></p>
+<p align="center"><a href="https://www.prisma.io"><img src="https://i.imgur.com/QgwDieO.png" alt="Prisma"></a></p>
 
 [Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Examples](https://github.com/prisma/prisma-examples/) • [Blog](https://www.prisma.io/blog) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prisma) • [Prisma Framework (Preview)](https://github.com/prisma/prisma2)
 
