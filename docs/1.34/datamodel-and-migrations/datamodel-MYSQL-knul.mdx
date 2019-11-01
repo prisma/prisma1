@@ -486,7 +486,7 @@ type User {
 
 type Profile {
   id: ID! @id
-  user: User!
+  user: User! @relation(name: "MyRelation")
 }
 ```
 
@@ -509,7 +509,7 @@ type User {
 
 type Profile {
   id: ID! @id
-  user: User!
+  user: User! @relation(name: "MyRelation")
 }
 
 type MyRelation @relationTable {
