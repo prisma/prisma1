@@ -594,7 +594,7 @@ CREATE TABLE "default$default"."_PostToUser" (
 ```graphql
 type User {
   id: ID! @id
-  posts: [Post!]!
+  posts: [Post!]! @relation(name: "MyRelation")
 }
 
 type Post {
@@ -617,7 +617,7 @@ CREATE TABLE "default$default"."_MyRelation" (
 ```graphql
 type User {
   id: ID! @id
-  posts: [Post!]!
+  posts: [Post!]! @relation(name: "MyRelation")
 }
 
 type Post {
