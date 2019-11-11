@@ -109,26 +109,6 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
       """{"data":{"createScalarModel":{"optJson":null,"optInt":null,"optBoolean":null,"optString":null,"optEnum":null,"optFloat":null}}}""".parseJson)
   }
 
-  "A Create Mutation" should "fail when text is over 256k long" in {
-    val reallyLongString = "1234567890" * 40000
-
-    server.queryThatMustFail(
-      s"""mutation {createScalarModel(data: {optString: "$reallyLongString", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[1,2,3]"}){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""",
-      project = project,
-      errorCode = 3007
-    )
-  }
-
-  "A Create Mutation" should "fail when a Json is over 256k long" in {
-    val reallyLongString = "1234567890" * 40000
-
-    server.queryThatMustFail(
-      s"""mutation {createScalarModel(data: {optString: "test", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[\\\"$reallyLongString\\\",\\\"is\\\",\\\"json\\\"]"}){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""",
-      project = project,
-      errorCode = 3007
-    )
-  }
-
   "A Create Mutation" should "fail when a Json is invalid" in {
     val result = server.queryThatMustFail(
       s"""mutation {createScalarModel(data: {optString: "test", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[{'a':2}]"}){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""",

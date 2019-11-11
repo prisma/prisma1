@@ -24,8 +24,8 @@ object InputValueValidation {
   }
 
   private def isValueSizeValid(value: GCValue) = value match {
-    case x: StringGCValue   => x.value.length <= 262144
-    case x: JsonGCValue     => x.value.toString.length <= 262144
+    case x: StringGCValue   => true
+    case x: JsonGCValue     => true
     case x: IntGCValue      => true
     case x: BooleanGCValue  => true
     case x: DateTimeGCValue => true
