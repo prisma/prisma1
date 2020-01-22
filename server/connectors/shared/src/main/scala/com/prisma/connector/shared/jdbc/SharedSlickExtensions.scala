@@ -13,6 +13,7 @@ trait SharedSlickExtensions {
   val logger = LoggerFactory.getLogger("prisma")
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit = (_) => (), readResult: ResultSet => T): DBIO[T] = {
+    logger.trace(s"Executing query: ${query.getSQL}")
     jooqToDBIO(query, setParams) { ps =>
       val rs = ps.executeQuery()
       readResult(rs)
