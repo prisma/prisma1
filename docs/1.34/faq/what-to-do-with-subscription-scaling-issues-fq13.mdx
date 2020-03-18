@@ -1,0 +1,17 @@
+export const meta = {
+  title: 'What to do with scaling issues of subscriptions?',
+  position: 12,
+  articleGroup: 'Subscriptions scaling issues',
+}
+
+## FAQ
+
+Prisma 1 supports realtime subscriptions out-of-the-box. With a high amount of parallel subscriptions, Prisma's subcriptions sometimes become unreliable. This is a limitation of Prisma 1 that will not be resolved. Instead, Prisma 2.0 will eventually have a robust and scalable event system that enables similar funcionality as subscriptions in Prisma 1.
+
+If subscriptions are critical to your application and you regularly experience heavy load that makes subscriptions unreliable, there are alternatives to Prisma such as [Hasura](https://hasura.io/) with GraphQL subscription support.
+
+Related issues:
+
+- [Add support for more PubSub systems](https://github.com/prisma/prisma/issues/2867)
+- [Prisma Horizontal Scaling](https://github.com/prisma/prisma/issues/2850)
+- [Production Optimizations & Scalability - Feature Requests](https://github.com/prisma/prisma/issues/3852)
