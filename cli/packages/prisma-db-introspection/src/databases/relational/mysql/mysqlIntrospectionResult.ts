@@ -47,9 +47,10 @@ export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
 
     switch (type) {
       case 'int':
-      case 'bigint':
       case 'smallint':
         return TypeIdentifiers.integer
+      case 'bigint':
+        return TypeIdentifiers.bigInt
       case 'decimal':
       case 'float':
       case 'double':

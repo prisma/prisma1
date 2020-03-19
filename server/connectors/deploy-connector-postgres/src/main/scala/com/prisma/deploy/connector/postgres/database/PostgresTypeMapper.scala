@@ -24,6 +24,7 @@ case class PostgresTypeMapper() extends TypeMapper {
     case TypeIdentifier.String   => "text"
     case TypeIdentifier.Boolean  => "boolean"
     case TypeIdentifier.Int      => "int"
+    case TypeIdentifier.BigInt   => "b
     case TypeIdentifier.Float    => "Decimal(65,30)"
     case TypeIdentifier.Cuid     => "varchar (25)"
     case TypeIdentifier.Enum     => "text"

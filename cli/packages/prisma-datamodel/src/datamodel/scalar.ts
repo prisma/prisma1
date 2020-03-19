@@ -1,6 +1,7 @@
 export type TypeIdentifier =
   | 'String'
   | 'Int'
+  | 'BigInt'
   | 'Float'
   | 'Boolean'
   | 'Long' // Long is sometimes used internally by prisma.
@@ -12,6 +13,7 @@ export type TypeIdentifier =
 export abstract class TypeIdentifiers {
   public static string: TypeIdentifier = 'String'
   public static integer: TypeIdentifier = 'Int'
+  public static bigInt: TypeIdentifier = 'BigInt'
   public static float: TypeIdentifier = 'Float'
   public static boolean: TypeIdentifier = 'Boolean'
   public static long: TypeIdentifier = 'Long'
@@ -25,6 +27,7 @@ export const TypeIdentifierTable = {
   String: true,
   Int: true,
   Float: true,
+  BigInt: true,
   Boolean: true,
   Long: true,
   DateTime: true,
