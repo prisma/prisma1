@@ -27,22 +27,22 @@ It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma [currently sup
 
 ## Quickstart
 
-Get started with Prisma from scratch (or [use your existing database](https://www.prisma.io/docs/-t003/)):
+Get started with Prisma from scratch (or [use your existing database](https://www.prisma.io/docs/1.34/-t003/)):
 
-#### 1. Install Prisma via Homebrew
+#### 1. Install Prisma with NPM or Yarn
+
+```
+npm install -g prisma1
+# or
+yarn global add prisma1
+```
+
+<Details>
+<Summary><b>Alternative</b>: Install via Homebrew</Summary>
 
 ```
 brew tap prisma/prisma
 brew install prisma
-```
-
-<Details>
-<Summary><b>Alternative</b>: Install with NPM or Yarn</Summary>
-
-```
-npm install -g prisma
-# or
-yarn global add prisma
 ```
 
 </Details>
@@ -52,14 +52,14 @@ yarn global add prisma
 To setup Prisma, you need to have [Docker](https://www.docker.com) installed. Run the following command to get started with Prisma:
 
 ```
-prisma init hello-world
+prisma1 init hello-world
 ```
 
 > If you don't want to use Docker to host the Prisma server as a database proxy, be sure to check out the new [Prisma Framework](https://github.com/prisma/prisma2) which removes the need for the Prisma server.
 
 The interactive CLI wizard now helps you with the required setup:
 
-- Select **Create new database** (you can also use an [existing database](https://www.prisma.io/docs/-t003/) or a hosted [demo database](https://www.prisma.io/docs/-t001/))
+- Select **Create new database** (you can also use an [existing database](https://www.prisma.io/docs/1.34/-t003/) or a hosted [demo database](https://www.prisma.io/docs/1.34/-t001/))
 - Select the database type: **MySQL** or **PostgreSQL**
 - Select the language for the generated Prisma client: **TypeScript**, **Flow**, **JavaScript** or **Go**
 
@@ -95,7 +95,7 @@ type Post {
 To deploy your Prisma API, run the following command:
 
 ```
-prisma deploy
+prisma1 deploy
 ```
 
 The Prisma API is deployed based on the datamodel and exposes CRUD & realtime operations for each model in that file.
@@ -113,7 +113,7 @@ npm install --save prisma-client-lib
 To generate the Prisma client, run the following command:
 
 ```
-prisma generate
+prisma1 generate
 ```
 
 Create a new Node script inside the `hello-world` directory:
@@ -197,62 +197,62 @@ const postsByAuthor = await prisma
 
 Here is what you can do next:
 
-- [Build an app with Prisma client](https://www.prisma.io/docs/-t201/)
+- [Build an app with Prisma client](https://www.prisma.io/docs/1.34/-t201/)
 - [Check out some examples](#examples)
-- [Read more about how Prisma works](https://www.prisma.io/docs/-j9ff/)
+- [Read more about how Prisma works](https://www.prisma.io/docs/1.34/-j9ff/)
 
 ## Examples (Prisma 1)
 
-> You can find the examples for the **Prisma Framework** (originally called _Prisma 2_) [here](https://github.com/prisma/prisma-examples/tree/prisma2). These example are based on the [new](https://www.prisma.io/blog/announcing-prisma-2-zq1s745db8i5/) Prisma tools: [Photon.js](https://github.com/prisma/photonjs) and [Lift](https://github.com/prisma/lift).
+> You can find the examples for the **Prisma Framework** (originally called _Prisma 2_) [here](https://github.com/prisma/prisma-examples/tree/master). These example are based on the [new](https://www.prisma.io/blog/announcing-prisma-2-zq1s745db8i5/) Prisma tools: [Photon.js](https://github.com/prisma/photonjs) and [Lift](https://github.com/prisma/lift).
 
 #### TypeScript
 
 | Demo | Description |
 |:------|:----------|
-| [`script`](https://github.com/prisma/prisma-examples/tree/master/typescript/script) | Simple usage of Prisma client in script |
-| [`graphql`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql) | Simple GraphQL server based on [`graphql-yoga`](https://github.com/prisma/graphql-yoga) |
-| [`graphql-apollo-server`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql-apollo-server) | Simple GraphQL server based on [`apollo-server`](https://www.apollographql.com/docs/apollo-server/) |
-| [`graphql-crud`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql-crud) | GraphQL server with full CRUD API |
-| [`graphql-auth`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql-auth) | GraphQL server with email-password authentication & permissions |
-| [`graphql-subscriptions`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql-subscriptions) | GraphQL server with realtime subscriptions |
-| [`rest-express`](https://github.com/prisma/prisma-examples/tree/master/typescript/rest-express) | Simple REST API with Express.JS |
-| [`grpc`](https://github.com/prisma/prisma-examples/tree/master/typescript/grpc) | Simple gRPC API |
-| [`docker-mongodb`](https://github.com/prisma/prisma-examples/tree/master/typescript/docker-mongodb) | Set up Prisma locally with MongoDB |
-| [`docker-mysql`](https://github.com/prisma/prisma-examples/tree/master/typescript/docker-mysql) | Set up Prisma locally with MySQL |
-| [`docker-postgres`](https://github.com/prisma/prisma-examples/tree/master/typescript/docker-postgres) | Set up Prisma locally with PostgreSQL |
-| [`cli-app`](https://github.com/prisma/prisma-examples/tree/master/typescript/cli-app) | Simple CLI TODO list app |
+| [`script`](https://github.com/prisma/prisma1-examples/tree/master/typescript/script) | Simple usage of Prisma client in script |
+| [`graphql`](https://github.com/prisma/prisma1-examples/tree/master/typescript/graphql) | Simple GraphQL server based on [`graphql-yoga`](https://github.com/prisma/graphql-yoga) |
+| [`graphql-apollo-server`](https://github.com/prisma/prisma1-examples/tree/master/typescript/graphql-apollo-server) | Simple GraphQL server based on [`apollo-server`](https://www.apollographql.com/docs/apollo-server/) |
+| [`graphql-crud`](https://github.com/prisma/prisma1-examples/tree/master/typescript/graphql-crud) | GraphQL server with full CRUD API |
+| [`graphql-auth`](https://github.com/prisma/prisma1-examples/tree/master/typescript/graphql-auth) | GraphQL server with email-password authentication & permissions |
+| [`graphql-subscriptions`](https://github.com/prisma/prisma1-examples/tree/master/typescript/graphql-subscriptions) | GraphQL server with realtime subscriptions |
+| [`rest-express`](https://github.com/prisma/prisma1-examples/tree/master/typescript/rest-express) | Simple REST API with Express.JS |
+| [`grpc`](https://github.com/prisma/prisma1-examples/tree/master/typescript/grpc) | Simple gRPC API |
+| [`docker-mongodb`](https://github.com/prisma/prisma1-examples/tree/master/typescript/docker-mongodb) | Set up Prisma locally with MongoDB |
+| [`docker-mysql`](https://github.com/prisma/prisma1-examples/tree/master/typescript/docker-mysql) | Set up Prisma locally with MySQL |
+| [`docker-postgres`](https://github.com/prisma/prisma1-examples/tree/master/typescript/docker-postgres) | Set up Prisma locally with PostgreSQL |
+| [`cli-app`](https://github.com/prisma/prisma1-examples/tree/master/typescript/cli-app) | Simple CLI TODO list app |
 
 #### Node.js
 
 | Demo | Description |
 |:------|:----------|
-| [`script`](https://github.com/prisma/prisma-examples/tree/master/node/script) | Simple usage of Prisma client in script |
-| [`graphql`](https://github.com/prisma/prisma-examples/tree/master/node/graphql) | Simple GraphQL server |
-| [`graphql-auth`](https://github.com/prisma/prisma-examples/tree/master/node/graphql-auth) | GraphQL server with email-password authentication & permissions |
-| [`graphql-subscriptions`](https://github.com/prisma/prisma-examples/tree/master/node/graphql-subscriptions) | GraphQL server with realtime subscriptions |
-| [`rest-express`](https://github.com/prisma/prisma-examples/tree/master/node/rest-express) | Simple REST API with Express.JS |
-| [`grpc`](https://github.com/prisma/prisma-examples/tree/master/node/grpc) | Simple gRPC API |
-| [`docker-mongodb`](https://github.com/prisma/prisma-examples/tree/master/node/docker-mongodb) | Set up Prisma locally with MongoDB |
-| [`docker-mysql`](https://github.com/prisma/prisma-examples/tree/master/node/docker-mysql) | Set up Prisma locally with MySQL |
-| [`docker-postgres`](https://github.com/prisma/prisma-examples/tree/master/node/docker-postgres) | Set up Prisma locally with PostgreSQL |
-| [`cli-app`](https://github.com/prisma/prisma-examples/tree/master/node/cli-app) | Simple CLI TODO list app |
+| [`script`](https://github.com/prisma/prisma1-examples/tree/master/node/script) | Simple usage of Prisma client in script |
+| [`graphql`](https://github.com/prisma/prisma1-examples/tree/master/node/graphql) | Simple GraphQL server |
+| [`graphql-auth`](https://github.com/prisma/prisma1-examples/tree/master/node/graphql-auth) | GraphQL server with email-password authentication & permissions |
+| [`graphql-subscriptions`](https://github.com/prisma/prisma1-examples/tree/master/node/graphql-subscriptions) | GraphQL server with realtime subscriptions |
+| [`rest-express`](https://github.com/prisma/prisma1-examples/tree/master/node/rest-express) | Simple REST API with Express.JS |
+| [`grpc`](https://github.com/prisma/prisma1-examples/tree/master/node/grpc) | Simple gRPC API |
+| [`docker-mongodb`](https://github.com/prisma/prisma1-examples/tree/master/node/docker-mongodb) | Set up Prisma locally with MongoDB |
+| [`docker-mysql`](https://github.com/prisma/prisma1-examples/tree/master/node/docker-mysql) | Set up Prisma locally with MySQL |
+| [`docker-postgres`](https://github.com/prisma/prisma1-examples/tree/master/node/docker-postgres) | Set up Prisma locally with PostgreSQL |
+| [`cli-app`](https://github.com/prisma/prisma1-examples/tree/master/node/cli-app) | Simple CLI TODO list app |
 
 #### Golang
 
 | Demo | Description |
 |:------|:----------|
-| [`cli-app`](https://github.com/prisma/prisma-examples/tree/master/go/cli-app) | Simple CLI TODO list app |
-| [`graphql`](https://github.com/prisma/prisma-examples/tree/master/go/graphql) | Simple GraphQL server |
-| [`http-mux`](https://github.com/prisma/prisma-examples/tree/master/go/http-mux) | Simple REST API with [gorilla/mux](https://github.com/gorilla/mux) |
-| [`rest-gin`](https://github.com/prisma/prisma-examples/tree/master/go/rest-gin) | Simple REST API with [Gin](https://github.com/gin-gonic/gin) |
-| [`script`](https://github.com/prisma/prisma-examples/tree/master/go/script) | Simple usage of Prisma client in script |
+| [`cli-app`](https://github.com/prisma/prisma1-examples/tree/master/go/cli-app) | Simple CLI TODO list app |
+| [`graphql`](https://github.com/prisma/prisma1-examples/tree/master/go/graphql) | Simple GraphQL server |
+| [`http-mux`](https://github.com/prisma/prisma1-examples/tree/master/go/http-mux) | Simple REST API with [gorilla/mux](https://github.com/gorilla/mux) |
+| [`rest-gin`](https://github.com/prisma/prisma1-examples/tree/master/go/rest-gin) | Simple REST API with [Gin](https://github.com/gin-gonic/gin) |
+| [`script`](https://github.com/prisma/prisma1-examples/tree/master/go/script) | Simple usage of Prisma client in script |
 
 #### Flow
 
 | Demo | Description |
 |:------|:----------|
-| [`graphql`](https://github.com/prisma/prisma-examples/tree/master/flow/graphql) | Simple GraphQL server |
-| [`script`](https://github.com/prisma/prisma-examples/tree/master/flow/script) | Simple usage of Prisma client in script |
+| [`graphql`](https://github.com/prisma/prisma1-examples/tree/master/flow/graphql) | Simple GraphQL server |
+| [`script`](https://github.com/prisma/prisma1-examples/tree/master/flow/script) | Simple usage of Prisma client in script |
 
 ## Database Connectors
 
