@@ -1,6 +1,6 @@
 {
   "version": "1.21.1",
-  "name": "prisma",
+  "name": "prisma1",
   "description": "Prisma is a realtime GraphQL database layer. Connect directly from the frontend or build your own GraphQL server.",
   "keywords": [
     "prisma",
@@ -20,7 +20,7 @@
   },
   "main": "dist/index.js",
   "bin": {
-    "prisma": "dist/index.js"
+    "prisma1": "dist/index.js"
   },
   "files": [
     "dist"
