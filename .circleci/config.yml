@@ -62,6 +62,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: prisma
     steps:
       - checkout
+      - run: sudo apt-get update
       - run: sudo apt install postgresql-client
       - run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
       - run: cd cli && yarn
