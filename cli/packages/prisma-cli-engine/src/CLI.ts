@@ -209,14 +209,14 @@ export class CLI {
       }
     }
 
-    if (this.notifier.update) {
+    if (this.notifier.update && this.notifier.update.latest.startsWith('1.')) {
       this.notifier.notify({
         message:
           'Update available ' +
           chalk.dim(this.notifier.update.current) +
           chalk.reset(' → ') +
           chalk.cyan(this.notifier.update.latest) +
-          `\nRun ${chalk.bold.cyan('npm i -g prisma')} to update`,
+          `\nRun ${chalk.bold.cyan('npm i -g prisma1')} to update`,
         boxenOpts: {
           padding: 1,
           margin: 1,

@@ -17,7 +17,7 @@ export const defaultDefinition: ProjectDefinition = {
 # This file is the main config file for your Prisma Service.
 # It's very minimal at this point and uses default values.
 # We've included a hello world function here.
-# Just run \`prisma deploy\` to have the first running Prisma Service.
+# Just run \`prisma1 deploy\` to have the first running Prisma Service.
 #
 # Check out some examples:
 #    https://github.com/prisma/framework/tree/master/examples
@@ -118,7 +118,7 @@ export const changedDefaultDefinition: ProjectDefinition = {
 # This file is the main config file for your Prisma Service.
 # It's very minimal at this point and uses default values.
 # We've included a hello world function here.
-# Just uncomment it and run \`prisma deploy\`
+# Just uncomment it and run \`prisma1 deploy\`
 #
 # Check out some examples:
 #    https://github.com/prisma/framework/tree/master/examples

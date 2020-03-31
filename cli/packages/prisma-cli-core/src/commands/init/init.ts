@@ -47,7 +47,7 @@ export default class Init extends Command {
     try {
       files = fs.readdirSync(this.config.definitionDir)
     } catch (e) {
-      debug(`prisma init workflow called without existing directory.`)
+      debug(`prisma1 init workflow called without existing directory.`)
       debug(e.toString())
     }
     // the .prismarc must be allowed for the docker version to be functioning
@@ -104,7 +104,7 @@ datamodel: datamodel.prisma
       }
 
       endpointSteps.push(
-        `Deploy your Prisma service: ${chalk.cyan('prisma deploy')}`,
+        `Deploy your Prisma service: ${chalk.cyan('prisma1 deploy')}`,
       )
 
       const endpointCreatedFiles = [
@@ -116,10 +116,8 @@ datamodel: datamodel.prisma
 
       this.out.log(`
 ${chalk.bold(
-        `Created ${
-          endpointCreatedFiles.length
-        } new files:                                                                          `,
-      )}
+  `Created ${endpointCreatedFiles.length} new files:                                                                          `,
+)}
 
 ${endpointCreatedFiles.join('\n')}
 
@@ -193,7 +191,7 @@ datamodel: datamodel.prisma${databaseTypeString}`
       )
     }
 
-    steps.push(`Deploy your Prisma service: ${chalk.cyan('prisma deploy')}`)
+    steps.push(`Deploy your Prisma service: ${chalk.cyan('prisma1 deploy')}`)
 
     if (results.database && results.database.alreadyData) {
       steps.push(
@@ -235,10 +233,8 @@ datamodel: datamodel.prisma${databaseTypeString}`
 
     this.out.log(`
 ${chalk.bold(
-      `Created ${
-        createdFiles.length
-      } new files:                                                                          `,
-    )}
+  `Created ${createdFiles.length} new files:                                                                          `,
+)}
 
 ${createdFiles.join('\n')}
 

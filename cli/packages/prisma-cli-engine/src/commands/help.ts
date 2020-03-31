@@ -101,7 +101,7 @@ export default class Help extends Command {
       'https://www.prisma.io',
     )})
     
-${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
+${chalk.bold('Usage:')} ${chalk.bold('prisma1')} COMMAND`)
     const topics = (ptopics || this.plugins.topics).filter(t => {
       if (!t.id) {
         return
@@ -128,16 +128,14 @@ ${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
           // if (t.id === 'cluster') {
           //   debugger
           // }
-          return cmds
-            .filter(cmd => !cmd.hidden)
-            .map(cmd => {
-              const cmdName = cmd.command ? ` ${cmd.command}` : ''
-              const deprecation = cmd.deprecated ? ' (deprecated)' : ''
-              return [
-                t.id + cmdName,
-                chalk.dim((cmd.description || t.description) + deprecation),
-              ]
-            })
+          return cmds.filter(cmd => !cmd.hidden).map(cmd => {
+            const cmdName = cmd.command ? ` ${cmd.command}` : ''
+            const deprecation = cmd.deprecated ? ' (deprecated)' : ''
+            return [
+              t.id + cmdName,
+              chalk.dim((cmd.description || t.description) + deprecation),
+            ]
+          })
         }),
       )) as any
       const name = group.deprecated ? `${group.name} (deprecated)` : group.name
@@ -160,17 +158,17 @@ ${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
     })
 
     this.out.log(`\nUse ${chalk.cyan(
-      'prisma help [command]',
+      'prisma1 help [command]',
     )} for more information about a command.
 Docs can be found here: https://bit.ly/prisma-cli-commands
 
 ${chalk.dim('Examples:')}
 
 ${chalk.gray('-')} Initialize files for a new Prisma service
-  ${chalk.cyan('$ prisma init')}
+  ${chalk.cyan('$ prisma1 init')}
 
 ${chalk.gray('-')} Deploy service changes (or new service)
-  ${chalk.cyan('$ prisma deploy')}
+  ${chalk.cyan('$ prisma1 deploy')}
 `)
   }
 
