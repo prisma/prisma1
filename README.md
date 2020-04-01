@@ -1,6 +1,6 @@
 <p align="center"><a href="https://www.prisma.io"><img src="https://i.imgur.com/QgwDieO.png" alt="Prisma"></a></p>
 
-[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Examples](https://github.com/prisma/prisma1-examples/) • [Blog](https://www.prisma.io/blog) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prisma) • [Prisma Framework (Preview)](https://github.com/prisma/prisma)
+[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Examples](https://github.com/prisma/prisma1-examples/) • [Blog](https://www.prisma.io/blog) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prisma) • [Prisma 2.0](https://github.com/prisma/prisma)
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma1.svg?style=shield)](https://circleci.com/gh/prisma/prisma1) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io)
 
@@ -12,9 +12,7 @@ Prisma replaces traditional ORMs and simplifies database workflows:
 
 It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma [currently supports](#database-connectors) MySQL, PostgreSQL, MongoDB.
 
-> A new version of Prisma, the [**Prisma Framework**](https://github.com/prisma/prisma2) (initially called _Prisma 2_), is currently in Preview. It doesn't require a database proxy server and features a more modular architecture based on three tools: [Photon.js](https://github.com/prisma/photonjs), [Lift](https://github.com/prisma/lift) and [Studio](https://github.com/prisma/studio). Follow the development of the Prisma Framework on: [**isprisma2ready.com**](https://isprisma2ready.com).
->
-> Get started with the [tutorial](https://github.com/prisma/prisma/blob/master/docs/tutorial.md) or some ready-to-run [examples](https://github.com/prisma/prisma-examples/).
+> Prisma 2.0 is currently in [Beta](https://www.prisma.io/blog/prisma-2-beta-b7bcl0gd8d8e/)! It doesn't require a database proxy server and features a more modular architecture. Follow the development of Prisma 2.0 on: [isprisma2ready.com](https://isprisma2ready.com). Get started in 5 minutes with the [Quickstart(https://www.prisma.io/docs/getting-started/quickstart).
 
 ## Contents
 
@@ -23,7 +21,6 @@ It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma [currently sup
 - [Database Connectors](#database-connectors)
 - [Community](#community)
 - [Contributing](#contributing)
-- [Prisma Framework Preview](#prisma-framework-preview)
 
 ## Quickstart
 
@@ -264,30 +261,6 @@ You can connect the following databases to Prisma already:
 - PostgreSQL
 - MongoDB
 
-### Upcoming Connectors
-
-> Prisma 1 is currently in maintenance mode in favor of the development of the [Prisma Framework](https://github.com/prisma/prisma). The data source connectors listed below will be implemented in the scope of the Prisma Framework instead of Prisma 1.
-
-If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.prisma.io).
-
-- [Elastic Search](https://github.com/prisma/prisma1/issues/1665)
-- [MS SQL](https://github.com/prisma/prisma1/issues/1642)
-- [Oracle](https://github.com/prisma/prisma1/issues/1644)
-- [ArangoDB](https://github.com/prisma/prisma1/issues/1645)
-- [Neo4j](https://github.com/prisma/prisma1/issues/1646)
-- [Druid](https://github.com/prisma/prisma1/issues/1647)
-- [Dgraph](https://github.com/prisma/prisma1/issues/1648)
-- [DynamoDB](https://github.com/prisma/prisma1/issues/1655)
-- [Cloud Firestore](https://github.com/prisma/prisma1/issues/1660)
-- [CockroachDB](https://github.com/prisma/prisma1/issues/1705)
-- [Cassandra](https://github.com/prisma/prisma1/issues/1750)
-- [Redis](https://github.com/prisma/prisma1/issues/1722)
-- [AWS Neptune](https://github.com/prisma/prisma1/issues/1752)
-- [CosmosDB](https://github.com/prisma/prisma1/issues/1663)
-- [Influx](https://github.com/prisma/prisma1/issues/1857)
-
-Join the discussion or contribute to influence which we'll work on next!
-
 ## Community
 
 Prisma has a [community](https://www.prisma.io/community) of thousands of amazing developers and contributors. Welcome, please join us! 👋
@@ -310,14 +283,3 @@ Prisma has a [community](https://www.prisma.io/community) of thousands of amazin
 
 - [Chinese translation of the Prisma docs](https://prisma.1wire.com/) (Thanks to [Victor Kang](https://github.com/Victorkangsh))
 - [Awesome Prisma](https://github.com/catalinmiron/awesome-prisma) (Thanks to [Catalin Miron](https://github.com/catalinmiron))
-
-## Prisma Framework Preview
-
-Prisma 2 splits up Prisma's core functionality into 2 standalone tools:
-
-- [Photon](https://photonjs.prisma.io/): Type-safe database access
-- [Lift](https://lift.prisma.io/): Declarative data modeling and migrations
-
-Photon and Lift are currently in Preview! Get started with the [tutorial](https://github.com/prisma/prisma2/blob/master/docs/tutorial.md) or some ready-to-run [examples](https://github.com/prisma/prisma-examples).
-
-You can track the progress of Prisma 2 on [**isprisma2ready.com**](https://www.isprisma2ready.com) or follow the development of the [technical specification](https://github.com/prisma/specs).
