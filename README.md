@@ -26,7 +26,7 @@ It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma [currently sup
 
 ## Quickstart
 
-Get started with Prisma from scratch (or [use your existing database](https://www.prisma.io/docs/1.34/-t003/)):
+Get started with Prisma 1 from scratch (or [use your existing database](https://www.prisma.io/docs/1.34/-t003/)):
 
 #### 1. Install Prisma via Homebrew
 
@@ -39,9 +39,9 @@ brew install prisma
 <Summary><b>Alternative</b>: Install with NPM or Yarn</Summary>
 
 ```
-npm install -g prisma
+npm install -g prisma1
 # or
-yarn global add prisma
+yarn global add prisma1
 ```
 
 </Details>
@@ -51,10 +51,10 @@ yarn global add prisma
 To setup Prisma, you need to have [Docker](https://www.docker.com) installed. Run the following command to get started with Prisma:
 
 ```
-prisma init hello-world
+prisma1 init hello-world
 ```
 
-> If you don't want to use Docker to host the Prisma server as a database proxy, be sure to check out the new [Prisma Framework](https://github.com/prisma/prisma) which removes the need for the Prisma server.
+> If you don't want to use Docker to host the Prisma server as a database proxy, be sure to check out the new [Prisma 2.0](https://github.com/prisma/prisma) which removes the need for the Prisma server.
 
 The interactive CLI wizard now helps you with the required setup:
 
@@ -94,7 +94,7 @@ type Post {
 To deploy your Prisma API, run the following command:
 
 ```
-prisma deploy
+prisma1 deploy
 ```
 
 The Prisma API is deployed based on the datamodel and exposes CRUD & realtime operations for each model in that file.
@@ -112,7 +112,7 @@ npm install --save prisma-client-lib
 To generate the Prisma client, run the following command:
 
 ```
-prisma generate
+prisma1 generate
 ```
 
 Create a new Node script inside the `hello-world` directory:
@@ -202,7 +202,7 @@ Here is what you can do next:
 
 ## Examples (Prisma 1)
 
-> You can find the examples for the **Prisma Framework** [here](https://github.com/prisma/prisma-examples). These example are based on the [new](https://www.prisma.io/blog/announcing-prisma-2-zq1s745db8i5/) Prisma tools: [Prisma Client](https://github.com/prisma/prisma-client-js) and [Migrate](https://github.com/prisma/migrate).
+> You can find the examples for **Prisma 2.0** [here](https://github.com/prisma/prisma-examples). These example are based on the [new](https://www.prisma.io/blog/prisma-2-beta-b7bcl0gd8d8e/) Prisma tools: [Prisma Client](https://github.com/prisma/prisma-client-js) and [Migrate](https://github.com/prisma/migrate).
 
 #### TypeScript
 
