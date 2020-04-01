@@ -12,7 +12,7 @@ Prisma replaces traditional ORMs and simplifies database workflows:
 
 It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma [currently supports](#database-connectors) MySQL, PostgreSQL, MongoDB.
 
-> Prisma 2.0 is currently in [Beta](https://www.prisma.io/blog/prisma-2-beta-b7bcl0gd8d8e/)! It doesn't require a database proxy server and features a more modular architecture. Follow the development of Prisma 2.0 on: [isprisma2ready.com](https://isprisma2ready.com). Get started in 5 minutes with the [Quickstart(https://www.prisma.io/docs/getting-started/quickstart).
+> Prisma 2.0 is currently in [Beta](https://www.prisma.io/blog/prisma-2-beta-b7bcl0gd8d8e/)! It doesn't require a database proxy server and features a more modular architecture. Follow the development of Prisma 2.0 on: [isprisma2ready.com](https://isprisma2ready.com). Get started in 5 minutes with the [Quickstart](https://www.prisma.io/docs/getting-started/quickstart).
 
 ## Contents
 
