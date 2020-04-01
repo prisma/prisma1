@@ -4,7 +4,7 @@
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma1.svg?style=shield)](https://circleci.com/gh/prisma/prisma1) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io)
 
-Prisma replaces traditional ORMs and simplifies database workflows: 
+Prisma 1 replaces traditional ORMs and simplifies database workflows: 
 
 - _Access_: **Type-safe database access with the auto-generated Prisma client** (in [JavaScript](https://www.prisma.io/client/client-javscript/), [TypeScript](https://www.prisma.io/client/client-typescript/), [Go](https://www.prisma.io/client/client-go/))
 - _Migrate_: **Declarative data modelling and migrations** (optional)
@@ -12,7 +12,9 @@ Prisma replaces traditional ORMs and simplifies database workflows:
 
 It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma [currently supports](#database-connectors) MySQL, PostgreSQL, MongoDB.
 
-> Prisma 2.0 is currently in [Beta](https://www.prisma.io/blog/prisma-2-beta-b7bcl0gd8d8e/)! It doesn't require a database proxy server and features a more modular architecture. Follow the development of Prisma 2.0 on: [isprisma2ready.com](https://isprisma2ready.com). Get started in 5 minutes with the [Quickstart](https://www.prisma.io/docs/getting-started/quickstart).
+> This repository is the home of **Prisma 1**.
+> 
+> A new version of Prisma is currently in [Beta](https://www.prisma.io/blog/prisma-2-beta-b7bcl0gd8d8e/)! It doesn't require a database proxy server and features a more modular architecture. Follow the development of Prisma 2.0 on: [isprisma2ready.com](https://isprisma2ready.com). Get started in 5 minutes with the [Quickstart](https://www.prisma.io/docs/getting-started/quickstart).
 
 ## Contents
 
