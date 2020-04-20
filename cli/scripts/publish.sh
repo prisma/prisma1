@@ -357,7 +357,7 @@ languages=( typescript flow )
 
 # Clone
 
-git clone git@github.com:prisma/prisma-examples.git
+git clone git@github.com:prisma/prisma1-examples.git
 cd prisma-examples
 branch="client-$CIRCLE_BRANCH"
 
@@ -384,6 +384,6 @@ if [ $CIRCLE_BRANCH == "alpha" ] || [ $CIRCLE_BRANCH == "beta" ]; then
   git config --global user.email "tim.suchanek@gmail.com"
   git config --global user.name "Tim Suchanek"
   git commit -a -m "bump prisma-client-lib versions to ${newVersion}"
-  git remote add origin-push https://${GH_TOKEN}@github.com/prisma/prisma-examples.git > /dev/null 2>&1
+  git remote add origin-push https://${GH_TOKEN}@github.com/prisma/prisma1-examples.git > /dev/null 2>&1
   git push --quiet --set-upstream origin-push $branch || echo ""
 fi
