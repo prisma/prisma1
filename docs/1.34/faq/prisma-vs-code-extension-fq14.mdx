@@ -1,0 +1,14 @@
+export const meta = {
+  title: 'How to get syntax highlighting in VS Code?',
+  position: 13,
+  articleGroup: 'Prisma 1 VS Code extension',
+}
+
+## FAQ
+
+In Prisma 1, the datamodel is written in GraphQL syntax (SDL). However, the datamodel files typically use the `.prisma` file extension (e.g. `datamodel.prisma`) instead of `.graphql`.
+
+In the new [Prisma 2.0 version](https://www.prisma.io/docs), Prisma introduces a custom data modeling syntax that is not compatible with Prisma 1's GraphQL syntax any more. The files written in the new Prisma 2.0 syntax _must_ use the  `.prisma` file extension. The [Prisma VS Code extensions](https://marketplace.visualstudio.com/items?itemName=Prisma.prisma) is only compatible with the new Prisma 2.0 syntax. 
+
+If you want to get syntax highlighting for your Prisma 1 datamodel file, you need therefore need to rename it to use the `.graphql` file extension (e.g. from `datamodel.prisma` to `datamodel.graphql`) and install the [GraphQL VS Code extension](https://marketplace.visualstudio.com/items?itemName=Prisma.vscode-graphql).
+
