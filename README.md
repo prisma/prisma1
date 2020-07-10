@@ -12,7 +12,7 @@
 
 Prisma 1 replaces traditional ORMs and simplifies database workflows: 
 
-- _Access_: **Type-safe database access with the auto-generated Prisma client** (in [JavaScript](https://www.prisma.io/client/client-javscript/), [TypeScript](https://www.prisma.io/client/client-typescript/), [Go](https://www.prisma.io/client/client-go/))
+- _Access_: **Type-safe database access with the auto-generated Prisma client**
 - _Migrate_: **Declarative data modelling and migrations** (optional)
 - _Manage_: **Visual data management with Prisma Admin**
 
