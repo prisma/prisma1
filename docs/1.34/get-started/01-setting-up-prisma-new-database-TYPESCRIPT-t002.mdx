@@ -26,11 +26,7 @@ On this page, you will learn how to:
 
 <Info>
 
-Looking for the new [**Prisma Framework**](https://github.com/prisma/prisma2) (formerly called _Prisma 2_)? It makes using Prisma even simpler by removing the need to host the Prisma server. Check out the database client [Photon.js](https://github.com/prisma/photonjs) and the declarative data modeling / migration tool [Lift](https://github.com/prisma/lift).
-
-<br />
-
-The best way to get started is by following the step-by-step [tutorial](https://github.com/prisma/prisma2/blob/master/docs/tutorial.md) or exploring the ready-to-run [examples](https://github.com/prisma/prisma1-examples/tree/prisma2). Note that the Prisma Framework is not production-ready yet, you can track its development on [isprisma2ready.com](https://isprisma2ready.com).
+Prisma 1 is currently in [maintenance mode](https://github.com/prisma/prisma1/issues/4898). We recommend to [**get started with Prisma 2**](https://www.prisma.io/docs/getting-started/quickstart-typescript) instead. 
 
 </Info>
 
@@ -55,7 +51,7 @@ npm install -g prisma
 
 To use Prisma locally, you need to have [Docker](https://www.docker.com) installed on your machine. If you don't have Docker yet, you can download the Docker Community Edition for your operating system [here](https://www.docker.com/community-edition).
 
-> Don't want to use Docker? Check out the new [Prisma Framework](https://github.com/prisma/prisma2/) which removes the need to host the Prisma server.
+> Don't want to use Docker? Check out the new [Prisma 2](https://www.prisma.io/docs) which removes the need to host the Prisma server using Docker.
 
 ## Set up and connect Prisma with a database
 
@@ -239,23 +235,11 @@ prisma deploy
 
 Congratulations, you have successfully set up Prisma. You can now start using the Prisma client to talk to your database from code.
 
-<Info>
-
-In the new [Prisma Framework](https://github.com/prisma/prisma2/), schema migrations are performed using a standalone tool called [Lift](https://github.com/prisma/lift). Learn more in the [Prisma Framework tutorial](https://github.com/prisma/prisma2/blob/master/docs/tutorial.md).
-
-</Info>
-
 ## View and edit your data in Prisma Admin
 
 If you want to view and edit the data in your database, you can use [Prisma Admin](el3e). To access Prisma Admin, you need to append `/_admin` to your Prisma endpoint, for example: `http://localhost:4466/_admin`.
 
 ## Generate your Prisma client
-
-<Info>
-
-In the new [Prisma Framework](https://github.com/prisma/prisma2/), the Prisma client is turned into a standalone tool called [Photon.js](https://github.com/prisma/photonjs). You can learn more about Photon.js in the [API docs](https://github.com/prisma/prisma2/blob/master/docs/photon/api.md).
-
-</Info>
 
 The Prisma client is a custom, auto-generated library that connects to your Prisma API. Append the following lines to the end of your `prisma.yml`:
 
