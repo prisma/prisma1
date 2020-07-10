@@ -4,6 +4,8 @@
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma1.svg?style=shield)](https://circleci.com/gh/prisma/prisma1) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io)
 
+⚠️ **Prisma 1 is currently in [maintenance mode](https://github.com/prisma/prisma1/issues/4898). If you are new to Prisma, check out [Prisma 2](https://www.prisma.io) instead.** ⚠️
+
 Prisma 1 replaces traditional ORMs and simplifies database workflows: 
 
 - _Access_: **Type-safe database access with the auto-generated Prisma client** (in [JavaScript](https://www.prisma.io/client/client-javscript/), [TypeScript](https://www.prisma.io/client/client-typescript/), [Go](https://www.prisma.io/client/client-go/))
@@ -11,8 +13,6 @@ Prisma 1 replaces traditional ORMs and simplifies database workflows:
 - _Manage_: **Visual data management with Prisma Admin**
 
 It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma 1 currently supports MySQL, PostgreSQL, MongoDB.
-
-⚠️ Prisma 1 is currently in [maintenance mode](https://github.com/prisma/prisma1/issues/4898). If you are new to Prisma, check out [Prisma 2](https://www.prisma.io) instead. ⚠️
 
 ## Community
 
