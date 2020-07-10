@@ -4,7 +4,11 @@
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma1.svg?style=shield)](https://circleci.com/gh/prisma/prisma1) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io)
 
+---
+
 ⚠️ **Prisma 1 is currently in [maintenance mode](https://github.com/prisma/prisma1/issues/4898). If you are new to Prisma, check out [Prisma 2](https://www.prisma.io) instead!** ⚠️
+
+---
 
 Prisma 1 replaces traditional ORMs and simplifies database workflows: 
 
