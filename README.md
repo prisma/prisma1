@@ -16,7 +16,7 @@ Prisma 1 replaces traditional ORMs and simplifies database workflows:
 - _Migrate_: **Declarative data modelling and migrations** (optional)
 - _Manage_: **Visual data management with Prisma Admin**
 
-It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma 1 currently supports MySQL, PostgreSQL, MongoDB.
+It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma 1 currently supports MySQL, PostgreSQL, MongoDB. You can get started with Prisma 1 in the [Prisma 1 docs](https://v1.prisma.io/docs/1.34/get-started/01-setting-up-prisma-new-database-TYPESCRIPT-t002/).
 
 ## Community
 
