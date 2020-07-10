@@ -12,7 +12,7 @@ Prisma 1 replaces traditional ORMs and simplifies database workflows:
 
 It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma 1 currently supports MySQL, PostgreSQL, MongoDB.
 
-> ⚠️ Prisma 1 is currently in [maintenance mode](https://github.com/prisma/prisma1/issues/4898). If you are new to Prisma, check out [Prisma 2](https://www.prisma.io) instead.
+⚠️ Prisma 1 is currently in [maintenance mode](https://github.com/prisma/prisma1/issues/4898). If you are new to Prisma, check out [Prisma 2](https://www.prisma.io) instead. ⚠️
 
 ## Community
 
