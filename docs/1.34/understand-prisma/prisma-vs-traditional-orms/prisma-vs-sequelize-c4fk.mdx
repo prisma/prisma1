@@ -1,5 +1,6 @@
 import Code from "components/Markdown/Code"
 import Icon from 'components/Markdown/Icon'
+import Info from 'components/Markdown/Info'
 
 export const meta = {
   title: "Prisma & Sequelize",
@@ -9,7 +10,11 @@ export const meta = {
 
 ## Overview
 
-> **Note**: This page compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with Prisma [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
 
 This page compares Prisma with [Sequelize](http://docs.sequelizejs.com/). Here is a high-level overview:
 
@@ -31,6 +36,12 @@ In the following, you find a detailled comparison of the Sequelize and Prisma AP
 
 ## Fetching single objects
 
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
+
 **Prisma**
 
 ```ts
@@ -44,6 +55,12 @@ const user = await User.findByPk(id)
 ```
 
 ## Fetching selected scalars of single objects
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
 
 **Prisma**
 
@@ -62,6 +79,12 @@ const user = await User.findByPk(id, attributes: {
 ```
 
 ## Fetching relations
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
 
 **Prisma**
 
@@ -117,6 +140,12 @@ const user = await User.findByPk(id, {
 
 ## Filtering for concrete values
 
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
+
 **Prisma**
 
 ```ts
@@ -139,6 +168,12 @@ const user = User.findAll({
 
 ## Other filter criteria
 
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
+
 **Prisma**
 
 Prisma generates many additional filters that are commonly used in modern application development:
@@ -155,6 +190,12 @@ Prisma generates many additional filters that are commonly used in modern applic
 Sequelize has an extensive set of operators to be found [here](http://docs.sequelizejs.com/manual/tutorial/querying.html#operators).
 
 ## Relation filters
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
 
 **Prisma**
 
@@ -179,6 +220,12 @@ query {
 Sequelize doesn't offer a dedicated API for relation filters. You can get similar functionality by sending a raw SQL query to the database.
 
 ## Pagination
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
 
 **Prisma**
 
@@ -205,6 +252,12 @@ const posts = await Post.findAll({
 ```
 
 ## Creating objects
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
 
 **Prisma**
 
@@ -237,6 +290,12 @@ const user = await User.create({
 </Code>
 
 ## Updating objects
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
 
 **Prisma**
 
@@ -271,6 +330,12 @@ await User.update({
 
 ## Deleting objects
 
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
+
 **Prisma**
 
 ```ts
@@ -284,6 +349,12 @@ await user.destroy()
 ```
 
 ## Batch updates
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
 
 **Prisma**
 
@@ -312,6 +383,12 @@ const updatedUsers = await User.update({
 
 ## Batch deletes
 
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
+
 **Prisma**
 
 ```ts
@@ -333,6 +410,12 @@ await User.destroy({
 ```
 
 ## Transactions
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Sequelize. You can find an updated version comparing Sequelize with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-sequelize).
+
+</Info>
 
 **Prisma**
 
