@@ -85,14 +85,14 @@ describe('cli help', () => {
 describe('cli version', () => {
   test('-v', async () => {
     const cli = await run('-v')
-    expect(cli.cmd.out.stdout.output).toContain('prisma1/')
+    expect(cli.cmd.out.stdout.output).toContain('/1.1')
   })
   test('--version', async () => {
     const cli = await run('--version')
-    expect(cli.cmd.out.stdout.output).toContain('prisma1/')
+    expect(cli.cmd.out.stdout.output).toContain('/1.1')
   })
   test('version', async () => {
     const cli = await run('version')
-    expect(cli.cmd.out.stdout.output).toContain('prisma1/')
+    expect(cli.cmd.out.stdout.output).toContain('/1.1')
   })
 })
