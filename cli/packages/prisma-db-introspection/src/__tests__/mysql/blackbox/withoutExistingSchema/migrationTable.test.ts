@@ -1,6 +1,6 @@
 import testSchema from '../common'
 
-describe('Reserved Tables', () => {
+describe.skip('Reserved Tables', () => {
   test('ignore relation table', async () => {
     await testSchema(`CREATE TABLE \`Test\` (
       \`pk\` varchar(55) NOT NULL,
