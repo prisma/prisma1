@@ -76,7 +76,7 @@ export default class List extends Command {
     if (!gotCloud) {
       this.out.log('')
       this.out.warn(`This does not include your services deployed in the cloud.
-In order to see them, please run ${chalk.bold.green('prisma login')}`)
+In order to see them, please run ${chalk.bold.green('prisma1 login')}`)
     }
   }
 }

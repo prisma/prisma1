@@ -5,7 +5,9 @@ jest.unmock('fs-extra')
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000
 
 async function run(...argv: string[]) {
-  const cli = new CLI({ config: { argv: ['prisma'].concat(argv), mock: true } })
+  const cli = new CLI({
+    config: { argv: ['prisma1'].concat(argv), mock: true },
+  })
   try {
     await cli.run()
     return cli
@@ -53,7 +55,7 @@ async function run(...argv: string[]) {
 describe('edge cases', () => {
   test('shows help for `help` command itself', async () => {
     const cli = await run('help')
-    expect(cli.cmd.out.stdout.output).toMatch(/Usage: prisma COMMAND/)
+    expect(cli.cmd.out.stdout.output).toMatch(/Usage: prisma1 COMMAND/)
   })
 })
 
@@ -83,14 +85,14 @@ describe('cli help', () => {
 describe('cli version', () => {
   test('-v', async () => {
     const cli = await run('-v')
-    expect(cli.cmd.out.stdout.output).toContain('prisma/')
+    expect(cli.cmd.out.stdout.output).toContain('/1.1')
   })
   test('--version', async () => {
     const cli = await run('--version')
-    expect(cli.cmd.out.stdout.output).toContain('prisma/')
+    expect(cli.cmd.out.stdout.output).toContain('/1.1')
   })
   test('version', async () => {
     const cli = await run('version')
-    expect(cli.cmd.out.stdout.output).toContain('prisma/')
+    expect(cli.cmd.out.stdout.output).toContain('/1.1')
   })
 })

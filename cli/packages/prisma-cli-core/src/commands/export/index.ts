@@ -38,17 +38,19 @@ export default class Export extends Command {
     if (
       this.definition.definition!.databaseType &&
       this.definition.definition!.databaseType === 'document'
-      ) {
-        throw new Error(`Export is not yet supported for document stores. Please use the native export features of your database. 
+    ) {
+      throw new Error(`Export is not yet supported for document stores. Please use the native export features of your database. 
         
         More info here: https://docs.mongodb.com/manual/reference/program/mongodump/`)
-      } else {
-        this.out.log(chalk.yellow(`Warning: The \`prisma export\` command will not be further developed in the future. Please use the native export features of your database for these workflows. 
+    } else {
+      this.out.log(
+        chalk.yellow(`Warning: The \`prisma1 export\` command will not be further developed in the future. Please use the native export features of your database for these workflows. 
     
 More info here:
 MySQL: https://dev.mysql.com/doc/refman/5.7/en/mysqlimport.html 
 Postgres: https://www.postgresql.org/docs/10/app-pgrestore.html
-`))
+`),
+      )
     }
 
     const cluster = await this.definition.getCluster()
@@ -63,7 +65,7 @@ Postgres: https://www.postgresql.org/docs/10/app-pgrestore.html
     )
 
     const importCommand = chalk.green.bold(
-      `$ prisma import --data ${exportPath}`,
+      `$ prisma1 import --data ${exportPath}`,
     )
     this.out.log(`Exported service to ${chalk.bold(exportPath)}
 You can import it to a new service with

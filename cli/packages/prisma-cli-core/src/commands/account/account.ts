@@ -14,7 +14,7 @@ Email: ${account!.login[0].email}
 Name:  ${account!.name}`)
     } catch (e) {
       this.out.log(
-        `Currently not logged in. Run ${chalk.cyan('prisma login')} to login.`,
+        `Currently not logged in. Run ${chalk.cyan('prisma1 login')} to login.`,
       )
     }
   }

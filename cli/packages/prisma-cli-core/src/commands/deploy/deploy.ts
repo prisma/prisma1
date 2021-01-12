@@ -23,14 +23,14 @@ export default class Deploy extends Command {
   ${chalk.green.bold('Examples:')}
       
 ${chalk.gray(
-    '-',
-  )} Deploy local changes from prisma.yml to the default service environment.
-  ${chalk.green('$ prisma deploy')}
+  '-',
+)} Deploy local changes from prisma.yml to the default service environment.
+  ${chalk.green('$ prisma1 deploy')}
     
 ${chalk.gray(
-    '-',
-  )} Deploy local changes from default service file accepting potential data loss caused by schema changes
-  ${chalk.green('$ prisma deploy --force')}
+  '-',
+)} Deploy local changes from default service file accepting potential data loss caused by schema changes
+  ${chalk.green('$ prisma1 deploy --force')}
   `
   static flags: Flags = {
     force: flags.boolean({
@@ -135,9 +135,7 @@ ${chalk.gray(
 
     if (cluster && cluster.local && !(await cluster.isOnline())) {
       throw new Error(
-        `Could not connect to server at ${
-          cluster.baseUrl
-        }. Please check if your server is running.`,
+        `Could not connect to server at ${cluster.baseUrl}. Please check if your server is running.`,
       )
     }
 
@@ -189,7 +187,7 @@ ${chalk.gray(
       workspace!,
       noMigrate,
       noGenerate,
-      noHook
+      noHook,
     )
   }
 
@@ -370,12 +368,12 @@ ${chalk.gray(
           if (!noHook && isGenerateHookPresent) {
             this.out.log(
               chalk.yellow(
-                `Warning: The \`prisma generate\` command was executed twice. Since Prisma 1.31, the Prisma client is generated automatically after running \`prisma deploy\`. It is not necessary to generate it via a \`post-deploy\` hook any more, you can therefore remove the hook if you do not need it otherwise.`,
+                `Warning: The \`prisma1 generate\` command was executed twice. Since Prisma 1.31, the Prisma client is generated automatically after running \`prisma1 deploy\`. It is not necessary to generate it via a \`post-deploy\` hook any more, you can therefore remove the hook if you do not need it otherwise.`,
               ),
             )
           }
           const generateCommand = new GenerateCommand({
-            config: this.config
+            config: this.config,
           })
           generateCommand.run()
         } else {
@@ -481,7 +479,7 @@ ${chalk.gray(
       } else {
         this.out.log(
           `\nIf you want to ignore the warnings, please deploy with the --force flag: ${chalk.cyan(
-            '$ prisma deploy --force',
+            '$ prisma1 deploy --force',
           )}`,
         )
         this.out.log(

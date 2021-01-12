@@ -1,6 +1,6 @@
 {
   "version": "1.21.1",
-  "name": "prisma",
+  "name": "prisma1",
   "description": "Prisma is a realtime GraphQL database layer. Connect directly from the frontend or build your own GraphQL server.",
   "keywords": [
     "prisma",
@@ -10,17 +10,17 @@
     "api",
     "server"
   ],
-  "homepage": "https://github.com/prisma/prisma",
+  "homepage": "https://github.com/prisma/prisma1",
   "repository": {
     "type": "git",
-    "url": "https://github.com/prisma/prisma.git"
+    "url": "https://github.com/prisma/prisma1.git"
   },
   "bugs": {
-    "url": "https://github.com/prisma/prisma/issues"
+    "url": "https://github.com/prisma/prisma1/issues"
   },
   "main": "dist/index.js",
   "bin": {
-    "prisma": "dist/index.js"
+    "prisma1": "dist/index.js"
   },
   "files": [
     "dist"

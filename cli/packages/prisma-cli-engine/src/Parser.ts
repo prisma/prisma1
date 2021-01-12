@@ -61,7 +61,7 @@ export class Parser {
           if (this.input.cmd.constructor.name === 'Export' && arg === '-E') {
             throw new Error(
               `-E has been renamed to -e. -e has been renamed to -p. Get more information with ${chalk.bold.green(
-                'prisma export -h',
+                'prisma1 export -h',
               )}`,
             )
           } else {
