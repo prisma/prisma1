@@ -462,6 +462,8 @@ The type of the `where` object depends on the model for which it was generated.
 
 It is also possible to _combine_ multiple filters using the `AND` and `OR` fields.
 
+> **Note**: The `OR` filter is [not available when using MongoDB](https://github.com/prisma/prisma1/issues/3897).
+
 ### Examples
 
 _Fetch users that have an `A` in their names_:

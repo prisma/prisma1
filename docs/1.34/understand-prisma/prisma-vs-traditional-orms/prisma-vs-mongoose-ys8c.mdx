@@ -1,13 +1,20 @@
 import Code from "components/Markdown/Code"
 import Icon from 'components/Markdown/Icon'
+import Info from 'components/Markdown/Info'
 
 export const meta = {
   title: "Prisma & Mongoose",
   position: 80,
-  description: "Learn how Prisma compares to Mongoose"
+  description: "Learn how Prisma 1 compares to Mongoose"
 }
 
 ## Overview
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Mongoose. You can find an updated version comparing Mongoose with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-mongoose).
+
+</Info>
 
 This page compares Prisma with [Mongoose](https://mongoosejs.com/). Here is a high-level overview:
 
@@ -26,6 +33,12 @@ In the following, you find a detailled comparison of the Mongoose and Prisma API
 
 ## Fetching single objects
 
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Mongoose. You can find an updated version comparing Mongoose with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-mongoose).
+
+</Info>
+
 **Prisma**
 
 ```ts
@@ -39,6 +52,12 @@ const user = await findById(id)
 ```
 
 ## Fetching selected scalars of single objects
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Mongoose. You can find an updated version comparing Mongoose with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-mongoose).
+
+</Info>
 
 **Prisma**
 
@@ -56,6 +75,12 @@ const user = await findById(id)
 ```
 
 ## Fetching relations
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Mongoose. You can find an updated version comparing Mongoose with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-mongoose).
+
+</Info>
 
 **Prisma**
 
@@ -109,6 +134,12 @@ const userWithPosts = await User
 
 ## Filtering for concrete values
 
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Mongoose. You can find an updated version comparing Mongoose with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-mongoose).
+
+</Info>
+
 **Prisma**
 
 ```ts
@@ -129,6 +160,12 @@ const user = await User.find({
 
 ## Other filter criteria
 
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Mongoose. You can find an updated version comparing Mongoose with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-mongoose).
+
+</Info>
+
 **Prisma**
 
 Prisma generates many additional filters that are commonly used in modern application development:
@@ -145,6 +182,12 @@ Prisma generates many additional filters that are commonly used in modern applic
 Mongoose exposes the [MongoDB query selectors](https://docs.mongodb.com/manual/reference/operator/query/#query-selectors) as filter criteria.
 
 ## Relation filters
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Mongoose. You can find an updated version comparing Mongoose with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-mongoose).
+
+</Info>
 
 **Prisma**
 
@@ -169,6 +212,12 @@ query {
 Mongoose doesn't offer a dedicated API for relation filters. You can get similar functionality by sending a raw SQL query to the database.
 
 ## Pagination
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Mongoose. You can find an updated version comparing Mongoose with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-mongoose).
+
+</Info>
 
 **Prisma**
 
@@ -195,6 +244,12 @@ const posts = await Post.find({
 ```
 
 ## Creating objects
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Mongoose. You can find an updated version comparing Mongoose with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-mongoose).
+
+</Info>
 
 **Prisma**
 
@@ -227,6 +282,12 @@ await user.save()
 </Code>
 
 ## Updating objects
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Mongoose. You can find an updated version comparing Mongoose with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-mongoose).
+
+</Info>
 
 **Prisma**
 
@@ -265,6 +326,12 @@ await user.save()
 </Code>
 
 ## Deleting objects
+
+<Info>
+
+This page is outdated! It compares **Prisma 1** with Mongoose. You can find an updated version comparing Mongoose with **Prisma 2** [here](https://www.prisma.io/docs/understand-prisma/api-comparisons/prisma-and-mongoose).
+
+</Info>
 
 **Prisma**
 
