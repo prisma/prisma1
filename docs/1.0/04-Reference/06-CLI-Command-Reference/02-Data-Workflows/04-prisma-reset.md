@@ -3,12 +3,12 @@ alias: clchg7lwe1
 description: Reset data
 ---
 
-# `prisma1 reset`
+# `prisma reset`
 
 #### Usage
 
 ```sh
-prisma1 reset [flags]
+prisma reset [flags]
 ```
 
 #### Flags

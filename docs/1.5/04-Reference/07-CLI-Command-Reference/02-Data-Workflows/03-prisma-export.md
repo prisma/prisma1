@@ -3,14 +3,14 @@ alias: oonu0quai2
 description: Export service data to a local file
 ---
 
-# `prisma1 export`
+# `prisma export`
 
 Exports your service data to a local zip directory.
 
 #### Usage
 
 ```sh
-prisma1 export [flags]
+prisma export [flags]
 ```
 
 #### Flags
@@ -25,11 +25,11 @@ prisma1 export [flags]
 ##### Export data to file with default name (`export-<timestamp>.zip`).
 
 ```sh
-prisma1 export
+prisma export
 ```
 
 ##### Export data to file called `mydata.zip`.
 
 ```sh
-prisma1 export --path mydata.zip
+prisma export --path mydata.zip
 ```

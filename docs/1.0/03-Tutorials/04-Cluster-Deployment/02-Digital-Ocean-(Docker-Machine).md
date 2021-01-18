@@ -205,7 +205,7 @@ docker-compose up -d
 On your local machine, verify that the cluster configuration is being picked up correctly:
 
 ```sh
-prisma1 cluster list
+prisma cluster list
 ```
 
 The output should include your newly added cluster.
@@ -213,8 +213,8 @@ The output should include your newly added cluster.
 Now you can create a new service and deploy it to the cluster:
 
 ```
-prisma1 init
-prisma1 deploy
+prisma init
+prisma deploy
 ```
 
 Pick the new cluster in the deployment option. You should see output similar to this:

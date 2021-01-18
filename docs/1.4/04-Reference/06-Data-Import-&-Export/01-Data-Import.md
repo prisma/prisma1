@@ -41,7 +41,7 @@ Here is a general overview of the data import process:
   +--------------+
 ```
 
-As mentioned above, step 1 has to be performed manually. Step 2 can then be done by either using the raw import API or the `prisma1 import` command from the CLI.
+As mentioned above, step 1 has to be performed manually. Step 2 can then be done by either using the raw import API or the `prisma import` command from the CLI.
 
 > To view the current state of supported transformations in the CLI and submit a vote for the one you need, you can check out [this](https://github.com/graphcool/framework/issues/1410) GitHub issue.
 
@@ -55,7 +55,7 @@ You can upload an unlimited number of files for each of these types, but each fi
 
 ## Data import with the CLI
 
-The Prisma CLI offers the `prisma1 import` command. It accepts one option:
+The Prisma CLI offers the `prisma import` command. It accepts one option:
 
 - `--data` (short: `-d`): A file path to a directory containing the data to be imported (this can either be _regular_ or a _zipped_ directory)
 
@@ -95,7 +95,7 @@ Consider the following file structure defining a Prisma service:
 `data` contains the files data to be imported. Further, all files ending on `.json` are adhering to NDF. To import the data from these files, you can simply run the following command in the terminal:
 
 ```sh
-prisma1 import --data data
+prisma import --data data
 ```
 
 ## Data import using the raw import API

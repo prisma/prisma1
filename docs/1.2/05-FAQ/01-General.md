@@ -27,7 +27,7 @@ The second use case gets you up and running with a hosted GraphQL API very quick
 Prisma services are managed with the [Prisma CLI](https://github.com/graphcool/prisma/tree/master/cli) which you can install as follows:
 
 ```sh
-npm install -g prisma1
+npm install -g prisma
 ```
 
 The best way to get started is through our [Quickstart](https://www.prismagraphql.com/docs/quickstart/) page.

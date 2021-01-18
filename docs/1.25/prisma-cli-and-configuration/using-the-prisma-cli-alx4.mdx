@@ -31,7 +31,7 @@ brew tap
 ### NPM
 
 ```bash copy
-npm install -g prisma1
+npm install -g prisma
 ```
 
 ### Yarn
@@ -77,10 +77,10 @@ Docs can be found here: https://bit.ly/prisma-cli-commands
 Examples:
 
 - Initialize files for a new Prisma service
-  $ prisma1 init
+  $ prisma init
 
 - Deploy service changes (or new service)
-  $ prisma1 deploy
+  $ prisma deploy
 ```
 
 ## Quickstart
@@ -88,11 +88,11 @@ Examples:
 Once installed, execute the following commands to get your Prisma API up-and-running and start sending queries and mutations to it:
 
 ```bash
-prisma1 init hello-world
+prisma init hello-world
 # Select a *Demo server* from the interactive prompt
 cd hello-world
-prisma1 deploy
-prisma1 playground
+prisma deploy
+prisma playground
 ```
 
 You can now start sending queries and mutations to your Prisma API. For a more comprehensive walkthrough, check out the [Get Started](a001) section.
@@ -126,5 +126,5 @@ To get a simple local proxy, you can use the [`proxy` module](https://www.npmjs.
 ```bash
 npm install -g proxy
 DEBUG="*" proxy -p 8080
-HTTP_PROXY=http://localhost:8080 HTTPS_PROXY=https://localhost:8080 prisma1 deploy
+HTTP_PROXY=http://localhost:8080 HTTPS_PROXY=https://localhost:8080 prisma deploy
 ```

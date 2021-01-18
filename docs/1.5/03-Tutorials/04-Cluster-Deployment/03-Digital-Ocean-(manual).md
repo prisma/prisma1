@@ -63,8 +63,8 @@ sudo apt-get install -y nodejs
 Install Prisma:
 
 ```sh
-npm -g install prisma1
-prisma1 local start
+npm -g install prisma
+prisma local start
 ```
 
 Prisma is now installed and running. At this point you should verify that everything is running correctly.
@@ -80,7 +80,7 @@ e5d2e028eba9        prismagraphql/prisma:1.0.0   "/app/bin/single-ser…"   51 s
 42d9d5acd0e4        mysql:5.7                            "docker-entrypoint.s…"   51 seconds ago      Up 49 seconds       0.0.0.0:3306->3306/tcp   prisma-db
 ```
 
-Run `prisma1 cluster list` and verify that the local cluster is in the output.
+Run `prisma cluster list` and verify that the local cluster is in the output.
 
 Finally, connect to the `/cluster` endpoint in a browser. If your droplet has the ip `37.139.15.166` open the following webpage: `http://37.139.15.166:4466/cluster`
 
@@ -123,7 +123,7 @@ Change the host to use the ip of your Digital Ocean droplet.
 On your local machine, verify that the cluster configuration is being picked up correctly:
 
 ```sh
-prisma1 cluster list
+prisma cluster list
 ```
 
 The output should include your newly added cluster.
@@ -131,8 +131,8 @@ The output should include your newly added cluster.
 Now you can create a new service and deploy it to the cluster:
 
 ```sh
-prisma1 init
-prisma1 deploy
+prisma init
+prisma deploy
 ```
 
 Pick the new cluster in the deployment option. You should see output similar to this:

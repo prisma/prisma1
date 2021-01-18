@@ -17,7 +17,7 @@ This changes when using MongoDB with Prisma. Prisma adds a "schema" (i.e. the Pr
 The general process for performing a migration with Prisma is as follows:
 
 1. Adjust the [datamodel](knun) file to reflect the new desired schema
-1. Run [`prisma1 deploy`](xcv9) to apply the changes and perform the migration of the Prisma API (and potentially) the underlying MongoDB database)
+1. Run [`prisma deploy`](xcv9) to apply the changes and perform the migration of the Prisma API (and potentially) the underlying MongoDB database)
 
 When going through that process, Prisma will only ever make _additive_ structural changes to the underlying MongoDB database(s).
 
@@ -66,7 +66,7 @@ type Person @db(name: "users") {
 }
 ```
 
-To apply the changes and update the Prisma API, run `prisma1 deploy`.
+To apply the changes and update the Prisma API, run `prisma deploy`.
 
 #### Scenario 2: Without the `@db` directive
 
@@ -90,7 +90,7 @@ type Person {
 }
 ```
 
-When running `prisma1 deploy`, there are three things done by Prisma:
+When running `prisma deploy`, there are three things done by Prisma:
 
 - Remove CRUD operations for the `User` type from the Prisma API
 - Expose CRUD operations for the new `Person` type in the Prisma API
@@ -128,7 +128,7 @@ type User {
 }
 ```
 
-Now run `prisma1 deploy` to apply the changes.
+Now run `prisma deploy` to apply the changes.
 
 #### Scenario 2: Renaming only in the underlying MongoDB
 
@@ -138,7 +138,7 @@ After you've done this, your Prisma API of course has not changed. This also mea
 
 To prevent this, you have two options:
 
-- Delete the `name` field from the datamodel and run `prisma1 deploy`. This means there is no way to get access to the new `lastName` through Prisma.
+- Delete the `name` field from the datamodel and run `prisma deploy`. This means there is no way to get access to the new `lastName` through Prisma.
 - Also rename the field in the Prisma API, see the third scenario for more info on this.
 
 #### Scenario 3: Renaming in the Prisma API and the underlying MongoDB
@@ -153,9 +153,9 @@ type User {
   lastName: String!
 ```
 
-Finally, run `prisma1 deploy`. 
+Finally, run `prisma deploy`. 
 
-> Note that the Prisma CLI might require you to run `prisma1 deploy --force` to execute this operation. This is a bug in the CLI that has been reported [here](https://github.com/prisma/prisma/issues/3871).
+> Note that the Prisma CLI might require you to run `prisma deploy --force` to execute this operation. This is a bug in the CLI that has been reported [here](https://github.com/prisma/prisma/issues/3871).
 
 ### Deleting a collection
 
@@ -184,6 +184,6 @@ type User {
 }
 ```
 
-Now run `prisma1 deploy` to apply the changes. This does not change anything in the underlying MongoDB, the `Post` collections remains there as a _dangling collection_.
+Now run `prisma deploy` to apply the changes. This does not change anything in the underlying MongoDB, the `Post` collections remains there as a _dangling collection_.
 
 To get rid of the dangling collection, you need to [manually remove the collection](https://docs.mongodb.com/manual/reference/method/db.collection.remove/) from your MongoDB database.

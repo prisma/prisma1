@@ -44,7 +44,7 @@ Prisma services are managed with the [Prisma CLI](!alias-je3ahghip5). You can in
 Open your terminal and run the following command to install the Prisma CLI:
 
 ```
-npm install -g prisma1
+npm install -g prisma
 # or
 # yarn global add prisma
 ```
@@ -182,7 +182,7 @@ So far you only have the local service configuration files for your Prisma servi
 Run the following command to deploy the Prisma service to your local Prisma server:
 
 ```sh
-prisma1 deploy
+prisma deploy
 ```
 
 </Instruction>
@@ -195,7 +195,7 @@ So your Prisma servier is deployed - but how do you know how to interact with it
 
 In general, the generated API allows to perform CRUD operations on the types in your data model. It also exposes GraphQL subscriptions which allow clients to _subscribe_ to certain _events_ and receive updates in realtime.
 
-It is important to understand that the data model is the foundation for your API. Every time you make changes to your data model (and run `prisma1 deploy` afterwards), the schema of Prisma's GraphQL API gets updated accordingly.
+It is important to understand that the data model is the foundation for your API. Every time you make changes to your data model (and run `prisma deploy` afterwards), the schema of Prisma's GraphQL API gets updated accordingly.
 
 Because your data model contains the `User` type, the Prisma API now allows for its clients to create, read, update and delete records, also called _nodes_, of that type. In particular, the following GraphQL operations are now generated based on the `User` type:
 
@@ -214,7 +214,7 @@ To actually use these operations, you need a way to [send requests to your servi
 To open a GraphQL Playground you can use the Prisma CLI again. Run the following command inside the `hello-world` directory:
 
 ```sh
-prisma1 playground
+prisma playground
 ```
 
 </Instruction>

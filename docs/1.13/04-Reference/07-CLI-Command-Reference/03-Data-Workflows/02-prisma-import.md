@@ -3,14 +3,14 @@ alias: ah3phephev
 description: Import data
 ---
 
-# `prisma1 import`
+# `prisma import`
 
 Import data into the database of your Prisma service. The data needs to be formatted according to the [Normalized Data Format](!alias-teroo5uxih). For more info, read the [Data Import](!alias-ol2eoh8xie) chapter.
 
 #### Usage
 
 ```sh
-prisma1 import [flags]
+prisma import [flags]
 ```
 
 #### Flags

@@ -129,7 +129,7 @@ There are two ways to use the Management API:
 
 ### Using the Prisma CLI
 
-When using the Prisma CLI to perform requests against the Management API (e.g. using `prisma1 deploy`), you don't need to worry about generating Management API tokens. The CLI generates them for you upon every API request. Therefore, the CLI needs to know the Management API secret of your Prisma server in order to generate a Management API token and authenticate its requests.
+When using the Prisma CLI to perform requests against the Management API (e.g. using `prisma deploy`), you don't need to worry about generating Management API tokens. The CLI generates them for you upon every API request. Therefore, the CLI needs to know the Management API secret of your Prisma server in order to generate a Management API token and authenticate its requests.
 
 **This is why you have to set the `PRISMA_MANAGEMENT_API_SECRET` environment variable when using the Prisma CLI**.
 
@@ -147,7 +147,7 @@ When you want to send HTTP requests directly to the Management API of your Prism
 
 <Warning>
 
-The Prisma CLI has a hidden helper command for generating Management API tokens: `prisma1 cluster-token`. Before running it, you need to set the `PRISMA_MANAGEMENT_API_SECRET` environment variable. Note that this command is not officially documented and might change without further notice.
+The Prisma CLI has a hidden helper command for generating Management API tokens: `prisma cluster-token`. Before running it, you need to set the `PRISMA_MANAGEMENT_API_SECRET` environment variable. Note that this command is not officially documented and might change without further notice.
 
 There already is a [pending feature request](https://github.com/prisma/prisma/issues/2772) for a similar command.
 

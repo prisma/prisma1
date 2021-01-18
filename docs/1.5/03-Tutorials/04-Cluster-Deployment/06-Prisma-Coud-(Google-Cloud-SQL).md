@@ -225,7 +225,7 @@ Now that you provisioned a cluster, you can use it as a runtime environment for 
 Install the latest CLI version with the following command:
 
 ```sh
-npm install -g prisma1
+npm install -g prisma
 ```
 
 </Instruction>
@@ -235,7 +235,7 @@ npm install -g prisma1
 Then, log into your Prisma Cloud account:
 
 ```sh
-prisma1 login
+prisma login
 ```
 
 </Instruction>
@@ -247,7 +247,7 @@ This will store your _cloud session key_ in `~/.prisma/config.yml`. This key is 
 Next, go ahead and create a new service:
 
 ```sh
-prisma1 init hello-world
+prisma init hello-world
 ```
 
 </Instruction>
@@ -258,12 +258,12 @@ When prompted by the CLI, choose the `Minimal setup: database-only` option. Then
 
 ```sh
 cd hello-world
-prisma1 deploy
+prisma deploy
 ```
 
 </Instruction>
 
-After running `prisma1 deploy`, the Prisma CLI will prompt you to choose a cluster you'd like to use as a deployment target. Among the options, you'll find the cluster that you've just setup.
+After running `prisma deploy`, the Prisma CLI will prompt you to choose a cluster you'd like to use as a deployment target. Among the options, you'll find the cluster that you've just setup.
 
 <Instruction>
 

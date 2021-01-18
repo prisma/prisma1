@@ -24,7 +24,7 @@ On this page, you will learn how to:
 The [Prisma CLI](https://www.npmjs.com/package/prisma) is used to deploy and manage Prisma services. You can install it using NPM:
 
 ```bash copy
-npm install -g prisma1
+npm install -g prisma
 ```
 
 ## Install Docker
@@ -123,22 +123,22 @@ docker-compose up -d
 
 ## Create a Prisma service
 
-To bootstrap the service configuration files for your first Prisma service, create a new directory and initalize it using the `prisma1 init` command:
+To bootstrap the service configuration files for your first Prisma service, create a new directory and initalize it using the `prisma init` command:
 
 ```bash copy
 mkdir hello-world
 cd hello-world
-prisma1 init --endpoint http://localhost:4466
+prisma init --endpoint http://localhost:4466
 ```
 
 ## Deploy the Prisma service
 
-The `prisma1 init` command created the _minimal_ service configuration needed to deploy a Prisma service: `prisma.yml` and `datamodel.graphql`. 
+The `prisma init` command created the _minimal_ service configuration needed to deploy a Prisma service: `prisma.yml` and `datamodel.graphql`. 
 
 This service configuration now needs to be _deployed_ so you can use the Prisma API of your service:
 
 ```bash copy
-prisma1 deploy
+prisma deploy
 ```
 
 ## Explore the Prisma API in a Playground
@@ -146,7 +146,7 @@ prisma1 deploy
 The Prisma API of your service exposes CRUD and realtime operations for the `User` type defined in `datamodel.graphql`. You can explore the API in a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) using the following command:
 
 ```bash copy
-prisma1 playground
+prisma playground
 ```
 
 Here are a few sample queries and mutations you can send to explore the API.

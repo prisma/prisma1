@@ -101,8 +101,8 @@ secret: secret123
 datamodel: datamodel.graphql
 ```
 
-Now, you can pass a `--stage` option when running `prisma1 deploy`. The CLI will pick the value provided value up and set it as the `stage` in `prisma.yml`.
+Now, you can pass a `--stage` option when running `prisma deploy`. The CLI will pick the value provided value up and set it as the `stage` in `prisma.yml`.
 
 ```sh
-prisma1 deploy --stage dev
+prisma deploy --stage dev
 ```

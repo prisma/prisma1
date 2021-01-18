@@ -3,14 +3,14 @@ alias: jusreo9tn4
 description: Introspect an existing database to generate the data model
 ---
 
-# `prisma1 introspect`
+# `prisma introspect`
 
 Creates a data model by introspecting an existing database
 
 #### Usage
 
 ```sh
-prisma1 introspect
+prisma introspect
 ```
 
 #### Limitations
@@ -22,7 +22,7 @@ Currently only works for Postgres databases.
 ##### Introspect an existing Postgres database
 
 ```sh
-~/my-app $ prisma1 introspect
+~/my-app $ prisma introspect
 ? What kind of database do you want to introspect? Postgres
 ? Enter database host localhost
 ? Enter database port 3306

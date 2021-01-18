@@ -27,7 +27,7 @@ The most minimal version of a valid prisma.yml needs to contains at least two pr
 - `datamodel`
 - `endpoint`
 
-To be able to specify an `endpoint`, you need to have access to a Prisma server. If you don't have access to a Prisma server, you can omit the `endpoint` from prisma.yml and run `prisma1 deploy` only with the `datamodel` property. In that case, a CLI wizard guides you through the process of creating a local Prisma server or lets you deploy to a [Demo server](jfr3) in Prisma Cloud. It then writes the `endpoint` into prisma.yml for you before the service gets deployed:
+To be able to specify an `endpoint`, you need to have access to a Prisma server. If you don't have access to a Prisma server, you can omit the `endpoint` from prisma.yml and run `prisma deploy` only with the `datamodel` property. In that case, a CLI wizard guides you through the process of creating a local Prisma server or lets you deploy to a [Demo server](jfr3) in Prisma Cloud. It then writes the `endpoint` into prisma.yml for you before the service gets deployed:
 
 ```yml
 datamodel: datamodel.prisma
@@ -59,7 +59,7 @@ generate:
 
 hooks:
   post-deploy:
-    - prisma1 generate
+    - prisma generate
 ```
 
 > In this example, the `databaseType` is inferred and defaults to `relational`.
@@ -107,7 +107,7 @@ generate:
 # the Prisma client.
 hooks:
   post-deploy:
-    - prisma1 generate
+    - prisma generate
 
 # This service has one event subscription configured. The
 # corresponding subscription query is located in `database/subscriptions/welcomeEmail.graphql`.
@@ -259,7 +259,7 @@ The HTTP endpoint for your Prisma API is composed of the following components:
 - **Service name**: A descriptive name for your Prisma servic e.
 - **Service stage**: The development stage of your cluster (e.g. `dev`, `staging`, `prod`).
 
-Note that the `endpoint` is actually required to deploy your Prisma service. However, if you don't specify it in prisma.yml before running `prisma1 deploy`, the CLI prompts you with a wizard to help you figure out a Prisma server as deployment target and subsequently writes the `endpoint` into prisma.yml for you.
+Note that the `endpoint` is actually required to deploy your Prisma service. However, if you don't specify it in prisma.yml before running `prisma deploy`, the CLI prompts you with a wizard to help you figure out a Prisma server as deployment target and subsequently writes the `endpoint` into prisma.yml for you.
 
 #### Type
 
@@ -397,7 +397,7 @@ The `hooks` property is used to define terminal commands which will be executed 
 
 The following hooks are currently available:
 
-- `post-deploy`: Will be invoked _after_ the `prisma1 deploy` command
+- `post-deploy`: Will be invoked _after_ the `prisma deploy` command
 
 #### Type
 
@@ -405,16 +405,16 @@ The `hooks` property expects an **object**. The properties of that object match 
 
 #### Examples
 
-Here is an example that performs two tasks after `prisma1 deploy` was executed:
+Here is an example that performs two tasks after `prisma deploy` was executed:
 
 1. Print "Deployment finished"
-1. Invoke code generation with `prisma1 generate`
+1. Invoke code generation with `prisma generate`
 
 ```yml
 hooks:
   post-deploy:
     - echo "Deployment finished"
-    - prisma1 generate
+    - prisma generate
 ```
 
 ### seed (optional)
@@ -430,7 +430,7 @@ The `seed` property expects an **object**, with either one of two sub-properties
   - A path to a `.zip` file that contains a data set in Normalized Data Format (NDF)
 - `run`: Shell command that will be executed when seeding a service. This is meant for more complex seed setups that are not covered by `import`.
 
-Seeds are implicitly executed when deploying a service for the first time (unless explicitly disabled using the `--no-seed` flag on `prisma1 deploy`). Track [this feature request for additional seeding workflows](https://github.com/graphcool/prisma/issues/1536).
+Seeds are implicitly executed when deploying a service for the first time (unless explicitly disabled using the `--no-seed` flag on `prisma deploy`). Track [this feature request for additional seeding workflows](https://github.com/graphcool/prisma/issues/1536).
 
 #### Examples
 

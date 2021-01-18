@@ -3,12 +3,12 @@ alias: quungoogh8
 description: Add an existing cluster.
 ---
 
-# `prisma1 cluster add`
+# `prisma cluster add`
 
 Add an existing cluster.
 
 #### Usage
 
 ```sh
-prisma1 cluster add
+prisma cluster add
 ```

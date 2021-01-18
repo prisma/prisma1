@@ -3,7 +3,7 @@ alias: kee1iedaov
 description: Deploys service definition changes
 ---
 
-# `prisma1 deploy`
+# `prisma deploy`
 
 Deploys service definition changes. Every time you're making a local change to any file in the [service configuration](!alias-ieshoo5ohm) (including the [data model](!alias-eiroozae8u)), you need to synchronize these changes with the remote service using this command.
 
@@ -18,7 +18,7 @@ If your deploy results in data loss or brings your project into an incosistent s
 #### Usage
 
 ```sh
-prisma1 deploy [flags]
+prisma deploy [flags]
 ```
 
 #### Flags
@@ -51,23 +51,23 @@ prisma1 deploy [flags]
 ##### Deploy service.
 
 ```sh
-prisma1 deploy
+prisma deploy
 ```
 
 ##### Deploy service and interactively select a cluster as deployment target.
 
 ```sh
-prisma1 deploy --interactive
+prisma deploy --interactive
 ```
 
 ##### Deploy service with environment variables specified in `.env.prod`.
 
 ```sh
-prisma1 deploy --env-file .env.prod
+prisma deploy --env-file .env.prod
 ```
 
 ##### Deploy service accepting data loss or brining the project into an incosistent state.
 
 ```sh
-prisma1 deploy --force
+prisma deploy --force
 ```

@@ -59,7 +59,7 @@ Here's what changed:
 To apply the changes you just made to your datamodel, you need to redeploy the Prisma datamodel:
 
 ```bash copy
-prisma1 deploy
+prisma deploy
 ```
 
 ## Regenerate your Prisma client
@@ -67,7 +67,7 @@ prisma1 deploy
 Because the Prisma client is based on your datamodel, it needs to be regenerated every time the datamodel is updated:
 
 ```bash copy
-prisma1 generate
+prisma generate
 ```
 
 The Prisma client library in the `/generated/prisma-client` directory is now being updated and its API has been adjusted to use the new datamodel.
@@ -79,7 +79,7 @@ You can ensure that your Prisma client is automatically being updated after ever
 ```yml copy
 hooks:
   post-deploy:
-    - prisma1 generate
+    - prisma generate
 ```
 
 </Info>
