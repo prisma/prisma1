@@ -5,9 +5,9 @@ export const meta = {
 
 ## Overview
 
-The Prisma client is auto-generated using the `prisma generate` command of the [Prisma CLI](alx4). One Prisma client connects to exactly one Prisma service.
+The Prisma client is auto-generated using the `prisma1 generate` command of the [Prisma CLI](alx4). One Prisma client connects to exactly one Prisma service.
 
-`prisma generate` reads the information that's specified under the `generate` root property in your service's prisma.yml. 
+`prisma1 generate` reads the information that's specified under the `generate` root property in your service's prisma.yml. 
 
 ## Configuring `generate` in prisma.yml
 
@@ -29,7 +29,7 @@ generate:
     output: ./prisma-client/
 ```
 
-Running `prisma generate` in the directory where that prisma.yml is located generates a Prisma client in TypeScript and stores it in a file called `prisma.ts`.
+Running `prisma1 generate` in the directory where that prisma.yml is located generates a Prisma client in TypeScript and stores it in a file called `prisma.ts`.
 
 > The `generator` also accepts `graphql-schema` as a value. This downloads the GraphQL schema for your Prisma API via an [introspection](https://graphql.org/learn/introspection/) query.`
 

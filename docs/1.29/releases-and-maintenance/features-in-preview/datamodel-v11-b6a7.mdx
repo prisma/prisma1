@@ -510,12 +510,12 @@ The command `prisma1 deploy` got enhanced. From now on, there will be two modes 
 - `prisma1 deploy`: This command reads your datamodel and migrates the underlying database to match it.
 - `prisma1 deploy --no-migrate`: This command does *not* migrate the underlying database. Instead, it expects the database schema to be in the right state already (which means you need to manually migrate the database _before_ running `prisma1 deploy --no-migrate`)! If the datamodel and database schema do not align, `prisma1 deploy` will throw an error.
 
-### `prisma introspect`
+### `prisma1 introspect`
 
-The command `prisma introspect` has been adapted to output the new datamodel format when using it with the `--prototype` flag: 
+The command `prisma1 introspect` has been adapted to output the new datamodel format when using it with the `--prototype` flag: 
 
 ```
-prisma introspect --prototype
+prisma1 introspect --prototype
 ```
 
 The command has been improved so that it will pay respect to existing datamodel files. This way you can use it to translate your database schema into a datamodel while the introspection will preserve the ordering of types and fields of your existing datamodel file.
@@ -525,7 +525,7 @@ The command has been improved so that it will pay respect to existing datamodel 
 You can fluently switch between those two commands however you like. For instance you could use `prisma1 deploy` for most of your migration needs. When you hit an advanced use case where the Prisma migration system is not yet powerful enough, you can:
 
 1. Migrate the database manually 
-1. Use `prisma introspect --prototype` to update your datamodel with those changes from the database
+1. Use `prisma1 introspect --prototype` to update your datamodel with those changes from the database
 1. Use `prisma1 deploy --no-migrate` to let the Prisma server know about that
 
 
@@ -1018,7 +1018,7 @@ Read more about deployment errors here: https://bit.ly/prisma-force-flag
 
 ### 3. Migrating to datamodel v1.1 syntax
 
-> **Note**: In this tutorial, we're updating the tutorial by hand. Alternatively, you can also generate a new datamodel using introspection: `prisma introspect --prototype`
+> **Note**: In this tutorial, we're updating the tutorial by hand. Alternatively, you can also generate a new datamodel using introspection: `prisma1 introspect --prototype`
 
 To fix the errors that Prisma threw after `prisma1 deploy`, you need to:
 

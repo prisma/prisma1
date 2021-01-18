@@ -210,7 +210,7 @@ endpoint: http://localhost:4466
 You now need to introspect your database schema to generate the datamodel which is the foundation for the API of your Prisma client:
 
 ```bash copy
-prisma introspect
+prisma1 introspect
 ```
 
 The CLI generates the `datamodel-[TIMESTAMP].prisma` (e.g. `datamodel-1533886167692.prisma`) file containing the SDL version of your database schema. On the first run, it also writes the `datamodel` property into the `prisma.yml`.
@@ -244,7 +244,7 @@ generate:
 Now generate the client with this command:
 
 ```bash copy
-prisma generate
+prisma1 generate
 ```
 
 The CLI now stored your Prisma client inside the `./generated/prisma-client/` directory as specified in `prisma.yml`.

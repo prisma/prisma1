@@ -95,7 +95,7 @@ prisma1 deploy --new
 prisma1 deploy --env-file .env.prod
 ```
 
-## prisma generate
+## prisma1 generate
 
 Invokes the _generators_ specified in `prisma.yml`. Available generators are:
 
@@ -110,7 +110,7 @@ The following generators are built-into the Prisma CLI:
 ### Usage
 
 ```bash
-prisma generate [flags]
+prisma1 generate [flags]
 ```
 
 ### Flags
@@ -132,7 +132,7 @@ generate:
 ```
 
 ```bash
-prisma generate
+prisma1 generate
 ```
 
 **Generate the Go client and the GraphQL schema store the generated files at `./generated/prisma`**
@@ -148,16 +148,16 @@ generate:
 ```
 
 ```bash
-prisma generate
+prisma1 generate
 ```
 
-## prisma introspect
+## prisma1 introspect
 
 Creates a [datamodel](knul) by _introspecting_ the schema of an existing database.
 
 <Warning>
 
-`prisma introspect` currently only works for Postgres databases.
+`prisma1 introspect` currently only works for Postgres databases.
 
 </Warning>
 
@@ -175,7 +175,7 @@ Learn more about database introspection with Prisma [here](soi1).
 ### Usage
 
 ```sh
-prisma introspect
+prisma1 introspect
 ```
 
 ### Examples
@@ -183,7 +183,7 @@ prisma introspect
 **Introspect an existing database**
 
 ```sh
-prisma introspect
+prisma1 introspect
 ```
 
 Here is a sample interaction where the database connection details are provided through the wizard:
@@ -369,7 +369,7 @@ prisma1 playground
 prisma1 playground --web
 ```
 
-## prisma seed
+## prisma1 seed
 
 Seeds the service with data. 
 
@@ -378,7 +378,7 @@ This command expects that the [`seed`](5cy7#seed-optional) property in prisma.ym
 #### Usage
 
 ```sh
-prisma seed [flags]
+prisma1 seed [flags]
 ```
 
 #### Flags
@@ -393,13 +393,13 @@ prisma seed [flags]
 **Seed service with initial data**
 
 ```sh
-prisma seed
+prisma1 seed
 ```
 
 **Seed service with initial data after deleting all of the service's data first**
 
 ```sh
-prisma seed --reset
+prisma1 seed --reset
 ```
 
 ## prisma1 import
@@ -521,7 +521,7 @@ prisma1 login --key KEY
 
 > In the above command, the `KEY` placeholder needs to be replaced with the value of your valid cloud session key. You can find the `cloudSessionKey` in `~/.prisma/config.yml`.
 
-## prisma logout
+## prisma1 logout
 
 Logout from [Prisma Cloud](https://www.prisma.io/cloud). 
 
@@ -530,7 +530,7 @@ This command simply deletes the `cloudSessionKey` from `~/.prisma/config.yml`.
 ### Usage
 
 ```sh
-prisma logout
+prisma1 logout
 ```
 
 ### Examples
@@ -538,7 +538,7 @@ prisma logout
 **Log out of Prisma Cloud**
 
 ```sh
-prisma logout
+prisma1 logout
 ```
 
 ## prisma1 console

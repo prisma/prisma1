@@ -59,7 +59,7 @@ generate:
 
 hooks:
   post-deploy:
-    - prisma generate
+    - prisma1 generate
 ```
 
 > In this example, the `databaseType` is inferred and defaults to `relational`.
@@ -107,7 +107,7 @@ generate:
 # the Prisma client.
 hooks:
   post-deploy:
-    - prisma generate
+    - prisma1 generate
 
 # Points to a `.graphql` file containing GraphQL
 # operations that will be executed when initially
@@ -378,13 +378,13 @@ The `hooks` property expects an **object**. The properties of that object match 
 Here is an example that performs two tasks after `prisma1 deploy` was executed:
 
 1. Print "Deployment finished"
-1. Invoke code generation with `prisma generate`
+1. Invoke code generation with `prisma1 generate`
 
 ```yml
 hooks:
   post-deploy:
     - echo "Deployment finished"
-    - prisma generate
+    - prisma1 generate
 ```
 
 ### seed (optional)

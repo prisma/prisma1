@@ -503,12 +503,12 @@ The command `prisma1 deploy` got enhanced. From now on, there will be two modes 
 - `prisma1 deploy`: This command reads your datamodel and migrates the underlying database to match it.
 - `prisma1 deploy --no-migrate`: This command does *not* migrate the underlying database. Instead, it expects the database schema to be in the right state already (which means you need to manually migrate the database _before_ running `prisma1 deploy --no-migrate`)! If the datamodel and database schema do not align, `prisma1 deploy` will throw an error.
 
-### `prisma introspect`
+### `prisma1 introspect`
 
-The command `prisma introspect` has been adapted to output the new datamodel format: 
+The command `prisma1 introspect` has been adapted to output the new datamodel format: 
 
 ```
-prisma introspect
+prisma1 introspect
 ```
 
 The command has been improved so that it will pay respect to existing datamodel files. This way you can use it to translate your database schema into a datamodel while the introspection will preserve the ordering of types and fields of your existing datamodel file.
@@ -518,7 +518,7 @@ The command has been improved so that it will pay respect to existing datamodel 
 You can fluently switch between those two commands however you like. For instance you could use `prisma1 deploy` for most of your migration needs. When you hit an advanced use case where the Prisma migration system is not yet powerful enough, you can:
 
 1. Migrate the database manually 
-1. Use `prisma introspect` to update your datamodel with those changes from the database
+1. Use `prisma1 introspect` to update your datamodel with those changes from the database
 1. Use `prisma1 deploy --no-migrate` to let the Prisma server know about that
 
 ## Prerequisites & Installation
@@ -973,10 +973,10 @@ Read more about deployment errors here: https://bit.ly/prisma-force-flag
 
 ### 3. Migrating to datamodel v1.1 syntax
 
-To update your datamodel and get rid of the previous errors, you can use the `prisma introspect` command. Inside your project directory, run:
+To update your datamodel and get rid of the previous errors, you can use the `prisma1 introspect` command. Inside your project directory, run:
 
 ```
-prisma introspect
+prisma1 introspect
 ```
 
 This introspects your database schema and generates a new datamodel file that uses v1.1 syntax. The new file is called `datamodel-TIMESTAMP.prisma`, e.g. `datamodel-1554394432089.prisma`. For the example from above, the following datamodel is generated:

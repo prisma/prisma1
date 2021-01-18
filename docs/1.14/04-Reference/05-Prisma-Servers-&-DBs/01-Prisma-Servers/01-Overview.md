@@ -90,4 +90,4 @@ The CLI authenticates against Prisma Cloud using the `cloudSessionKey` stored in
 
 #### Logout
 
-To logout from the Prisma CLI use `prisma logout` command. This command removes the `cloudSessionKey` from `~/.prisma/config.yml` file.
+To logout from the Prisma CLI use `prisma1 logout` command. This command removes the `cloudSessionKey` from `~/.prisma/config.yml` file.
