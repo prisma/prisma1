@@ -5,13 +5,13 @@ description: Docker
 
 # Docker
 
-The infrastructure for self-hosted (and local) clusters is entirely based on [Docker](https://www.docker.com). In that sense, it's theoretically possible to deploy your Prisma service simply with the [Docker CLI](https://docs.docker.com/engine/reference/commandline/cli). In fact, a number of commands in the Prisma CLI actually are simple _proxies_ for the Docker CLI: All of the `prisma local <subcommand>` commands as well as the `prisma cluster logs` command fall into that category.
+The infrastructure for self-hosted (and local) clusters is entirely based on [Docker](https://www.docker.com). In that sense, it's theoretically possible to deploy your Prisma service simply with the [Docker CLI](https://docs.docker.com/engine/reference/commandline/cli). In fact, a number of commands in the Prisma CLI actually are simple _proxies_ for the Docker CLI: All of the `prisma1 local <subcommand>` commands as well as the `prisma1 cluster logs` command fall into that category.
 
-- `prisma local start`: Starts the Prisma Docker containers by invoking [`docker-compose up`](https://docs.docker.com/compose/reference/up/)
-- `prisma local stop`: Stops the Prisma Docker containers by invoking [`docker stop`](https://docs.docker.com/engine/reference/commandline/stop/)
-- `prisma local upgrade`: Downloads the [latest Prisma images](https://hub.docker.com/r/prismagraphql/prisma/tags/) from Docker Hub using [`docker pull`](https://docs.docker.com/engine/reference/commandline/pull/)
-- `prisma local nuke`: Hard-resets the local development cluster by invoking [`docker-compose kill`](https://docs.docker.com/compose/reference/kill/), [`docker-compose down`](https://docs.docker.com/compose/reference/down/) and [`docker-compose up`](https://docs.docker.com/compose/reference/up/) (in that order)
-- `prisma cluster logs`: Shows the logs of the Docker containers using [`docker logs`](https://docs.docker.com/engine/reference/commandline/logs/)
+- `prisma1 local start`: Starts the Prisma Docker containers by invoking [`docker-compose up`](https://docs.docker.com/compose/reference/up/)
+- `prisma1 local stop`: Stops the Prisma Docker containers by invoking [`docker stop`](https://docs.docker.com/engine/reference/commandline/stop/)
+- `prisma1 local upgrade`: Downloads the [latest Prisma images](https://hub.docker.com/r/prismagraphql/prisma/tags/) from Docker Hub using [`docker pull`](https://docs.docker.com/engine/reference/commandline/pull/)
+- `prisma1 local nuke`: Hard-resets the local development cluster by invoking [`docker-compose kill`](https://docs.docker.com/compose/reference/kill/), [`docker-compose down`](https://docs.docker.com/compose/reference/down/) and [`docker-compose up`](https://docs.docker.com/compose/reference/up/) (in that order)
+- `prisma1 cluster logs`: Shows the logs of the Docker containers using [`docker logs`](https://docs.docker.com/engine/reference/commandline/logs/)
 
 ## Docker images
 
@@ -207,10 +207,10 @@ CONTAINER ID  IMAGE                       COMMAND                 CREATED       
 
 ### Nuke
 
-If your local prisma cluster is in an unrecoverable state, the easiest option might be to completely reset it. Be careful as **this command will reset all data** in your local cluster.
+If your local prisma1 cluster is in an unrecoverable state, the easiest option might be to completely reset it. Be careful as **this command will reset all data** in your local cluster.
 
 ```sh
-$ prisma local nuke
+$ prisma1 local nuke
 Nuking local cluster 10.9s
 Booting fresh local development cluster 18.4s
 ```

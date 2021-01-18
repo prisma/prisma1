@@ -117,7 +117,7 @@ CONTAINER ID        IMAGE                               COMMAND                 
 
 ### Hard resetting the Docker environment
 
-If your local prisma cluster is in an unrecoverable state, the easiest option might be to completely reset it. Be careful as **these commands will reset all data** in your local Prisma server (including deployed Prisma APIs).
+If your local prisma1 cluster is in an unrecoverable state, the easiest option might be to completely reset it. Be careful as **these commands will reset all data** in your local Prisma server (including deployed Prisma APIs).
 
 ```sh
 docker-compose kill

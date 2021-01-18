@@ -15,7 +15,7 @@ Read through all the [release notes](https://github.com/graphcool/prisma/release
 
 ## Data Backup
 
-Before starting with the migration, run `prisma export` for all services to create a data backup. Alternatively, you might be able to use a backup feature for your database. Verify that the backup contains all data, and importantly, verify that restoring or `prisma import` works as well.
+Before starting with the migration, run `prisma1 export` for all services to create a data backup. Alternatively, you might be able to use a backup feature for your database. Verify that the backup contains all data, and importantly, verify that restoring or `prisma1 import` works as well.
 
 ## Test Run
 

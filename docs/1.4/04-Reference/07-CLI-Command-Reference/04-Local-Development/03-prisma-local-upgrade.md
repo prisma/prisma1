@@ -3,14 +3,14 @@ alias: quungoogh9
 description: Download latest Docker image of the local cluster.
 ---
 
-# `prisma local pull`
+# `prisma1 local pull`
 
 Download [latest Docker image](https://hub.docker.com/r/prismagraphql/prisma/) for the local cluster using `docker pull`. The command further invokes `docker up` for the specified cluster instance.
 
 #### Usage
 
 ```sh
-prisma local upgrade [flags]
+prisma1 local upgrade [flags]
 ```
 
 #### Flags
@@ -24,11 +24,11 @@ prisma local upgrade [flags]
 ##### Upgrade local default cluster called `local`.
 
 ```sh
-prisma local upgrade
+prisma1 local upgrade
 ```
 
 ##### Upgrade local cluster called `mycluster`.
 
 ```sh
-prisma local upgrade --name mycluster
+prisma1 local upgrade --name mycluster
 ```

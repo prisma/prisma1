@@ -42,7 +42,7 @@ You also need to know whether your database server uses **SSL**.
 The [Prisma CLI](https://www.npmjs.com/package/prisma) is used to deploy and manage Prisma services. You can install it using NPM:
 
 ```bash copy
-npm install -g prisma
+npm install -g prisma1
 ```
 
 ## Install Docker
@@ -143,12 +143,12 @@ Replace the `__PATH_TO_YOUR_DATA_MODEL__` placeholder with the name of the file 
 This service configuration now needs to be _deployed_ so you can use the Prisma API of your service:
 
 ```bash copy
-prisma deploy
+prisma1 deploy
 ```
 
 <Warning>
 
-Launching the Prisma server may take a few minutes. In case the `prisma deploy` command fails, wait a few minutes and try again. Also run `docker ps` to ensure the Docker container is actually running.
+Launching the Prisma server may take a few minutes. In case the `prisma1 deploy` command fails, wait a few minutes and try again. Also run `docker ps` to ensure the Docker container is actually running.
 
 </Warning>
 
@@ -157,7 +157,7 @@ Launching the Prisma server may take a few minutes. In case the `prisma deploy` 
 The Prisma API of your service exposes CRUD and realtime operations for the types defined in your data model. You can explore the API in a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) using the following command:
 
 ```bash copy
-prisma playground
+prisma1 playground
 ```
 
 The queries and mutations you can send depend on the data model that was generated from the database introspection. The following sample queries assume there is a `User` type in the data model defined as follows:

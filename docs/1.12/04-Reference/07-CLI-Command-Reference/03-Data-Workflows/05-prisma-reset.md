@@ -3,14 +3,14 @@ alias: clchg7lwe1
 description: Reset service data
 ---
 
-# `prisma reset`
+# `prisma1 reset`
 
 Reset the service data on the current stage/cluster.
 
 #### Usage
 
 ```sh
-prisma reset [flags]
+prisma1 reset [flags]
 ```
 
 #### Flags
@@ -25,11 +25,11 @@ prisma reset [flags]
 ##### Reset service data for current stage/cluster (with confirmation prompt).
 
 ```sh
-prisma reset
+prisma1 reset
 ```
 
 ##### Reset service data for current stage/cluster (without confirmation prompt).
 
 ```sh
-prisma reset --force
+prisma1 reset --force
 ```

@@ -344,14 +344,14 @@ That's all. Prisma is running on Kubernetes!
 The last step is to configure your local `Prisma CLI` so that you can communicate with the instance on the Kubernetes Cluster.
 
 <InfoBox>
-The upcoming last step is also necessary if you want to integrate `prisma deploy` into your CI/CD process.
+The upcoming last step is also necessary if you want to integrate `prisma1 deploy` into your CI/CD process.
 </InfoBox>
 
 ## Configuration of the Prisma CLI
 
 The Prisma server is running on the Kubernetes cluster and has an internal load balancer. This is a sane security default, because you won't expose the Prisma server to the public directly. Instead, you would develop a GraphQL API and deploy it to the Kubernetes cluster as well.
 
-You may ask: "Okay, but how do I execute `prisma deploy` in order to populate my data model when I'm not able to communicate with the Prisma server directly?". That is indeed a very good question! `kubectl` comes with a mechanism that allows forwarding a local port to an application that lives on the Kubernetes cluster.
+You may ask: "Okay, but how do I execute `prisma1 deploy` in order to populate my data model when I'm not able to communicate with the Prisma server directly?". That is indeed a very good question! `kubectl` comes with a mechanism that allows forwarding a local port to an application that lives on the Kubernetes cluster.
 
 So every time you want to communicate with your Prisma server on the Kubernetes cluster, you have to perform the following steps:
 
@@ -367,7 +367,7 @@ endpoint: http://localhost:4467/myservice/production
 datamodel: datamodel.graphql
 ```
 
-With this in place, you can deploy the Prisma service via the Prisma CLI (`prisma deploy`) as long as your port forwarding to the cluster is active.
+With this in place, you can deploy the Prisma service via the Prisma CLI (`prisma1 deploy`) as long as your port forwarding to the cluster is active.
 
 Okay, you made it! Congratulations, you have successfully deployed a Prisma server to a production Kubernetes cluster environment.
 

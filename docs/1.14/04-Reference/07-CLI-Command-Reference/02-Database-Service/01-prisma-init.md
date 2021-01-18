@@ -3,7 +3,7 @@ alias: eeb1ohr4ec
 description: Creates the local file structure for a new Prisma database API
 ---
 
-# `prisma init`
+# `prisma1 init`
 
 Creates the local file structure for a new Prisma database API.
 
@@ -11,7 +11,7 @@ If you provide a directory name as an argument to the command, the generated fil
 
 <InfoBox type=warning>
 
-Note that in [Prisma 1.7](https://github.com/graphcool/prisma/releases/tag/1.7.0), the `--boilerplate` flag has been removed from `prisma init`. This means you can not bootstrap an entire GraphQL server based on a [GraphQL boilerplate](https://github.com/graphql-boilerplates) project any more.
+Note that in [Prisma 1.7](https://github.com/graphcool/prisma/releases/tag/1.7.0), the `--boilerplate` flag has been removed from `prisma1 init`. This means you can not bootstrap an entire GraphQL server based on a [GraphQL boilerplate](https://github.com/graphql-boilerplates) project any more.
 
 To bootstrap a GraphQL server based on a GraphQL boilerplate project, use the `graphql create` command from the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli):
 
@@ -31,7 +31,7 @@ graphql create myapp --boilerplate typescript-advanced
 #### Usage
 
 ```sh
-prisma init DIRNAME
+prisma1 init DIRNAME
 ```
 
 #### Examples
@@ -39,5 +39,5 @@ prisma init DIRNAME
 ##### Create file structure for Prisma database service in directory called `myapp`.
 
 ```sh
-prisma init myapp
+prisma1 init myapp
 ```

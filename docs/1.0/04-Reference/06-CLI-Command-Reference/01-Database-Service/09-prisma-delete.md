@@ -3,14 +3,14 @@ alias: eizai4ahno
 description: Delete an existing target from the cluster its deployed to
 ---
 
-# `prisma delete`
+# `prisma1 delete`
 
 Delete an existing target from the cluster its deployed to.
 
 #### Usage
 
 ```sh
-prisma delete [flags]
+prisma1 delete [flags]
 ```
 
 #### Flags

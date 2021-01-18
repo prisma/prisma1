@@ -166,7 +166,7 @@ Here you need to provide some additional information about your Prisma server, e
 
 **2.2.1. Set the ManagementApiSecret parameter**
 
-The **ManagementApiSecret** is used to ensure only authorized people can deploy services to your Prisma server. The CLI needs to provide a JWT that was generated based on this secret when accessing the Prisma server (e.g. when you're running `prisma deploy`).
+The **ManagementApiSecret** is used to ensure only authorized people can deploy services to your Prisma server. The CLI needs to provide a JWT that was generated based on this secret when accessing the Prisma server (e.g. when you're running `prisma1 deploy`).
 
 For the purpose of this tutorial we're choosing `protecting-my-prisma-server` as the value for **ManagementApiSecret**.
 
@@ -263,7 +263,7 @@ It’s time to put your new server in use and deploy a service to it.
 In a location of your choice, run the following command in the terminal to create the file structure for a new Prisma service:
 
 ```sh
-prisma init my-prisma-service
+prisma1 init my-prisma-service
 ```
 
 </Instruction>
@@ -292,7 +292,7 @@ For the following prompts, you can simply hit **Enter** to choose the suggested 
 
 After those selections, the CLI creates a new directory called `my-prisma-service` with your project files.
 
-Before deploying your service with `prisma deploy`, you need to ensure the Prisma CLI is authorized to access your Prisma server. To do so, you need to set the `PRISMA_MANAGEMENT_API_SECRET` environment variable in your shell. The CLI will read this environment variable and generate a JWT based on it which it uses to authenticate against the server.
+Before deploying your service with `prisma1 deploy`, you need to ensure the Prisma CLI is authorized to access your Prisma server. To do so, you need to set the `PRISMA_MANAGEMENT_API_SECRET` environment variable in your shell. The CLI will read this environment variable and generate a JWT based on it which it uses to authenticate against the server.
 
 <Instruction>
 
@@ -308,11 +308,11 @@ export PRISMA_MANAGEMENT_API_SECRET="protecting-my-prisma-server"
 
 <Instruction>
 
-Next, navigate into it and run `prisma deploy`:
+Next, navigate into it and run `prisma1 deploy`:
 
 ```sh
 cd my-prisma-service
-prisma deploy
+prisma1 deploy
 ```
 
 </Instruction>

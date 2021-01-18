@@ -3,7 +3,7 @@ alias: eeb1ohr4ec
 description: Creates the local file structure for a new Prisma database service
 ---
 
-# `prisma init`
+# `prisma1 init`
 
 Creates the local file structure for a new Prisma database service. If no `--boilerplate` option is provided, the command will trigger an interactive prompt allowing you to choose a preconfigured template for your service. There are two major options for such a template:
 
@@ -21,7 +21,7 @@ If you provide a directory name as an argument to the command, the generated fil
 #### Usage
 
 ```sh
-prisma init DIRNAME [flags]
+prisma1 init DIRNAME [flags]
 ```
 
 #### Flags
@@ -35,17 +35,17 @@ prisma init DIRNAME [flags]
 ##### Create file structure for Prisma database service in current directory.
 
 ```sh
-prisma init
+prisma1 init
 ```
 
 ##### Create file structure for Prisma database service in directory called `database`.
 
 ```sh
-prisma init database
+prisma1 init database
 ```
 
 ##### Bootstrap file for GraphQL server based on `node-basic` boilerplate in directory called `node-app`.
 
 ```sh
-prisma init node-app --boilerplate node-basic
+prisma1 init node-app --boilerplate node-basic
 ```

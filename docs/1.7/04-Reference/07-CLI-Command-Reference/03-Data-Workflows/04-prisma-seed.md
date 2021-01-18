@@ -3,7 +3,7 @@ alias: clchg8lwe2
 description: Seed service with initial data
 ---
 
-# `prisma reset`
+# `prisma1 reset`
 
 Seed the service with initial data.
 

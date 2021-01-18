@@ -12,7 +12,7 @@ description: Code generation (Codegen)
 Install with `npm`:
 
 ```sh
-npm install -g prisma-binding
+npm install -g prisma1-binding
 ```
 
 Install with `yarn`:

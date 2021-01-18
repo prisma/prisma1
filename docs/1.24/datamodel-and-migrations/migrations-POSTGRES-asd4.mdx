@@ -13,10 +13,10 @@ export const meta = {
 
 You can configure Prisma with your PostgreSQL database in either of two ways:
 
-- **Enable database migrations through Prisma**: This means _all_ changes to your database schema must be made through Prisma (by adjusting your [datamodel](knum) and using the [`prisma deploy`](xcv9) command). You can achieve this by setting the `migrations` flag in the [`PRISMA_CONFIG`](rty1#prisma_config-reference) variable of your Prisma server to `true`.
+- **Enable database migrations through Prisma**: This means _all_ changes to your database schema must be made through Prisma (by adjusting your [datamodel](knum) and using the [`prisma1 deploy`](xcv9) command). You can achieve this by setting the `migrations` flag in the [`PRISMA_CONFIG`](rty1#prisma_config-reference) variable of your Prisma server to `true`.
 - **Disable database migrations through Prisma**: This means _none_ of the changes to your database schema can be made by Prisma, all migrations must be performed manually and directly against the database. You can achieve this by setting the `migrations` flag in the [`PRISMA_CONFIG`](rty1#prisma_config-reference) variable of your Prisma server to `false`.
 
-> Note that the `migrations` flag will be removed at some point and Prisma's migration model will become more flexible. This means you can either use the Prisma CLI to perform migrations with [`prisma deploy`](xcv9) or perform your migrations manually. Learn more in [this](https://github.com/prisma/prisma/issues/3022) GitHub issue or explore the [spec](https://github.com/prisma/prisma/issues/3408) for the upcoming Prisma version.
+> Note that the `migrations` flag will be removed at some point and Prisma's migration model will become more flexible. This means you can either use the Prisma CLI to perform migrations with [`prisma1 deploy`](xcv9) or perform your migrations manually. Learn more in [this](https://github.com/prisma/prisma/issues/3022) GitHub issue or explore the [spec](https://github.com/prisma/prisma/issues/3408) for the upcoming Prisma version.
 
 ## Enabling database migrations
 
@@ -44,7 +44,7 @@ PRISMA_CONFIG: |
 If database migrations are enabled, you use SDL to define and migrate your database schema. There are two steps to every migration:
 
 1. Adjust the [datamodel](knum) file to reflect the new desired schema
-1. Run `prisma deploy` to apply the changes and perform the migration of the underlying database
+1. Run `prisma1 deploy` to apply the changes and perform the migration of the underlying database
 
 ### Migration operations
 
@@ -85,12 +85,12 @@ type Story @rename(oldName: "Post") {
 }
 ```
 
-4. Migrating the database with `prisma deploy`
+4. Migrating the database with `prisma1 deploy`
 
 After having the saved the datamodel file with these changes, you need to run:
 
 ```
-prisma deploy
+prisma1 deploy
 ```
 
 5. Removing the `@rename` directive manually
@@ -126,12 +126,12 @@ type Post {
 }
 ```
 
-4. Migrating the database with `prisma deploy`
+4. Migrating the database with `prisma1 deploy`
 
 After having the saved the datamodel file with these changes, you need to run:
 
 ```
-prisma deploy
+prisma1 deploy
 ```
 
 5. Removing the `@rename` directive manually
@@ -179,4 +179,4 @@ You can use the [`prisma introspect`](xcv3) command to generate a datamodel base
 
 The `prisma introspect` command introspects your database schema and creates a datamodel file based on that. The name of the datamodel file will include a timestamp so that the generated datamodel doesn't conflict with your existing one, e.g. `datamodel-1547547645423.prisma`.
 
-`prisma introspect` does **not** change your database schema. It only generates the temporary datamodel file that reflects the current database schema. You can use this temporary file as a helper to adjust your _actual_ datamodel by copying and pasting the new types and fields into it. Once you're happy with the adjusted datamodel, you need to run `prisma deploy` to actually apply the changes and update the Prisma API.
+`prisma introspect` does **not** change your database schema. It only generates the temporary datamodel file that reflects the current database schema. You can use this temporary file as a helper to adjust your _actual_ datamodel by copying and pasting the new types and fields into it. Once you're happy with the adjusted datamodel, you need to run `prisma1 deploy` to actually apply the changes and update the Prisma API.

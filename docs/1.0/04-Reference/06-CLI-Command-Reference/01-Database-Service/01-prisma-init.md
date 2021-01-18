@@ -3,7 +3,7 @@ alias: eeb1ohr4ec
 description: Creates the local file structure for a new Prisma database service
 ---
 
-# `prisma init`
+# `prisma1 init`
 
 Creates the local file structure for a new Prisma database service:
 
@@ -16,7 +16,7 @@ If you provide a directory name as an argument to the command, all these files w
 #### Usage
 
 ```sh
-prisma init DIRNAME
+prisma1 init DIRNAME
 ```
 
 #### Examples
@@ -24,11 +24,11 @@ prisma init DIRNAME
 ##### Create file structure for Prisma database service in current directory.
 
 ```sh
-prisma init
+prisma1 init
 ```
 
 ##### Create file structure for Prisma database service in directory called `database`.
 
 ```sh
-prisma init database
+prisma1 init database
 ```

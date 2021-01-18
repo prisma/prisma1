@@ -3,14 +3,14 @@ alias: vu5ohngud5
 description: Stop local development cluster
 ---
 
-# `prisma local stop`
+# `prisma1 local stop`
 
 Stop local development cluster.
 
 #### Usage
 
 ```sh
-prisma local stop [flags]
+prisma1 local stop [flags]
 ```
 
 #### Flags
@@ -24,11 +24,11 @@ prisma local stop [flags]
 ##### Stop local default cluster called `local`.
 
 ```sh
-prisma local stop
+prisma1 local stop
 ```
 
 ##### Stop local cluster called `mycluster`.
 
 ```sh
-prisma local stop --name mycluster
+prisma1 local stop --name mycluster
 ```

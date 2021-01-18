@@ -19,4 +19,4 @@ The Prisma API is defined by a corresponding [GraphQL schema](https://blog.graph
 
 The [GraphQL Playground](https://github.com/graphcool/graphql-playground) is the best tool to explore the Prisma API and get to know it better. You can use it to run GraphQL mutations, queries and subscriptions.
 
-To open up a Playground for your database service, simply run the `prisma playground` command in the working directory of your service or paste your service's HTTP endpoint into the address bar of your browser.
+To open up a Playground for your database service, simply run the `prisma1 playground` command in the working directory of your service or paste your service's HTTP endpoint into the address bar of your browser.

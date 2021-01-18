@@ -19,7 +19,7 @@ Throughout the course of this tutorial, you'll use the Prisma CLI to create and 
 Open your terminal and globally install the Prisma CLI:
 
 ```sh
-npm install -g prisma
+npm install -g prisma1
 ```
 
 </Instruction>
@@ -39,14 +39,14 @@ After it's downloaded, you can install it right away. Note that this also gives 
 
 ## Step 2: Bootstrap your GraphQL server
 
-Now you can use `prisma init` to bootstrap your GraphQL server. Note that this command will trigger an interactive prompt that allows to select a template your project should be based on.
+Now you can use `prisma1 init` to bootstrap your GraphQL server. Note that this command will trigger an interactive prompt that allows to select a template your project should be based on.
 
 <Instruction>
 
-Because you're passing `my-app` as an argument to `prisma init`, the Prisma CLI will create a new directory called `my-app` where it will place all the files for your project:
+Because you're passing `my-app` as an argument to `prisma1 init`, the Prisma CLI will create a new directory called `my-app` where it will place all the files for your project:
 
 ```sh
-prisma init my-app
+prisma1 init my-app
 ```
 
 </Instruction>
@@ -69,7 +69,7 @@ Finally, when prompted which cluster you want to deploy to, choose the `local` c
 
 </Instruction>
 
-After `prisma init` has finished, your Prisma database service is deployed and will be accessible under [`http://localhost:4466/my-app/dev`](http://localhost:4466/my-app/dev).
+After `prisma1 init` has finished, your Prisma database service is deployed and will be accessible under [`http://localhost:4466/my-app/dev`](http://localhost:4466/my-app/dev).
 
 As you might recognize, the HTTP endpoint for the database service is composed of the following components:
 
@@ -108,7 +108,7 @@ Let's investigate the generated files and understand their roles:
   - [`database/seed.graphql`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/database/seed.graphql): Contains mutations to seed the database with some initial data.
 - `/src`
   - [`src/schema.graphql`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/src/schema.graphql) defines your **application schema**. It contains the GraphQL API that you want to expose to your client applications.
-  - [`src/generated/prisma.graphql`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/src/generated/prisma.graphql) defines the **Prisma schema**. It contains the definition of the CRUD API for the types in your data model and is generated based on your `datamodel.graphql`. **You should never edit this file manually**, but introduce changes only by altering `datamodel.graphql` and run `prisma deploy`.
+  - [`src/generated/prisma.graphql`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/src/generated/prisma.graphql) defines the **Prisma schema**. It contains the definition of the CRUD API for the types in your data model and is generated based on your `datamodel.graphql`. **You should never edit this file manually**, but introduce changes only by altering `datamodel.graphql` and run `prisma1 deploy`.
   - [`src/index.ts`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/src/index.ts) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 
 Most important for you at this point are `database/datamodel.graphql` and `src/schema.graphql`. `database/datamodel.graphql` is used to define your data model. This data model is the foundation for the API that's defined in `src/schema.graphql` and exposed to your client applications.

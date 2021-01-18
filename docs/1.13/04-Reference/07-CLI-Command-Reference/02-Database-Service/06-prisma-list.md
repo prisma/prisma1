@@ -3,14 +3,14 @@ alias: out6eechoi
 description: List all deployed services
 ---
 
-# `prisma list`
+# `prisma1 list`
 
 List all deployed services.
 
 #### Usage
 
 ```sh
-prisma list
+prisma1 list
 ```
 
 #### Examples
@@ -18,5 +18,5 @@ prisma list
 ##### List all deployed services.
 
 ```sh
-prisma list
+prisma1 list
 ```

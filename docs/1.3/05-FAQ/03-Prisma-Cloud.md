@@ -21,7 +21,7 @@ Right now, every team member that's invited to join a project on Prisma Cloud ha
 
 ### What are clusters? How do they relate to services?
 
-A cluster is the _runtime environment_ for Prisma services. This means in order to deploy a Prisma service (using the `prisma deploy` command), you need to have _some_ cluster available.
+A cluster is the _runtime environment_ for Prisma services. This means in order to deploy a Prisma service (using the `prisma1 deploy` command), you need to have _some_ cluster available.
 
 In general, there are three types of clusters:
 

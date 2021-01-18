@@ -5,7 +5,7 @@ export const meta = {
   position: 60,
 }
 
-## prisma init
+## prisma1 init
 
 Launches an interactive CLI wizard helping you to bootstrap the service configuration for a new Prisma service. 
 
@@ -20,7 +20,7 @@ If you provide a directory name as an argument to the command, the generated fil
 ### Usage
 
 ```bash
-prisma init DIRNAME
+prisma1 init DIRNAME
 ```
 
 ### Examples
@@ -28,10 +28,10 @@ prisma init DIRNAME
 **Create service configuration for Prisma service in a directory called `myapp`**
 
 ```bash
-prisma init myapp
+prisma1 init myapp
 ```
 
-## prisma deploy
+## prisma1 deploy
 
 Deploys a service configuration to a Prisma service. 
 
@@ -44,7 +44,7 @@ If no [`endpoint`](5cy7#endpoint-optional) property is specifed in prisma.yml, t
 ### Usage
 
 ```bash
-prisma deploy [flags]
+prisma1 deploy [flags]
 ```
 
 ### Flags
@@ -64,19 +64,19 @@ prisma deploy [flags]
 **Deploy service configuration in current directory**
 
 ```bash
-prisma deploy
+prisma1 deploy
 ```
 
 **Deploy service and interactively select a Prisma server as deployment target**:
 
 ```bash
-prisma deploy --new
+prisma1 deploy --new
 ```
 
 **Deploy service with environment variables specified in `.env.prod`**
 
 ```bash
-prisma deploy --env-file .env.prod
+prisma1 deploy --env-file .env.prod
 ```
 
 
@@ -137,7 +137,7 @@ Created 1 new file:
 The generated datamodel file will contain a timestamp in its name to avoid overriding your existing `datamodel.graphql` file.
 
 
-## prisma info
+## prisma1 info
 
 Display service information:
 
@@ -148,7 +148,7 @@ Display service information:
 ### Usage
 
 ```bash
-prisma info
+prisma1 info
 ```
 
 ### Flags
@@ -164,31 +164,31 @@ prisma info
 **Print information about current service**
 
 ```bash
-prisma info
+prisma1 info
 ```
 
 **Print information about current service in JSON**
 
 ```bash
-prisma info --json
+prisma1 info --json
 ```
 
 **Print information about current service in JSON and include service secret**
 
 ```bash
-prisma info --json --secret
+prisma1 info --json --secret
 ```
 
 > The service secret is only printed if both the `--json` and `--secret` flags are provided.
 
-## prisma token
+## prisma1 token
 
 Generate a new [service token](ghd4#service-token). The service token is a [JWT](https://jwt.io) that is _signed_ with the [service secret](ghd4#service-secret).
 
 ### Usage
 
 ```bash
-prisma token [flags]
+prisma1 token [flags]
 ```
 
 ### Flags
@@ -203,23 +203,23 @@ prisma token [flags]
 **Print service token**
 
 ```bash
-prisma token
+prisma1 token
 ```
 
 **Copy service token to clipboard**
 
 ```bash
-prisma token --copy
+prisma1 token --copy
 ```
 
-## prisma list
+## prisma1 list
 
 List all deployed services.
 
 ### Usage
 
 ```sh
-prisma list
+prisma1 list
 ```
 
 ### Examples
@@ -227,10 +227,10 @@ prisma list
 **List all deployed services**
 
 ```sh
-prisma list
+prisma1 list
 ```
 
-### prisma delete
+### prisma1 delete
 
 Delete an existing service from the Prisma server its running on. 
 
@@ -239,7 +239,7 @@ This command needs to be executed inside the root directory of the Prisma servic
 ### Usage
 
 ```sh
-prisma delete [flags]
+prisma1 delete [flags]
 ```
 
 ### Flags
@@ -254,16 +254,16 @@ prisma delete [flags]
 **Delete an existing service (with confirmation prompt)**
 
 ```sh
-prisma delete
+prisma1 delete
 ```
 
 **Delete an existing service (without confirmation prompt)**
 
 ```sh
-prisma delete --force
+prisma1 delete --force
 ```
 
-## prisma playground
+## prisma1 playground
 
 Opens a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) for the current service. 
 
@@ -274,7 +274,7 @@ The Playground is running on port `3000`.
 ### Usage
 
 ```sh
-prisma playground [flags]
+prisma1 playground [flags]
 ```
 
 ### Flags
@@ -289,13 +289,13 @@ prisma playground [flags]
 **Open Playground (Desktop version, if installed)**
 
 ```sh
-prisma playground
+prisma1 playground
 ```
 
 **Open Playground (browser-based version)**
 
 ```sh
-prisma playground --web
+prisma1 playground --web
 ```
 
 ## prisma seed
@@ -331,7 +331,7 @@ prisma seed
 prisma seed --reset
 ```
 
-## prisma import
+## prisma1 import
 
 Imports data into the database of your Prisma service. 
 
@@ -340,7 +340,7 @@ The data needs to be formatted according to the [Normalized Data Format](jsw9#no
 ### Usage
 
 ```sh
-prisma import [flags]
+prisma1 import [flags]
 ```
 
 ### Flags
@@ -350,14 +350,14 @@ prisma import [flags]
 -e, --env-file ENV-FILE    Path to .env file to inject env vars
 ```
 
-## prisma export
+## prisma1 export
 
 Exports your service data to a local zip directory. For more info, read the [Data Import & Export](jsw9) page.
 
 ### Usage
 
 ```sh
-prisma export [flags]
+prisma1 export [flags]
 ```
 
 ### Flags
@@ -372,23 +372,23 @@ prisma export [flags]
 **Export data to file with default name (`export-<timestamp>.zip`)**
 
 ```sh
-prisma export
+prisma1 export
 ```
 
 **Export data to file called `mydata.zip`**
 
 ```sh
-prisma export --path mydata.zip
+prisma1 export --path mydata.zip
 ```
 
-## prisma reset
+## prisma1 reset
 
 Delete all service data.
 
 ### Usage
 
 ```sh
-prisma reset [flags]
+prisma1 reset [flags]
 ```
 
 ### Flags
@@ -403,16 +403,16 @@ prisma reset [flags]
 **Delete all of the service's data (with confirmation prompt).**
 
 ```sh
-prisma reset
+prisma1 reset
 ```
 
 **Delete all of the service's data (without confirmation prompt).**
 
 ```sh
-prisma reset --force
+prisma1 reset --force
 ```
 
-## prisma login
+## prisma1 login
 
 Authenticate with [Prisma Cloud](https://www.prisma.io/cloud). 
 
@@ -425,7 +425,7 @@ Note that rather than providing your cloud session key via the `--key` flag, you
 ### Usage
 
 ```sh
-prisma login [flags]
+prisma1 login [flags]
 ```
 
 ### Flags
@@ -439,13 +439,13 @@ prisma login [flags]
 **Authenticate with Prisma Cloud (opens browser)**
 
 ```sh
-prisma login
+prisma1 login
 ```
 
 **Authenticate with Prisma Cloud by manually passing the cloud session key**
 
 ```sh
-prisma login --key KEY
+prisma1 login --key KEY
 ```
 
 > In the above command, the `KEY` placeholder needs to be replaced with the value of your valid cloud session key. You can find the `cloudSessionKey` in `~/.prisma/config.yml`.
@@ -470,14 +470,14 @@ prisma logout
 prisma logout
 ```
 
-## prisma console
+## prisma1 console
 
 Opens the [Prisma Cloud Console](https://app.prisma.io/) in the browser.
 
 ### Usage
 
 ```sh
-prisma console
+prisma1 console
 ```
 
 ### Examples
@@ -485,10 +485,10 @@ prisma console
 **Open the Prisma Cloud Console in the browser**
 
 ```sh
-prisma console
+prisma1 console
 ```
 
-## prisma account
+## prisma1 account
 
 Displays account information of the authenticated [Prisma Cloud](https://www.prisma.io/cloud) user (based on the `cloudSessionKey` in `~/.prisma/config.yml`). 
 
@@ -500,7 +500,7 @@ The displayed information includes:
 ### Usage
 
 ```sh
-prisma account
+prisma1 account
 ```
 
 ### Examples
@@ -508,5 +508,5 @@ prisma account
 **Display account information of the authenticated Prisma Cloud user**
 
 ```sh
-prisma account
+prisma1 account
 ```

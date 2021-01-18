@@ -32,9 +32,9 @@ clusters:
     clusterSecret: "-----BEGIN RSA PRIVATE KEY----- [ long key omitted ] -----END RSA PRIVATE KEY-----\r\n"
 ```
 
-If you want to add a custom cluster, you can either use the `prisma cluster add` command or manually add a cluster entry to the file, providing the required information.
+If you want to add a custom cluster, you can either use the `prisma1 cluster add` command or manually add a cluster entry to the file, providing the required information.
 
-You can list your clusters and more information using `prisma cluster list`.
+You can list your clusters and more information using `prisma1 cluster list`.
 
 ## Cluster deployment
 

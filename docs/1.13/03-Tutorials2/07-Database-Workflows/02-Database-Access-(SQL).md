@@ -13,7 +13,7 @@ description: Learn how to diredctly access your database with SQL.
 
 Follow this guide to connect directly to the MySQL database powering your local Prisma cluster.
 
-If you used `prisma local start` to start your local Prisma cluster, you will have two containers running:
+If you used `prisma1 local start` to start your local Prisma cluster, you will have two containers running:
 
 `prisma` is running the main Prisma service
 

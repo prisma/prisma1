@@ -25,7 +25,7 @@ npm install -g graphql-cli
 
 </Instruction>
 
-> Note that you don't have to globally install the Prisma CLI as it's listed as a _development dependency_ in the boilerplate project you'll use. However, we still recommend that you install it. If you don't install it globally, you can invoke all `prisma` commands by prefixing them with `yarn`, e.g. `yarn prisma deploy` or `yarn prisma playground`.
+> Note that you don't have to globally install the Prisma CLI as it's listed as a _development dependency_ in the boilerplate project you'll use. However, we still recommend that you install it. If you don't install it globally, you can invoke all `prisma` commands by prefixing them with `yarn`, e.g. `yarn prisma1 deploy` or `yarn prisma1 playground`.
 
 ## Step 2: Bootstrap your React fullstack app
 
@@ -55,7 +55,7 @@ Here is an overview of the generated files in the `server` directory and their r
   - [`database/seed.graphql`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/database/seed.graphql): Contains mutations to seed the database with some initial data.
 - `/server/src`
   - [`src/schema.graphql`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/src/schema.graphql) defines your **application schema**. It contains the GraphQL API that you want to expose to your client applications.
-  - [`src/generated/prisma.graphql`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/src/generated/prisma.graphql) defines the **Prisma schema**. It contains the definition of the CRUD API for the types in your data model and is generated based on your `datamodel.graphql`. **You should never edit this file manually**, but introduce changes only by altering `datamodel.graphql` and run `prisma deploy`.
+  - [`src/generated/prisma.graphql`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/src/generated/prisma.graphql) defines the **Prisma schema**. It contains the definition of the CRUD API for the types in your data model and is generated based on your `datamodel.graphql`. **You should never edit this file manually**, but introduce changes only by altering `datamodel.graphql` and run `prisma1 deploy`.
   - [`src/index.js`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/src/index.js) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 
 Most important for you at this point are `database/datamodel.graphql` and `src/schema.graphql`.
@@ -78,7 +78,7 @@ Based on this data model Prisma generates the **database schema**, a [GraphQL sc
 
 ## Step 3: Deploy the Prisma database service
 
-Before you can start the server, you first need to make sure your Prisma database service is available. You can do so by deploying it with the `prisma deploy` command.
+Before you can start the server, you first need to make sure your Prisma database service is available. You can do so by deploying it with the `prisma1 deploy` command.
 
 In this case, you'll deploy the Prisma database service to the **free development cluster** of Prisma Cloud. Note that this cluster is not intended for production use, but rather for development and demo purposes.
 
@@ -90,7 +90,7 @@ Deploy the database service from the `server` directory of the project:
 
 ```bash(path="")
 cd server
-prisma deploy
+prisma1 deploy
 ```
 
 </Instruction>
@@ -153,7 +153,7 @@ Now that the server is running, you can use a [GraphQL Playground](https://githu
 Open a GraphQL Playground by executing the following command:
 
 ```bash(path="server")
-prisma playground
+prisma1 playground
 ```
 
 </Instruction>

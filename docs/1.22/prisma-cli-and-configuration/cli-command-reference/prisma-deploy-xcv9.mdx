@@ -1,9 +1,9 @@
 export const meta = {
-  title: "prisma deploy",
+  title: "prisma1 deploy",
   position: 120,
 }
 
-## `$ prisma deploy`
+## `$ prisma1 deploy`
 
 Deploys a service configuration to a Prisma service. 
 
@@ -16,7 +16,7 @@ If no [`endpoint`](5cy7#endpoint-optional) property is specifed in prisma.yml, t
 ### Usage
 
 ```bash
-prisma deploy [flags]
+prisma1 deploy [flags]
 ```
 
 ### Flags
@@ -36,17 +36,17 @@ prisma deploy [flags]
 **Deploy service configuration in current directory**
 
 ```bash
-prisma deploy
+prisma1 deploy
 ```
 
 **Deploy service and interactively select a Prisma server as deployment target**:
 
 ```bash
-prisma deploy --new
+prisma1 deploy --new
 ```
 
 **Deploy service with environment variables specified in `.env.prod`**
 
 ```bash
-prisma deploy --env-file .env.prod
+prisma1 deploy --env-file .env.prod
 ```

@@ -16,7 +16,7 @@ You need an up-to-date version of Docker to run Prisma locally. You can find ins
 Use the interactive `init` command to bootstrap configuration for your Prisma server:
 
 ```sh
-prisma init
+prisma1 init
 ```
 
 Choose `Create new database` and pick MySQL or Postgres.
@@ -29,7 +29,7 @@ This will download the open source Docker images for Prisma as well as your sele
 Now you can deploy a service to the local cluster:
 
 ```
-❯ prisma deploy
+❯ prisma1 deploy
 
 ? Please choose the cluster you want to deploy "demo@dev" to (Use arrow keys)
 
@@ -41,7 +41,7 @@ Now you can deploy a service to the local cluster:
 New versions of Prisma are released every other week. To upgrade, you should first upgrade your CLI:
 
 ```sh
-npm -g install prisma
+npm -g install prisma1
 ```
 
 You can now update your Prisma server by manually changing the `docker-compose.yml` file to use the latest version of Prisma:
@@ -70,7 +70,7 @@ For the change to take effect, run:
 docker-compose up -d
 ```
 
-> Note: It is recommended to export your data before upgrading, using the `prisma export` command.
+> Note: It is recommended to export your data before upgrading, using the `prisma1 export` command.
 
 If you run into issues during or after upgrading, you can use normal docker commands to remove your docker containers and start from scratch:
 

@@ -17,9 +17,9 @@ Currently database introspection only works with Postgres. Additionally there is
 
 ## Introspecting a database
 
-There are two ways you can use the CLI to introspect a database: Using the interactive `prisma init` command and using the dedicated `prisma introspect` command.
+There are two ways you can use the CLI to introspect a database: Using the interactive `prisma1 init` command and using the dedicated `prisma introspect` command.
 
-During the prisma init flow you can choose to connect to an existing database with data. The CLI will ask for database connection information and verify that it can establish a successful connection. If the information is correct, the CLI will introspect the database and show you a summary
+During the prisma1 init flow you can choose to connect to an existing database with data. The CLI will ask for database connection information and verify that it can establish a successful connection. If the information is correct, the CLI will introspect the database and show you a summary
 
 ![](https://i.imgur.com/cNIeeJf.png)
 
@@ -37,7 +37,7 @@ The timestamp component allows you to use the introspect command for an existing
 
 ## Deploying
 
-After you have made your changes to the generated data model it is time to deploy your Prisma service. If you used `prisma init` to setup your service, your Prisma server is already configured to not apply migrations to your database. If your are setting up Prisma manually you should ensure that your PRISMA_CONFIG has set `migrations: false` like this:
+After you have made your changes to the generated data model it is time to deploy your Prisma service. If you used `prisma1 init` to setup your service, your Prisma server is already configured to not apply migrations to your database. If your are setting up Prisma manually you should ensure that your PRISMA_CONFIG has set `migrations: false` like this:
 
 ```yml
 PRISMA_CONFIG: |

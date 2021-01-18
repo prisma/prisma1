@@ -30,7 +30,7 @@ Postgres uses the following model to organize databases internally:
 
 There are two ways you can use the CLI to introspect a Postgres schema:
 
-- Using the interactive `prisma init` wizard
+- Using the interactive `prisma1 init` wizard
 - Using the dedicated `prisma introspect` command
 
 In both cases, you need to provide the _connection details_ for the running Postgres database. This includes the following:
@@ -42,15 +42,15 @@ In both cases, you need to provide the _connection details_ for the running Post
 - **Use SSL (Yes/No)**: If your database connection is using SSL, you need to select `Yes`, otherwise `No`.
 - **Name of existing _schema_**: The name of the Postgres _schema_ (according to the illustrated model from above), e.g. `public`.
 
-### Using the `prisma init` wizard
+### Using the `prisma1 init` wizard
 
-During the interactive `prisma init` flow you can choose to connect to an existing database with data. The CLI will ask for database connection details (as mentioned above) and verify that it can establish a successful connection.
+During the interactive `prisma1 init` flow you can choose to connect to an existing database with data. The CLI will ask for database connection details (as mentioned above) and verify that it can establish a successful connection.
 
 If the connection details are valid, the CLI will introspect the database and show you a summary.
 
 ![](https://i.imgur.com/cNIeeJf.png)
 
-When `prisma init` terminates, the CLI has created the following files for you which you can now use to _deploy_ a new Prisma service:
+When `prisma1 init` terminates, the CLI has created the following files for you which you can now use to _deploy_ a new Prisma service:
 
 - `datamodel.graphql`: Contains the data model (in SDL) that was generated based on your existing database.
 - `docker-compose.yml`: The Docker Compose file containing the configuration of your Prisma server, including details about how to connect to your database
@@ -59,15 +59,15 @@ When `prisma init` terminates, the CLI has created the following files for you w
 To be able to query your Postgres database using GraphQL you now need to _deploy_ the service and open a GraphQL Playground:
 
 ```bash
-prisma deploy
-prisma playground
+prisma1 deploy
+prisma1 playground
 ```
 
 ### Using `prisma introspect`
 
-`prisma introspect` works in a similar way as the `prisma init` wizard in that you need to provide the database connection information.
+`prisma introspect` works in a similar way as the `prisma1 init` wizard in that you need to provide the database connection information.
 
-While `prisma init` wizard generates an entire _service configuration_, `prisma introspect` only generates the data model file:
+While `prisma1 init` wizard generates an entire _service configuration_, `prisma introspect` only generates the data model file:
 
 - `datamodel-[TIMESTAMP].graghpql`: The timestamp component allows you to use the introspect command for an existing Prisma service without overriding your existing datamodel.
 
