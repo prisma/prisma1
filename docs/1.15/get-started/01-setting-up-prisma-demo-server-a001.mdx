@@ -22,20 +22,20 @@ On this page, you will learn how to:
 The [Prisma CLI](https://www.npmjs.com/package/prisma) is used to deploy and manage Prisma services. You can install it using NPM:
 
 ```bash copy
-npm install -g prisma1
+npm install -g prisma
 ```
 
 ## Create a Prisma service configuration
 
-To bootstrap the configuration files for your first Prisma service, create a new directory and initalize it using the `prisma1 init` command:
+To bootstrap the configuration files for your first Prisma service, create a new directory and initalize it using the `prisma init` command:
 
 ```bash copy
 mkdir hello-world
 cd hello-world
-prisma1 init
+prisma init
 ```
 
-After running `prisma1 init`, the Prisma CLI prompts you to select _how_ you want to deploy your Prisma service:
+After running `prisma init`, the Prisma CLI prompts you to select _how_ you want to deploy your Prisma service:
 
 1. Select **Demo server** from the list.
 1. When your browser opens, register with [Prisma Cloud](https://www.prisma.io/cloud/). This is needed because that's where the Demo server is hosted.
@@ -44,10 +44,10 @@ After running `prisma1 init`, the Prisma CLI prompts you to select _how_ you wan
 
 ## Deploy the Prisma service
 
-The `prisma1 init` command created the _minimal_ service configuration needed to deploy a Prisma service: `prisma.yml` and `datamodel.graphql`. This service configuration now needs to be _deployed_ so you can use the Prisma API of your service:
+The `prisma init` command created the _minimal_ service configuration needed to deploy a Prisma service: `prisma.yml` and `datamodel.graphql`. This service configuration now needs to be _deployed_ so you can use the Prisma API of your service:
 
 ```bash copy
-prisma1 deploy
+prisma deploy
 ```
 
 ## Explore the Prisma API in a Playground

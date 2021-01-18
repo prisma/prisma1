@@ -16,13 +16,13 @@ A central part of configuring a Prisma service is deploying a [data model](!alia
 You can download the Prisma CLI from npm:
 
 ```
-npm install -g prisma1
+npm install -g prisma
 ```
 
 To initialize a new service, use the `init` command:
 
 ```
-prisma1 init
+prisma init
 ```
 
 In the following sections you'll learn more about configuring Prisma services using the CLI.

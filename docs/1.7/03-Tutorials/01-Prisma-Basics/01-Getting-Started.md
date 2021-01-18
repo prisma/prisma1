@@ -10,7 +10,7 @@ In this tutorial, you'll learn how to get started with Prisma to generate a Grap
 Here are the steps you're going to perform:
 
 - Install the Prisma CLI
-- Bootstrapping a Prisma service with `prisma1 init`
+- Bootstrapping a Prisma service with `prisma init`
 - Explore the API in a GraphQL Playground and send queries & mutations
 
 > To ensure you're not accidentally skipping an instruction in the tutorial, all required actions on your end are highlighted with a little counter on the left.
@@ -26,7 +26,7 @@ Prisma services are managed with the [Prisma CLI](!alias-ieshoo5ohm). You can in
 Open your terminal and run the following command to install the Prisma CLI:
 
 ```
-npm install -g prisma1
+npm install -g prisma
 # or
 # yarn global add prisma
 ```
@@ -40,7 +40,7 @@ npm install -g prisma1
 Open a terminal and navigate to a folder of your choice. Then bootstrap your Prisma service with the following command:
 
 ```sh
-prisma1 init hello-world
+prisma init hello-world
 ```
 
 </Instruction>
@@ -99,7 +99,7 @@ So your API is deployed - but how do you know how to interact with it? What does
 
 In general, the generated API allows to perform CRUD operations on the types in your data model. It also exposes GraphQL subscriptions which allow clients to _subscribe_ to certain _events_ and receive updates in realtime.
 
-It is important to understand that the data model is the foundation for your API. Every time you make changes to your data model (and run `prisma1 deploy` afterwards), the GraphQL API gets updated accordingly.
+It is important to understand that the data model is the foundation for your API. Every time you make changes to your data model (and run `prisma deploy` afterwards), the GraphQL API gets updated accordingly.
 
 Because your data model contains the `User` type, the Prisma API now allows for its clients to create, read, update and delete instances, also called _nodes_, of that type. In particular, the following GraphQL operations are now generated based on the `User` type:
 
@@ -133,7 +133,7 @@ projects:
 To open a GraphQL Playground, you can now use the Prisma CLI again. Simply run the following command inside the `hello-world` directory:
 
 ```sh
-prisma1 playground
+prisma playground
 ```
 
 </Instruction>

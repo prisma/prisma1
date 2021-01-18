@@ -19,13 +19,13 @@ There are two ways to migrate your database with Prisma:
 
 ## Migrations with the Prisma CLI
 
-When using Prisma with a MySQL database, you can perform your database migrations using the [`prisma1 deploy`](xcv9) command of the Prisma CLI.
+When using Prisma with a MySQL database, you can perform your database migrations using the [`prisma deploy`](xcv9) command of the Prisma CLI.
 
 There are two steps to every database migration:
 
 1. Adjust the [datamodel](knul) file to reflect the new desired schema
-1. Run `prisma1 deploy` to apply the changes and perform the migration of the underlying database
+1. Run `prisma deploy` to apply the changes and perform the migration of the underlying database
 
 ## Manual migrations with SQL
 
-When migrating your database manually, you need to ensure that the Prisma datamodel matches the database schema after the migration. The easiest way to do so is by using the `prisma1 introspect` command to generate a datamodel file based on your migrated database schema and then use this new datamodel file as the new foundation for your Prisma project.
+When migrating your database manually, you need to ensure that the Prisma datamodel matches the database schema after the migration. The easiest way to do so is by using the `prisma introspect` command to generate a datamodel file based on your migrated database schema and then use this new datamodel file as the new foundation for your Prisma project.

@@ -70,7 +70,7 @@ Before deploying Prisma services to a Demo server, the Prisma CLI needs to be au
 To log into Prisma CLoud from the CLI, use the following command:
 
 ```bash
-prisma1 login
+prisma login
 ```
 
 This command opens a browser window where you need to provide your Prisma Cloud credentials. If the credentials are valid, the CLI generates a Prisma Cloud token (sometimes called _cloud session key_) and stores it in `~/.prisma/config.yml` as `cloudSessionKey`.
@@ -79,7 +79,7 @@ This token is used in subsequent requests to authenticate against the Demo serve
 
 ### Logout
 
-To logout from the Prisma CLI use `prisma1 logout` command. It simply removes the `cloudSessionKey` from `~/.prisma/config.yml`.
+To logout from the Prisma CLI use `prisma logout` command. It simply removes the `cloudSessionKey` from `~/.prisma/config.yml`.
 
 ## Pricing
 

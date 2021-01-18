@@ -117,7 +117,7 @@ eval $(docker-machine env prisma)
 
 </Instruction>
 
-That's it - all your `docker` (and therefore `prisma1 local`) commands will now run against the Digital Ocean Droplet instead of your local machine!
+That's it - all your `docker` (and therefore `prisma local`) commands will now run against the Digital Ocean Droplet instead of your local machine!
 
 To actually install Prisma on your Droplet, you need to perform the following steps (we'll go over them in detail afterwards):
 
@@ -196,7 +196,7 @@ You're now ready to deploy a Prisma service to your droplet
 Inside the `prisma-digital-ocean-demo` directory, run the following command:
 
 ```sh(path="prisma-digital-ocean-demo")
-prisma1 init hello-world
+prisma init hello-world
 ```
 
 </Instruction>
@@ -223,7 +223,7 @@ Navigate into the newly-created `hello-world` directory and deploy the service:
 
 ```sh(path="prisma-digital-ocean-demo")
 cd hello-world
-prisma1 deploy
+prisma deploy
 ```
 
 </Instruction>
@@ -237,7 +237,7 @@ The Prisma CLI in this case acts as a _client_ for the Prisma Management API whi
 
 </InfoBox>
 
-This is it! Your Prisma service is now running on your local server and can be access through the endpoint that was printed by the `prisma1 deploy` command! It will look similar to this: `http://__DROPLET_IP_ADDRESS__:4466/hello-world/dev`.
+This is it! Your Prisma service is now running on your local server and can be access through the endpoint that was printed by the `prisma deploy` command! It will look similar to this: `http://__DROPLET_IP_ADDRESS__:4466/hello-world/dev`.
 
 You can go ahead and send the following mutation and query to it:
 
@@ -315,12 +315,12 @@ Awesome - your server is now secured and only people who have access to your pri
 Let's try and deploy the server without changing anything:
 
 ```sh
-prisma1 deploy
+prisma deploy
 Creating stage dev for service hello-world !
  ▸    Server at http://104.131.127.241:4466:4466 requires a cluster secret. Please provide it with the env var PRISMA_MANAGEMENT_API_SECRET
 ```
 
-Perfect this is what we expected! Now you need to make the private key available to the CLI so your `prisma1 deploy` and similar commands can be properly authenticated.
+Perfect this is what we expected! Now you need to make the private key available to the CLI so your `prisma deploy` and similar commands can be properly authenticated.
 
 <Instruction>
 

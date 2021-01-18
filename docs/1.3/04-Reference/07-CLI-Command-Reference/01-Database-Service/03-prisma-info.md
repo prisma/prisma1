@@ -3,7 +3,7 @@ alias: cheeni9mae
 description: Display service information (endpoints, cluster, ...)
 ---
 
-# `prisma1 info`
+# `prisma info`
 
 Display service information:
 
@@ -14,7 +14,7 @@ Display service information:
 #### Usage
 
 ```sh
-prisma1 info
+prisma info
 ```
 
 #### Flags
@@ -30,19 +30,19 @@ prisma1 info
 ##### Print information about current service.
 
 ```sh
-prisma1 info
+prisma info
 ```
 
 ##### Print information about current service in JSON.
 
 ```sh
-prisma1 info --json
+prisma info --json
 ```
 
 ##### Print information about current service in JSON and include service secret.
 
 ```sh
-prisma1 info --json --secret
+prisma info --json --secret
 ```
 
 > **Note**: The secret will not be printed if the `--json` flag is not provided.

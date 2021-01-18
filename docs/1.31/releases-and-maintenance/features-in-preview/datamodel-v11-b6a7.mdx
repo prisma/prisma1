@@ -496,30 +496,30 @@ CREATE TABLE "default$default"."MyRelation" (
 
 ## Migrations and introspection with the Prisma CLI
 
-### `prisma1 deploy`
+### `prisma deploy`
 
-The command `prisma1 deploy` got enhanced. From now on, there will be two modes that allow developers to choose whether the Prisma migration system should migrate their database:
+The command `prisma deploy` got enhanced. From now on, there will be two modes that allow developers to choose whether the Prisma migration system should migrate their database:
 
-- `prisma1 deploy`: This command reads your datamodel and migrates the underlying database to match it.
-- `prisma1 deploy --no-migrate`: This command does *not* migrate the underlying database. Instead, it expects the database schema to be in the right state already (which means you need to manually migrate the database _before_ running `prisma1 deploy --no-migrate`)! If the datamodel and database schema do not align, `prisma1 deploy` will throw an error.
+- `prisma deploy`: This command reads your datamodel and migrates the underlying database to match it.
+- `prisma deploy --no-migrate`: This command does *not* migrate the underlying database. Instead, it expects the database schema to be in the right state already (which means you need to manually migrate the database _before_ running `prisma deploy --no-migrate`)! If the datamodel and database schema do not align, `prisma deploy` will throw an error.
 
-### `prisma1 introspect`
+### `prisma introspect`
 
-The command `prisma1 introspect` has been adapted to output the new datamodel format: 
+The command `prisma introspect` has been adapted to output the new datamodel format: 
 
 ```
-prisma1 introspect
+prisma introspect
 ```
 
 The command has been improved so that it will pay respect to existing datamodel files. This way you can use it to translate your database schema into a datamodel while the introspection will preserve the ordering of types and fields of your existing datamodel file.
 
 ### Common workflows
 
-You can fluently switch between those two commands however you like. For instance you could use `prisma1 deploy` for most of your migration needs. When you hit an advanced use case where the Prisma migration system is not yet powerful enough, you can:
+You can fluently switch between those two commands however you like. For instance you could use `prisma deploy` for most of your migration needs. When you hit an advanced use case where the Prisma migration system is not yet powerful enough, you can:
 
 1. Migrate the database manually 
-1. Use `prisma1 introspect` to update your datamodel with those changes from the database
-1. Use `prisma1 deploy --no-migrate` to let the Prisma server know about that
+1. Use `prisma introspect` to update your datamodel with those changes from the database
+1. Use `prisma deploy --no-migrate` to let the Prisma server know about that
 
 ## Prerequisites & Installation
 
@@ -528,7 +528,7 @@ The datamodel v1.1 is available in the latest Prisma version.
 ### 1. Install the latest Prisma CLI
 
 ```
-npm install -g prisma1
+npm install -g prisma
 ```
 
 ### 2. Use the latest Prisma Docker image
@@ -662,7 +662,7 @@ Let's understand some important bits of the datamodel:
 With `prisma.yml` and `datamodel.prisma` in place, you can deploy your datamodel:
 
 ```
-prisma1 deploy
+prisma deploy
 ```
 
 The underlying database that's created by Prisma is called after the service name and stage (separated by the `$` character). Because the `endpoint` in `prisma.yml` doesn't use these properties, Prisma defaults to `default` for both. The database name consequently is `default$default`.
@@ -792,13 +792,13 @@ If you have a database that already contains some data, you can get started by i
 To get started, run:
 
 ```
-prisma1 init
+prisma init
 ```
 
 This launches an interactive wizard that guides you through the process of connecting to your existing database. The following interaction shows how to connect to a local PostgreSQL database:
 
 ```
-$ prisma1 init myapp
+$ prisma init myapp
 ? Set up a new Prisma server or deploy to an existing server? Use existing database
 ? What kind of database do you want to deploy to? PostgreSQL
 ? Does your database contain existing data? Yes
@@ -822,7 +822,7 @@ Created 3 new files:
 Next steps:
 
   1. Start your Prisma server: docker-compose up -d
-  2. Deploy your Prisma service: prisma1 deploy
+  2. Deploy your Prisma service: prisma deploy
   3. Read more about introspection:
      http://bit.ly/prisma-introspection
 ```
@@ -840,7 +840,7 @@ Now you can deploy your Prisma setup:
 ```
 cd myapp
 docker-compose up -d
-prisma1 deploy
+prisma deploy
 ```
 
 ### 3. View and edit your data
@@ -942,13 +942,13 @@ docker-compose up -d
 Now you can install the latest CLI version, e.g. with npm:
 
 ```
-npm install -g prisma1
+npm install -g prisma
 ```
 
 At this point, you can already try to redeploy your Prisma datamodel. It won't work and the CLI will show some errors:
 
 ```
-$ prisma1 deploy
+$ prisma deploy
 Deploying service `default` to stage `default` to server `local` 585ms
 
 Errors:
@@ -973,10 +973,10 @@ Read more about deployment errors here: https://bit.ly/prisma-force-flag
 
 ### 3. Migrating to datamodel v1.1 syntax
 
-To update your datamodel and get rid of the previous errors, you can use the `prisma1 introspect` command. Inside your project directory, run:
+To update your datamodel and get rid of the previous errors, you can use the `prisma introspect` command. Inside your project directory, run:
 
 ```
-prisma1 introspect
+prisma introspect
 ```
 
 This introspects your database schema and generates a new datamodel file that uses v1.1 syntax. The new file is called `datamodel-TIMESTAMP.prisma`, e.g. `datamodel-1554394432089.prisma`. For the example from above, the following datamodel is generated:
@@ -1028,12 +1028,12 @@ enum Role {
 You can now upgrade the datamodel of your running Prisma service:
 
 ```
-prisma1 deploy
+prisma deploy
 ```
 
 <Collapse title="Alternative: Fix errors manually instead of using introspection">
 
-To fix the errors that Prisma threw after `prisma1 deploy`, you need to:
+To fix the errors that Prisma threw after `prisma deploy`, you need to:
 
 - Use the `@id` directive instead of `@unique` on the `id` fields of your models
 - Remove the quotes around the arguments of the `@default` directives
@@ -1083,7 +1083,7 @@ enum Role {
 Now you can deploy the datamodel with the new syntax:
 
 ```
-prisma1 deploy
+prisma deploy
 ```
 
 </Collapse>
@@ -1102,7 +1102,7 @@ If you want to optimize your database schema and take advantage of the new featu
 To export the data, you can run the following command (inside the directory where your `prisma.yml` is located):
 
 ```
-prisma1 export
+prisma export
 ```
 
 This creates the following file: `export-TIMESTAMP.zip`, where `TIMESTAMPT` represents the time of the export, e.g. `export-2019-03-21T09:08:48.816Z.zip`.
@@ -1167,7 +1167,7 @@ enum Role {
 With these changes in place, you can deploy the datamodel: 
 
 ```
-prisma1 deploy
+prisma deploy
 ```
 
 The new database schema now has the following (empty) tables:
@@ -1180,10 +1180,10 @@ The new database schema now has the following (empty) tables:
 
 ###### 4.3. Import the data
 
-To import the data, you need to use the `prisma1 import` command and point it to the exported file from [4.1.](#41-export-data), e.g.:
+To import the data, you need to use the `prisma import` command and point it to the exported file from [4.1.](#41-export-data), e.g.:
 
 ```
-prisma1 import -d ./export-2019-03-21T09:08:48.816Z.zip
+prisma import -d ./export-2019-03-21T09:08:48.816Z.zip
 ```
 
 Note that there currently still is a [bug](https://github.com/prisma/datamodel-v1.1-feedback/issues/1) that prevents this from working smoothly. One workaround is to just add the `createdAt: DateTime! @createdAt` and `updatedAt: DateTime! @updatedAt` fields to thyour new datamodel. 
@@ -1204,6 +1204,6 @@ Please report bugs in [this](https://github.com/prisma/datamodel-v1.1-feedback) 
 
 We recommend the following:
 
-1. Use `prisma1 export` to export the data from your existing Prisma project.
+1. Use `prisma export` to export the data from your existing Prisma project.
 1. Copy your existing datamodel to a new Prisma project and apply your desired optimisations to your datamodel.
-1. Use `prisma1 import` to import the data into your new Prisma project.
+1. Use `prisma import` to import the data into your new Prisma project.

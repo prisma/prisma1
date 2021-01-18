@@ -109,7 +109,7 @@ eval $(docker-machine env prisma)
 
 </Instruction>
 
-That's it - all your `docker` (and therefore `prisma1 local`) commands will now run against the Digital Ocean Droplet instead of your local machine!
+That's it - all your `docker` (and therefore `prisma local`) commands will now run against the Digital Ocean Droplet instead of your local machine!
 
 To actually install Prisma on your Droplet, you need to perform the following steps (we'll go over them in detail afterwards):
 
@@ -238,7 +238,7 @@ The cluster registry is stored in `~/.prisma/config.yml`. It lists all the clust
 
 There is two ways how you can a new cluster to the registry:
 
-1. Use the interactive Prisma CLI using the  `prisma1 cluster add` command
+1. Use the interactive Prisma CLI using the  `prisma cluster add` command
 1. Open `~/.prisma/config.yml` and add the cluster manually
 
 In both cases, there are three pieces of information that need to be provided:
@@ -296,7 +296,7 @@ You're now ready to deploy a Prisma service to the cluster.
 Inside the `digital-ocean-demo` directory, run the following command:
 
 ```sh(path="digital-ocean-demo")
-prisma1 init hello-world
+prisma init hello-world
 ```
 
 </Instruction>
@@ -324,7 +324,7 @@ Navigate into the newly-created `hello-world` directory and deploy the service:
 
 ```sh(path="digital-ocean-demo")
 cd hello-world
-prisma1 deploy
+prisma deploy
 ```
 
 </Instruction>
@@ -332,7 +332,7 @@ prisma1 deploy
 Because no `cluster` is specified in `prisma.yml`, the CLI now prompts you to select a cluster. The list includes the `digital-ocean-cluster` you previously added:
 
 ```
-$ prisma1 deploy
+$ prisma deploy
 
 ? Please choose the cluster you want to deploy "hello-world@dev" to (Use arrow keys)
 
@@ -354,7 +354,7 @@ The Prisma CLI in that case acts as a _client_ for the Prisma Cluster API which 
 
 </InfoBox>
 
-This is it! Your Prisma service is now running on your local cluster and can be access through the endpoint that was printed by the `prisma1 deploy` command! It will look similar to this: `http://__DROPLET_IP_ADDRESS__:4466/hello-world/dev`.
+This is it! Your Prisma service is now running on your local cluster and can be access through the endpoint that was printed by the `prisma deploy` command! It will look similar to this: `http://__DROPLET_IP_ADDRESS__:4466/hello-world/dev`.
 
 You can go ahead and send the following mutation and query to it:
 
@@ -460,7 +460,7 @@ docker-compose up -d
 
 Awesome - your cluster is now secured and only people who have access to your private key will be able to access it from now on!
 
-Next, you need to make the private key available to the CLI so your `prisma1 deploy` and similar commands can be properly authenticated. The way to do this is by setting it as the `clusterSecret` in `~/.prisma/config.yml`:
+Next, you need to make the private key available to the CLI so your `prisma deploy` and similar commands can be properly authenticated. The way to do this is by setting it as the `clusterSecret` in `~/.prisma/config.yml`:
 
 <Instruction>
 

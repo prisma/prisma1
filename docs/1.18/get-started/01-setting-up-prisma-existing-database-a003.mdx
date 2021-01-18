@@ -54,7 +54,7 @@ brew install prisma
 ```
 
 ```bash copy
-npm install -g prisma1
+npm install -g prisma
 ```
 
 </Code>
@@ -163,7 +163,7 @@ endpoint: http://localhost:4466
 You now need to introspect your database schema to generate the datamodel which is the foundation for the API of your Prisma client:
 
 ```bash copy
-prisma1 introspect
+prisma introspect
 ```
 
 The CLI generates the `datamodel-[TIMESTAMP].graphql` (e.g. `datamodel-1533886167692.graphql`) file containing the SDL version of your database schema. On the first run, it also writes the `datamodel` property into the `prisma.yml`.
@@ -175,12 +175,12 @@ Finally, you need to rename the file to `datamodel.prisma` because that's the fi
 You now have the _minimal_ setup to deploy your Prisma API. Run the following command (this does **not** change anything in your database):
 
 ```bash copy
-prisma1 deploy
+prisma deploy
 ```
 
 <Warning>
 
-Launching the Prisma server may take a few minutes. In case the `prisma1 deploy` command fails, wait a few minutes and try again. Also run `docker ps` to ensure the Docker container is actually running.
+Launching the Prisma server may take a few minutes. In case the `prisma deploy` command fails, wait a few minutes and try again. Also run `docker ps` to ensure the Docker container is actually running.
 
 </Warning>
 
@@ -198,7 +198,7 @@ generate:
 Now generate the client with this command:
 
 ``` copy
-prisma1 generate
+prisma generate
 ```
 
 The CLI now stored your Prisma client inside the `prisma-client` directory as specified in `prisma.yml`.

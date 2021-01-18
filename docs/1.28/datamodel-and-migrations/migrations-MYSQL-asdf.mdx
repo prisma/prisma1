@@ -10,14 +10,14 @@ export const meta = {
 
 ## Overview
 
-When using Prisma with a MySQL database, _all_ your database migrations are performed using the [`prisma1 deploy`](xcv9) command of the Prisma CLI.
+When using Prisma with a MySQL database, _all_ your database migrations are performed using the [`prisma deploy`](xcv9) command of the Prisma CLI.
 
 ## Database migrations with Prisma
 
 There are two steps to every database migration:
 
 1. Adjust the [datamodel](knul) file to reflect the new desired schema
-1. Run `prisma1 deploy` to apply the changes and perform the migration of the underlying database
+1. Run `prisma deploy` to apply the changes and perform the migration of the underlying database
 
 ### Migration operations
 
@@ -58,12 +58,12 @@ type Story @rename(oldName: "Post") {
 }
 ```
 
-##### 4) Migrating the database with `prisma1 deploy`
+##### 4) Migrating the database with `prisma deploy`
 
 After having the saved the datamodel file with these changes, you need to run:
 
 ```
-prisma1 deploy
+prisma deploy
 ```
 
 ##### 5) Removing the `@rename` directive manually
@@ -99,12 +99,12 @@ type Post {
 }
 ```
 
-##### 4) Migrating the database with `prisma1 deploy`
+##### 4) Migrating the database with `prisma deploy`
 
 After having the saved the datamodel file with these changes, you need to run:
 
 ```
-prisma1 deploy
+prisma deploy
 ```
 
 ##### 5) Removing the `@rename` directive manually

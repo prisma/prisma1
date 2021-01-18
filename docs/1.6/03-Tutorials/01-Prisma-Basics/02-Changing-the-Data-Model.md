@@ -58,7 +58,7 @@ So far, the changes you made are only local. So, you won't be able to access the
 To make your changes take effect, you need to to deploy the service again. In the `hello-world` directory, run the following command:
 
 ```sh
-prisma1 deploy
+prisma deploy
 ```
 
 </Instruction>
@@ -108,7 +108,7 @@ type Post {
 
 <Instruction>
 
-To apply these changes, you need to run `prisma1 deploy` inside the `hello-world` directory again.
+To apply these changes, you need to run `prisma deploy` inside the `hello-world` directory again.
 
 </Instruction>
 

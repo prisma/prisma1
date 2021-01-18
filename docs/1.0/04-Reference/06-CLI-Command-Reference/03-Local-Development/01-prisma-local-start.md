@@ -3,14 +3,14 @@ alias: woh9sheith
 description: Start local development cluster (Docker required)
 ---
 
-# `prisma1 local start`
+# `prisma local start`
 
 Start local development cluster (Docker required).
 
 #### Usage
 
 ```sh
-prisma1 local start [flags]
+prisma local start [flags]
 ```
 
 #### Flags

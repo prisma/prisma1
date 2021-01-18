@@ -33,22 +33,22 @@ brew install prisma
 ```
 
 ```bash copy
-npm install -g prisma1
+npm install -g prisma
 ```
 
 </Code>
 
 ## Set up Prisma
 
-To bootstrap the configuration files for your Prisma setup, create a new directory and initalize it using the `prisma1 init` command:
+To bootstrap the configuration files for your Prisma setup, create a new directory and initalize it using the `prisma init` command:
 
 ```bash copy
 mkdir hello-world
 cd hello-world
-prisma1 init
+prisma init
 ```
 
-After running `prisma1 init`, the Prisma CLI prompts you to select _how_ you want to deploy Prisma:
+After running `prisma init`, the Prisma CLI prompts you to select _how_ you want to deploy Prisma:
 
 1. Select **Demo server** from the list.
 1. When your browser opens, register with [Prisma Cloud](https://www.prisma.io/cloud/). This is needed because that's where the Demo server is hosted.
@@ -71,7 +71,7 @@ After running `prisma1 init`, the Prisma CLI prompts you to select _how_ you wan
 The interactive wizard created the _minimal_ Prisma configuration based on a hosted demo database: `prisma.yml` and `datamodel.prisma`. Prisma now needs to be _deployed_ so you can [use the Prisma API](nms2):
 
 ```bash copy
-prisma1 deploy
+prisma deploy
 ```
 
 Congratulations, you have successfully deployed Prisma. You now have a free and hosted demo database ([AWS Aurora](https://aws.amazon.com/rds/aurora)) available in Prisma Cloud and are ready to use the Prisma client to read and write to it from your code.

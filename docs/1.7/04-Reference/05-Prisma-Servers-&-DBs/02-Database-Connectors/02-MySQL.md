@@ -41,12 +41,12 @@ services:
 
 You can setup a new Prisma server that connects to a MySQL database using the Prisma CLI (requires [Docker](https://www.docker.com)):
 
-1. Run `prisma1 init hello-world`
+1. Run `prisma init hello-world`
 1. Select **Create new database**
 1. Select PostgreSQL
 1. Navigate into the new `hello-world` directory: `cd hello-world`
 1. Start Prisma server: `docker-compose up -d`
-1. Run `prisma1 deploy` to deploy your Prisma API
+1. Run `prisma deploy` to deploy your Prisma API
 
 ### Troubleshooting
 

@@ -33,7 +33,7 @@ type User {
 #### 2. Deploying the updated data model
 
 ```sh
-prisma1 deploy
+prisma deploy
 ```
 
 This will...

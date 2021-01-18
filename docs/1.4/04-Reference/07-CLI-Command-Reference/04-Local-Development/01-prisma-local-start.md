@@ -3,14 +3,14 @@ alias: woh9sheith
 description: Start local development cluster (Docker required)
 ---
 
-# `prisma1 local start`
+# `prisma local start`
 
 Start local development cluster ([Docker](https://www.docker.com) required).
 
 #### Usage
 
 ```sh
-prisma1 local start [flags]
+prisma local start [flags]
 ```
 
 #### Flags
@@ -24,13 +24,13 @@ prisma1 local start [flags]
 ##### Start local default cluster called `local`.
 
 ```sh
-prisma1 local start
+prisma local start
 ```
 
 ##### Start local cluster called `mycluster`.
 
 ```sh
-prisma1 local start --name mycluster
+prisma local start --name mycluster
 ```
 
 > **Note**: If it didn't exist before, the command adds a new entry with the key `mycluster` to your [cluster registry](!alias-eu2ood0she#cluster-registry) in `~/.prisma/config.yml`.

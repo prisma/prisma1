@@ -3,12 +3,12 @@ alias: vu2ohngud7
 description: Output cluster logs.
 ---
 
-# `prisma1 cluster logs`
+# `prisma cluster logs`
 
 Output [cluster](!alias-eu2ood0she) logs.
 
 #### Usage
 
 ```sh
-prisma1 cluster logs [flags]
+prisma cluster logs [flags]
 ```

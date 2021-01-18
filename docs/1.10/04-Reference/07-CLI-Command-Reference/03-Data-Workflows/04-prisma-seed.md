@@ -3,14 +3,14 @@ alias: clchg8lwe2
 description: Seed service with initial data
 ---
 
-# `prisma1 reset`
+# `prisma reset`
 
 Seed the service with initial data.
 
 #### Usage
 
 ```sh
-prisma1 seed [flags]
+prisma seed [flags]
 ```
 
 #### Flags
@@ -24,11 +24,11 @@ prisma1 seed [flags]
 ##### Seed service with initial data
 
 ```sh
-prisma1 seed
+prisma seed
 ```
 
 ##### Seed service with initial data, resetting the service first
 
 ```sh
-prisma1 seed --reset
+prisma seed --reset
 ```

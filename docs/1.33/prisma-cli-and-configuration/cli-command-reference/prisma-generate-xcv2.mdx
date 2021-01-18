@@ -1,9 +1,9 @@
 export const meta = {
-  title: "prisma1 generate",
+  title: "prisma generate",
   position: 130,
 }
 
-## `prisma1 generate`
+## `prisma generate`
 
 Invokes the _generators_ specified in `prisma.yml`. Available generators are:
 
@@ -15,12 +15,12 @@ The following generators are built-into the Prisma CLI:
 - Prisma client in Go: `go-client`
 - GraphQL schema of the Prisma API: `graphql-schema`
 
-By default, the Prisma client is generated locally based on the [datamodel](knul). If the datamodel is currently out-of-sync with the API of the running Prisma service, it's also possible to generate the client from the live API instead of the datamodel using the `--endpoint` option. `prisma1 generate` looks up the `endpoint` in your `prisma.yml` when the option is added to the command. If you want to provide a custom endpoint, you can add it as an argument to the `--endpoint` option as well.
+By default, the Prisma client is generated locally based on the [datamodel](knul). If the datamodel is currently out-of-sync with the API of the running Prisma service, it's also possible to generate the client from the live API instead of the datamodel using the `--endpoint` option. `prisma generate` looks up the `endpoint` in your `prisma.yml` when the option is added to the command. If you want to provide a custom endpoint, you can add it as an argument to the `--endpoint` option as well.
 
 ### Usage
 
 ```bash
-prisma1 generate [flags]
+prisma generate [flags]
 ```
 
 ### Flags
@@ -44,7 +44,7 @@ generate:
 ```
 
 ```bash
-prisma1 generate
+prisma generate
 ```
 
 **Generate the TypeScript client from custom endpoint**
@@ -58,7 +58,7 @@ generate:
 ```
 
 ```bash
-prisma1 generate --endpoint http://localhost:4466
+prisma generate --endpoint http://localhost:4466
 ```
 
 **Generate the Go client and the GraphQL schema store the generated files at `./generated/prisma`**
@@ -74,5 +74,5 @@ generate:
 ```
 
 ```bash
-prisma1 generate
+prisma generate
 ```

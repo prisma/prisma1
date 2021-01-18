@@ -398,17 +398,17 @@ Next, you'll setup your Prisma database service.
 Therefore, you first need to install the [Prisma CLI](!alias-foatho8aip):
 
 ```bash
-npm install -g prisma1
+npm install -g prisma
 ```
 
 </Instruction>
 
 <Instruction>
 
-Once installed, you can use the `prisma1 init` command to create a new directory which will contain the configuration files for your Prisma database service:
+Once installed, you can use the `prisma init` command to create a new directory which will contain the configuration files for your Prisma database service:
 
 ```bash
-prisma1 init database
+prisma init database
 ```
 
 </Instruction>
@@ -429,7 +429,7 @@ The CLI further prompts you to select a _region_ to which the Prisma service sho
 
 </Instruction>
 
-All `prisma1 init` is doing here is creating a new directory called `database` and places two files in there:
+All `prisma init` is doing here is creating a new directory called `database` and places two files in there:
 
 - [`prisma.yml`](!alias-foatho8aip): The root configuration file for your Prisma service.
 - [`datamodel.graphql`](!alias-eiroozae8u): Contains the definition of your data model in SDL (Prisma will translate this into an according database schema).
@@ -466,11 +466,11 @@ Ok cool! So, what did we win now? So far, not much! But let’s go ahead and dep
 
 <Instruction>
 
-Navigate into the `database` directory and execute `prisma1 deploy`:
+Navigate into the `database` directory and execute `prisma deploy`:
 
 ```bash
 cd database
-prisma1 deploy
+prisma deploy
 ```
 
 </Instruction>
@@ -673,7 +673,7 @@ Because the GraphQL CLI “understands” the `.graphqlconfig.yml`, it knows tha
 
 <InfoBox>
 
-💡 **Pro tip**: To ensure your Prisma database schema is always in sync with the deployed API, you can also add a `post-deploy` [hook](!alias-ufeshusai8#hooks-optional) to your `prisma.yml` file. Whenever you're updating the data model (and therefore the Prisma database schema) by running `prisma1 deploy`, the CLI will automatically download the schema for the updated API.
+💡 **Pro tip**: To ensure your Prisma database schema is always in sync with the deployed API, you can also add a `post-deploy` [hook](!alias-ufeshusai8#hooks-optional) to your `prisma.yml` file. Whenever you're updating the data model (and therefore the Prisma database schema) by running `prisma deploy`, the CLI will automatically download the schema for the updated API.
 <br>
 To do so, add the following code to the end of `prisma.yml`:
 
@@ -691,7 +691,7 @@ All right, everything is in place now! You can finally start the GraphQL server 
 
 Because the application schema hasn’t changed (only its *implementation* was updated), you can send the same queries and mutations from before to test your API. Of course, now the data you're storing will be persisted in the database that's proxied by Prisma.
 
-Also, here’s a little gem: If you [download the standalone version of the GraphQL Playground](https://github.com/graphcool/graphql-playground/releases/), you can work with the API of your `graphql-yoga` server and the Prisma API side-by-side (run `prisma1 playground` after you downloaded and installed it on your machine). The projects are read from the `.graphqlconfig.yml` file as well:
+Also, here’s a little gem: If you [download the standalone version of the GraphQL Playground](https://github.com/graphcool/graphql-playground/releases/), you can work with the API of your `graphql-yoga` server and the Prisma API side-by-side (run `prisma playground` after you downloaded and installed it on your machine). The projects are read from the `.graphqlconfig.yml` file as well:
 
 ![](https://cdn-images-1.medium.com/max/2764/1*OZy6mDfz8vZIrmvP9RvSHg.png)
 

@@ -3,12 +3,12 @@ alias: shoo8cioto
 description: Create a new service token
 ---
 
-# `prisma1 token`
+# `prisma token`
 
 Create a new service token
 
 #### Usage
 
 ```sh
-prisma1 token [flags]
+prisma token [flags]
 ```

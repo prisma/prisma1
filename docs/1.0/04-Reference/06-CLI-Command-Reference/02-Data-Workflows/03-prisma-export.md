@@ -3,14 +3,14 @@ alias: oonu0quai2
 description: Export service data to a local file
 ---
 
-# `prisma1 export`
+# `prisma export`
 
 Exports your service data.
 
 #### Usage
 
 ```sh
-prisma1 export [flags]
+prisma export [flags]
 ```
 
 #### Flags
@@ -24,11 +24,11 @@ prisma1 export [flags]
 ##### Export data
 
 ```sh
-prisma1 export
+prisma export
 ```
 
 ##### Export data with specific environment variables
 
 ```sh
-prisma1 export --dotenv .env.prods
+prisma export --dotenv .env.prods
 ```

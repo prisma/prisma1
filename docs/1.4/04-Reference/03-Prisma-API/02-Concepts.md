@@ -222,7 +222,7 @@ The JWT must contain different [claims](https://jwt.io/introduction/#payload):
 
 ##### Prisma CLI
 
-Run `prisma1 token` to obtain a new signed JWT for your current Prisma service.
+Run `prisma token` to obtain a new signed JWT for your current Prisma service.
 
 ##### JavaScript
 
@@ -307,4 +307,4 @@ Check if the token you provided has not yet expired and is signed with a secret 
 
 ### Internal server errors
 
-Consult the service logs for more information on the error. For the local cluster, this can be done using the [prisma1 logs](!alias-aenael2eek) command.
+Consult the service logs for more information on the error. For the local cluster, this can be done using the [prisma logs](!alias-aenael2eek) command.

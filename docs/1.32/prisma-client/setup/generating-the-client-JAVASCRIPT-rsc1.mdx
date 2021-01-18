@@ -10,9 +10,9 @@ export const meta = {
 
 ## Overview
 
-The Prisma client is auto-generated using the `prisma1 generate` command of the [Prisma CLI](alx4). One Prisma client connects to exactly one Prisma service.
+The Prisma client is auto-generated using the `prisma generate` command of the [Prisma CLI](alx4). One Prisma client connects to exactly one Prisma service.
 
-`prisma1 generate` reads the information that's specified under the [`generate`](5cy7#generate-optional) root property in your service's `prisma.yml`. 
+`prisma generate` reads the information that's specified under the [`generate`](5cy7#generate-optional) root property in your service's `prisma.yml`. 
 
 ## Configuring `generate` in `prisma.yml`
 
@@ -39,7 +39,7 @@ generate:
     output: ./prisma-client/
 ```
 
-Running [`prisma1 generate`](xcv2) in the directory where that `prisma.yml` is located generates a Prisma client in JavaScript and stores the generated files in a directory called `prisma-client`.
+Running [`prisma generate`](xcv2) in the directory where that `prisma.yml` is located generates a Prisma client in JavaScript and stores the generated files in a directory called `prisma-client`.
 
 The generated Prisma client is configured to target the `endpoint` specified in `prisma.yml`. It also knows the `secret` so that it can authenticate against your Prisma service when you're using it in your application.
 
