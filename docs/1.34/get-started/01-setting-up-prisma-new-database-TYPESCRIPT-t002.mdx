@@ -42,7 +42,7 @@ brew install prisma
 ```
 
 ```bash copy
-npm install -g prisma
+npm install -g prisma1
 ```
 
 </Code>
@@ -191,14 +191,14 @@ When using the Prisma CLI, you then need to set the `PRISMA_MANAGEMENT_API_SECRE
 To bootstrap the configuration files for your Prisma client run the following command:
 
 ```bash copy
-prisma init --endpoint http://localhost:4466
+prisma1 init --endpoint http://localhost:4466
 ```
 
 > The `endpoint` needs to match the URL of a running Prisma server.
 
 ## Deploy the Prisma datamodel
 
-The `prisma init` command created the _minimal_ setup needed to deploy the Prisma datamodel: `prisma.yml` and `datamodel.prisma`.
+The `prisma1 init` command created the _minimal_ setup needed to deploy the Prisma datamodel: `prisma.yml` and `datamodel.prisma`.
 
 <Collapse title="Expand if you're using MongoDB">
 
@@ -230,7 +230,7 @@ type User {
 With these configuration files, you can now _deploy_ the Prisma API:
 
 ```bash copy
-prisma deploy
+prisma1 deploy
 ```
 
 Congratulations, you have successfully set up Prisma. You can now start using the Prisma client to talk to your database from code.
@@ -252,7 +252,7 @@ generate:
 Now generate the client with this command:
 
 ```bash copy
-prisma generate
+prisma1 generate
 ```
 
 The CLI now stored your Prisma client inside the `./generated/prisma-client/` directory as specified in `prisma.yml`.
