@@ -12,7 +12,7 @@ export const meta = {
 
 When connecting Prisma to an existing database that already contains some data, it can be tedious to manually write the datamodel from scratch while ensuring it matches the structure of the already existing data.
 
-To automate this process, you can use the [`prisma introspect`](xcv3) command from the [Prisma CLI](alx4) to generate the [datamodel](soi3) based on the actual structure of the existing data.
+To automate this process, you can use the [`prisma1 introspect`](xcv3) command from the [Prisma CLI](alx4) to generate the [datamodel](soi3) based on the actual structure of the existing data.
 
 The generated SDL serves as a foundation for your Prisma service, but you can easily make modifications afterwards as you see fit. Some common modifications include hiding a table from the GraphQL API or giving a column to a different name.
 
@@ -26,23 +26,23 @@ MonogDB uses the following model to organize data internally:
 
 There are two ways you can use the CLI to introspect a MongoDB database:
 
-- Using the interactive `prisma init` wizard
-- Using the dedicated `prisma introspect` command
+- Using the interactive `prisma1 init` wizard
+- Using the dedicated `prisma1 introspect` command
 
 In both cases, you need to provide the _connection details_ for the running MongoDB instance. This includes the following:
 
 - The MongoDB [connection string](https://docs.mongodb.com/manual/reference/connection-string/) that can connect to your MongoDB server.
 - The name of the MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) you want to connect to.
 
-### Using the `prisma init` wizard
+### Using the `prisma1 init` wizard
 
-During the interactive `prisma init` flow you can choose to connect to an existing database with data. The CLI will ask for database connection details (as mentioned above) and verify that it can establish a successfully connection.
+During the interactive `prisma1 init` flow you can choose to connect to an existing database with data. The CLI will ask for database connection details (as mentioned above) and verify that it can establish a successfully connection.
 
 If the connection details are valid, the CLI will introspect the database and show you a summary.
 
 ![](https://i.imgur.com/cNIeeJf.png)
 
-When `prisma init` terminates, the CLI has created the following files for you which you can now use to _deploy_ a new Prisma service:
+When `prisma1 init` terminates, the CLI has created the following files for you which you can now use to _deploy_ a new Prisma service:
 
 - `datamodel.prisma`: Contains the datamodel (in SDL) that was generated based on your existing database.
 - `docker-compose.yml`: The Docker Compose file containing the configuration of your Prisma server, including details about how to connect to your database
@@ -51,14 +51,14 @@ When `prisma init` terminates, the CLI has created the following files for you w
 To be able to query your MongoDB database using Prisma you now need to _deploy_ the service and open a GraphQL Playground:
 
 ```bash
-prisma deploy
-prisma playground
+prisma1 deploy
+prisma1 playground
 ```
 
-### Using `prisma introspect`
+### Using `prisma1 introspect`
 
-`prisma introspect` works in a similar way as the `prisma init` wizard in that you need to provide the database connection information.
+`prisma1 introspect` works in a similar way as the `prisma1 init` wizard in that you need to provide the database connection information.
 
-While `prisma init` wizard generates an entire _service configuration_, `prisma introspect` only generates the datamodel file:
+While `prisma1 init` wizard generates an entire _service configuration_, `prisma1 introspect` only generates the datamodel file:
 
 - `datamodel-[TIMESTAMP].prisma`: The timestamp component allows you to use the introspect command for an existing Prisma service without overriding your existing datamodel.

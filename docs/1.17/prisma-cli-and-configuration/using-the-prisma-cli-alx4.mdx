@@ -24,7 +24,7 @@ The Prisma CLI can be installed from the [NPM registry](https://docs.npmjs.com/m
 ### NPM
 
 ```bash
-npm install -g prisma@beta
+npm install -g prisma1@beta
 ```
 
 ### Yarn
@@ -70,10 +70,10 @@ Docs can be found here: https://bit.ly/prisma-cli-commands
 Examples:
 
 - Initialize files for a new Prisma service
-  $ prisma init
+  $ prisma1 init
 
 - Deploy service changes (or new service)
-  $ prisma deploy
+  $ prisma1 deploy
 ```
 
 ## Quickstart
@@ -81,11 +81,11 @@ Examples:
 Once installed, execute the following commands to get your Prisma API up-and-running and start sending queries and mutations to it:
 
 ```bash
-prisma init hello-world
+prisma1 init hello-world
 # Select a *demo server* from the interactive prompt
 cd hello-world
-prisma deploy
-prisma playground
+prisma1 deploy
+prisma1 playground
 ```
 
 You can now start sending queries and mutations to your Prisma API. For a more comprehensive walkthrough, check out the [Get Started](a001) section.
@@ -119,5 +119,5 @@ To get a simple local proxy, you can use the [`proxy` module](https://www.npmjs.
 ```bash
 npm install -g proxy
 DEBUG="*" proxy -p 8080
-HTTP_PROXY=http://localhost:8080 HTTPS_PROXY=https://localhost:8080 prisma deploy
+HTTP_PROXY=http://localhost:8080 HTTPS_PROXY=https://localhost:8080 prisma1 deploy
 ```

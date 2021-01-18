@@ -3,14 +3,14 @@ alias: anaif5iez3
 description: Open the GraphQL Playground
 ---
 
-# `prisma playground`
+# `prisma1 playground`
 
 Open a [GraphQL Playground](https://github.com/graphcool/graphql-playground) for the current service. The current service is determined by the default environment that's specified in the `.prismarc` of the directory in which you're executing the command.
 
 #### Usage
 
 ```sh
-prisma playground [flags]
+prisma1 playground [flags]
 ```
 
 #### Flags

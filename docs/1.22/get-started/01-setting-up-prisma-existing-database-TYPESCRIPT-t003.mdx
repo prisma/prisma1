@@ -65,7 +65,7 @@ brew install prisma
 ```
 
 ```bash copy
-npm install -g prisma
+npm install -g prisma1
 ```
 
 </Code>
@@ -75,7 +75,7 @@ npm install -g prisma
 When using **MongoDB**, you need to install the beta version of the Prisma CLI: 
 
 ```console copy
-npm install -g prisma@beta
+npm install -g prisma1@beta
 ```
 
 </Warning>
@@ -209,7 +209,7 @@ endpoint: http://localhost:4466
 You now need to introspect your database schema to generate the datamodel which is the foundation for the API of your Prisma client:
 
 ```bash copy
-prisma introspect
+prisma1 introspect
 ```
 
 The CLI generates the `datamodel-[TIMESTAMP].prisma` (e.g. `datamodel-1533886167692.prisma`) file containing the SDL version of your database schema. On the first run, it also writes the `datamodel` property into the `prisma.yml`.
@@ -221,12 +221,12 @@ Finally, you need to rename the file to `datamodel.prisma` because that's the fi
 You now have the _minimal_ setup ready to deploy your Prisma API. Run the following command (this does **not** change anything in your database):
 
 ```bash copy
-prisma deploy
+prisma1 deploy
 ```
 
 <Warning>
 
-Launching the Prisma server may take a few minutes. In case the `prisma deploy` command fails, wait a few minutes and try again. Also run `docker ps` to ensure the Docker container is actually running.
+Launching the Prisma server may take a few minutes. In case the `prisma1 deploy` command fails, wait a few minutes and try again. Also run `docker ps` to ensure the Docker container is actually running.
 
 </Warning>
 
@@ -243,7 +243,7 @@ generate:
 Now generate the client with this command:
 
 ```bash copy
-prisma generate
+prisma1 generate
 ```
 
 The CLI now stored your Prisma client inside the `./generated/prisma-client/` directory as specified in `prisma.yml`.

@@ -354,7 +354,7 @@ The last step is to configure your local `Prisma CLI` so that you can communicat
 
 <InfoBox>
 
-The upcoming last step is also necessary if you want to integrate `prisma deploy` into your CI/CD process.
+The upcoming last step is also necessary if you want to integrate `prisma1 deploy` into your CI/CD process.
 
 </InfoBox>
 
@@ -362,7 +362,7 @@ The upcoming last step is also necessary if you want to integrate `prisma deploy
 
 The Prisma server is running on the Kubernetes cluster and has an internal load balancer. This is a sane security default, because you won't expose the Prisma server to the public directly. Instead, you would develop a GraphQL API and deploy it to the Kubernetes cluster as well.
 
-You may ask: "Okay, but how do I execute `prisma deploy` in order to populate my data model when I'm not able to communicate with the Prisma server directly?`. That is indeed a very good question!`kubectl` comes with a mechanism that allows forwarding a local port to an application that lives on the Kubernetes cluster.
+You may ask: "Okay, but how do I execute `prisma1 deploy` in order to populate my data model when I'm not able to communicate with the Prisma server directly?`. That is indeed a very good question!`kubectl` comes with a mechanism that allows forwarding a local port to an application that lives on the Kubernetes cluster.
 
 So every time you want to communicate with your Prisma server on the Kubernetes cluster, you have to perform the following steps:
 
@@ -372,7 +372,7 @@ So every time you want to communicate with your Prisma server on the Kubernetes 
 The Prisma server is now reachable via `http://localhost:4467`. With this in place, we can configure the CLI:
 
 ```sh
-prisma cluster add
+prisma1 cluster add
 
 ? Please provide the cluster endpoint http://localhost:4467
 ? Please provide the cluster secret <the-private-key-from-the-api-call>

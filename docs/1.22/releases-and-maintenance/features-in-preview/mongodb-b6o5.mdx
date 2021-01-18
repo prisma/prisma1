@@ -224,7 +224,7 @@ The `@embedded` directive is used for _embedded types_. Find more info [above](#
 Install the latest version of the Prisma CLI using the instructions [here](b5op#prisma-cli). Then run the following command to initialize a new Prisma service:
 
 ```bash copy
-prisma init hello-mongo
+prisma1 init hello-mongo
 ```
 
 This launches the interactive wizard that helps you configure Prisma. To test the new MongoDB connector, you need to select the following answers for the first two questions:
@@ -254,7 +254,7 @@ fc261a149740        prismagraphql/prisma:1.22    "/bin/sh -c /app/sta…"   Abou
 Once you're sure the Prisma server is running, you can deploy the Prisma service:
 
 ```bash copy
-prisma deploy
+prisma1 deploy
 ```
 
 Note that Prisma creates a new MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) for each combination of service _name_ and _stage_. Consider the following examples:
@@ -341,8 +341,8 @@ type Comment @embedded {
 Don't forget to update the Prisma API and regenerate your Prisma client after you changed `datamodel.prisma`:
 
 ```bash copy
-prisma deploy
-prisma generate
+prisma1 deploy
+prisma1 generate
 ```
 
 ## Get started with an existing database
@@ -358,7 +358,7 @@ Throughout your use of MongoDB with Prisma, when you're writing to the underlyin
 
 <Warning>
 
-Therefore, when starting out with an existing MongoDB, it is extremely important that the legacy data is consistent and that it can be modeled accurately as a Prisma datamodel. You can use the `prisma introspect` command to derive a datamodel from the data that's currently stored in your MongoDB. `prisma introspect` is currently available in the [beta version](b5op) of the Prisma CLI.
+Therefore, when starting out with an existing MongoDB, it is extremely important that the legacy data is consistent and that it can be modeled accurately as a Prisma datamodel. You can use the `prisma1 introspect` command to derive a datamodel from the data that's currently stored in your MongoDB. `prisma1 introspect` is currently available in the [beta version](b5op) of the Prisma CLI.
 
 </Warning>
 
@@ -435,7 +435,7 @@ The Prisma server is now connected to your MongoDB and runs on `http://localhost
 Next, you need to create your Prisma service configuration. Run the following command:
 
 ```bash copy
-prisma init --endpoint http://localhost:4466
+prisma1 init --endpoint http://localhost:4466
 ```
 
 This creates the `prisma.yml` and `datamodel.prisma` files that make up your service configuration. 
@@ -459,7 +459,7 @@ Here are a few rules of thumb for modelling the data:
 
 <Info>
 
-You can use `prisma introspect` to suggest a datamodel. It is available in the current [beta](b5op) version of the Prisma CLI.
+You can use `prisma1 introspect` to suggest a datamodel. It is available in the current [beta](b5op) version of the Prisma CLI.
 
 </Info>
 
@@ -482,8 +482,8 @@ generate:
 Next, run the following two commands to deploy your Prisma API and generate the Prisma client:
 
 ```bash copy
-prisma deploy
-prisma generate
+prisma1 deploy
+prisma1 generate
 ```
 
 ### 4. Use the Prisma client to read and write data
@@ -549,7 +549,7 @@ Once it's installed, you can use the `mongo` command in your terminal to launch 
 
 ### 3. Authenticating as an admin user
 
-In the Docker Compose file that was created by the `prisma init` command, Prisma configured an _admin_ user with the following credentials:
+In the Docker Compose file that was created by the `prisma1 init` command, Prisma configured an _admin_ user with the following credentials:
 
 - Username: `prisma`
 - Password: `prisma`

@@ -34,7 +34,7 @@ In this tutorial, you'll perform the following steps:
 In your terminal, navigate to a folder of your choice and run the following command:
 
 ```sh
-prisma init import-example
+prisma1 init import-example
 ```
 
 </Instruction>
@@ -123,7 +123,7 @@ When deploying the service, the CLI will now send the mutation defined in `seed.
 Deploy the Prisma service by running the following command:
 
 ```sh
-prisma deploy
+prisma1 deploy
 ```
 
 </Instruction>
@@ -183,7 +183,7 @@ It's time to export the in the Normalized Data Format.
 In the `import-example` in your terminal, execute the following command:
 
 ```sh
-prisma export
+prisma1 export
 ```
 
 </Instruction>
@@ -213,7 +213,7 @@ disableAuth: true
 
 <Instruction>
 
-Run `prisma deploy` again to deploy the service the new `test` stage.
+Run `prisma1 deploy` again to deploy the service the new `test` stage.
 
 </Instruction>
 
@@ -232,7 +232,7 @@ Now that the service is running, you can import the data from the zip directory!
 Run the following command in your terminal. Note that you need to replace the `__DATA__` placeholder with the path to the exported zip directory (e.g. `export-2018-01-13T19:28:25.921Z.zip`):
 
 ```sh
-prisma import --data __DATA__
+prisma1 import --data __DATA__
 ```
 
 </Instruction>

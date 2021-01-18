@@ -72,7 +72,7 @@ type Post {
 After you saved the file, open your terminal and navigate into the root directory of your Prisma service (the one where `prisma.yml` is located) and run the following command to update its GraphQL API:
 
 ```sh
-prisma deploy
+prisma1 deploy
 ```
 
 </Instruction>
@@ -389,6 +389,6 @@ ReactDOM.render(<App />, document.getElementById('root'))
 
 </Instruction>
 
-We hope you got a glimpse of the power that Prisma's generated mutations and queries offer. You used just three operations, but there are many more. Checkout the many queries and mutations that your Prisma service offers by running GraphQL Playground with `prisma playground`.
+We hope you got a glimpse of the power that Prisma's generated mutations and queries offer. You used just three operations, but there are many more. Checkout the many queries and mutations that your Prisma service offers by running GraphQL Playground with `prisma1 playground`.
 
 That's it, now you have a working mini blog application backed with Prisma!

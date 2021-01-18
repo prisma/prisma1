@@ -16,7 +16,7 @@ You can view logs from your local Prisma cluster to debug issues.
 You can view normal debug logs:
 
 ```sh
-prisma local logs
+prisma1 local logs
 ```
 
 ### Docker logs
@@ -48,10 +48,10 @@ CONTAINER ID  IMAGE                       COMMAND                 CREATED       
 
 ### Nuke
 
-If your local prisma cluster is in an unrecoverable state, the easiest option might be to completely reset it. Be careful as **this command will reset all data** in your local cluster.
+If your local prisma1 cluster is in an unrecoverable state, the easiest option might be to completely reset it. Be careful as **this command will reset all data** in your local cluster.
 
 ```sh
-❯ prisma local nuke
+❯ prisma1 local nuke
 Nuking local cluster 10.9s
 Booting fresh local development cluster 18.4s
 ```

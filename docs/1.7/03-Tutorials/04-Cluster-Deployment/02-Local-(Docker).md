@@ -13,7 +13,7 @@ description: Learn how to deploy your Prisma database service to a local cluster
 
 This guide describes advanced topics for the local Prisma cluster.
 
-If you want to develop without internet access or simply prefer having everything locally, you can use `prisma local` to set up a local Prisma cluster with Docker.
+If you want to develop without internet access or simply prefer having everything locally, you can use `prisma1 local` to set up a local Prisma cluster with Docker.
 
 ### Installing Docker
 
@@ -24,7 +24,7 @@ You need an up-to-date version of Docker to run Prisma locally. You can find ins
 Getting started is as simple as running:
 
 ```sh
-prisma local start
+prisma1 local start
 ```
 
 This will download the open source Docker images for Prisma and start two Docker containers for Prisma and MySQL. It can take a while, depending on your internet connection.
@@ -32,7 +32,7 @@ This will download the open source Docker images for Prisma and start two Docker
 Now you can deploy a service to the local cluster:
 
 ```
-❯ prisma deploy
+❯ prisma1 deploy
 
 ? Please choose the cluster you want to deploy "demo@dev" to (Use arrow keys)
 
@@ -48,10 +48,10 @@ This will add a `cluster` entry to the `prisma.yml` with the cluster you chose.
 To upgrade the local cluster, you can run:
 
 ```sh
-prisma local upgrade
+prisma1 local upgrade
 ```
 
-> Note: It is recommended to export your data before upgrading, using the `prisma export` command.
+> Note: It is recommended to export your data before upgrading, using the `prisma1 export` command.
 
 If you run into issues during or after upgrading, you can [nuke the local cluster](!alias-si4aef8hee), wiping all data in the process.
 
@@ -60,7 +60,7 @@ If you run into issues during or after upgrading, you can [nuke the local cluste
 You can view the current version of Prisma you are running by listing all available clusters:
 
 ```
-> prisma cluster list
+> prisma1 cluster list
 
 name            version        endpoint
 ──────────────  ─────────────  ──────────────────────────────────

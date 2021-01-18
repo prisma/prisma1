@@ -12,7 +12,7 @@ export const meta = {
 
 When connecting Prisma to an existing database that already has a database schema and/or contains some data, it can be tedious to manually write the datamodel from scratch while ensuring it matches the structure of the already existing data.
 
-To automate this process, you can use the [`prisma introspect`](xcv3) command from the [Prisma CLI](alx4) to generate the [datamodel](knum) based on the actual structure of the existing data.
+To automate this process, you can use the [`prisma1 introspect`](xcv3) command from the [Prisma CLI](alx4) to generate the [datamodel](knum) based on the actual structure of the existing data.
 
 The generated SDL serves as a foundation for your Prisma API, but you can easily make modifications afterwards as you see fit. Some common modifications include hiding a table from the Prisma API or renaming a column to a different name.
 
@@ -20,8 +20,8 @@ The generated SDL serves as a foundation for your Prisma API, but you can easily
 
 There are two ways you can use the CLI to introspect a MySQL schema:
 
-- Using the interactive `prisma init` wizard
-- Using the dedicated `prisma introspect` command
+- Using the interactive `prisma1 init` wizard
+- Using the dedicated `prisma1 introspect` command
 
 In both cases, you need to provide the _connection details_ for the running MySQL database. This includes the following:
 
@@ -31,13 +31,13 @@ In both cases, you need to provide the _connection details_ for the running MySQ
 - **Name of existing _database_**: The name of the MySQL _database_ (according to the illustrated model from above).
 - **Use SSL (Yes/No)**: If your database connection is using SSL, you need to select `Yes`, otherwise `No`.
 
-### Using the `prisma init` wizard
+### Using the `prisma1 init` wizard
 
-During the interactive `prisma init` flow you can choose to connect to an existing database with data. The CLI will ask for database connection details (as mentioned above) and verify that it can establish a successfully connection.
+During the interactive `prisma1 init` flow you can choose to connect to an existing database with data. The CLI will ask for database connection details (as mentioned above) and verify that it can establish a successfully connection.
 
 If the connection details are valid, the CLI will introspect the database and show you a summary.
 
-When `prisma init` terminates, the CLI has created the following files for you which you can now use to _deploy_ a new Prisma service:
+When `prisma1 init` terminates, the CLI has created the following files for you which you can now use to _deploy_ a new Prisma service:
 
 - `datamodel.prisma`: Contains the datamodel (in SDL) that was generated based on your existing database.
 - `docker-compose.yml`: The Docker Compose file containing the configuration of your Prisma server, including details about how to connect to your database
@@ -46,15 +46,15 @@ When `prisma init` terminates, the CLI has created the following files for you w
 To be able to query your PostgreSQL database using GraphQL you now need to _deploy_ the service:
 
 ```bash
-prisma deploy
+prisma1 deploy
 ```
 
 You can then view and edit your data in [Prisma Admin](/prisma-admin) or access it using the [Prisma client](/prisma-client).
 
-### Using `prisma introspect`
+### Using `prisma1 introspect`
 
-`prisma introspect` works in a similar way as the `prisma init` wizard in that you need to provide the database connection information.
+`prisma1 introspect` works in a similar way as the `prisma1 init` wizard in that you need to provide the database connection information.
 
-While `prisma init` wizard generates an entire _service configuration_, `prisma introspect` only generates the datamodel file:
+While `prisma1 init` wizard generates an entire _service configuration_, `prisma1 introspect` only generates the datamodel file:
 
 - `datamodel-[TIMESTAMP].prisma`: The timestamp component allows you to use the introspect command for an existing Prisma service without overriding your existing datamodel.

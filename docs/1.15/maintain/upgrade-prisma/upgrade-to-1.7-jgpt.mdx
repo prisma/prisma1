@@ -89,7 +89,7 @@ For example:
 
 ### Post deployment hooks
 
-In Prisma 1.7, you can specify arbitrary terminal commands to be executed by the Prisma CLI after a deployment (i.e. after `prisma deploy` has terminated).
+In Prisma 1.7, you can specify arbitrary terminal commands to be executed by the Prisma CLI after a deployment (i.e. after `prisma1 deploy` has terminated).
 
 Here is an example that performs three tasks after a deployment:
 
@@ -110,9 +110,9 @@ hooks:
 
 ### Deprecating `local` commands
 
-The `prisma local` commands are being deprecated in favor of using Docker commands directly. `prisma local` provided a convenient abstraction for certain Docker workflows. In 1.7, everything related to these Docker worfklows can be done manually using the [Docker CLI](https://docs.docker.com/engine/reference/commandline/cli/).
+The `prisma1 local` commands are being deprecated in favor of using Docker commands directly. `prisma1 local` provided a convenient abstraction for certain Docker workflows. In 1.7, everything related to these Docker worfklows can be done manually using the [Docker CLI](https://docs.docker.com/engine/reference/commandline/cli/).
 
-When running `prisma init` in Prisma 1.7, the CLI generates a `docker-compose.yml` file that specifies the images for two Docker containers:
+When running `prisma1 init` in Prisma 1.7, the CLI generates a `docker-compose.yml` file that specifies the images for two Docker containers:
 
 - `prisma`: This is the image for the Prisma API that turns your database into a GraphQL API.
 - `db`: This is the image for the connected database, e.g. `mysql`.
@@ -160,7 +160,7 @@ With Prisma 1.7, a _symmetric_ authentication approach is introduced. This means
 
 #### Providing the key to the Prisma server
 
-Prisma servers running on Docker receive their keys via the `managementApiSecret` key in `docker-compose.yml`. When deploying the Prisma server using `docker-compose up -d`, the key will be stored on the server. Every request made by the CLI (e.g. `prisma deploy`) now needs to be authenticated with that key.
+Prisma servers running on Docker receive their keys via the `managementApiSecret` key in `docker-compose.yml`. When deploying the Prisma server using `docker-compose up -d`, the key will be stored on the server. Every request made by the CLI (e.g. `prisma1 deploy`) now needs to be authenticated with that key.
 
 Here is an example where the `managementApiSecret` key is set to `my-server-secret-123`:
 
@@ -195,7 +195,7 @@ services:
 
 #### Authenticating requests made by the Prisma CLI
 
-Whenever the CLI makes requests against the server (e.g. `prisma deploy`), it needs to authenticate using the same key that was stored on the Prisma server. But where does it get the key from?
+Whenever the CLI makes requests against the server (e.g. `prisma1 deploy`), it needs to authenticate using the same key that was stored on the Prisma server. But where does it get the key from?
 
 You need to explicitly set the key using the `PRISMA_MANAGEMENT_API_SECRET` environment variable. The easiest way to do so is by using a [`.env`](https://www.npmjs.com/package/dotenv)-file which is automatically "understood" by the Prisma CLI.
 
@@ -238,7 +238,7 @@ hooks:
 
 ### Bootstrap a GraphQL server
 
-Note that in Prisma 1.7, the `--boilerplate` option has been removed from the `prisma init` command. This means you can not bootstrap an entire GraphQL server based on a [GraphQL boilerplate](https://github.com/graphql-boilerplates) project any more.
+Note that in Prisma 1.7, the `--boilerplate` option has been removed from the `prisma1 init` command. This means you can not bootstrap an entire GraphQL server based on a [GraphQL boilerplate](https://github.com/graphql-boilerplates) project any more.
 
 To bootstrap a GraphQL server based on a GraphQL boilerplate project, use the `graphql create` command from the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli):
 

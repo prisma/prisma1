@@ -37,7 +37,7 @@ brew install prisma
 ```
 
 ```bash copy
-npm install -g prisma
+npm install -g prisma1
 ```
 
 </Code>
@@ -51,7 +51,7 @@ To use Prisma locally, you need to have [Docker](https://www.docker.com) install
 Run the following command to connect Prisma to your existing database:
 
 ``` bash copy
-prisma init hello-world
+prisma1 init hello-world
 ```
 
 This launches an interactive wizard. Here's what you need to do:
@@ -106,12 +106,12 @@ When using the Prisma CLI, you then need to set the `PRISMA_MANAGEMENT_API_SECRE
 You now have the _minimal_ setup ready to deploy your Prisma datamodel. Run the following command (this does **not** change anything in your database):
 
 ```bash copy
-prisma deploy
+prisma1 deploy
 ```
 
 <Warning>
 
-Launching the Prisma server may take a few minutes. In case the `prisma deploy` command fails, wait a few minutes and try again. Also run `docker ps` to ensure the Prisma Docker container is actually running.
+Launching the Prisma server may take a few minutes. In case the `prisma1 deploy` command fails, wait a few minutes and try again. Also run `docker ps` to ensure the Prisma Docker container is actually running.
 
 </Warning>
 

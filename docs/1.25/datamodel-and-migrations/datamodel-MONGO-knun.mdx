@@ -86,12 +86,12 @@ This example illustrates a few important concepts when working with your datamod
 - The fields annotated with the `@id`-, `@createdAt`- and `@updatedAt`-directives are managed by Prisma and _read-only_ in the exposed Prisma API, meaning they can not be altered via mutations (except when [importing data using the NDF format](jsw9#data-import)).
 - The `@unique` directive expresses a _unique constraint_, meaning Prisma ensures that there never will be two nodes with the same values for the annotated field.
 
-Creating and updating your datamodel is as simple as writing and saving the datamodel file. Once you're happy with your datamodel, you can save the file and apply the changes to your Prisma service by running `prisma deploy`:
+Creating and updating your datamodel is as simple as writing and saving the datamodel file. Once you're happy with your datamodel, you can save the file and apply the changes to your Prisma service by running `prisma1 deploy`:
 
 The values of these fields are currently read-only  (except when [importing data using the NDF format](jsw9#data-import)) in the Prisma API  but will be made configurable in the future. See [this proposal](https://github.com/prisma/prisma/issues/1278) for more information.
 
 ```
-$ prisma deploy
+$ prisma1 deploy
 
 Changes:
 
@@ -172,7 +172,7 @@ generate:
     output: ./prisma-schema
 ```
 
-Now you can run `prisma generate` and the Prisma CLI will stored the Prisma GraphQLS schema in `./prisma-schema/prisma.graphql`.
+Now you can run `prisma1 generate` and the Prisma CLI will stored the Prisma GraphQLS schema in `./prisma-schema/prisma.graphql`.
 
 ### A note on the application schema
 

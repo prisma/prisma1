@@ -29,10 +29,10 @@ The upper bound in storage capacity for a Prisma API that's running in a Sandbox
 
 </InfoBox>
 
-When you're running `prisma deploy` for a Prisma API, there are two scenarios with respect to the targeted Prisma server:
+When you're running `prisma1 deploy` for a Prisma API, there are two scenarios with respect to the targeted Prisma server:
 
 - The `endpoint` property in `prisma.yml` is **specified**. In this case, the CLI will directly deploy the API to that endpoint.
-- The `endpoint` property in `prisma.yml` is **not specified**. In this case, the Prisma CLI wizard will prompt you with a few questions, construct the `endpoint` for you and deploy the API to the corresponding server. It also writes the `endpoint` into `prisma.yml`, this will be used as the default for future deploys. To bring up the wizard again, you can run `prisma deploy --new` or remove the `endpoint` manually from `prisma.yml`.
+- The `endpoint` property in `prisma.yml` is **not specified**. In this case, the Prisma CLI wizard will prompt you with a few questions, construct the `endpoint` for you and deploy the API to the corresponding server. It also writes the `endpoint` into `prisma.yml`, this will be used as the default for future deploys. To bring up the wizard again, you can run `prisma1 deploy --new` or remove the `endpoint` manually from `prisma.yml`.
 
 ## Channels
 
@@ -49,7 +49,7 @@ If you follow a quickstart or any other material in the documentation, you will 
 Using npm:
 
 ```sh
-npm install -g prisma@beta
+npm install -g prisma1@beta
 ```
 
 If you are using the docker images directly, you can find the latest beta image on https://hub.docker.com/r/prismagraphql/prisma/tags/ or simply use the `beta` tag to always get the latest.
@@ -59,7 +59,7 @@ If you are using the docker images directly, you can find the latest beta image 
 Using npm:
 
 ```sh
-npm install -g prisma@alpha
+npm install -g prisma1@alpha
 ```
 
 If you are using the docker images directly, you can find the latest alpha image on https://hub.docker.com/r/prismagraphql/prisma/tags/ or simply use the `alpha` tag to always get the latest.
@@ -74,20 +74,20 @@ Prisma servers support _symmetric_ as well as _asymmetric_ authentication approa
 
 Using the asymmetric authentication approach, Prisma servers are secured using public/private key pairs. 
 
-The Prisma servers knows the **public key** (via the `legacySecret` property in `docker-compose.yml`, see [here](!alias-aira9zama5) for more info). The **private key** is known locally by the Prisma CLI and used to generate authentication tokens. These tokens are used to authenticate requests against the Prisma server (e.g. an invocation of `prisma deploy`) which can then be validated by the Prisma server using its public key.
+The Prisma servers knows the **public key** (via the `legacySecret` property in `docker-compose.yml`, see [here](!alias-aira9zama5) for more info). The **private key** is known locally by the Prisma CLI and used to generate authentication tokens. These tokens are used to authenticate requests against the Prisma server (e.g. an invocation of `prisma1 deploy`) which can then be validated by the Prisma server using its public key.
 
 #### Symmetric approach using a single secret
 
 In Prisma 1.7, a new authentication approach for Prisma servers has been introduced. It uses a single secret to authenticate requests made by the Prisma CLI against a Prisma server.
 
-The secret can be chosen by the admin of the Prisma server. It is set via the `managementApiSecret` property in the `docker-compose.yml` which is used to deploy the Prisma server. If not specified, the CLI doesn't need to authenticate its requests. If specified, the CLI needs to have access to an environment variable called `PRISMA_MANAGEMENT_API_SECRET` which contains the secret, otherwise the CLI can not talk to the Prisma server (e.g. `prisma deploy` will fail).
+The secret can be chosen by the admin of the Prisma server. It is set via the `managementApiSecret` property in the `docker-compose.yml` which is used to deploy the Prisma server. If not specified, the CLI doesn't need to authenticate its requests. If specified, the CLI needs to have access to an environment variable called `PRISMA_MANAGEMENT_API_SECRET` which contains the secret, otherwise the CLI can not talk to the Prisma server (e.g. `prisma1 deploy` will fail).
 
 ### Prisma Cloud
 
 #### Login
 
-The CLI authenticates against Prisma Cloud using the `cloudSessionKey` stored in `~/.prisma/config.yml`. The CLI writes that key into that file upon the initial login: `prisma login`.
+The CLI authenticates against Prisma Cloud using the `cloudSessionKey` stored in `~/.prisma/config.yml`. The CLI writes that key into that file upon the initial login: `prisma1 login`.
 
 #### Logout
 
-To logout from the Prisma CLI use `prisma logout` command. This command removes the `cloudSessionKey` from `~/.prisma/config.yml` file.
+To logout from the Prisma CLI use `prisma1 logout` command. This command removes the `cloudSessionKey` from `~/.prisma/config.yml` file.

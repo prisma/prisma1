@@ -7,7 +7,7 @@ description: Introspection
 
 ## Overview
 
-When connecting Prisma to an existing database it can be tedious to write the data model from scratch. To automate this process you can use the `prisma introspect` command to generate a data model based on your actual database schema.
+When connecting Prisma to an existing database it can be tedious to write the data model from scratch. To automate this process you can use the `prisma1 introspect` command to generate a data model based on your actual database schema.
 
 The generated SDL serves as a basis for your Prisma service, but you can easily make modifications afterwards as you see fit. Some common modifications include hiding a table from the GraphQL API or making a column to a different name.
 
@@ -17,9 +17,9 @@ Currently database introspection only works with Postgres. Additionally there is
 
 ## Introspecting a database
 
-There are two ways you can use the CLI to introspect a database: Using the interactive `prisma init` command and using the dedicated `prisma introspect` command.
+There are two ways you can use the CLI to introspect a database: Using the interactive `prisma1 init` command and using the dedicated `prisma1 introspect` command.
 
-During the prisma init flow you can choose to connect to an existing database with data. The CLI will ask for database connection information and verify that it can establish a successful connection. If the information is correct, the CLI will introspect the database and show you a summary
+During the prisma1 init flow you can choose to connect to an existing database with data. The CLI will ask for database connection information and verify that it can establish a successful connection. If the information is correct, the CLI will introspect the database and show you a summary
 
 ![](https://i.imgur.com/cNIeeJf.png)
 
@@ -29,7 +29,7 @@ The CLI has now generated all the files you need to run Prisma on your existing 
 - docker-compose.yml
 - prisma.yml
 
-If you just want to generate the datamodel you can use the `prisma introspect` command. You will need to provide your database connection details as above. The CLI will generate a single file for you:
+If you just want to generate the datamodel you can use the `prisma1 introspect` command. You will need to provide your database connection details as above. The CLI will generate a single file for you:
 
 - datamodel-[TIMESTAMP].graphql
 
@@ -37,7 +37,7 @@ The timestamp component allows you to use the introspect command for an existing
 
 ## Deploying
 
-After you have made your changes to the generated data model it is time to deploy your Prisma service. If you used `prisma init` to setup your service, your Prisma server is already configured to not apply migrations to your database. If your are setting up Prisma manually you should ensure that your PRISMA_CONFIG has set `migrations: false` like this:
+After you have made your changes to the generated data model it is time to deploy your Prisma service. If you used `prisma1 init` to setup your service, your Prisma server is already configured to not apply migrations to your database. If your are setting up Prisma manually you should ensure that your PRISMA_CONFIG has set `migrations: false` like this:
 
 ```yml
 PRISMA_CONFIG: |

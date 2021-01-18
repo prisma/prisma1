@@ -56,7 +56,7 @@ type Post {
 After you saved the file, open your terminal and navigate into the root directory of your Prisma service (the one where `prisma.yml` is located) and run the following command to update its GraphQL API:
 
 ```sh
-prisma deploy
+prisma1 deploy
 ```
 
 </Instruction>

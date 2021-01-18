@@ -211,13 +211,13 @@ Authorization: Bearer __YOUR_API_TOKEN__
 
 #### Obtaining an API token with the Prisma CLI
 
-The easiest way to obtain an API token is by using the [`prisma token`](!alias-shoo8cioto) command from the Prisma CLI:
+The easiest way to obtain an API token is by using the [`prisma1 token`](!alias-shoo8cioto) command from the Prisma CLI:
 
 ```sh
-prisma token
+prisma1 token
 ```
 
-When running `prisma token` inside a directory where `prisma.yml` is available, the CLI will read the `secret` property from `prisma.yml` and generate a corresponding JWT.
+When running `prisma1 token` inside a directory where `prisma.yml` is available, the CLI will read the `secret` property from `prisma.yml` and generate a corresponding JWT.
 
 #### Authenticating in a GraphQL Playground
 
@@ -342,4 +342,4 @@ Check if the token you provided has not yet expired and is signed with a secret 
 
 ### Internal server errors
 
-Consult the service logs for more information on the error. For the local cluster, this can be done using the [prisma logs](!alias-aenael2eek) command.
+Consult the service logs for more information on the error. For the local cluster, this can be done using the [prisma1 logs](!alias-aenael2eek) command.

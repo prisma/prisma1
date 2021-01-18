@@ -3,14 +3,14 @@ alias: bai9yeitoa
 description: Hard-reset local development cluster.
 ---
 
-# `prisma local nuke`
+# `prisma1 local nuke`
 
 Hard-reset local development cluster. **This irrevocably wipes all the services including data in your local cluster**.
 
 #### Usage
 
 ```sh
-prisma local logs [flags]
+prisma1 local logs [flags]
 ```
 
 #### Flags
@@ -24,11 +24,11 @@ prisma local logs [flags]
 ##### Nuke local default cluster called `local`.
 
 ```sh
-prisma local nuke
+prisma1 local nuke
 ```
 
 ##### Nuke local cluster called `mycluster`.
 
 ```sh
-prisma local stop --name mycluster
+prisma1 local stop --name mycluster
 ```

@@ -109,7 +109,7 @@ Before starting the server, you need to ensure the Prisma database API is availa
 
 <Instruction>
 
-To deploy the Prisma API, run the `yarn prisma deploy` command inside the `subscriptions-starter` directory.
+To deploy the Prisma API, run the `yarn prisma1 deploy` command inside the `subscriptions-starter` directory.
 
 The CLI will then prompt you with a few questions regarding *how* you want to deploy the API. For the purpose of this tutorial, choose the **Demo server** options, then simply hit **Enter** to select the suggested values for the *service name* and *stage*. (Note that if you have [Docker](https://www.docker.com) installed, you can also deploy *locally*).
 

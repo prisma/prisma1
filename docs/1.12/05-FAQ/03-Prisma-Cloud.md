@@ -21,7 +21,7 @@ Right now, every team member that's invited to join a project on Prisma Cloud ha
 
 ### What are Prisma servers? How do they relate to Prisma services?
 
-A Prisma server is the _runtime environment_ for zero or more Prisma services. This means in order to deploy a Prisma service (using the `prisma deploy` command), you need to have a Prisma server available.
+A Prisma server is the _runtime environment_ for zero or more Prisma services. This means in order to deploy a Prisma service (using the `prisma1 deploy` command), you need to have a Prisma server available.
 
 In general, there are three types of Prisma servers:
 

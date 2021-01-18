@@ -69,10 +69,10 @@ This example illustrates a few important concepts when working with your data mo
 * Except for the `name` field on `User`, all fields are required in the data model (as indicated by the `!` following the type).
 * The `id`, `createdAt` and `updatedAt` fields are managed by Prisma and read-only in the exposed GraphQL API (meaning they can not be altered via mutations).
 
-Creating and updating your data model is as simple as writing a text file. Once you're happy with your data model, you can apply the changes to your Prisma service by running `prisma deploy`:
+Creating and updating your data model is as simple as writing a text file. Once you're happy with your data model, you can apply the changes to your Prisma service by running `prisma1 deploy`:
 
 ```sh
-$ prisma deploy
+$ prisma1 deploy
 
 Changes:
 

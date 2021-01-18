@@ -3,7 +3,7 @@ alias: cheeni9mae
 description: Prints meta-data about a specific service
 ---
 
-# `prisma info`
+# `prisma1 info`
 
 Prints meta-data about a specific service. The information contains:
 
@@ -13,5 +13,5 @@ Prints meta-data about a specific service. The information contains:
 #### Usage
 
 ```sh
-prisma info
+prisma1 info
 ```

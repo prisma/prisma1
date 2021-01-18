@@ -138,7 +138,7 @@ There are two ways to use the Management API:
 
 #### Using the Prisma CLI
 
-When using the Prisma CLI to perform requests against the Management API (e.g. using `prisma deploy`), you don't need to worry about generating Management API tokens. The CLI generates them for you upon every API request. Therefore, the CLI needs to know the Management API secret of your Prisma server in order to generate a Management API token and authenticate its requests.
+When using the Prisma CLI to perform requests against the Management API (e.g. using `prisma1 deploy`), you don't need to worry about generating Management API tokens. The CLI generates them for you upon every API request. Therefore, the CLI needs to know the Management API secret of your Prisma server in order to generate a Management API token and authenticate its requests.
 
 **This is why you have to set the `PRISMA_MANAGEMENT_API_SECRET` environment variable when using the Prisma CLI**.
 
@@ -156,7 +156,7 @@ When you want to send HTTP requests directly to the Management API of your Prism
 
 <Warning>
 
-The Prisma CLI has a hidden helper command for generating Management API tokens: `prisma cluster-token`. Before running it, you need to set the `PRISMA_MANAGEMENT_API_SECRET` environment variable. Note that this command is not officially documented and might change without further notice.
+The Prisma CLI has a hidden helper command for generating Management API tokens: `prisma1 cluster-token`. Before running it, you need to set the `PRISMA_MANAGEMENT_API_SECRET` environment variable. Note that this command is not officially documented and might change without further notice.
 
 There already is a [pending feature request](https://github.com/prisma/prisma/issues/2772) for a similar command.
 
@@ -197,10 +197,10 @@ As the developer of a Prisma service, you can choose your own service secret. Wh
 
 ![](https://i.imgur.com/cCmp8JI.png)
 
-The easiest way to obtain a service token is by running the `prisma token` command inside the same directory where your `prisma.yml` is located:
+The easiest way to obtain a service token is by running the `prisma1 token` command inside the same directory where your `prisma.yml` is located:
 
 ```bash
-$ prisma token
+$ prisma1 token
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InNlcnZpY2UiOiJkZW1vQGRldiIsInJvbGVzIjpbImFkbWluIl19LCJpYXQiOjE1MzI1ODgzNzAsImV4cCI6MTUzMzE5MzE3MH0.Nv8coqsiwdwoSfWCBJHYfnr0WK2GRyqO5xTN6Q3IVkw
 ```
 
@@ -233,9 +233,9 @@ You can also specify it via an environment variable. For example, if you have an
 secret: ${env:MY_SECRET}
 ```
 
-When running `prisma generate` or `prisma deploy`, the Prisma CLI will read the `MY_SECRET` environment variable. Learn more about using environment variables in `prisma.yml` [here](5cy7#environment-variable).
+When running `prisma1 generate` or `prisma1 deploy`, the Prisma CLI will read the `MY_SECRET` environment variable. Learn more about using environment variables in `prisma.yml` [here](5cy7#environment-variable).
 
-Also note that `prisma generate` automatically injects the `secret` into the generated Prisma client. So there's no need to generate a service token explicitly. Learn more generating the Prisma client [here](rsc1).
+Also note that `prisma1 generate` automatically injects the `secret` into the generated Prisma client. So there's no need to generate a service token explicitly. Learn more generating the Prisma client [here](rsc1).
 
 ### Service token
 
@@ -388,7 +388,7 @@ secret: my-secret-42
 To apply this change, you also need to redeploy the service:
 
 ```bash
-prisma deploy
+prisma1 deploy
 ```
 
 If you're now trying to resend the above HTTP request using `curl`:
@@ -418,7 +418,7 @@ This will happen for _all_ requests made against the Prisma API, no matter if it
 To fix this, you need to include a service token in the `Authorization` header field of the HTTP request. You can obtain a service token using the Prisma CLI:
 
 ```bash
-prisma token
+prisma1 token
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InNlcnZpY2UiOiJkZW1vQGRldiIsInJvbGVzIjpbImFkbWluIl19LCJpYXQiOjE1MzI1MzAyMDgsImV4cCI6MTUzMzEzNTAwOH0.FM6haUilhi89-c-2h7asV3-Ot6NQrs1qoaKL-wPjj04
 ```
 
@@ -439,6 +439,6 @@ Similarly, in a GraphQL Playground you need to set it (in JSON format) in the **
 }
 ```
 
-If you're opening the Playground using the `prisma playground` command, the Prisma CLI automatically injects the `Authorization` header with a valid service token.
+If you're opening the Playground using the `prisma1 playground` command, the Prisma CLI automatically injects the `Authorization` header with a valid service token.
 
 ![](https://i.imgur.com/xBkBn9X.png)

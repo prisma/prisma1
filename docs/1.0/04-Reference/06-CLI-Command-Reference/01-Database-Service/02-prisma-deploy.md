@@ -3,14 +3,14 @@ alias: kee1iedaov
 description: Deploys service definition changes
 ---
 
-# `prisma deploy`
+# `prisma1 deploy`
 
 Deploys service definition changes. Every time you're making a local change to any file in the service definition on your machine, you need to synchronize these changes with the remote service using this command.
 
 #### Usage
 
 ```sh
-prisma deploy [flags]
+prisma1 deploy [flags]
 ```
 
 #### Flags
@@ -30,11 +30,11 @@ prisma deploy [flags]
 ##### Deploy service
 
 ```sh
-prisma deploy
+prisma1 deploy
 ```
 
 ##### Deploy service with specific environment variables
 
 ```sh
-prisma deploy --dotenv .env.prod
+prisma1 deploy --dotenv .env.prod
 ```

@@ -52,7 +52,7 @@ The HTTP endpoint for your Prisma API is composed of the following components:
 - **Service name**: A descriptive name for your Prisma API.
 - **Stage**: The development stage of your cluster (e.g. `dev`, `staging`, `prod`).
 
-Note that the `endpoint` is actually required to deploy your Prisma API. However, if you don't specify it in `prisma.yml` before running `prisma deploy`, the CLI will use a wizard to prompt you with a few questions and add the `endpoint` to `prisma.yml` for you.
+Note that the `endpoint` is actually required to deploy your Prisma API. However, if you don't specify it in `prisma.yml` before running `prisma1 deploy`, the CLI will use a wizard to prompt you with a few questions and add the `endpoint` to `prisma.yml` for you.
 
 #### Type
 
@@ -243,7 +243,7 @@ The `hooks` property is used to define terminal commands which will be executed 
 
 The following hooks are currently available:
 
-- `post-deploy`: Will be invoked _after_ the `prisma deploy` command
+- `post-deploy`: Will be invoked _after_ the `prisma1 deploy` command
 
 #### Type
 
@@ -251,7 +251,7 @@ The `hooks` property expects an **object**. The properties match the names of th
 
 #### Examples
 
-Here is an example that performs three tasks after `prisma deploy` was executed:
+Here is an example that performs three tasks after `prisma1 deploy` was executed:
 
 1. Print "Deployment finished"
 1. Download the GraphQL schema for the `db` project specified in `.graphqlconfig.yml`

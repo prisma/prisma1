@@ -73,7 +73,7 @@ sudo apt-get install -y nodejs
 Install the Prisma CLI:
 
 ```sh
-npm -g install prisma
+npm -g install prisma1
 ```
 
 The Prisma CLI is now installed on your Digital Ocean Droplet. Next, you need to configure and start the Prisma server.
@@ -145,12 +145,12 @@ d8cc3a393a9f        mysql:5.7                   "docker-entrypoint.s…"   15 se
 
 Now that your Prisma server and its database are running via Docker, you will deploy the Prisma service.
 
-We are going to bootstrap a new Prisma service via `prisma init`.
+We are going to bootstrap a new Prisma service via `prisma1 init`.
 
 On your local machine ,run the following command in your terminal:
 
 ```sh
-prisma init hello-world
+prisma1 init hello-world
 ```
 
 Following the interactive prompt, select `Use other server`. Enter the IP of the digital ocean Droplet, a `service name` for your Prisma service, a `service stage`, and follow the prompt for adding the management secret.
@@ -165,12 +165,12 @@ datamodel.graphql    GraphQL SDL-based datamodel (foundation for database)
 .env                 Env file including PRISMA_API_MANAGEMENT_SECRET
 ```
 
-Next navigate into the `hello-world` directory that was generated from `prisma init` and deploy your Prisma service with the following commands:
+Next navigate into the `hello-world` directory that was generated from `prisma1 init` and deploy your Prisma service with the following commands:
 
 ```sh
 cd hello-world
 
-prisma deploy
+prisma1 deploy
 ```
 
 ```sh

@@ -10,7 +10,7 @@ In this tutorial, you'll learn how to get started with Prisma to generate a Grap
 Here are the steps you're going to perform:
 
 - Install the Prisma CLI
-- Bootstrapping a Prisma service with `prisma init`
+- Bootstrapping a Prisma service with `prisma1 init`
 - Explore the API in a GraphQL Playground and send queries & mutations
 
 > To ensure you're not accidentally skipping an instruction in the tutorial, all required actions on your end are highlighted with a little counter on the left.
@@ -26,7 +26,7 @@ Prisma services are managed with the [Prisma CLI](!alias-ieshoo5ohm). You can in
 Open your terminal and run the following command to install the Prisma CLI:
 
 ```
-npm install -g prisma
+npm install -g prisma1
 # or
 # yarn global add prisma
 ```
@@ -40,7 +40,7 @@ npm install -g prisma
 Open a terminal and navigate to a folder of your choice. Then bootstrap your Prisma service with the following command:
 
 ```sh
-prisma init hello-world
+prisma1 init hello-world
 ```
 
 </Instruction>
@@ -72,7 +72,7 @@ Here's an overview of the properties in the generated `prisma.yml`:
 - `service`: Defines the service name which will be part of the service's HTTP endpoint
 - `stage`: A service can be deployed to multiple stages (e.g. a _development_ and a _production_ environment)
 - `datamodel`: The path to the file which contains your data model
-- `disableAuth`: If set to true, everyone who knows the endpoint of your Prisma service has full read and write access. If set to `false`, you need to specify a `secret` in `prisma.yml` which is used to generate JWT authentication tokens. These tokens need to be attached to the `Authorization` header of the requests sent to the API of your service. The easiest way to obtain such a token is the `prisma token` command from the Prisma CLI.
+- `disableAuth`: If set to true, everyone who knows the endpoint of your Prisma service has full read and write access. If set to `false`, you need to specify a `secret` in `prisma.yml` which is used to generate JWT authentication tokens. These tokens need to be attached to the `Authorization` header of the requests sent to the API of your service. The easiest way to obtain such a token is the `prisma1 token` command from the Prisma CLI.
 
 > **Note**: We'll keep `disableAuth` set to `true` for this tutorial. In production applications, you'll always want to require authentication for your service! You can read more about this topic [here](!alias-pua7soog4v).
 
@@ -98,7 +98,7 @@ The `@unique` directive here expresses that no two users in the database can hav
 Inside the `hello-world` directory in your terminal, run the following command:
 
 ```sh
-prisma deploy
+prisma1 deploy
 ```
 
 </Instruction>
@@ -140,7 +140,7 @@ To actually use these operations, you need a way to [send requests to your servi
 To open a GraphQL Playground, you can use the Prisma CLI again. Simply run the following command inside the `hello-world` directory:
 
 ```sh
-prisma playground
+prisma1 playground
 ```
 
 </Instruction>

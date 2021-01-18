@@ -201,7 +201,7 @@ type Post {
 
 Notice that despite using SDL, this file is not a proper GraphQL schema! It's missing the *root types* which would define the actual API operations - `datamodel.graphql` only contains the definition for a type in the _data model_. This data model is used as the foundation to generate the Prisma API.
 
-With these two files in place, you're ready to deploy a Prisma service - all you need for that is to run `prisma deploy` from the directory that contains these files. The Prisma API that you now have access to provides CRUD and realtime operations for the `Post` type. Here is what the generated GraphQL schema looks like:
+With these two files in place, you're ready to deploy a Prisma service - all you need for that is to run `prisma1 deploy` from the directory that contains these files. The Prisma API that you now have access to provides CRUD and realtime operations for the `Post` type. Here is what the generated GraphQL schema looks like:
 
 ```graphql
 type Query {

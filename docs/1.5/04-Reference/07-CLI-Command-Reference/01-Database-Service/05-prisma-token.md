@@ -3,14 +3,14 @@ alias: shoo8cioto
 description: Create a new service token
 ---
 
-# `prisma token`
+# `prisma1 token`
 
 Generate a new [service token](!alias-utee3eiquo#service-token). The token is a [JWT](https://jwt.io) that is signed with the [service secret](!alias-utee3eiquo#service-secret).
 
 #### Usage
 
 ```sh
-prisma token [flags]
+prisma1 token [flags]
 ```
 
 #### Flags
@@ -25,11 +25,11 @@ prisma token [flags]
 ##### Print service token.
 
 ```sh
-prisma token
+prisma1 token
 ```
 
 ##### Copy service token to clipboard.
 
 ```sh
-prisma token --copy
+prisma1 token --copy
 ```

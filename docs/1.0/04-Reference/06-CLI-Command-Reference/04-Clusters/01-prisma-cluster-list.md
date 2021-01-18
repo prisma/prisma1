@@ -3,12 +3,12 @@ alias: woh0sheith
 description: List all clusters.
 ---
 
-# `prisma cluster list`
+# `prisma1 cluster list`
 
 List all clusters
 
 #### Usage
 
 ```sh
-prisma cluster list [flags]
+prisma1 cluster list [flags]
 ```

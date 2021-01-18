@@ -16,13 +16,13 @@ A central part of configuring a Prisma service is deploying a [data model](!alia
 You can download the Prisma CLI from npm:
 
 ```sh
-npm install -g prisma
+npm install -g prisma1
 ```
 
 To initialize a new service, use the `init` command. Then follow the interactive prompt to bootstrap the service based on a template of your choice:
 
 ```sh
-prisma init hello-world
+prisma1 init hello-world
 ```
 
 In the following sections you'll learn more about configuring Prisma services using the CLI.
@@ -44,5 +44,5 @@ To get a simple local proxy, you can use the [`proxy` module](https://www.npmjs.
 ```bash
 npm install -g proxy
 DEBUG="*" proxy -p 8080
-HTTP_PROXY=http://localhost:8080 HTTPS_PROXY=https://localhost:8080 prisma deploy
+HTTP_PROXY=http://localhost:8080 HTTPS_PROXY=https://localhost:8080 prisma1 deploy
 ```
