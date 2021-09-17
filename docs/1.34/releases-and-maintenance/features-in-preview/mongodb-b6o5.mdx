@@ -103,7 +103,7 @@ A _link relation_ with the MongoDB connector works in the way that:
 
 - One side (A) of the relation stores the ID of the document on the other side (B), this is called an _inlined link_
 - The other side (B) of the relation has _no reference_ at all to the document on the initial side (A)
-- Each side of the relation is represented by its own collection in the underlying MongoDB, i.e. a link relation always spans accross multiple collections. 
+- Each side of the relation is represented by its own collection in the underlying MongoDB, i.e. a link relation always spans across multiple collections. 
 
 You can denote the side of the relation that should store the ID using the `link` parameter of the `@relation` directive. In the following example, the `User` type stores the ID values of all the `Post` documents it's related to. A `Post` document however doesn't store any information about its `author` in the underlying Mongo database:
 
