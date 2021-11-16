@@ -32,7 +32,7 @@
     "@expo/spawn-async": "1.4.0",
     "@types/fs-extra": "^5.0.0",
     "@types/node": "^8.0.22",
-    "aws-sdk": "^2.373.0",
+    "aws-sdk": "^2.814.0",
     "axios": "^0.18.0",
     "dotenv-cli": "^1.4.0",
     "git-commit-push-via-github-api": "1.0.1",
