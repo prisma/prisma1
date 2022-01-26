@@ -6,4 +6,20 @@ export const meta = {
 
 ## FAQ
 
-Prisma is currenly in [maintenance mode](https://github.com/prisma/prisma1/issues/4898). There will be no new features developed for Prisma 1.
+Prisma 1 is currently in [maintenance mode](https://github.com/prisma/prisma1/issues/4898). There will be no new features developed for Prisma 1.
+
+### What is the difference between Prisma 1 Open Source and Prisma 1 Cloud?
+
+**Prisma 1 Open Source** is the [client](https://v1.prisma.io/docs/1.34/prisma-client/), [CLI](https://v1.prisma.io/docs/1.34/prisma-cli-and-configuration/), and [server](https://v1.prisma.io/docs/1.34/prisma-server/).
+
+**Prisma 1 Cloud** was a [service](https://app.prisma.io) that complemented Prisma 1 Open Source by hosting the [Prisma 1 server](https://v1.prisma.io/docs/1.34/prisma-server/).
+
+### How can I check whether I'm using Prisma 1 Cloud?
+
+1. Open `prisma.yml` in your project
+2. Find the `endpoint` property
+3. If the `endpoint` property includes either `https://us1.prisma.sh` or `https://eu1.prisma.sh` then you are using Prisma 1 Cloud
+
+### How can I log into Prisma 1 Cloud?
+
+Visit [app.prisma.io](https://app.prisma.io) and login with an email and password or through Github.
