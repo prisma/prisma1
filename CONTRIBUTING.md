@@ -61,18 +61,18 @@ Below are a series of steps to help you from a more "practical" perspective. If 
 
 SSH:
 ```sh
-git clone git@github.com:YOUR_USERNAME/prisma.git
+git clone git@github.com:YOUR_USERNAME/prisma1.git
 ```
 
 HTTPS:
 ```sh
-git clone https://github.com/YOUR_USERNAME/prisma.git
+git clone https://github.com/YOUR_USERNAME/prisma1.git
 ```
 
 **Add the remote upstream**
 
 ```sh
-git remote add upstream git://github.com/prisma/prisma.git
+git remote add upstream git://github.com/prisma1/prisma1.git
 ```
 
 **Fetch changes from upstream**
