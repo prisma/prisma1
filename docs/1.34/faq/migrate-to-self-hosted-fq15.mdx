@@ -12,7 +12,7 @@ This new version of Prisma doesn't require developers to set up a proxy server (
 
 Today, we have hundreds of thousands of developers using the [Prisma ORM](https://www.prisma.io/). In addition, our team is building the next generation of database tools for development teams and organizations: the [Prisma Data Platform](https://www.prisma.io/dataplatform).
 
-🚨 Due to Prisma's new focus on the open-source ORM and the Prisma Data Platform, **we will officially sunset Prisma 1 Cloud on September 1st, 2022**
+🚨 Due to Prisma's new focus on the open-source ORM and the Prisma Data Platform, **we will officially sunset Prisma 1 Cloud on September 1st, 2022**
 
 ### Migration Steps
 
@@ -71,10 +71,10 @@ Learn more about [how to upgrade](https://www.prisma.io/docs/guides/upgrade-guid
 We do not recommend self-hosting Prisma 1 as it is in maintenance mode, and Prisma will not develop new features or offer ongoing support for issues. The following are high-level steps for self-hosting if it is not feasible to upgrade your application to Prisma ORM in the time before the Prisma 1 Cloud sunset on September 1st, 2022.
 
 1. Deploy a Prisma 1 Server to the hosting environment of your choice. Use the following tutorials as examples:
-1. [Deploy to Kubernetes](https://v1.prisma.io/tutorials/deploy-prisma-to-kubernetes-ct13)
-2. [Deploy to Digital Ocean](https://v1.prisma.io/tutorials/deploy-prisma-to-digitalocean-ct12)
-3. [Deploy to Digital Ocean with Docker](https://v1.prisma.io/tutorials/deploy-prisma-to-digitalocean-with-docker-machine-ct06)
-4. [Deploy to Dokku](https://v1.prisma.io/tutorials/deploy-prisma-to-dokku-ct15)
+   - [Deploy to Kubernetes](https://v1.prisma.io/tutorials/deploy-prisma-to-kubernetes-ct13)
+   - [Deploy to Digital Ocean](https://v1.prisma.io/tutorials/deploy-prisma-to-digitalocean-ct12)
+   - [Deploy to Digital Ocean with Docker](https://v1.prisma.io/tutorials/deploy-prisma-to-digitalocean-with-docker-machine-ct06)
+   - [Deploy to Dokku](https://v1.prisma.io/tutorials/deploy-prisma-to-dokku-ct15)
 2. [Export your service data](https://v1.prisma.io/tutorials/data-import-and-export-with-prisma-cs03) from Prisma 1 Cloud using [`prisma1 export`](https://v1.prisma.io/docs/1.34/prisma-cli-and-configuration/cli-command-reference/prisma-export-ycv2/) or email us using the email address from your account with a list of the **Services** in your account that you would like us to back up.
 3. Update the connection strings in your local `prisma.yml` file to point to the Prisma 1 Server created in Step 2, and [import your service data](https://v1.prisma.io/tutorials/data-import-and-export-with-prisma-cs03).
 4. Regression test your application in pre-production environments, then deploy the application with new connection strings to production.
