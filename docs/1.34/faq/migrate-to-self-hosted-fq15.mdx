@@ -1,0 +1,100 @@
+export const meta = {
+  title: 'Migrating Away from Prisma 1 Cloud',
+  position: 14,
+  articleGroup: 'Prisma 1 Cloud Sunset',
+}
+
+# Migrating Away from Prisma 1 Cloud
+
+[We released the Prisma ORM (i.e., _Prisma 2_)](https://www.prisma.io/blog/announcing-prisma-2-n0v98rzc8br1) for production usage almost two years ago.
+
+This new version of Prisma doesn't require developers to set up a proxy server (i.e., the _Prisma server_). It also comes with many additional benefits, such as an intuitive and expressive modeling language to declare your database models, a proper migration system, and full type-safety for _all_ database queries. Learn more about the differences between Prisma 1 and the new Prisma ORM [here](https://www.prisma.io/docs/guides/upgrade-guides/upgrade-from-prisma-1/how-to-upgrade#main-differences-between-prisma-1-and-prisma-2).
+
+Today, we have hundreds of thousands of developers using the [Prisma ORM](https://www.prisma.io/). In addition, our team is building the next generation of database tools for development teams and organizations: the [Prisma Data Platform](https://www.prisma.io/dataplatform).
+
+🚨 Due to Prisma's new focus on the open-source ORM and the Prisma Data Platform, **we will officially sunset Prisma 1 Cloud on September 1st, 2022**
+
+### Migration Steps
+
+1. Identify which features of Prisma 1 Cloud your application is using.
+2. Create a plan based on your specific use case and migrate.
+3. Close your Prisma 1 Cloud account, or please notify us.
+
+## Step 1: Identify Features
+
+### Prisma 1 Cloud
+
+First, identify if you're using Prisma 1 Cloud at all!
+
+1. Open `prisma.yml` in your project.
+2. Find the `endpoint` property.
+3. You are using Prisma 1 Cloud if the `endpoint` property includes `prisma.sh`, and should continue reading this tutorial.
+
+### Servers
+
+Servers made it possible to self-host Prisma 1 and maintain ownership of your data while still using Prisma 1 Cloud. Verify if you had configured custom servers:
+
+1. Log in at [https://app.prisma.io](https://app.prisma.io).
+2. Navigate to the **Servers** tab at the top of the screen.
+3. You have configured custom servers if you see more than two entries, `prisma-eu1`, and `prisma-us1`.
+4. If you have configured custom servers, click on each and note the number of Services running and the Server and Database details.
+5. If your custom server has 0 Services running, Prisma 1 Cloud is not using it, and you can delete it from Prisma 1 Cloud by clicking the **Delete Server** button on the server details page.
+
+### Services
+
+Services are discrete Prisma 1 endpoints that applications connect to, usually delineated by `dev` or `prod` environments. Note all Services in your account:
+
+1. Log in at [https://app.prisma.io](https://app.prisma.io).
+2. Navigate to the **Services** tab at the top of the screen.
+3. Click into each service and note the details, including the Name, Stage (environment), and HTTP Endpoint.
+
+## Step 2: Create a Plan and Migrate
+
+### Upgrade or Self-host
+
+If you're using Prisma 1 Cloud to host your Prisma server, you will need to migrate off before **September 1st, 2022**. You have a few options:
+
+1. Upgrade your application from Prisma 1 to Prisma ORM. In this case, you will no longer need Prisma 1 Cloud because Prisma ORM does not require a separate Prisma server.
+2. Self-host Prisma 1. While it is a viable option, we do not recommend self-hosting Prisma 1 as it is in maintenance mode, and Prisma will not develop new features or offer ongoing support for issues.
+
+#### Upgrading to Prisma ORM
+
+When upgrading to [Prisma ORM](https://prisma.io), there are two general strategies:
+
+1. **Upgrade all at once**: Remove Prisma 1 from your project and move everything to Prisma ORM all at once.
+2. **Side-by-side upgrade**: Add Prisma ORM to an existing Prisma 1 project and gradually replace existing Prisma 1 features while running each side-by-side.
+
+Learn more about [how to upgrade](https://www.prisma.io/docs/guides/upgrade-guides/upgrade-from-prisma-1/how-to-upgrade#upgrade-strategies), [the main differences between Prisma 1 and Prisma ORM](https://www.prisma.io/docs/guides/upgrade-guides/upgrade-from-prisma-1/how-to-upgrade#main-differences-between-prisma-1-and-prisma-2), and the [Prisma upgrade CLI](https://www.prisma.io/docs/guides/upgrade-guides/upgrade-from-prisma-1/how-to-upgrade#prisma-upgrade-cli).
+
+#### Self-hosting Prisma 1
+
+We do not recommend self-hosting Prisma 1 as it is in maintenance mode, and Prisma will not develop new features or offer ongoing support for issues. The following are high-level steps for self-hosting if it is not feasible to upgrade your application to Prisma ORM in the time before the Prisma 1 Cloud sunset on September 1st, 2022.
+
+1. Deploy a Prisma 1 Server to the hosting environment of your choice. Use the following tutorials as examples:
+   - [Deploy to Kubernetes](https://v1.prisma.io/tutorials/deploy-prisma-to-kubernetes-ct13)
+   - [Deploy to Digital Ocean](https://v1.prisma.io/tutorials/deploy-prisma-to-digitalocean-ct12)
+   - [Deploy to Digital Ocean with Docker](https://v1.prisma.io/tutorials/deploy-prisma-to-digitalocean-with-docker-machine-ct06)
+   - [Deploy to Dokku](https://v1.prisma.io/tutorials/deploy-prisma-to-dokku-ct15)
+2. [Export your service data](https://v1.prisma.io/tutorials/data-import-and-export-with-prisma-cs03) from Prisma 1 Cloud using [`prisma1 export`](https://v1.prisma.io/docs/1.34/prisma-cli-and-configuration/cli-command-reference/prisma-export-ycv2/) or email us using the email address from your account with a list of the **Services** in your account that you would like us to back up.
+3. Update the connection strings in your local `prisma.yml` file to point to the Prisma 1 Server created in Step 2, and [import your service data](https://v1.prisma.io/tutorials/data-import-and-export-with-prisma-cs03).
+4. Regression test your application in pre-production environments, then deploy the application with new connection strings to production.
+
+### Custom Servers
+
+If your Prisma 1 Cloud implementation uses custom servers (see above in Step 1), **you are already self-hosting Prisma 1.** Verify that the `endpoint` property in your `prisma.yml` file references the custom server that you configured on the Prisma 1 Cloud **Servers** page.
+
+### Request data
+
+Any Prisma 1 Cloud implementations that do not use a Custom Server must migrate data to a new database.
+
+1. Identify if the [Normalized Data Format (NDF)](https://v1.prisma.io/docs/1.34/prisma-cli-and-configuration/data-import-and-export-jsw9/#normalized-data-format) meets the needs of your application.
+2. If so, try using the Prisma 1 CLI  `export` [method](https://v1.prisma.io/docs/1.34/prisma-cli-and-configuration/cli-command-reference/prisma-export-ycv2/).
+3. If the Normalized Data Format doesn't meet your needs, [send us an email](mailto:prisma1cloud@prisma.io) using the email address from your account with a list of the **Services** in your account that you would like us to back up.
+
+## Step 3: Close Your Prisma 1 Cloud Account
+
+After completing the migration off of Prisma 1 Cloud, close your account or [send us an email](mailto:prisma1cloud@prisma.io):
+
+1. Log in to [Prisma 1 Cloud](https://app.prisma.io).
+2. Verify that there are no production-facing services by visiting the **Services** tab.
+3. Click on the **Account** circle in the upper right-hand corner and click and confirm **Delete Account** at the bottom of the page.
