@@ -6,4 +6,50 @@ export const meta = {
 
 ## FAQ
 
-Prisma is currenly in [maintenance mode](https://github.com/prisma/prisma1/issues/4898). There will be no new features developed for Prisma 1.
+Prisma 1 (Open Source) is currently in [maintenance mode](https://github.com/prisma/prisma1/issues/4898). Prisma will not develop any new features or support future implementations.
+
+### What is the difference between Prisma 1 (Open Source) and Prisma 1 Cloud?
+
+**Prisma 1 (Open Source)** is the [client](https://v1.prisma.io/docs/1.34/prisma-client/), [CLI](https://v1.prisma.io/docs/1.34/prisma-cli-and-configuration/), and [server](https://v1.prisma.io/docs/1.34/prisma-server/).
+
+**Prisma 1 Cloud** was a [service](https://app.prisma.io) that complemented Prisma 1 (Open Source) by hosting the [server](https://v1.prisma.io/docs/1.34/prisma-server/) and a data browser.
+
+### How can I check whether I'm using Prisma 1 Cloud?
+
+1. Open `prisma.yml` in your project.
+2. Find the `endpoint` property.
+3. If the `endpoint` property includes either `https://us1.prisma.sh` or `https://eu1.prisma.sh`, then you are using Prisma 1 Cloud.
+
+### How can I log into Prisma 1 Cloud and retrieve my information?
+
+1. Visit [app.prisma.io](https://app.prisma.io) and log in with an email and password or through GitHub.
+2. After logging in, navigate to the **Services** tab at the top of the screen to access any currently active services, the **Servers** tab for any custom servers you may have added, and **Settings** in the top center of the screen to access billing and integration information.
+
+#### Retrieving data
+
+If you plan to [upgrade to Prisma ORM](https://www.prisma.io/docs/guides/upgrade-guides/upgrade-from-prisma-1/how-to-upgrade) please [email us](mailto:prisma1cloud@prisma.io) using the email address we have on file with a list of the **Services** in your account that you would like us to export.
+
+If you choose to self-host Prisma 1 (Open Source), use the [CLI to export](https://v1.prisma.io/docs/1.34/prisma-cli-and-configuration/cli-command-reference/prisma-export-ycv2/) your data.
+
+### I'm not ready to upgrade to Prisma ORM. Can I self-host?
+
+Yes, you can self-host. However, we recommend preparing to upgrade to [Prisma ORM](https://www.prisma.io/) as [Prisma 1](https://v1.prisma.io/docs) is in maintenance mode.
+
+#### At a high level, these are the steps for migrating to a self-hosted version of Prisma 1 (Open Source):
+
+1. Log into your [Prisma 1 Cloud account](https://app.prisma.io) and document any running services in the **Services** tab at the top of the screen.
+2. Deploy a Prisma 1 Server to the hosting environment of your choice. Use the following tutorials as examples:
+    1. [Deploy to Kubernetes](https://v1.prisma.io/tutorials/deploy-prisma-to-kubernetes-ct13)
+    2. [Deploy to Digital Ocean](https://v1.prisma.io/tutorials/deploy-prisma-to-digitalocean-ct12)
+    3. [Deploy to Digital Ocean with Docker](https://v1.prisma.io/tutorials/deploy-prisma-to-digitalocean-with-docker-machine-ct06)
+    4. [Deploy to Dokku](https://v1.prisma.io/tutorials/deploy-prisma-to-dokku-ct15)
+3. [Export your service data](https://v1.prisma.io/tutorials/data-import-and-export-with-prisma-cs03) from Prisma 1 Cloud using [`prisma1 export`](https://v1.prisma.io/docs/1.34/prisma-cli-and-configuration/cli-command-reference/prisma-export-ycv2/).
+4. Update the connection strings in your local `prisma.yml` file to point to the Prisma 1 Server created in Step 2, and [import your service data](https://v1.prisma.io/tutorials/data-import-and-export-with-prisma-cs03).
+5. Regression test your application in pre-production environments, then deploy the application with new connection strings to production.
+6. Close your Prisma 1 Cloud account (see below).
+
+### How can I close my Prisma 1 account?
+
+1. Log in to [Prisma 1 Cloud](https://app.prisma.io).
+2. Verify that there are no production-facing services by visiting the **Services** tab.
+3. Click on the **Account** sphere in the upper right-hand corner and click and confirm **Delete Account** at the bottom of the page.
