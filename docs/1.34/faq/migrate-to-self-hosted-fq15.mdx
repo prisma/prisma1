@@ -83,6 +83,13 @@ We do not recommend self-hosting Prisma 1 as it is in maintenance mode, and Pris
 
 If your Prisma 1 Cloud implementation uses custom servers (see above in Step 1), **you are already self-hosting Prisma 1.** Verify that the `endpoint` property in your `prisma.yml` file references the custom server that you configured on the Prisma 1 Cloud **Servers** page.
 
+#### Data Browser
+
+If you choose to self-host Prisma 1 you can access a similar data browser to the one currently found on [Prisma 1 Cloud](https://app.prisma.io) directly.
+
+1. Update the `endpoint` property in your `prisma.yml` file to point to the Prisma 1 server where you want to access the data browser.
+2. In your command line from the same directory that the `prisma.yml` file is in, type `prisma1 admin`, and it should open up a browser to query data hosted right on the server itself. The general URL structure will look something like "https://ENDPOINT/_admin"
+
 ### Request data
 
 Any Prisma 1 Cloud implementations that do not use a Custom Server must migrate data to a new database.
