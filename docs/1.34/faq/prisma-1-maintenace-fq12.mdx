@@ -17,8 +17,8 @@ Prisma 1 (Open Source) is currently in [maintenance mode](https://github.com/pri
 ### How can I check whether I'm using Prisma 1 Cloud?
 
 1. Open your project locally.
-2. Inspect `prisma.yml` and any environment variable your build process is using.
-3. If your project uses a `PRISMA_MANAGEMENT_API_SECRET`, you are **not** using Prisma 1 Cloud. You can verify this by using `prisma1 logout` from the command line and attempting to deploy or access a service.
+2. Inspect `prisma.yml` and any environment variables your build process is using.
+3. If your project uses a `PRISMA_MANAGEMENT_API_SECRET`, you are **not** using Prisma 1 Cloud. You can verify this by using `prisma1 logout` from the command line, regenerating your Prisma 1 client, and attempting to deploy or access a service.
 
 ### How can I log into Prisma 1 Cloud and retrieve my information?
 
@@ -50,7 +50,7 @@ If you choose to self-host Prisma 1 (Open Source), use the [CLI to export](https
 1. Visit [app.prisma.io](https://app.prisma.io) and log in with an email and password or through GitHub.
 2. Navigate to the **Services** tab at the top of your screen.
 3. Identify the service you wish to delete and click the **Gear** icon on the right-hand side.
-4. Confirm deletion. **Note: Deleting a service following the steps below will delete the service, data model, and data. To preserve data at a custom service, follow [these steps](https://v1.prisma.io/docs/1.34/faq/prisma-1-maintenace-fq12/#how-can-i-delete-custom-servers).**
+4. Confirm deletion. **Note: Deleting a service following these steps will delete the service, data model, and data. To preserve data at a custom service, follow [these steps](https://v1.prisma.io/docs/1.34/faq/prisma-1-maintenace-fq12/#how-can-i-delete-custom-servers).**
 
 ### I'm not ready to upgrade to Prisma ORM. Can I self-host?
 
