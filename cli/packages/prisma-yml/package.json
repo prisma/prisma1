@@ -22,7 +22,7 @@
     "typescript": "^3.2.2"
   },
   "dependencies": {
-    "ajv": "5",
+    "ajv": "6",
     "bluebird": "^3.5.1",
     "chalk": "^2.3.0",
     "debug": "^3.1.0",
