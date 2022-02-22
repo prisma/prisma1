@@ -20,7 +20,7 @@ It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma 1 currently su
 
 ## Get started with Prisma 1
 
-Yopu can find installation and usage instructions in the [Prisma 1 docs](https://v1.prisma.io/docs/1.34/get-started/01-setting-up-prisma-new-database-TYPESCRIPT-t002/).
+You can find installation and usage instructions in the [Prisma 1 docs](https://v1.prisma.io/docs/1.34/get-started/01-setting-up-prisma-new-database-TYPESCRIPT-t002/).
 
 > Prisma 1 is currently in [maintenance mode](https://github.com/prisma/prisma1/issues/4898). If you are new to Prisma, check out [Prisma 2](https://www.prisma.io) instead!
 
