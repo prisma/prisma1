@@ -20,7 +20,7 @@ It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma 1 currently su
 
 ## Get started with Prisma 1
 
-Yopu can find installation and usage instructions in the [Prisma 1 docs](https://v1.prisma.io/docs/1.34/get-started/01-setting-up-prisma-new-database-TYPESCRIPT-t002/).
+You can find installation and usage instructions in the [Prisma 1 docs](https://v1.prisma.io/docs/1.34/get-started/01-setting-up-prisma-new-database-TYPESCRIPT-t002/).
 
 > [Prisma 1 will be deprecated on September 1st, 2022](https://github.com/prisma/prisma1/issues/5208). If you are new to Prisma, check out the latest version of [Prisma](https://www.prisma.io)!
 
